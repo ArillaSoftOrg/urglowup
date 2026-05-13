@@ -114,6 +114,10 @@ export async function updateBusinessStatus(
 
   revalidateAdmin();
   if (business.slug) revalidatePath(`/b/${business.slug}`);
+  // Revalidate marketplace listing when a business enters or leaves ACTIVE_MARKETPLACE
+  if (newStatus === "ACTIVE_MARKETPLACE" || business.status === "ACTIVE_MARKETPLACE") {
+    revalidatePath("/explore");
+  }
 
   return { success: true, message: `Status updated to ${newStatus}.` };
 }
@@ -156,6 +160,7 @@ export async function toggleMarketplaceVisibility(
   );
 
   revalidateAdmin();
+  revalidatePath("/explore");
   return {
     success: true,
     message: `Marketplace visibility ${newValue ? "enabled" : "disabled"}.`,

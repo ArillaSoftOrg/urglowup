@@ -15,6 +15,12 @@ export async function Navbar() {
 
         <nav className="hidden md:flex items-center gap-6 text-sm">
           <Link
+            href="/explore"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Explore
+          </Link>
+          <Link
             href="/for-business"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >

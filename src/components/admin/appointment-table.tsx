@@ -7,8 +7,9 @@ import { Calendar } from "lucide-react";
 import type { AdminAppointment } from "@/lib/queries/admin";
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING_CONFIRMATION: "bg-yellow-100 text-yellow-800",
+  PENDING: "bg-yellow-100 text-yellow-800",
   CONFIRMED: "bg-blue-100 text-blue-800",
+  REJECTED: "bg-red-100 text-red-800",
   COMPLETED: "bg-green-100 text-green-800",
   CANCELLED_BY_CUSTOMER: "bg-red-100 text-red-800",
   CANCELLED_BY_BUSINESS: "bg-red-100 text-red-800",
@@ -16,8 +17,9 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_CONFIRMATION: "Pending",
+  PENDING: "Pending",
   CONFIRMED: "Confirmed",
+  REJECTED: "Rejected",
   COMPLETED: "Completed",
   CANCELLED_BY_CUSTOMER: "Cancelled (Customer)",
   CANCELLED_BY_BUSINESS: "Cancelled (Business)",
@@ -76,11 +78,10 @@ export function AppointmentTable({
 }: {
   appointments: AdminAppointment[];
 }) {
-  const pending = appointments.filter(
-    (a) => a.status === "PENDING"
-  );
+  const pending = appointments.filter((a) => a.status === "PENDING");
   const confirmed = appointments.filter((a) => a.status === "CONFIRMED");
   const completed = appointments.filter((a) => a.status === "COMPLETED");
+  const rejected = appointments.filter((a) => a.status === "REJECTED");
   const cancelled = appointments.filter(
     (a) =>
       a.status === "CANCELLED_BY_CUSTOMER" ||
@@ -98,6 +99,9 @@ export function AppointmentTable({
         <TabsTrigger value="completed">
           Completed ({completed.length})
         </TabsTrigger>
+        <TabsTrigger value="rejected">
+          Rejected ({rejected.length})
+        </TabsTrigger>
         <TabsTrigger value="cancelled">
           Cancelled ({cancelled.length})
         </TabsTrigger>
@@ -108,6 +112,7 @@ export function AppointmentTable({
         { value: "pending", items: pending },
         { value: "confirmed", items: confirmed },
         { value: "completed", items: completed },
+        { value: "rejected", items: rejected },
         { value: "cancelled", items: cancelled },
       ].map(({ value, items }) => (
         <TabsContent key={value} value={value} className="mt-4">
