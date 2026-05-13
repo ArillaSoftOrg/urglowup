@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  BUSINESS_OWNER
+  ADMIN
+}
+
+enum BusinessStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE_PRIVATE
+  ACTIVE_MARKETPLACE
+  SUSPENDED
+  REJECTED
+}
+
+enum PriceType {
+  FIXED
+  STARTS_FROM
+  CONSULTATION_REQUIRED
+  FREE_CONSULTATION
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED_BY_CUSTOMER
+  CANCELLED_BY_BUSINESS
+  COMPLETED
+  NO_SHOW
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+  REMOVED
+}
+
+enum ReviewSource {
+  URGLOWUP
+  GOOGLE
+}
+
+enum MediaType {
+  COVER
+  LOGO
+  PORTFOLIO_IMAGE
+  PORTFOLIO_VIDEO
+  SERVICE_IMAGE
+  BEFORE_AFTER
+}
+
+enum MediaStatus {
+  ACTIVE
+  HIDDEN
+  REMOVED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// ─── Models ──────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  phone     String?
+  avatarUrl String?
+  role      UserRole @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business     Business?
+  appointments Appointment[]
+  reviews      Review[]
+  favorites    Favorite[]
+  adminActions AdminAction[]
+}
+
+model Business {
+  id                   String         @id @default(cuid())
+  ownerId              String         @unique
+  owner                User           @relation(fields: [ownerId], references: [id])
+  name                 String
+  slug                 String         @unique
+  description          String?
+  phone                String?
+  whatsapp             String?
+  instagramUrl         String?
+  address              String?
+  city                 String?
+  district             String?
+  latitude             Float?
+  longitude            Float?
+  coverImageUrl        String?
+  logoUrl              String?
+  status               BusinessStatus @default(DRAFT)
+  isMarketplaceVisible Boolean        @default(false)
+  googlePlaceId        String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  categories   BusinessToCategory[]
+  services     BusinessService[]
+  hours        BusinessHour[]
+  media        BusinessMedia[]
+  appointments Appointment[]
+  reviews      Review[]
+  favorites    Favorite[]
+
+  @@index([city])
+  @@index([status])
+}
+
+model BusinessCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  businesses BusinessToCategory[]
+}
+
+model BusinessToCategory {
+  businessId String
+  categoryId String
+  business   Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category   BusinessCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([businessId, categoryId])
+}
+
+model BusinessService {
+  id              String    @id @default(cuid())
+  businessId      String
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  durationMinutes Int
+  price           Decimal?  @db.Decimal(10, 2)
+  priceType       PriceType @default(FIXED)
+  isActive        Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  appointments Appointment[]
+  media        BusinessMedia[]
+}
+
+model BusinessHour {
+  id                  String    @id @default(cuid())
+  businessId          String
+  business            Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  dayOfWeek           DayOfWeek
+  isOpen              Boolean   @default(true)
+  openTime            String?
+  closeTime           String?
+  slotIntervalMinutes Int       @default(30)
+
+  @@unique([businessId, dayOfWeek])
+}
+
+model BusinessMedia {
+  id               String           @id @default(cuid())
+  businessId       String
+  business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  url              String
+  publicId         String
+  type             MediaType
+  title            String?
+  description      String?
+  relatedServiceId String?
+  relatedService   BusinessService? @relation(fields: [relatedServiceId], references: [id], onDelete: SetNull)
+  status           MediaStatus      @default(ACTIVE)
+  sortOrder        Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  businessId    String
+  business      Business          @relation(fields: [businessId], references: [id])
+  customerId    String
+  customer      User              @relation(fields: [customerId], references: [id])
+  serviceId     String
+  service       BusinessService   @relation(fields: [serviceId], references: [id])
+  requestedDate DateTime          @db.Date
+  requestedTime String
+  status        AppointmentStatus @default(PENDING)
+  customerNote  String?
+  businessNote  String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  review Review?
+
+  @@index([businessId, status])
+  @@index([customerId])
+}
+
+model Review {
+  id            String       @id @default(cuid())
+  businessId    String
+  business      Business     @relation(fields: [businessId], references: [id])
+  customerId    String
+  customer      User         @relation(fields: [customerId], references: [id])
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  rating        Int
+  comment       String?
+  status        ReviewStatus @default(PENDING)
+  source        ReviewSource @default(URGLOWUP)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, businessId])
+}
+
+model AdminAction {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String
+  targetType String
+  targetId   String
+  details    String?
+  createdAt  DateTime @default(now())
+}
+
+model Region {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  country   String   @default("TR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

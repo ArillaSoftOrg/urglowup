@@ -1,0 +1,78 @@
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { z } from "zod/v4";
+import { deleteFromCloudinary } from "@/lib/cloudinary";
+import { getResourceType } from "@/lib/constants/media";
+import { revalidatePath } from "next/cache";
+
+const requestSchema = z.object({
+  mediaId: z.string().min(1),
+});
+
+export async function DELETE(request: Request) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "BUSINESS_OWNER") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const business = await db.business.findUnique({
+    where: { ownerId: user.id },
+    select: { id: true },
+  });
+  if (!business) {
+    return NextResponse.json({ error: "No business found" }, { status: 404 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const result = requestSchema.safeParse(body);
+  if (!result.success) {
+    return NextResponse.json(
+      { error: result.error.issues[0].message },
+      { status: 400 }
+    );
+  }
+
+  const media = await db.businessMedia.findUnique({
+    where: { id: result.data.mediaId },
+  });
+
+  if (!media || media.businessId !== business.id) {
+    return NextResponse.json({ error: "Media not found" }, { status: 404 });
+  }
+
+  // Delete from Cloudinary
+  const resourceType = getResourceType(media.type);
+  try {
+    await deleteFromCloudinary(media.publicId, resourceType);
+  } catch {
+    // Continue even if Cloudinary delete fails — still remove DB record
+  }
+
+  // Delete DB record
+  await db.businessMedia.delete({ where: { id: media.id } });
+
+  // Clear cover/logo reference if applicable
+  if (media.type === "COVER") {
+    await db.business.update({
+      where: { id: business.id },
+      data: { coverImageUrl: null },
+    });
+  } else if (media.type === "LOGO") {
+    await db.business.update({
+      where: { id: business.id },
+      data: { logoUrl: null },
+    });
+  }
+
+  revalidatePath("/business/media");
+  revalidatePath("/business/dashboard");
+
+  return NextResponse.json({ success: true });
+}
