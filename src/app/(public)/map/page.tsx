@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Map } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -20,12 +20,12 @@ export default function MapPage() {
         category or city.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Button asChild>
-          <Link href="/explore">Browse All</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href="/">Go Home</Link>
-        </Button>
+        <Link href="/explore" className={buttonVariants({ variant: "default" })}>
+          Browse All
+        </Link>
+        <Link href="/" className={buttonVariants({ variant: "outline" })}>
+          Go Home
+        </Link>
       </div>
     </div>
   );
