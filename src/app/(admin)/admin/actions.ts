@@ -48,6 +48,45 @@ async function getBusinessSlug(
   return biz?.slug ?? null;
 }
 
+async function revalidateMarketplacePathsForBusiness(
+  businessId: string
+): Promise<void> {
+  const business = await db.business.findUnique({
+    where: { id: businessId },
+    select: {
+      slug: true,
+      city: true,
+      district: true,
+      categories: {
+        select: { category: { select: { slug: true } } },
+      },
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/explore");
+
+  if (!business) return;
+
+  if (business.slug) {
+    revalidatePath(`/b/${business.slug}`);
+  }
+
+  for (const bc of business.categories) {
+    revalidatePath(`/category/${bc.category.slug}`);
+  }
+
+  if (business.city) {
+    const encodedCity = encodeURIComponent(business.city);
+    revalidatePath(`/city/${encodedCity}`);
+
+    if (business.district) {
+      const encodedDistrict = encodeURIComponent(business.district);
+      revalidatePath(`/city/${encodedCity}/${encodedDistrict}`);
+    }
+  }
+}
+
 // ─── Business Actions ──────────────────────────────────────────
 
 const updateStatusSchema = z.object({
@@ -113,10 +152,8 @@ export async function updateBusinessStatus(
   );
 
   revalidateAdmin();
-  if (business.slug) revalidatePath(`/b/${business.slug}`);
-  // Revalidate marketplace listing when a business enters or leaves ACTIVE_MARKETPLACE
   if (newStatus === "ACTIVE_MARKETPLACE" || business.status === "ACTIVE_MARKETPLACE") {
-    revalidatePath("/explore");
+    await revalidateMarketplacePathsForBusiness(businessId);
   }
 
   return { success: true, message: `Status updated to ${newStatus}.` };
@@ -160,7 +197,7 @@ export async function toggleMarketplaceVisibility(
   );
 
   revalidateAdmin();
-  revalidatePath("/explore");
+  await revalidateMarketplacePathsForBusiness(businessId);
   return {
     success: true,
     message: `Marketplace visibility ${newValue ? "enabled" : "disabled"}.`,
