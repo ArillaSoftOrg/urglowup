@@ -82,7 +82,7 @@ function BusinessRow({ business }: { business: AdminBusiness }) {
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem>
             <Link href={`/admin/businesses/${business.id}`}>View Details</Link>
           </DropdownMenuItem>
           {transitions.length > 0 && <DropdownMenuSeparator />}

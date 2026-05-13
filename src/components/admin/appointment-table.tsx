@@ -77,7 +77,7 @@ export function AppointmentTable({
   appointments: AdminAppointment[];
 }) {
   const pending = appointments.filter(
-    (a) => a.status === "PENDING_CONFIRMATION"
+    (a) => a.status === "PENDING"
   );
   const confirmed = appointments.filter((a) => a.status === "CONFIRMED");
   const completed = appointments.filter((a) => a.status === "COMPLETED");

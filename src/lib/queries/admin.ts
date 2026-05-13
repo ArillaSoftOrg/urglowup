@@ -119,7 +119,7 @@ export async function getBusinessActionHistory(businessId: string) {
   return db.adminAction.findMany({
     where: { targetType: "Business", targetId: businessId },
     include: {
-      admin: { select: { firstName: true, lastName: true } },
+      admin: { select: { firstName: true, lastName: true, email: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 20,
