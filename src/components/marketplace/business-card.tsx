@@ -25,9 +25,7 @@ function StarRating({ avg, count }: { avg: number; count: number }) {
       <Star className="size-3 fill-amber-400 text-amber-400" />
       <span className="font-medium text-foreground">{rounded.toFixed(1)}</span>
       <span>·</span>
-      <span>
-        {count} review{count !== 1 ? "s" : ""}
-      </span>
+      <span>{count} değerlendirme</span>
     </div>
   );
 }
@@ -48,7 +46,7 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
-            alt={`${name} cover`}
+            alt={`${name} kapak görseli`}
             className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -87,7 +85,7 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
           {reviewCount > 0 && reviewAvg !== null ? (
             <StarRating avg={reviewAvg} count={reviewCount} />
           ) : (
-            <span className="text-xs text-muted-foreground">No reviews yet</span>
+            <span className="text-xs text-muted-foreground">Henüz değerlendirme yok</span>
           )}
 
           {locationParts.length > 0 && (

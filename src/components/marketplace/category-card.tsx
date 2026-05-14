@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { MarketplaceCategory } from "@/lib/queries/marketplace";
+import { getCategoryLabel } from "@/lib/category-labels";
 
 // Deterministic gradient fallback when no imageUrl
 const CATEGORY_GRADIENTS = [
@@ -41,9 +42,9 @@ export function CategoryCard({ category }: { category: MarketplaceCategory }) {
         )}
       </div>
       <div className="p-3">
-        <p className="font-medium leading-tight">{name}</p>
+        <p className="font-medium leading-tight">{getCategoryLabel(slug, name)}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {businessCount} business{businessCount !== 1 ? "es" : ""}
+          {businessCount} işletme
         </p>
       </div>
     </Link>

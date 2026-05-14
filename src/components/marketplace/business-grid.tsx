@@ -9,7 +9,7 @@ interface BusinessGridProps {
 
 export function BusinessGrid({
   businesses,
-  emptyMessage = "No businesses found.",
+  emptyMessage = "Henüz listelenmiş işletme yok.",
 }: BusinessGridProps) {
   if (businesses.length === 0) {
     return (

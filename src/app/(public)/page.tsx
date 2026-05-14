@@ -22,27 +22,36 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="px-4 py-20 text-center md:py-32">
-        <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight md:text-6xl">
-          Discover Beauty &amp; Personal Care Professionals
-        </h1>
-        <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-          View real work, read verified reviews, and request appointments with
-          confidence.
-        </p>
-        <div className="mt-8 flex justify-center gap-4">
-          <Link
-            href="/explore"
-            className={cn(buttonVariants({ size: "lg" }))}
-          >
-            Explore Now
-          </Link>
-          <Link
-            href="/for-business"
-            className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
-          >
-            For Business
-          </Link>
+      <section className="relative px-4 py-24 text-center md:py-36">
+        <div className="mx-auto max-w-2xl">
+          <p className="mb-3 text-sm font-medium uppercase tracking-widest text-primary">
+            UrGlowUp
+          </p>
+          <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
+            Güzellik &amp; Kişisel Bakım{" "}
+            <span className="text-primary">Uzmanlarını</span> Keşfet
+          </h1>
+          <p className="mx-auto mt-5 max-w-lg text-lg text-muted-foreground">
+            Gerçek çalışmaları görün, doğrulanmış yorumları okuyun ve güvenle
+            randevu alın.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/explore"
+              className={cn(buttonVariants({ size: "lg" }), "px-8")}
+            >
+              Hemen Keşfet
+            </Link>
+            <Link
+              href="/for-business"
+              className={cn(
+                buttonVariants({ size: "lg", variant: "outline" }),
+                "px-8"
+              )}
+            >
+              İşletmeler İçin
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -51,12 +60,12 @@ export default async function HomePage() {
         <section className="bg-muted/30 px-4 py-16">
           <div className="container mx-auto">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Browse by Category</h2>
+              <h2 className="text-2xl font-bold">Kategoriye Göre Gözat</h2>
               <Link
                 href="/explore"
                 className="text-sm text-muted-foreground hover:underline"
               >
-                View all →
+                Tümünü gör →
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -73,12 +82,12 @@ export default async function HomePage() {
         <section className="px-4 py-16">
           <div className="container mx-auto">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Featured Professionals</h2>
+              <h2 className="text-2xl font-bold">Öne Çıkan Uzmanlar</h2>
               <Link
                 href="/explore"
                 className="text-sm text-muted-foreground hover:underline"
               >
-                View all →
+                Tümünü gör →
               </Link>
             </div>
             <BusinessGrid businesses={featuredBusinesses} />
@@ -89,16 +98,16 @@ export default async function HomePage() {
       {/* For Business CTA */}
       <section className="bg-muted/30 px-4 py-16 text-center">
         <div className="mx-auto max-w-xl">
-          <h2 className="text-2xl font-bold">Are you a beauty professional?</h2>
+          <h2 className="text-2xl font-bold">Güzellik uzmanı mısınız?</h2>
           <p className="mt-3 text-muted-foreground">
-            Create your free profile, showcase your work, and start receiving
-            appointment requests today.
+            Ücretsiz profilinizi oluşturun, çalışmalarınızı sergileyin ve bugün
+            randevu almaya başlayın.
           </p>
           <Link
             href="/for-business"
             className={cn(buttonVariants({ size: "lg" }), "mt-6")}
           >
-            Get Started for Free
+            Ücretsiz Başlayın
           </Link>
         </div>
       </section>

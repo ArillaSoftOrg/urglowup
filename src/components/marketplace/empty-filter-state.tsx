@@ -9,15 +9,15 @@ export function EmptyFilterState({ clearHref }: EmptyFilterStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <SearchX className="size-10 text-muted-foreground" />
-      <p className="mt-3 font-medium">No professionals match your filters</p>
+      <p className="mt-3 font-medium">Filtrelerinize uygun uzman bulunamadı</p>
       <p className="mt-1 text-sm text-muted-foreground">
-        Try adjusting your search or removing some filters.
+        Aramanızı değiştirmeyi veya bazı filtreleri kaldırmayı deneyin.
       </p>
       <Link
         href={clearHref}
         className="mt-4 text-sm text-primary underline-offset-4 hover:underline"
       >
-        Clear all filters
+        Tüm filtreleri temizle
       </Link>
     </div>
   );

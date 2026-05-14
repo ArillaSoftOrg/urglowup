@@ -18,13 +18,13 @@ export async function Navbar() {
             href="/explore"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Explore
+            Keşfet
           </Link>
           <Link
             href="/for-business"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            For Business
+            İşletmeler İçin
           </Link>
         </nav>
 
@@ -35,11 +35,11 @@ export async function Navbar() {
             <>
               <SignInButton>
                 <Button variant="ghost" size="sm">
-                  Sign In
+                  Giriş Yap
                 </Button>
               </SignInButton>
               <SignUpButton>
-                <Button size="sm">Sign Up</Button>
+                <Button size="sm">Kayıt Ol</Button>
               </SignUpButton>
             </>
           )}

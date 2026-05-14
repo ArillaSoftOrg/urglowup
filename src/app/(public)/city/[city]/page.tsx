@@ -30,8 +30,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { city: rawCity } = await params;
   const city = decodeURIComponent(rawCity);
   return {
-    title: `Beauty & Personal Care in ${city}`,
-    description: `Find beauty and personal care professionals in ${city} on UrGlowUp.`,
+    title: `${city} — Güzellik & Kişisel Bakım`,
+    description: `${city}'deki güzellik ve kişisel bakım uzmanlarını UrGlowUp'ta keşfedin.`,
   };
 }
 
@@ -43,7 +43,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
 
   const [businesses, districts, categories] = await Promise.all([
     getMarketplaceBusinesses({
-      city, // always the route city
+      city,
       district:     filters.district,
       categorySlug: filters.categorySlug,
       q:            filters.q,
@@ -79,11 +79,11 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/" className="hover:underline">
-          Home
+          Ana Sayfa
         </Link>
         <ChevronRight className="size-3.5" />
         <Link href="/explore" className="hover:underline">
-          Explore
+          Keşfet
         </Link>
         <ChevronRight className="size-3.5" />
         <span className="font-medium text-foreground">{city}</span>
@@ -94,12 +94,13 @@ export default async function CityPage({ params, searchParams }: PageProps) {
         <div className="flex items-center gap-2">
           <MapPin className="size-5 text-muted-foreground" />
           <h1 className="text-3xl font-bold tracking-tight">
-            Professionals in {city}
+            {city} Uzmanları
           </h1>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          {businesses.length} professional{businesses.length !== 1 ? "s" : ""}
-          {hasAnyFilter && " found"}
+          {hasAnyFilter
+            ? `${businesses.length} uzman bulundu`
+            : `${businesses.length} uzman`}
         </p>
       </div>
 
@@ -116,7 +117,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       {/* District navigation pills — hidden when district filter is active */}
       {districtList.length > 0 && !filters.district && (
         <div>
-          <p className="mb-2 text-sm font-medium">Browse by district:</p>
+          <p className="mb-2 text-sm font-medium">İlçeye göre gözat:</p>
           <div className="flex flex-wrap gap-2">
             {districtList.map((district) => (
               <Link
@@ -137,7 +138,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       ) : (
         <BusinessGrid
           businesses={businesses}
-          emptyMessage={`No professionals listed in ${city} yet.`}
+          emptyMessage={`${city}'de henüz listelenmiş uzman yok.`}
         />
       )}
     </div>

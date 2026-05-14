@@ -9,6 +9,7 @@ import {
   getMarketplaceCities,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
+import { getCategoryLabel } from "@/lib/category-labels";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { FilterBar } from "@/components/marketplace/filter-bar";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
@@ -30,13 +31,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const category = await getMarketplaceCategoryBySlug(slug);
-  if (!category) return { title: "Category Not Found" };
+  if (!category) return { title: "Kategori Bulunamadı" };
 
+  const displayName = getCategoryLabel(slug, category.name);
   return {
-    title: category.name,
+    title: displayName,
     description:
       category.description ??
-      `Browse ${category.name} professionals on UrGlowUp.`,
+      `UrGlowUp'ta ${displayName} uzmanlarını keşfedin.`,
   };
 }
 
@@ -48,7 +50,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const [category, businesses, cities] = await Promise.all([
     getMarketplaceCategoryBySlug(slug),
     getMarketplaceBusinesses({
-      categorySlug: slug, // always the route slug
+      categorySlug: slug,
       city:         filters.city,
       q:            filters.q,
       minRating:    filters.minRating,
@@ -60,6 +62,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   if (!category) notFound();
 
+  const displayName = getCategoryLabel(slug, category.name);
+
   const hasAnyFilter = !!(
     filters.q || filters.city || filters.minRating ||
     filters.hasMedia || filters.hasHours
@@ -70,25 +74,26 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/" className="hover:underline">
-          Home
+          Ana Sayfa
         </Link>
         <ChevronRight className="size-3.5" />
         <Link href="/explore" className="hover:underline">
-          Explore
+          Keşfet
         </Link>
         <ChevronRight className="size-3.5" />
-        <span className="font-medium text-foreground">{category.name}</span>
+        <span className="font-medium text-foreground">{displayName}</span>
       </nav>
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{category.name}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{displayName}</h1>
         {category.description && (
           <p className="mt-2 text-muted-foreground">{category.description}</p>
         )}
         <p className="mt-1 text-sm text-muted-foreground">
-          {businesses.length} professional{businesses.length !== 1 ? "s" : ""}
-          {hasAnyFilter && " found"}
+          {hasAnyFilter
+            ? `${businesses.length} uzman bulundu`
+            : `${businesses.length} uzman`}
         </p>
       </div>
 
@@ -103,7 +108,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       ) : (
         <BusinessGrid
           businesses={businesses}
-          emptyMessage={`No ${category.name} professionals listed yet.`}
+          emptyMessage={`${displayName} kategorisinde henüz uzman listelenmedi.`}
         />
       )}
     </div>

@@ -33,8 +33,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const city = decodeURIComponent(rawCity);
   const district = decodeURIComponent(rawDistrict);
   return {
-    title: `${district}, ${city}`,
-    description: `Find beauty and personal care professionals in ${district}, ${city} on UrGlowUp.`,
+    title: `${district}, ${city} — Güzellik & Kişisel Bakım`,
+    description: `${district}, ${city}'deki güzellik ve kişisel bakım uzmanlarını UrGlowUp'ta keşfedin.`,
   };
 }
 
@@ -47,8 +47,8 @@ export default async function DistrictPage({ params, searchParams }: PageProps) 
 
   const [businesses, categories] = await Promise.all([
     getMarketplaceBusinesses({
-      city,     // always from route
-      district, // always from route
+      city,
+      district,
       categorySlug: filters.categorySlug,
       q:            filters.q,
       minRating:    filters.minRating,
@@ -68,11 +68,11 @@ export default async function DistrictPage({ params, searchParams }: PageProps) 
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/" className="hover:underline">
-          Home
+          Ana Sayfa
         </Link>
         <ChevronRight className="size-3.5" />
         <Link href="/explore" className="hover:underline">
-          Explore
+          Keşfet
         </Link>
         <ChevronRight className="size-3.5" />
         <Link
@@ -94,8 +94,9 @@ export default async function DistrictPage({ params, searchParams }: PageProps) 
           </h1>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          {businesses.length} professional{businesses.length !== 1 ? "s" : ""}
-          {hasAnyFilter && " found"}
+          {hasAnyFilter
+            ? `${businesses.length} uzman bulundu`
+            : `${businesses.length} uzman`}
         </p>
       </div>
 
@@ -115,7 +116,7 @@ export default async function DistrictPage({ params, searchParams }: PageProps) 
       ) : (
         <BusinessGrid
           businesses={businesses}
-          emptyMessage={`No professionals listed in ${district}, ${city} yet.`}
+          emptyMessage={`${district}, ${city}'de henüz listelenmiş uzman yok.`}
         />
       )}
     </div>

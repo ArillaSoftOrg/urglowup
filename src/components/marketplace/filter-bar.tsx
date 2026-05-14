@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
+import { getCategoryLabel } from "@/lib/category-labels";
 
 interface FilterBarProps {
   categories?: Array<{ name: string; slug: string }>;
@@ -84,12 +85,12 @@ export function FilterBar({
   type Chip = { key: string; label: string };
   const chips: Chip[] = [
     ...(currentQ         ? [{ key: "q",         label: `"${currentQ}"` }] : []),
-    ...(currentCategory  ? [{ key: "category",   label: categories?.find((c) => c.slug === currentCategory)?.name ?? currentCategory }] : []),
+    ...(currentCategory  ? [{ key: "category",   label: (() => { const c = categories?.find((c) => c.slug === currentCategory); return c ? getCategoryLabel(c.slug, c.name) : currentCategory; })() }] : []),
     ...(currentCity      ? [{ key: "city",        label: currentCity }] : []),
     ...(currentDistrict  ? [{ key: "district",    label: currentDistrict }] : []),
-    ...(currentMinRating ? [{ key: "minRating",   label: `${currentMinRating}+ stars` }] : []),
-    ...(currentHasMedia  ? [{ key: "hasMedia",    label: "Has portfolio" }] : []),
-    ...(currentHasHours  ? [{ key: "hasHours",    label: "Has hours" }] : []),
+    ...(currentMinRating ? [{ key: "minRating",   label: `${currentMinRating}+ yıldız` }] : []),
+    ...(currentHasMedia  ? [{ key: "hasMedia",    label: "Portföyü olanlar" }] : []),
+    ...(currentHasHours  ? [{ key: "hasHours",    label: "Çalışma saati olanlar" }] : []),
   ];
 
   const hasActiveFilters = chips.length > 0;
@@ -102,7 +103,7 @@ export function FilterBar({
         <div className="flex min-w-[180px] flex-1 items-center gap-1.5">
           <Input
             type="search"
-            placeholder="Search professionals..."
+            placeholder="Uzman ara..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleSearchKeyDown}
@@ -113,7 +114,7 @@ export function FilterBar({
             size="icon"
             className="h-9 w-9 shrink-0"
             onClick={handleSearchSubmit}
-            aria-label="Search"
+            aria-label="Ara"
           >
             <Search className="size-4" />
           </Button>
@@ -125,14 +126,14 @@ export function FilterBar({
             value={currentCategory || "_all"}
             onValueChange={(v) => navigate({ category: v && v !== "_all" ? v : undefined })}
           >
-            <SelectTrigger className="h-9 w-[160px]">
-              <SelectValue placeholder="All categories" />
+            <SelectTrigger className="h-9 w-[180px]">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All categories</SelectItem>
+              <SelectItem value="_all">Tüm kategoriler</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c.slug} value={c.slug}>
-                  {c.name}
+                  {getCategoryLabel(c.slug, c.name)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -145,11 +146,11 @@ export function FilterBar({
             value={currentCity || "_all"}
             onValueChange={(v) => navigate({ city: v && v !== "_all" ? v : undefined })}
           >
-            <SelectTrigger className="h-9 w-[140px]">
-              <SelectValue placeholder="All cities" />
+            <SelectTrigger className="h-9 w-[160px]">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All cities</SelectItem>
+              <SelectItem value="_all">Tüm şehirler</SelectItem>
               {cities.map(({ city }) => (
                 <SelectItem key={city} value={city}>
                   {city}
@@ -165,11 +166,11 @@ export function FilterBar({
             value={currentDistrict || "_all"}
             onValueChange={(v) => navigate({ district: v && v !== "_all" ? v : undefined })}
           >
-            <SelectTrigger className="h-9 w-[150px]">
-              <SelectValue placeholder="All districts" />
+            <SelectTrigger className="h-9 w-[160px]">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All districts</SelectItem>
+              <SelectItem value="_all">Tüm ilçeler</SelectItem>
               {districts.map((d) => (
                 <SelectItem key={d} value={d}>
                   {d}
@@ -184,14 +185,14 @@ export function FilterBar({
           value={currentMinRating || "_all"}
           onValueChange={(v) => navigate({ minRating: v && v !== "_all" ? v : undefined })}
         >
-          <SelectTrigger className="h-9 w-[130px]">
-            <SelectValue placeholder="Any rating" />
+          <SelectTrigger className="h-9 w-[150px]">
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="_all">Any rating</SelectItem>
-            <SelectItem value="3">3+ stars</SelectItem>
-            <SelectItem value="4">4+ stars</SelectItem>
-            <SelectItem value="4.5">4.5+ stars</SelectItem>
+            <SelectItem value="_all">Tüm puanlar</SelectItem>
+            <SelectItem value="3">3+ yıldız</SelectItem>
+            <SelectItem value="4">4+ yıldız</SelectItem>
+            <SelectItem value="4.5">4.5+ yıldız</SelectItem>
           </SelectContent>
         </Select>
 
@@ -202,7 +203,7 @@ export function FilterBar({
           className="h-9"
           onClick={() => navigate({ hasMedia: currentHasMedia ? undefined : "true" })}
         >
-          Has portfolio
+          Portföyü olanlar
         </Button>
 
         {/* Has hours */}
@@ -212,7 +213,7 @@ export function FilterBar({
           className="h-9"
           onClick={() => navigate({ hasHours: currentHasHours ? undefined : "true" })}
         >
-          Has hours
+          Çalışma saati olanlar
         </Button>
       </div>
 
@@ -229,7 +230,7 @@ export function FilterBar({
               <button
                 onClick={() => navigate({ [chip.key]: undefined })}
                 className="ml-0.5 rounded-full hover:text-foreground focus-visible:outline-none focus-visible:ring-2"
-                aria-label={`Remove ${chip.label} filter`}
+                aria-label={`${chip.label} filtresini kaldır`}
               >
                 <X className="size-3" />
               </button>
@@ -239,7 +240,7 @@ export function FilterBar({
             href={buildClearAllHref()}
             className="text-xs text-muted-foreground underline-offset-4 hover:underline"
           >
-            Clear all
+            Tümünü temizle
           </Link>
         </div>
       )}
