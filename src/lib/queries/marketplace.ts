@@ -43,10 +43,63 @@ export type MarketplaceCity = {
 
 // ─── Queries ───────────────────────────────────────────────────
 
-interface BusinessFilters {
+export interface BusinessFilters {
   categorySlug?: string;
   city?: string;
   district?: string;
+  /** Free-text search: business name, description, city, district, service names, category names */
+  q?: string;
+  /** Minimum average rating (post-query filter). One of: 3, 4, 4.5 */
+  minRating?: number;
+  /** Require at least one active portfolio/before-after media item */
+  hasMedia?: boolean;
+  /** Require at least one day marked isOpen */
+  hasHours?: boolean;
+}
+
+// ─── Filter parser ──────────────────────────────────────────────
+
+const VALID_MIN_RATINGS = [3, 4, 4.5] as const;
+type ValidMinRating = (typeof VALID_MIN_RATINGS)[number];
+
+export interface ParsedFilters {
+  q?: string;
+  categorySlug?: string;
+  city?: string;
+  district?: string;
+  minRating?: ValidMinRating;
+  hasMedia: boolean;
+  hasHours: boolean;
+}
+
+/**
+ * Safely parses raw searchParams into validated filter values.
+ * Trims strings, rejects empty values, and allowlists minRating.
+ */
+export function parseMarketplaceFilters(
+  raw: Record<string, string | string[] | undefined>
+): ParsedFilters {
+  function str(key: string): string | undefined {
+    const v = raw[key];
+    if (typeof v !== "string") return undefined;
+    const t = v.trim();
+    return t.length > 0 ? t : undefined;
+  }
+
+  const ratingNum = parseFloat(str("minRating") ?? "");
+  const minRating = VALID_MIN_RATINGS.includes(ratingNum as ValidMinRating)
+    ? (ratingNum as ValidMinRating)
+    : undefined;
+
+  return {
+    q:            str("q"),
+    categorySlug: str("category"),
+    city:         str("city"),
+    district:     str("district"),
+    minRating,
+    hasMedia:     raw["hasMedia"] === "true",
+    hasHours:     raw["hasHours"] === "true",
+  };
 }
 
 /**
@@ -57,7 +110,7 @@ interface BusinessFilters {
 export async function getMarketplaceBusinesses(
   filters: BusinessFilters = {}
 ): Promise<MarketplaceBusiness[]> {
-  const { categorySlug, city, district } = filters;
+  const { categorySlug, city, district, q, minRating, hasMedia, hasHours } = filters;
 
   const raw = await db.business.findMany({
     where: {
@@ -70,6 +123,27 @@ export async function getMarketplaceBusinesses(
       }),
       ...(district && {
         district: { equals: district, mode: "insensitive" },
+      }),
+      ...(q && {
+        OR: [
+          { name:        { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+          { city:        { contains: q, mode: "insensitive" } },
+          { district:    { contains: q, mode: "insensitive" } },
+          { services:    { some: { name: { contains: q, mode: "insensitive" }, isActive: true } } },
+          { categories:  { some: { category: { name: { contains: q, mode: "insensitive" } } } } },
+        ],
+      }),
+      ...(hasMedia && {
+        media: {
+          some: {
+            status: "ACTIVE",
+            type: { in: ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"] },
+          },
+        },
+      }),
+      ...(hasHours && {
+        hours: { some: { isOpen: true } },
       }),
     },
     select: {
@@ -95,7 +169,7 @@ export async function getMarketplaceBusinesses(
     take: 50, // Phase 10 limit — pagination added in a later phase
   });
 
-  return raw.map((b) => {
+  const mapped = raw.map((b) => {
     const reviewCount = b.reviews.length;
     const reviewAvg =
       reviewCount > 0
@@ -105,6 +179,10 @@ export async function getMarketplaceBusinesses(
     const { reviews: _reviews, ...rest } = b;
     return { ...rest, reviewCount, reviewAvg };
   });
+
+  return minRating != null
+    ? mapped.filter((b) => b.reviewAvg !== null && b.reviewAvg >= minRating)
+    : mapped;
 }
 
 /**

@@ -1,14 +1,16 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
   getMarketplaceBusinesses,
   getMarketplaceCategories,
   getMarketplaceCities,
+  parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
-
-export const revalidate = 3600;
+import { FilterBar } from "@/components/marketplace/filter-bar";
+import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 
 export const metadata: Metadata = {
   title: "Explore Beauty & Personal Care",
@@ -16,14 +18,32 @@ export const metadata: Metadata = {
     "Browse beauty and personal care professionals near you. Find hair salons, nail salons, skin care, and more.",
 };
 
-export default async function ExplorePage() {
+interface PageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function ExplorePage({ searchParams }: PageProps) {
+  const rawParams = await searchParams;
+  const filters = parseMarketplaceFilters(rawParams);
+
   const [businesses, categories, cities] = await Promise.all([
-    getMarketplaceBusinesses(),
+    getMarketplaceBusinesses({
+      q:            filters.q,
+      categorySlug: filters.categorySlug,
+      city:         filters.city,
+      minRating:    filters.minRating,
+      hasMedia:     filters.hasMedia || undefined,
+      hasHours:     filters.hasHours || undefined,
+    }),
     getMarketplaceCategories(),
     getMarketplaceCities(),
   ]);
 
   const activeCategories = categories.filter((c) => c.businessCount > 0);
+  const hasAnyFilter = !!(
+    filters.q || filters.categorySlug || filters.city ||
+    filters.minRating || filters.hasMedia || filters.hasHours
+  );
 
   return (
     <div className="container mx-auto space-y-12 px-4 py-10">
@@ -38,8 +58,18 @@ export default async function ExplorePage() {
         </p>
       </div>
 
-      {/* Browse by Category */}
-      {activeCategories.length > 0 && (
+      {/* Search & Filters */}
+      <Suspense fallback={<div className="h-10 animate-pulse rounded-md bg-muted" />}>
+        <FilterBar
+          categories={activeCategories.map((c) => ({ name: c.name, slug: c.slug }))}
+          cities={cities}
+          showCategory
+          showCity
+        />
+      </Suspense>
+
+      {/* Browse sections — hidden when any filter is active */}
+      {!hasAnyFilter && activeCategories.length > 0 && (
         <section>
           <h2 className="mb-4 text-xl font-semibold">Browse by Category</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -50,8 +80,7 @@ export default async function ExplorePage() {
         </section>
       )}
 
-      {/* Browse by City */}
-      {cities.length > 0 && (
+      {!hasAnyFilter && cities.length > 0 && (
         <section>
           <h2 className="mb-4 text-xl font-semibold">Browse by City</h2>
           <div className="flex flex-wrap gap-2">
@@ -69,22 +98,29 @@ export default async function ExplorePage() {
         </section>
       )}
 
-      {/* All Businesses */}
+      {/* Results */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">
-            All Professionals
-            {businesses.length > 0 && (
+            {hasAnyFilter
+              ? `${businesses.length} professional${businesses.length !== 1 ? "s" : ""} found`
+              : "All Professionals"}
+            {!hasAnyFilter && businesses.length > 0 && (
               <span className="ml-2 text-base font-normal text-muted-foreground">
                 ({businesses.length})
               </span>
             )}
           </h2>
         </div>
-        <BusinessGrid
-          businesses={businesses}
-          emptyMessage="No professionals listed yet. Check back soon."
-        />
+
+        {businesses.length === 0 && hasAnyFilter ? (
+          <EmptyFilterState clearHref="/explore" />
+        ) : (
+          <BusinessGrid
+            businesses={businesses}
+            emptyMessage="No professionals listed yet. Check back soon."
+          />
+        )}
       </section>
     </div>
   );

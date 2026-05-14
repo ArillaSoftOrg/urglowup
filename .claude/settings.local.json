@@ -15,7 +15,8 @@
       "Bash(npx next:*)",
       "Bash(ls \"C:\\\\Users\\\\Yusuf\\\\Desktop\\\\Urglowup/.env\"*)",
       "Bash(echo \"Exit code: $?\")",
-      "Bash(grep -r \"z\\\\\\\\.object\\\\|z\\\\\\\\.string\\\\|zod\" /c/Users/Yusuf/Desktop/Urglowup/src --include=\"*.ts\" --include=\"*.tsx\")"
+      "Bash(grep -r \"z\\\\\\\\.object\\\\|z\\\\\\\\.string\\\\|zod\" /c/Users/Yusuf/Desktop/Urglowup/src --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
     ]
   }
 }

@@ -1,24 +1,15 @@
 import { v2 as cloudinary } from "cloudinary";
+import { env } from "./env";
 
 let configured = false;
 
 function ensureConfigured() {
   if (configured) return;
 
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-  if (!cloudName || !apiKey || !apiSecret) {
-    throw new Error(
-      "Missing Cloudinary env vars: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET"
-    );
-  }
-
   cloudinary.config({
-    cloud_name: cloudName,
-    api_key: apiKey,
-    api_secret: apiSecret,
+    cloud_name: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
     secure: true,
   });
 
@@ -45,13 +36,13 @@ export function generateUploadSignature(params: {
 
   const signature = cloudinary.utils.api_sign_request(
     paramsToSign,
-    process.env.CLOUDINARY_API_SECRET!
+    env.CLOUDINARY_API_SECRET
   );
 
   return {
     signature,
-    apiKey: process.env.CLOUDINARY_API_KEY!,
-    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
+    apiKey: env.CLOUDINARY_API_KEY,
+    cloudName: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   };
 }
 

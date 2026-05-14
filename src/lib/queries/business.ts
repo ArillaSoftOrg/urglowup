@@ -41,3 +41,36 @@ export async function getBusinessBySlug(slug: string) {
 export type BusinessWithDetails = NonNullable<
   Awaited<ReturnType<typeof getBusinessBySlug>>
 >;
+
+export async function getBusinessForPublicLink(businessId: string) {
+  return db.business.findUnique({
+    where: { id: businessId },
+    select: {
+      name: true,
+      slug: true,
+      status: true,
+      description: true,
+      phone: true,
+      whatsapp: true,
+      city: true,
+      district: true,
+      address: true,
+      coverImageUrl: true,
+      logoUrl: true,
+      categories: { select: { categoryId: true } },
+      services: { where: { isActive: true }, select: { id: true } },
+      hours: { where: { isOpen: true }, select: { id: true } },
+      media: {
+        where: {
+          status: "ACTIVE",
+          type: { in: ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"] },
+        },
+        select: { id: true },
+      },
+    },
+  });
+}
+
+export type BusinessForPublicLink = NonNullable<
+  Awaited<ReturnType<typeof getBusinessForPublicLink>>
+>;

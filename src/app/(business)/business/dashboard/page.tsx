@@ -18,9 +18,14 @@ import {
   ArrowRight,
   AlertCircle,
   CalendarDays,
+  ExternalLink,
+  ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { nowInBusinessTimezone } from "@/lib/constants/booking";
+import { calculateProfileCompletion } from "@/lib/profile-completion";
+import { ProfileCompletionCard } from "@/components/business/profile-completion-card";
+import { env } from "@/lib/env";
 
 export const metadata = { title: "Dashboard" };
 
@@ -51,7 +56,28 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     db.business.findUnique({
       where: { id: businessId },
-      select: { name: true, slug: true, status: true },
+      select: {
+        name: true,
+        slug: true,
+        status: true,
+        description: true,
+        phone: true,
+        whatsapp: true,
+        city: true,
+        address: true,
+        coverImageUrl: true,
+        logoUrl: true,
+        categories: { select: { categoryId: true } },
+        services: { where: { isActive: true }, select: { id: true } },
+        hours: { where: { isOpen: true }, select: { id: true } },
+        media: {
+          where: {
+            status: "ACTIVE",
+            type: { in: ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"] },
+          },
+          select: { id: true },
+        },
+      },
     }),
     db.businessService.count({
       where: { businessId, isActive: true },
@@ -84,6 +110,9 @@ export default async function DashboardPage() {
   if (!business) return null;
 
   const hoursConfigured = hoursCount > 0;
+  const completion = calculateProfileCompletion(business);
+  const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  const publicUrl = `${appUrl}/b/${business.slug}`;
 
   return (
     <div className="space-y-6">
@@ -93,6 +122,11 @@ export default async function DashboardPage() {
           Welcome back, {business.name}
         </p>
       </div>
+
+      {/* Profile completion — hidden when 100% */}
+      {completion.score < 100 && (
+        <ProfileCompletionCard completion={completion} />
+      )}
 
       {/* Summary cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -242,17 +276,17 @@ export default async function DashboardPage() {
             </Link>
 
             <Link
-              href="/business/public-link"
+              href="/business/media"
               className={cn(
                 buttonVariants({ variant: "outline" }),
                 "h-auto justify-start gap-3 px-4 py-3"
               )}
             >
-              <Link2 className="size-5 shrink-0" />
+              <ImageIcon className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Public Link</p>
+                <p className="text-sm font-medium">Upload Media</p>
                 <p className="text-xs text-muted-foreground">
-                  Share your booking page
+                  Add photos and portfolio
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />
@@ -270,6 +304,42 @@ export default async function DashboardPage() {
                 <p className="text-sm font-medium">Appointments</p>
                 <p className="text-xs text-muted-foreground">
                   View appointment requests
+                </p>
+              </div>
+              <ArrowRight className="ml-auto size-4 shrink-0" />
+            </Link>
+
+            <Link
+              href="/business/public-link"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-auto justify-start gap-3 px-4 py-3"
+              )}
+            >
+              <Link2 className="size-5 shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-medium">Share Booking Link</p>
+                <p className="text-xs text-muted-foreground">
+                  QR code, Instagram &amp; WhatsApp
+                </p>
+              </div>
+              <ArrowRight className="ml-auto size-4 shrink-0" />
+            </Link>
+
+            <Link
+              href={publicUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-auto justify-start gap-3 px-4 py-3"
+              )}
+            >
+              <ExternalLink className="size-5 shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-medium">View Public Profile</p>
+                <p className="text-xs text-muted-foreground">
+                  See your booking page
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { generateTimeSlots } from "@/lib/slots";
 import {
   MIN_ADVANCE_HOURS,
@@ -11,6 +12,10 @@ import {
   BLOCKING_STATUSES,
   nowInBusinessTimezone,
 } from "@/lib/constants/booking";
+import {
+  sendNewRequestEmailToBusiness,
+  sendRequestReceivedEmailToCustomer,
+} from "@/lib/email-notifications";
 import type { DayOfWeek } from "@/generated/prisma/enums";
 
 // ─── Schemas ────────────────────────────────────────────────────
@@ -205,7 +210,7 @@ export async function createAppointmentRequest(
   }
 
   // Create appointment
-  await db.appointment.create({
+  const appointment = await db.appointment.create({
     data: {
       businessId,
       customerId: user.id,
@@ -215,6 +220,24 @@ export async function createAppointmentRequest(
       status: "PENDING",
       customerNote: customerNote || null,
     },
+  });
+
+  // Email to business owner — independent of customer email
+  after(async () => {
+    try {
+      await sendNewRequestEmailToBusiness(appointment.id);
+    } catch (err) {
+      console.error("[email] createAppointmentRequest → business:", err);
+    }
+  });
+
+  // Email to customer — independent of business owner email
+  after(async () => {
+    try {
+      await sendRequestReceivedEmailToCustomer(appointment.id);
+    } catch (err) {
+      console.error("[email] createAppointmentRequest → customer:", err);
+    }
   });
 
   revalidatePath("/account/appointments");

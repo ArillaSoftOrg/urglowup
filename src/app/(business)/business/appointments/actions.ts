@@ -4,7 +4,14 @@ import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { STATUS_TRANSITIONS } from "@/lib/constants/booking";
+import {
+  sendConfirmedEmailToCustomer,
+  sendRejectedEmailToCustomer,
+  sendCancelledByBusinessEmailToCustomer,
+  sendReviewRequestEmailToCustomer,
+} from "@/lib/email-notifications";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
 
 export type AppointmentActionState = {
@@ -59,6 +66,14 @@ export async function confirmAppointment(
     data: { status: "CONFIRMED" },
   });
 
+  after(async () => {
+    try {
+      await sendConfirmedEmailToCustomer(appointmentId);
+    } catch (err) {
+      console.error("[email] confirmAppointment:", err);
+    }
+  });
+
   revalidate();
   return { success: true, message: "Appointment confirmed." };
 }
@@ -73,6 +88,14 @@ export async function rejectAppointment(
   await db.appointment.update({
     where: { id: appointmentId },
     data: { status: "REJECTED" },
+  });
+
+  after(async () => {
+    try {
+      await sendRejectedEmailToCustomer(appointmentId);
+    } catch (err) {
+      console.error("[email] rejectAppointment:", err);
+    }
   });
 
   revalidate();
@@ -95,6 +118,14 @@ export async function cancelAppointmentByBusiness(
     data: { status: "CANCELLED_BY_BUSINESS" },
   });
 
+  after(async () => {
+    try {
+      await sendCancelledByBusinessEmailToCustomer(appointmentId);
+    } catch (err) {
+      console.error("[email] cancelAppointmentByBusiness:", err);
+    }
+  });
+
   revalidate();
   return { success: true, message: "Appointment cancelled." };
 }
@@ -109,6 +140,14 @@ export async function completeAppointment(
   await db.appointment.update({
     where: { id: appointmentId },
     data: { status: "COMPLETED" },
+  });
+
+  after(async () => {
+    try {
+      await sendReviewRequestEmailToCustomer(appointmentId);
+    } catch (err) {
+      console.error("[email] completeAppointment:", err);
+    }
   });
 
   revalidate();

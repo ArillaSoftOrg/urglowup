@@ -2,14 +2,10 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
+import { isAdminEmail } from "@/lib/admin-bootstrap";
 
 export async function POST(req: Request) {
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
-
-  if (!WEBHOOK_SECRET) {
-    throw new Error("Missing CLERK_WEBHOOK_SECRET environment variable");
-  }
-
   const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
@@ -22,7 +18,7 @@ export async function POST(req: Request) {
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
-  const wh = new Webhook(WEBHOOK_SECRET);
+  const wh = new Webhook(env.CLERK_WEBHOOK_SECRET);
   let evt: WebhookEvent;
 
   try {
@@ -31,7 +27,8 @@ export async function POST(req: Request) {
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature,
     }) as WebhookEvent;
-  } catch {
+  } catch (err) {
+    console.error("[clerk-webhook] Signature verification failed:", err);
     return new Response("Webhook verification failed", { status: 400 });
   }
 
@@ -42,31 +39,47 @@ export async function POST(req: Request) {
     const email = email_addresses[0]?.email_address;
 
     if (!email) {
-      return new Response("No email found", { status: 400 });
+      // Permanent skip — no email address on this Clerk user
+      return new Response("OK", { status: 200 });
     }
 
-    await db.user.upsert({
-      where: { clerkId: id },
-      update: {
-        email,
-        firstName: first_name,
-        lastName: last_name,
-        avatarUrl: image_url,
-      },
-      create: {
-        clerkId: id,
-        email,
-        firstName: first_name,
-        lastName: last_name,
-        avatarUrl: image_url,
-      },
-    });
+    const isAdmin = isAdminEmail(email);
+
+    try {
+      await db.user.upsert({
+        where: { clerkId: id },
+        create: {
+          clerkId: id,
+          email,
+          firstName: first_name,
+          lastName: last_name,
+          avatarUrl: image_url,
+          ...(isAdmin && { role: "ADMIN" }),
+        },
+        update: {
+          email,
+          firstName: first_name,
+          lastName: last_name,
+          avatarUrl: image_url,
+          // Only promote — never overwrite a role downward
+          ...(isAdmin && { role: "ADMIN" }),
+        },
+      });
+    } catch (err) {
+      console.error("[clerk-webhook] DB upsert failed:", err);
+      return new Response("Internal error", { status: 500 });
+    }
   }
 
   if (eventType === "user.deleted") {
     const { id } = evt.data;
     if (id) {
-      await db.user.deleteMany({ where: { clerkId: id } });
+      try {
+        await db.user.deleteMany({ where: { clerkId: id } });
+      } catch (err) {
+        // Log but return 200 — retrying a delete is not useful
+        console.error("[clerk-webhook] DB delete failed for clerkId:", id, err);
+      }
     }
   }
 
