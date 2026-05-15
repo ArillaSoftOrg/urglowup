@@ -10,6 +10,7 @@ import {
 } from "@/lib/constants/external";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { SyncNowButton } from "./sync-now-button";
 
 export const metadata = { title: "Integrations" };
@@ -36,6 +37,12 @@ function formatDateTime(date: Date): string {
 
 export default async function IntegrationsPage() {
   const { businessId } = await requireBusiness();
+
+  const googleConfigured = !!(
+    process.env.GOOGLE_CLIENT_ID &&
+    process.env.GOOGLE_CLIENT_SECRET &&
+    process.env.GOOGLE_REDIRECT_URI
+  );
 
   const connection = await getConnection(businessId, "GOOGLE_BUSINESS_PROFILE");
 
@@ -85,10 +92,25 @@ export default async function IntegrationsPage() {
 
         <CardContent className="space-y-4">
           {!connection ? (
-            <p className="text-sm text-muted-foreground">
-              No Google Business Profile connected yet.
-              {/* OAuth connection flow will be added when Google OAuth is configured. */}
-            </p>
+            <div className="space-y-3">
+              {googleConfigured ? (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Google Business Profile henüz bağlanmadı.
+                  </p>
+                  <a
+                    href="/api/integrations/google/start"
+                    className={buttonVariants()}
+                  >
+                    Google Business Profile Bağla
+                  </a>
+                </>
+              ) : (
+                <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
+                  Google entegrasyonu henüz yapılandırılmadı.
+                </div>
+              )}
+            </div>
           ) : (
             <>
               {/* Connection details */}
@@ -154,12 +176,20 @@ export default async function IntegrationsPage() {
 
               {/* EXPIRED status — reconnect prompt */}
               {connection.status === "EXPIRED" && (
-                <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
-                  <p className="font-medium">Reconnect required</p>
-                  <p className="mt-1">
-                    Your Google access token has expired. Please reconnect your Google Business
-                    Profile to resume syncing.
+                <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 space-y-2">
+                  <p className="font-medium">Yeniden bağlantı gerekiyor</p>
+                  <p>
+                    Google erişim tokenınızın süresi doldu. Senkronizasyona devam etmek için
+                    lütfen Google Business Profile hesabınızı yeniden bağlayın.
                   </p>
+                  {googleConfigured && (
+                    <a
+                      href="/api/integrations/google/start"
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                    >
+                      Google Business Profile Bağla
+                    </a>
+                  )}
                 </div>
               )}
 
