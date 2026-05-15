@@ -12,6 +12,7 @@ const businessNav = [
   { title: "Reviews", href: "/business/reviews" },
   { title: "Customers", href: "/business/customers" },
   { title: "Public Link", href: "/business/public-link" },
+  { title: "Integrations", href: "/business/integrations" },
   { title: "Settings", href: "/business/settings" },
 ];
 

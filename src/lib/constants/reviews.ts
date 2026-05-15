@@ -28,3 +28,29 @@ export const REVIEW_STATUS_COLORS: Record<ReviewStatus, string> = {
 
 /** Statuses that allow the customer to edit their review */
 export const EDITABLE_STATUSES: ReviewStatus[] = ["APPROVED", "PENDING"];
+
+// ── Google / external source display ─────────────────────────────────────────
+
+/** Label shown next to the Google star rating — kept separate from UrGlowUp rating */
+export const GOOGLE_RATING_LABEL = "Google Rating";
+
+/** Label shown next to the UrGlowUp star rating */
+export const URGLOWUP_RATING_LABEL = "UrGlowUp Rating";
+
+/**
+ * Short badge label rendered on Google-sourced reviews.
+ * Must always be displayed alongside Google review content.
+ */
+export const GOOGLE_REVIEW_SOURCE_LABEL = "Google";
+
+/**
+ * Attribution text for legal/compliance display near Google reviews.
+ * Google's ToS requires attribution whenever reviews are shown.
+ */
+export const GOOGLE_REVIEW_ATTRIBUTION_TEXT =
+  "Reviews sourced from Google Business Profile. " +
+  "Displayed in accordance with Google's attribution requirements. " +
+  "Google reviews are not used for UrGlowUp platform ranking or AI training.";
+
+/** Tailwind classes for the Google source badge */
+export const GOOGLE_BADGE_CLASS = "bg-blue-100 text-blue-800";

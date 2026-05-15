@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/internal/sync",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/internal/cache-cleanup",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}

@@ -53,6 +53,34 @@ enum ReviewSource {
   GOOGLE
 }
 
+enum ExternalProvider {
+  GOOGLE_BUSINESS_PROFILE
+}
+
+enum ExternalConnectionStatus {
+  ACTIVE
+  EXPIRED
+  DISCONNECTED
+  ERROR
+}
+
+enum ExternalSyncStatus {
+  IDLE
+  SYNCING
+  ERROR
+}
+
+enum ExternalReviewVisibility {
+  VISIBLE
+  HIDDEN_BY_SYSTEM
+}
+
+enum ExternalMediaVisibility {
+  VISIBLE
+  HIDDEN_BY_BUSINESS
+  HIDDEN_BY_SYSTEM
+}
+
 enum MediaType {
   COVER
   LOGO
@@ -92,11 +120,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  business     Business?
-  appointments Appointment[]
-  reviews      Review[]
-  favorites    Favorite[]
-  adminActions AdminAction[]
+  business            Business?
+  appointments        Appointment[]
+  reviews             Review[]
+  favorites           Favorite[]
+  adminActions        AdminAction[]
+  externalConnections BusinessExternalConnection[]
 }
 
 model Business {
@@ -122,13 +151,16 @@ model Business {
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
 
-  categories   BusinessToCategory[]
-  services     BusinessService[]
-  hours        BusinessHour[]
-  media        BusinessMedia[]
-  appointments Appointment[]
-  reviews      Review[]
-  favorites    Favorite[]
+  categories          BusinessToCategory[]
+  services            BusinessService[]
+  hours               BusinessHour[]
+  media               BusinessMedia[]
+  appointments        Appointment[]
+  reviews             Review[]
+  favorites           Favorite[]
+  externalConnections BusinessExternalConnection[]
+  externalReviewCache ExternalReviewCache[]
+  externalMediaCache  ExternalMediaCache[]
 
   @@index([city])
   @@index([status])
@@ -271,4 +303,127 @@ model Region {
   country   String   @default("TR")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ─── External Source Cache (Google Business Profile) ─────────────────────────
+// Architecture rules enforced at the data layer:
+//   1. Google reviews NEVER write to the native Review table.
+//   2. Google photos NEVER write to BusinessMedia or Cloudinary.
+//   3. Google rating and UrGlowUp rating are NEVER merged.
+//   4. Google content is NEVER used for AI training, marketplace ranking,
+//      or the native media library.
+//   5. Google attribution/source labels must always be preserved.
+
+model BusinessExternalConnection {
+  id                    String                   @id @default(cuid())
+  businessId            String
+  business              Business                 @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  provider              ExternalProvider
+  // Google account / location identifiers
+  providerAccountId     String
+  providerAccountName   String?
+  providerLocationId    String?
+  providerLocationName  String?
+  placeId               String?
+  // Who connected this account
+  connectedByUserId     String
+  connectedBy           User                     @relation(fields: [connectedByUserId], references: [id])
+  // OAuth scopes granted (stored as array)
+  scopes                String[]
+  // Encrypted OAuth tokens — AES-256-GCM, stored as iv:authTag:ciphertext (hex)
+  accessTokenEncrypted  String?
+  refreshTokenEncrypted String?
+  tokenExpiresAt        DateTime?
+  // Explicit connection lifecycle status (not a boolean flag)
+  status                ExternalConnectionStatus @default(ACTIVE)
+  disconnectedAt        DateTime?
+  // Sync job state (separate from connection status)
+  syncStatus            ExternalSyncStatus       @default(IDLE)
+  lastSyncAt            DateTime?
+  nextSyncAt            DateTime?
+  lastError             String?
+  // Business-controlled display toggles (section-level, not per-item)
+  showExternalReviews   Boolean                  @default(true)
+  showExternalPhotos    Boolean                  @default(true)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  reviewCache ExternalReviewCache[]
+  mediaCache  ExternalMediaCache[]
+
+  @@unique([businessId, provider])
+  @@index([businessId])
+  @@index([status])
+  @@index([provider, syncStatus])
+}
+
+model ExternalReviewCache {
+  id                      String                   @id @default(cuid())
+  businessId              String
+  business                Business                 @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  connectionId            String
+  connection              BusinessExternalConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  provider                ExternalProvider
+  // Google review identifier
+  providerReviewId        String
+  // Review content
+  rating                  Int
+  comment                 String?
+  reviewerDisplayName     String
+  reviewerProfilePhotoUrl String?
+  createTime              DateTime?
+  updateTime              DateTime?
+  merchantReply           String?
+  mediaItemsJson          String?                  // JSON array of media items from Google (read-only reference)
+  // Attribution / source — must always be preserved
+  attribution             String?                  // e.g. "Google"
+  sourceUrl               String?                  // Direct link to the review on Google Maps
+  // Cache lifecycle
+  fetchedAt               DateTime
+  expiresAt               DateTime                 // fetchedAt + 30 days
+  // Display control — HIDDEN_BY_BUSINESS is intentionally absent:
+  // businesses control visibility at the section level via showExternalReviews,
+  // not by cherry-picking individual reviews.
+  visibilityStatus        ExternalReviewVisibility @default(VISIBLE)
+  displayOrder            Int                      @default(0)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+
+  @@unique([businessId, provider, providerReviewId])
+  @@index([businessId, provider])
+  @@index([expiresAt])
+  @@index([businessId, visibilityStatus])
+}
+
+model ExternalMediaCache {
+  id                   String                  @id @default(cuid())
+  businessId           String
+  business             Business                @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  connectionId         String
+  connection           BusinessExternalConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  provider             ExternalProvider
+  // Google media identifier
+  providerMediaId      String
+  mediaFormat          String                  // "PHOTO" | "VIDEO" as returned by Google API
+  category             String?                 // Google media category (EXTERIOR, INTERIOR, FOOD, etc.)
+  // URLs — direct Google CDN only, NEVER Cloudinary
+  sourceUrl            String                  // Full-size Google CDN URL
+  thumbnailUrl         String?                 // Thumbnail URL from Google CDN
+  // Attribution / source — must always be preserved
+  attribution          String?                 // e.g. "Google"
+  createTime           DateTime?
+  // Cache lifecycle
+  fetchedAt            DateTime
+  expiresAt            DateTime                // fetchedAt + 30 days
+  // Display control — businesses may curate individual photos
+  visibilityStatus     ExternalMediaVisibility @default(VISIBLE)
+  displayOrder         Int                     @default(0)
+  isFeaturedByBusiness Boolean                 @default(false)
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  @@unique([businessId, provider, providerMediaId])
+  @@index([businessId, provider])
+  @@index([expiresAt])
+  @@index([businessId, visibilityStatus])
 }
