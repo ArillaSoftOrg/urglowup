@@ -16,6 +16,13 @@ export interface GoogleOAuthConfig {
   redirectUri: string;
 }
 
+export interface TokenExchangeResult {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  scope: string;
+}
+
 // ── Custom error class ────────────────────────────────────────────────────────
 
 export class TokenRefreshError extends Error {
@@ -117,5 +124,100 @@ export async function refreshAccessToken(
   return {
     access_token: json.access_token,
     expires_in: json.expires_in,
+  };
+}
+
+// ── Authorization code exchange ───────────────────────────────────────────────
+
+/**
+ * Exchanges a Google authorization code for access and refresh tokens.
+ *
+ * @param config - OAuth client credentials
+ * @param code   - One-time authorization code from the OAuth callback
+ * @returns      Access token, refresh token, and token lifetime
+ *
+ * @throws TokenRefreshError("invalid_grant")  when the code is expired or already used
+ * @throws TokenRefreshError("refresh_failed") for other 4xx errors
+ * @throws TokenRefreshError("network_error")  for network failures
+ */
+export async function exchangeCodeForTokens(
+  config: GoogleOAuthConfig,
+  code: string,
+): Promise<TokenExchangeResult> {
+  const body = new URLSearchParams({
+    code,
+    client_id: config.clientId,
+    client_secret: config.clientSecret,
+    redirect_uri: config.redirectUri,
+    grant_type: "authorization_code",
+  });
+
+  let response: Response;
+  try {
+    response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+  } catch {
+    throw new TokenRefreshError(
+      "Token exchange network request failed",
+      "network_error",
+    );
+  }
+
+  if (!response.ok) {
+    let errorCode: string | undefined;
+    try {
+      const json = (await response.json()) as { error?: string };
+      errorCode = json.error;
+    } catch {
+      // Body unreadable
+    }
+    if (response.status === 400 && errorCode === "invalid_grant") {
+      throw new TokenRefreshError(
+        "Authorization code is invalid or expired",
+        "invalid_grant",
+      );
+    }
+    throw new TokenRefreshError(
+      `Token exchange failed with status ${response.status}`,
+      "refresh_failed",
+    );
+  }
+
+  let json: {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+    scope?: string;
+  };
+  try {
+    json = (await response.json()) as typeof json;
+  } catch {
+    throw new TokenRefreshError(
+      "Token exchange response was not valid JSON",
+      "refresh_failed",
+    );
+  }
+
+  if (!json.access_token || typeof json.expires_in !== "number") {
+    throw new TokenRefreshError(
+      "Token exchange response missing access_token or expires_in",
+      "refresh_failed",
+    );
+  }
+  if (!json.refresh_token) {
+    throw new TokenRefreshError(
+      "Token exchange did not return a refresh_token — ensure prompt=consent was set",
+      "refresh_failed",
+    );
+  }
+
+  return {
+    access_token: json.access_token,
+    refresh_token: json.refresh_token,
+    expires_in: json.expires_in,
+    scope: json.scope ?? "",
   };
 }
