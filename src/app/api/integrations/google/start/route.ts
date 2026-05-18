@@ -24,9 +24,17 @@ const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 export async function GET(request: Request) {
   const integrationUrl = new URL("/business/integrations", request.url);
 
+  // TEMPORARY DIAGNOSTIC LOGS — remove after root cause confirmed
+  console.log("[google/start] hasGoogleClientId:", !!process.env.GOOGLE_CLIENT_ID);
+  console.log("[google/start] hasGoogleClientSecret:", !!process.env.GOOGLE_CLIENT_SECRET);
+  console.log("[google/start] hasGoogleRedirectUri:", !!process.env.GOOGLE_REDIRECT_URI);
+  console.log("[google/start] hasGoogleScopes:", !!process.env.GOOGLE_BUSINESS_PROFILE_SCOPES);
+  console.log("[google/start] hasEncryptionKey:", !!process.env.OAUTH_TOKEN_ENCRYPTION_KEY);
+
   // 1. Auth — must be a logged-in BUSINESS_OWNER
   const { userId: clerkId } = await auth();
   if (!clerkId) {
+    console.log("[google/start] redirectReason: no clerkId");
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -35,7 +43,11 @@ export async function GET(request: Request) {
     select: { id: true, role: true },
   });
 
+  console.log("[google/start] hasUser:", !!user);
+  console.log("[google/start] userRole:", user?.role ?? "none");
+
   if (!user || user.role !== UserRole.BUSINESS_OWNER) {
+    console.log("[google/start] redirectReason: not BUSINESS_OWNER");
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -44,7 +56,10 @@ export async function GET(request: Request) {
     select: { id: true },
   });
 
+  console.log("[google/start] hasBusiness:", !!business);
+
   if (!business) {
+    console.log("[google/start] redirectReason: no business");
     return NextResponse.redirect(new URL("/business/onboarding", request.url));
   }
 
@@ -52,7 +67,8 @@ export async function GET(request: Request) {
   let config;
   try {
     config = getGoogleConfig();
-  } catch {
+  } catch (err) {
+    console.log("[google/start] redirectReason: getGoogleConfig threw —", err instanceof Error ? err.message : String(err));
     return NextResponse.redirect(integrationUrl);
   }
 
@@ -68,7 +84,8 @@ export async function GET(request: Request) {
   let encryptedState: string;
   try {
     encryptedState = encryptTokenWithEnvKey(statePayload);
-  } catch {
+  } catch (err) {
+    console.log("[google/start] redirectReason: encryptTokenWithEnvKey threw —", err instanceof Error ? err.message : String(err));
     return NextResponse.redirect(integrationUrl);
   }
 
