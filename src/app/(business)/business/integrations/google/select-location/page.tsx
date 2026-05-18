@@ -18,18 +18,32 @@ import type { LocationItem } from "@/app/api/integrations/google/locations/route
 
 export const metadata = { title: "Google Business Profile — Lokasyon Seçin" };
 
-async function safeReadGoogleError(res: Response): Promise<{ status: number; message: string }> {
+async function safeReadGoogleError(res: Response): Promise<{ status: number; errorStatus: string; message: string }> {
   try {
-    const json = (await res.json()) as { error?: { message?: string } | string };
-    if (typeof json.error === "object" && json.error?.message) {
-      return { status: res.status, message: json.error.message };
+    const json = (await res.json()) as { error?: { message?: string; status?: string } | string };
+    if (typeof json.error === "object" && json.error) {
+      return {
+        status: res.status,
+        errorStatus: json.error.status ?? "",
+        message: json.error.message ?? `HTTP ${res.status}`,
+      };
     }
-    if (typeof json.error === "string") return { status: res.status, message: json.error };
+    if (typeof json.error === "string") return { status: res.status, errorStatus: "", message: json.error };
   } catch {
     // body unreadable
   }
-  return { status: res.status, message: `HTTP ${res.status}` };
+  return { status: res.status, errorStatus: "", message: `HTTP ${res.status}` };
 }
+
+function isQuotaError(err: { status: number; errorStatus: string; message: string }): boolean {
+  if (err.status === 429) return true;
+  if (err.errorStatus === "RESOURCE_EXHAUSTED") return true;
+  const msg = err.message.toLowerCase();
+  return msg.includes("quota exceeded") || msg.includes("quota of 0");
+}
+
+const QUOTA_ERROR_MSG =
+  "Google Business Profile API erişimi henüz Google tarafından onaylanmadı. Lütfen daha sonra tekrar deneyin.";
 
 // The Business Information API for locations
 const BUSINESS_INFO_API =
@@ -117,8 +131,9 @@ export default async function SelectLocationPage() {
     if (!accRes.ok) {
       const safeErr = await safeReadGoogleError(accRes);
       console.log("[google/select-location] safeGoogleErrorStatus:", safeErr.status);
+      console.log("[google/select-location] safeGoogleErrorCode:", safeErr.errorStatus);
       console.log("[google/select-location] safeGoogleErrorMessage:", safeErr.message);
-      fetchError = "Google hesapları alınamadı.";
+      fetchError = isQuotaError(safeErr) ? QUOTA_ERROR_MSG : "Google hesapları alınamadı.";
     } else {
       const accData = (await accRes.json()) as { accounts?: GoogleAccount[] };
       console.log("[google/select-location] accountsResponseKeys:", Object.keys(accData));
@@ -142,7 +157,12 @@ export default async function SelectLocationPage() {
         if (!locRes.ok) {
           const locErr = await safeReadGoogleError(locRes);
           console.log("[google/select-location] safeGoogleErrorStatus:", locErr.status);
+          console.log("[google/select-location] safeGoogleErrorCode:", locErr.errorStatus);
           console.log("[google/select-location] safeGoogleErrorMessage:", locErr.message);
+          if (isQuotaError(locErr)) {
+            fetchError = QUOTA_ERROR_MSG;
+            break;
+          }
           continue;
         }
 
