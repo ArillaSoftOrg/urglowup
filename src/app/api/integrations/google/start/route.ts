@@ -72,6 +72,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(integrationUrl);
   }
 
+  // TEMPORARY DIAGNOSTIC: client_id shape checks
+  console.log("[google/start] clientIdExists:", !!config.clientId);
+  console.log("[google/start] clientIdEndsWithGoogleusercontent:", config.clientId.endsWith(".apps.googleusercontent.com"));
+  console.log("[google/start] clientIdLength:", config.clientId.length);
+  console.log("[google/start] clientIdPrefix:", config.clientId.slice(0, 12));
+  console.log("[google/start] redirectUri:", config.redirectUri);
+  console.log("[google/start] scope:", config.scopes.join(" "));
+
   // 3. Generate nonce + encrypted state cookie
   const nonce = crypto.randomUUID();
   const statePayload = JSON.stringify({
@@ -91,6 +99,14 @@ export async function GET(request: Request) {
 
   // 4. Redirect to Google consent URL, attach state cookie to the response
   const authUrl = buildGoogleAuthUrl(config, nonce);
+
+  // TEMPORARY DIAGNOSTIC: auth URL shape checks
+  const _authUrlObj = new URL(authUrl);
+  const _authUrlParams = _authUrlObj.searchParams;
+  console.log("[google/start] authUrlHost:", _authUrlObj.host);
+  console.log("[google/start] authUrlHasClientSecretParam:", _authUrlParams.has("client_secret"));
+  console.log("[google/start] authUrlClientIdMatchesEnv:", _authUrlParams.get("client_id") === process.env.GOOGLE_CLIENT_ID);
+
   const response = NextResponse.redirect(authUrl);
 
   response.cookies.set(STATE_COOKIE, encryptedState, {

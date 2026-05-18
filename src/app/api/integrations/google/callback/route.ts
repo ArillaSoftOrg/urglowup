@@ -132,11 +132,19 @@ export async function GET(request: Request) {
     return res;
   }
 
+  // TEMPORARY DIAGNOSTIC: token exchange config checks
+  console.log("[google/callback] secretExists:", !!config.clientSecret);
+  console.log("[google/callback] secretPrefix:", config.clientSecret.slice(0, 6));
+  console.log("[google/callback] secretLength:", config.clientSecret.length);
+  console.log("[google/callback] tokenEndpoint:", "https://oauth2.googleapis.com/token");
+  console.log("[google/callback] redirectUri:", config.redirectUri);
+
   // 4. Exchange authorization code for tokens
   let tokens;
   try {
     tokens = await exchangeCodeForTokens(config, code);
-  } catch {
+  } catch (err) {
+    console.log("[google/callback] tokenExchangeError:", err instanceof Error ? err.message : String(err));
     const res = NextResponse.redirect(integrationUrl);
     clearStateCookie(res);
     return res;
