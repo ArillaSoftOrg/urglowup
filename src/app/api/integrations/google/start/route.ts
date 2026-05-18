@@ -72,14 +72,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(integrationUrl);
   }
 
-  // TEMPORARY DIAGNOSTIC: client_id shape checks
-  console.log("[google/start] clientIdExists:", !!config.clientId);
-  console.log("[google/start] clientIdEndsWithGoogleusercontent:", config.clientId.endsWith(".apps.googleusercontent.com"));
-  console.log("[google/start] clientIdLength:", config.clientId.length);
-  console.log("[google/start] clientIdPrefix:", config.clientId.slice(0, 12));
-  console.log("[google/start] redirectUri:", config.redirectUri);
-  console.log("[google/start] scope:", config.scopes.join(" "));
-
   // 3. Generate nonce + encrypted state cookie
   const nonce = crypto.randomUUID();
   const statePayload = JSON.stringify({
@@ -100,12 +92,20 @@ export async function GET(request: Request) {
   // 4. Redirect to Google consent URL, attach state cookie to the response
   const authUrl = buildGoogleAuthUrl(config, nonce);
 
-  // TEMPORARY DIAGNOSTIC: auth URL shape checks
-  const _authUrlObj = new URL(authUrl);
-  const _authUrlParams = _authUrlObj.searchParams;
-  console.log("[google/start] authUrlHost:", _authUrlObj.host);
-  console.log("[google/start] authUrlHasClientSecretParam:", _authUrlParams.has("client_secret"));
-  console.log("[google/start] authUrlClientIdMatchesEnv:", _authUrlParams.get("client_id") === process.env.GOOGLE_CLIENT_ID);
+  // TEMPORARY DIAGNOSTIC — remove after root cause confirmed
+  const _diagUrlObj = new URL(authUrl);
+  const _diagParams = _diagUrlObj.searchParams;
+  const _clientIdFromEnv = process.env.GOOGLE_CLIENT_ID ?? "";
+  const _clientIdFromUrl = _diagParams.get("client_id") ?? "";
+  console.log("[google/start] NODE_ENV:", process.env.NODE_ENV);
+  console.log("[google/start] deployedAt:", new Date().toISOString());
+  console.log("[google/start] clientIdFromEnv:", _clientIdFromEnv);
+  console.log("[google/start] clientIdFromAuthUrl:", _clientIdFromUrl);
+  console.log("[google/start] clientIdFromEnv===clientIdFromAuthUrl:", _clientIdFromEnv === _clientIdFromUrl);
+  console.log("[google/start] authUrlHasClientSecretParam:", _diagParams.has("client_secret"));
+  console.log("[google/start] authUrlRedirectUri:", _diagParams.get("redirect_uri"));
+  console.log("[google/start] authUrlScope:", _diagParams.get("scope"));
+  console.log("[google/start] authUrlHost:", _diagUrlObj.host);
 
   const response = NextResponse.redirect(authUrl);
 
