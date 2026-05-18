@@ -18,6 +18,19 @@ import type { LocationItem } from "@/app/api/integrations/google/locations/route
 
 export const metadata = { title: "Google Business Profile — Lokasyon Seçin" };
 
+async function safeReadGoogleError(res: Response): Promise<{ status: number; message: string }> {
+  try {
+    const json = (await res.json()) as { error?: { message?: string } | string };
+    if (typeof json.error === "object" && json.error?.message) {
+      return { status: res.status, message: json.error.message };
+    }
+    if (typeof json.error === "string") return { status: res.status, message: json.error };
+  } catch {
+    // body unreadable
+  }
+  return { status: res.status, message: `HTTP ${res.status}` };
+}
+
 // The Business Information API for locations
 const BUSINESS_INFO_API =
   "https://mybusinessbusinessinformation.googleapis.com/v1";
@@ -57,6 +70,7 @@ export default async function SelectLocationPage() {
   // Read + decrypt pending cookie
   const cookieStore = await cookies();
   const encryptedPending = cookieStore.get(PENDING_COOKIE)?.value;
+  console.log("[google/select-location] hasPendingCookie:", !!encryptedPending);
   if (!encryptedPending) redirect("/business/integrations");
 
   let pending: PendingPayload;
@@ -64,7 +78,9 @@ export default async function SelectLocationPage() {
     pending = JSON.parse(
       decryptTokenWithEnvKey(encryptedPending),
     ) as PendingPayload;
+    console.log("[google/select-location] pendingCookieDecryptOk:", true);
   } catch {
+    console.log("[google/select-location] pendingCookieDecryptOk:", false);
     redirect("/business/integrations");
   }
 
@@ -80,7 +96,9 @@ export default async function SelectLocationPage() {
   let accessToken: string;
   try {
     accessToken = decryptTokenWithEnvKey(pending.accessTokenEncrypted);
+    console.log("[google/select-location] accessTokenExistsAfterDecrypt:", !!accessToken);
   } catch {
+    console.log("[google/select-location] accessTokenExistsAfterDecrypt:", false);
     redirect("/business/integrations");
   }
 
@@ -89,28 +107,47 @@ export default async function SelectLocationPage() {
   let fetchError: string | null = null;
 
   try {
+    console.log("[google/select-location] accountsEndpoint:", ACCOUNTS_API);
     const accRes = await fetch(ACCOUNTS_API, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
+    console.log("[google/select-location] accountsFetchStatus:", accRes.status);
+
     if (!accRes.ok) {
+      const safeErr = await safeReadGoogleError(accRes);
+      console.log("[google/select-location] safeGoogleErrorStatus:", safeErr.status);
+      console.log("[google/select-location] safeGoogleErrorMessage:", safeErr.message);
       fetchError = "Google hesapları alınamadı.";
     } else {
       const accData = (await accRes.json()) as { accounts?: GoogleAccount[] };
+      console.log("[google/select-location] accountsResponseKeys:", Object.keys(accData));
       const accounts = accData.accounts ?? [];
+      console.log("[google/select-location] accountsCount:", accounts.length);
 
       for (const account of accounts) {
         const accountIdStr = account.name.split("/")[1] ?? account.name;
         const accountNameStr = account.accountName ?? accountIdStr;
 
+        const locEndpoint = `${BUSINESS_INFO_API}/${account.name}/locations`;
+        console.log("[google/select-location] locationsEndpoint:", locEndpoint);
+        console.log("[google/select-location] locationsReadMask:", READ_MASK);
         const params = new URLSearchParams({ readMask: READ_MASK });
         const locRes = await fetch(
-          `${BUSINESS_INFO_API}/${account.name}/locations?${params.toString()}`,
+          `${locEndpoint}?${params.toString()}`,
           { headers: { Authorization: `Bearer ${accessToken}` } },
         );
-        if (!locRes.ok) continue;
+        console.log("[google/select-location] locationsFetchStatus:", locRes.status);
+
+        if (!locRes.ok) {
+          const locErr = await safeReadGoogleError(locRes);
+          console.log("[google/select-location] safeGoogleErrorStatus:", locErr.status);
+          console.log("[google/select-location] safeGoogleErrorMessage:", locErr.message);
+          continue;
+        }
 
         const locData = (await locRes.json()) as { locations?: GoogleLocation[] };
+        console.log("[google/select-location] locationsResponseKeys:", Object.keys(locData));
         for (const loc of locData.locations ?? []) {
           const locationIdStr = loc.name.split("/").at(-1) ?? loc.name;
           const placeId =
@@ -129,6 +166,7 @@ export default async function SelectLocationPage() {
           });
         }
       }
+      console.log("[google/select-location] locationsCountTotal:", locations.length);
     }
   } catch {
     fetchError = "Google konumları yüklenirken bir hata oluştu.";
