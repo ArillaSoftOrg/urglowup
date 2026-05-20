@@ -29,6 +29,9 @@ const envSchema = z.object({
     .optional(),
   // Internal cron / cleanup secret
   INTERNAL_API_SECRET: z.string().optional(),
+  // Google Maps (Maps Phase 1)
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
+  GOOGLE_MAPS_SERVER_API_KEY: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

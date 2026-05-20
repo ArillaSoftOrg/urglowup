@@ -76,19 +76,22 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         <Link href="/" className="hover:underline">
           Ana Sayfa
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 text-border" />
         <Link href="/explore" className="hover:underline">
           Keşfet
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 text-border" />
         <span className="font-medium text-foreground">{displayName}</span>
       </nav>
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{displayName}</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Kategori
+        </p>
+        <h1 className="mt-1.5 text-3xl font-semibold tracking-[-0.02em]">{displayName}</h1>
         {category.description && (
-          <p className="mt-2 text-muted-foreground">{category.description}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{category.description}</p>
         )}
         <p className="mt-1 text-sm text-muted-foreground">
           {hasAnyFilter
@@ -98,7 +101,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-10 animate-pulse rounded-md bg-muted" />}>
+      <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
         <FilterBar cities={cities} showCity />
       </Suspense>
 

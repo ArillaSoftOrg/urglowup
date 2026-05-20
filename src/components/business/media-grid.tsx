@@ -27,6 +27,7 @@ import {
   Film,
   Loader2,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { MediaUploadButton } from "./media-upload-button";
 import { MediaEditDialog } from "./media-edit-dialog";
 import { setAsCover, setAsLogo } from "@/app/(business)/business/media/actions";
@@ -56,7 +57,7 @@ function CoverLogoSection({
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Card>
+      <Card className="bg-surface-cream">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Cover Image</CardTitle>
         </CardHeader>
@@ -70,7 +71,7 @@ function CoverLogoSection({
               />
             </div>
           ) : (
-            <div className="flex aspect-[3/1] items-center justify-center rounded-lg border-2 border-dashed bg-muted/50">
+            <div className="flex aspect-[3/1] items-center justify-center rounded-lg border-2 border-dashed bg-muted/40">
               <ImageIcon className="size-8 text-muted-foreground" />
             </div>
           )}
@@ -87,7 +88,7 @@ function CoverLogoSection({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-surface-cream">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Logo</CardTitle>
         </CardHeader>
@@ -101,7 +102,7 @@ function CoverLogoSection({
               />
             </div>
           ) : (
-            <div className="mx-auto flex size-24 items-center justify-center rounded-xl border-2 border-dashed bg-muted/50">
+            <div className="mx-auto flex size-24 items-center justify-center rounded-xl border-2 border-dashed bg-muted/40">
               <ImageIcon className="size-8 text-muted-foreground" />
             </div>
           )}
@@ -461,13 +462,34 @@ export function MediaGrid({
             </TabsList>
 
             <TabsContent value="all" className="mt-4">
-              <PortfolioGrid items={portfolioMedia} services={services} />
+              <PortfolioGrid
+                items={portfolioMedia}
+                services={services}
+                emptyHeadline="No portfolio media yet"
+                emptyDescription="Upload images, videos, or before/after photos to build your portfolio."
+                uploadType="PORTFOLIO_IMAGE"
+                uploadLabel="Upload image"
+              />
             </TabsContent>
             <TabsContent value="images" className="mt-4">
-              <PortfolioGrid items={images} services={services} />
+              <PortfolioGrid
+                items={images}
+                services={services}
+                emptyHeadline="No images yet"
+                emptyDescription="Upload portfolio images and before/after photos to showcase your work."
+                uploadType="PORTFOLIO_IMAGE"
+                uploadLabel="Upload image"
+              />
             </TabsContent>
             <TabsContent value="videos" className="mt-4">
-              <PortfolioGrid items={videos} services={services} />
+              <PortfolioGrid
+                items={videos}
+                services={services}
+                emptyHeadline="No videos yet"
+                emptyDescription="Upload short videos (up to 60 seconds) to show your work in action."
+                uploadType="PORTFOLIO_VIDEO"
+                uploadLabel="Upload video"
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -479,18 +501,27 @@ export function MediaGrid({
 function PortfolioGrid({
   items,
   services,
+  emptyHeadline,
+  emptyDescription,
+  uploadType,
+  uploadLabel,
 }: {
   items: BusinessMediaItem[];
   services: ServiceOption[];
+  emptyHeadline: string;
+  emptyDescription: string;
+  uploadType: MediaType;
+  uploadLabel: string;
 }) {
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center py-8 text-center">
-        <ImageIcon className="size-8 text-muted-foreground" />
-        <p className="mt-2 text-sm text-muted-foreground">
-          No media uploaded yet
-        </p>
-      </div>
+      <EmptyState
+        icon={ImageIcon}
+        headline={emptyHeadline}
+        description={emptyDescription}
+        surface="cream"
+        compact
+      />
     );
   }
 

@@ -7,7 +7,10 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MapPin, Navigation } from "lucide-react";
+import { BusinessMap } from "./business-map";
 import type { BusinessWithDetails } from "@/lib/queries/business";
+
+const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 export function LocationSection({
   business,
@@ -19,31 +22,48 @@ export function LocationSection({
 
   const addressParts = [business.address, business.district, business.city].filter(Boolean);
   const fullAddress = addressParts.join(", ");
-  const mapsQuery = encodeURIComponent(fullAddress);
+  const hasCoords =
+    typeof business.latitude === "number" &&
+    typeof business.longitude === "number";
+
+  const directionsUrl =
+    hasCoords
+      ? `https://www.google.com/maps/dir/?api=1&destination=${business.latitude},${business.longitude}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Location</CardTitle>
+        <CardTitle>Konum</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 rounded-lg bg-muted/30 px-3 py-2.5">
           <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">{fullAddress}</p>
         </div>
 
-        {/* Map placeholder */}
-        <div className="flex h-40 items-center justify-center rounded-lg border border-dashed bg-muted/30">
-          <div className="text-center">
-            <MapPin className="mx-auto size-8 text-muted-foreground/40" />
-            <p className="mt-2 text-xs text-muted-foreground">
-              Map integration coming soon
-            </p>
+        {hasCoords && mapsApiKey ? (
+          <BusinessMap
+            lat={business.latitude as number}
+            lng={business.longitude as number}
+            name={business.name}
+            apiKey={mapsApiKey}
+          />
+        ) : (
+          <div className="flex h-40 items-center justify-center rounded-xl bg-surface-cream">
+            <div className="text-center">
+              <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-brand-pink/15">
+                <MapPin className="size-5 text-brand-pink-foreground" />
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Harita yakında eklenecek
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <a
-          href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
+          href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
@@ -52,7 +72,7 @@ export function LocationSection({
           )}
         >
           <Navigation className="size-4" />
-          Get Directions
+          Yol Tarifi Al
         </a>
       </CardContent>
     </Card>

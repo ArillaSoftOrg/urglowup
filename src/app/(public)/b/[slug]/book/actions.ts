@@ -21,13 +21,13 @@ import type { DayOfWeek } from "@/generated/prisma/enums";
 // ─── Schemas ────────────────────────────────────────────────────
 
 const bookingRequestSchema = z.object({
-  businessId: z.string().min(1, "Business is required"),
-  serviceId: z.string().min(1, "Service is required"),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
-  time: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
+  businessId: z.string().min(1, "İşletme bilgisi eksik."),
+  serviceId: z.string().min(1, "Hizmet seçimi eksik."),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçersiz tarih biçimi."),
+  time: z.string().regex(/^\d{2}:\d{2}$/, "Geçersiz saat biçimi."),
   customerNote: z
     .string()
-    .max(500, "Note must be under 500 characters")
+    .max(500, "Not 500 karakterden uzun olamaz.")
     .optional()
     .or(z.literal("")),
 });
@@ -136,7 +136,7 @@ export async function createAppointmentRequest(
 ): Promise<BookingActionState> {
   const user = await getCurrentUser();
   if (!user) {
-    return { success: false, message: "Please log in to request an appointment." };
+    return { success: false, message: "Randevu talep etmek için giriş yapmalısınız." };
   }
 
   const raw = Object.fromEntries(formData.entries());
@@ -163,7 +163,7 @@ export async function createAppointmentRequest(
     business.status === "SUSPENDED" ||
     business.status === "REJECTED"
   ) {
-    return { success: false, message: "This business is not available for booking." };
+    return { success: false, message: "Bu işletme şu anda randevu almıyor." };
   }
 
   // Verify service exists and is active
@@ -172,27 +172,27 @@ export async function createAppointmentRequest(
     select: { id: true, durationMinutes: true },
   });
   if (!service) {
-    return { success: false, message: "This service is no longer available." };
+    return { success: false, message: "Bu hizmet artık sunulmuyor." };
   }
 
   // Verify date is valid
   const now = nowInBusinessTimezone();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   if (date < todayStr) {
-    return { success: false, message: "Cannot book a date in the past." };
+    return { success: false, message: "Geçmiş bir tarih seçemezsiniz." };
   }
 
   const maxDate = new Date(now);
   maxDate.setDate(maxDate.getDate() + MAX_ADVANCE_DAYS);
   const requestedDate = new Date(date + "T00:00:00");
   if (requestedDate > maxDate) {
-    return { success: false, message: `Cannot book more than ${MAX_ADVANCE_DAYS} days in advance.` };
+    return { success: false, message: `En fazla ${MAX_ADVANCE_DAYS} gün öncesinden randevu alabilirsiniz.` };
   }
 
   // Verify slot is still available
   const availableSlots = await getAvailableSlots(businessId, serviceId, date);
   if (!availableSlots.includes(time)) {
-    return { success: false, message: "This time slot is no longer available. Please select another." };
+    return { success: false, message: "Bu saat artık dolu. Lütfen başka bir saat seçin." };
   }
 
   // Check if customer already has a PENDING/CONFIRMED appointment at same business/date/time
@@ -206,7 +206,7 @@ export async function createAppointmentRequest(
     },
   });
   if (duplicate) {
-    return { success: false, message: "You already have a booking request at this time." };
+    return { success: false, message: "Bu saatte zaten bir randevu talebiniz var." };
   }
 
   // Create appointment
@@ -244,5 +244,5 @@ export async function createAppointmentRequest(
   revalidatePath("/business/appointments");
   revalidatePath("/business/dashboard");
 
-  return { success: true, message: "Appointment request submitted!" };
+  return { success: true, message: "Randevu talebiniz alındı!" };
 }

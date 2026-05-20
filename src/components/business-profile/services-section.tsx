@@ -8,18 +8,25 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { Clock, Scissors, CalendarCheck } from "lucide-react";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
-function formatPrice(service: BusinessWithDetails["services"][number]) {
-  if (service.priceType === "FREE_CONSULTATION") return "Free consultation";
-  if (service.priceType === "CONSULTATION_REQUIRED") return "Price on consultation";
-  if (!service.price) return null;
+function formatPrice(service: BusinessWithDetails["services"][number]): {
+  amount: string | null;
+  qualifier: string | null;
+} {
+  if (service.priceType === "FREE_CONSULTATION")
+    return { amount: "Ücretsiz danışma", qualifier: null };
+  if (service.priceType === "CONSULTATION_REQUIRED")
+    return { amount: "Fiyat için danışın", qualifier: null };
+  if (!service.price) return { amount: null, qualifier: null };
 
-  const amount = `$${Number(service.price)}`;
-  if (service.priceType === "STARTS_FROM") return `From ${amount}`;
-  return amount;
+  const amount = `₺${Number(service.price)}`;
+  if (service.priceType === "STARTS_FROM")
+    return { amount, qualifier: "itibaren" };
+  return { amount, qualifier: null };
 }
 
 export function ServicesSection({
@@ -30,59 +37,64 @@ export function ServicesSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Services</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Scissors className="size-5" />
+          Hizmetler
+        </CardTitle>
         {business.services.length > 0 && (
           <CardDescription>
-            {business.services.length} service
-            {business.services.length !== 1 ? "s" : ""} available
+            {business.services.length} hizmet mevcut
           </CardDescription>
         )}
       </CardHeader>
       <CardContent>
         {business.services.length === 0 ? (
-          <div className="flex flex-col items-center py-8 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-brand-pink">
-              <Scissors className="size-6 text-brand-pink-foreground" />
-            </div>
-            <p className="mt-3 text-sm font-medium">No services listed yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              This business hasn&apos;t added services yet. Check back soon.
-            </p>
-          </div>
+          <EmptyState
+            icon={Scissors}
+            headline="Henüz hizmet eklenmedi"
+            description="Bu işletme yakında hizmetlerini ekleyecek."
+            surface="cream"
+            compact
+          />
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-border/50">
             {business.services.map((service) => {
-              const price = formatPrice(service);
+              const { amount, qualifier } = formatPrice(service);
               return (
                 <div
                   key={service.id}
-                  className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                  className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0"
                 >
-                  <div className="min-w-0 space-y-1">
-                    <p className="text-sm font-medium">{service.name}</p>
+                  <div className="min-w-0 space-y-1.5">
+                    <p className="text-base font-semibold">{service.name}</p>
                     {service.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {service.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="size-3" />
-                      {service.durationMinutes} min
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="size-3.5" />
+                      {service.durationMinutes} dk
                     </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {price && (
-                      <Badge variant="secondary">{price}</Badge>
+                    {amount && (
+                      <div className="flex items-center gap-1.5">
+                        {qualifier && (
+                          <span className="text-xs text-muted-foreground">{qualifier}</span>
+                        )}
+                        <span className="text-base font-bold text-foreground">{amount}</span>
+                      </div>
                     )}
+                  </div>
+                  <div className="shrink-0 pt-0.5">
                     <Link
                       href={`/b/${business.slug}/book?service=${service.id}`}
                       className={cn(
-                        buttonVariants({ variant: "outline", size: "sm" }),
-                        "h-7 text-xs"
+                        buttonVariants({ variant: "brand", size: "sm" }),
+                        "gap-1.5"
                       )}
                     >
-                      <CalendarCheck className="size-3" />
-                      Book
+                      <CalendarCheck className="size-3.5" />
+                      Randevu Al
                     </Link>
                   </div>
                 </div>

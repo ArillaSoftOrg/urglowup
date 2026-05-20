@@ -68,13 +68,13 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        <p className="truncate font-medium leading-tight">{name}</p>
+      <div className="flex flex-1 flex-col gap-2.5 p-3.5">
+        <p className="truncate font-semibold leading-tight">{name}</p>
 
         {visibleCategories.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {visibleCategories.map(({ category }) => (
-              <Badge key={category.slug} variant="secondary" className="text-xs">
+              <Badge key={category.slug} variant="neutral" className="text-xs">
                 {category.name}
               </Badge>
             ))}

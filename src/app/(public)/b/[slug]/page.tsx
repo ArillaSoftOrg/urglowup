@@ -3,12 +3,13 @@ import { getBusinessBySlug } from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
 import { CoverSection } from "@/components/business-profile/cover-section";
 import { ProfileHeader } from "@/components/business-profile/profile-header";
+import { QuickInfoBar } from "@/components/business-profile/quick-info-bar";
 import { AboutSection } from "@/components/business-profile/about-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
 import { MediaSection } from "@/components/business-profile/media-section";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { LocationSection } from "@/components/business-profile/location-section";
-import { HoursSection } from "@/components/business-profile/hours-section";
+import { HoursSection, isBusinessOpen } from "@/components/business-profile/hours-section";
 import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
 import { MobileBookingBar } from "@/components/business-profile/mobile-booking-bar";
 import type { Metadata } from "next";
@@ -24,14 +25,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const business = await getBusinessBySlug(slug);
 
   if (!business || HIDDEN_STATUSES.has(business.status)) {
-    return { title: "Business Not Found" };
+    return { title: "İşletme Bulunamadı" };
   }
 
   return {
     title: business.name,
     description:
       business.description ??
-      `View ${business.name}'s profile, services, and reviews on UrGlowUp.`,
+      `${business.name} profilini, hizmetlerini ve değerlendirmelerini UrGlowUp'ta inceleyin.`,
   };
 }
 
@@ -44,6 +45,7 @@ export default async function BusinessProfilePage({ params }: PageProps) {
   }
 
   const reviewSummary = await getBusinessReviewSummary(business.id);
+  const isOpen = isBusinessOpen(business.hours);
 
   return (
     <>
@@ -54,6 +56,13 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           {/* Main content */}
           <div className="min-w-0 flex-1 space-y-6">
             <ProfileHeader business={business} />
+            <QuickInfoBar
+              hours={business.hours}
+              reviewSummary={reviewSummary}
+              city={business.city}
+              district={business.district}
+              serviceCount={business.services.length}
+            />
             <AboutSection business={business} />
             <ServicesSection business={business} />
             <HoursSection business={business} />
@@ -65,18 +74,18 @@ export default async function BusinessProfilePage({ params }: PageProps) {
             <LocationSection business={business} />
 
             {/* Spacer for mobile sticky CTA */}
-            <div className="h-16 lg:hidden" />
+            <div className="h-20 lg:hidden" />
           </div>
 
           {/* Desktop sidebar */}
           <aside className="hidden w-80 shrink-0 lg:block">
-            <ContactSidebar business={business} />
+            <ContactSidebar business={business} reviewSummary={reviewSummary} />
           </aside>
         </div>
       </div>
 
       {/* Mobile sticky CTA */}
-      <MobileBookingBar slug={business.slug} />
+      <MobileBookingBar slug={business.slug} isOpen={isOpen} />
     </>
   );
 }

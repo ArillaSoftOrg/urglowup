@@ -75,21 +75,21 @@ export function HoursManager({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Working Hours</h1>
+        <h1 className="text-2xl font-bold tracking-[-0.02em]">Working Hours</h1>
         <p className="text-sm text-muted-foreground">
           Set your weekly business hours
         </p>
       </div>
 
       {state.success && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-          <Check className="size-4" />
+        <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/15 p-3 text-sm text-success-foreground">
+          <Check className="size-4 shrink-0" />
           {state.message}
         </div>
       )}
 
       {state.message && !state.success && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
           {state.message}
         </div>
       )}
@@ -113,8 +113,8 @@ export function HoursManager({
               return (
                 <div
                   key={day}
-                  className={`rounded-lg border p-4 transition-colors ${
-                    isOpen ? "bg-background" : "bg-muted/50"
+                  className={`rounded-xl border p-4 transition-colors ${
+                    isOpen ? "bg-card border-border/50" : "bg-surface-cream border-border/30"
                   }`}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

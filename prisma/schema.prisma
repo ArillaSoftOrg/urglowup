@@ -143,6 +143,9 @@ model Business {
   district             String?
   latitude             Float?
   longitude            Float?
+  geocodedAt           DateTime?
+  geocodingStatus      String?
+  geocodingError       String?
   coverImageUrl        String?
   logoUrl              String?
   status               BusinessStatus @default(DRAFT)

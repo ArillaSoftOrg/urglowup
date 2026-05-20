@@ -4,15 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarCheck, Clock, CalendarDays } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CalendarCheck, Clock, CalendarDays, Timer } from "lucide-react";
 import { AppointmentActions } from "./appointment-actions";
 import {
   STATUS_LABELS,
-  STATUS_COLORS,
-  UPCOMING_STATUSES,
+  STATUS_VARIANTS,
   TERMINAL_STATUSES,
 } from "@/lib/constants/booking";
 import type { BusinessAppointment } from "@/lib/queries/appointments";
+import { cn } from "@/lib/utils";
 
 function formatDate(date: Date): string {
   return new Date(date).toLocaleDateString("en-US", {
@@ -34,8 +35,10 @@ function AppointmentCard({
 }: {
   appointment: BusinessAppointment;
 }) {
+  const isPending = appointment.status === "PENDING";
+
   return (
-    <Card>
+    <Card className={cn(isPending && "bg-surface-pink/30")}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
@@ -54,10 +57,7 @@ function AppointmentCard({
                   {appointment.customer.firstName}{" "}
                   {appointment.customer.lastName}
                 </p>
-                <Badge
-                  className={`text-xs ${STATUS_COLORS[appointment.status]}`}
-                  variant="outline"
-                >
+                <Badge variant={STATUS_VARIANTS[appointment.status]}>
                   {STATUS_LABELS[appointment.status]}
                 </Badge>
               </div>
@@ -74,7 +74,7 @@ function AppointmentCard({
                   {appointment.requestedTime}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Clock className="size-3" />
+                  <Timer className="size-3" />
                   {appointment.service.durationMinutes} min
                 </span>
               </div>
@@ -119,7 +119,6 @@ export function BusinessAppointmentList({
   const confirmed = appointments.filter((a) => a.status === "CONFIRMED");
   const past = appointments.filter((a) => TERMINAL_STATUSES.includes(a.status));
 
-  // Sort upcoming by date asc, past by date desc
   const sortAsc = (a: BusinessAppointment, b: BusinessAppointment) =>
     new Date(a.requestedDate).getTime() - new Date(b.requestedDate).getTime();
   const sortDesc = (a: BusinessAppointment, b: BusinessAppointment) =>
@@ -131,20 +130,27 @@ export function BusinessAppointmentList({
 
   return (
     <Tabs defaultValue={defaultTab ?? "pending"}>
-      <TabsList>
-        <TabsTrigger value="pending">
-          Pending ({pending.length})
-        </TabsTrigger>
-        <TabsTrigger value="confirmed">
-          Confirmed ({confirmed.length})
-        </TabsTrigger>
-        <TabsTrigger value="all">All ({appointments.length})</TabsTrigger>
-        <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
-      </TabsList>
+      <div className="overflow-x-auto">
+        <TabsList className="flex-nowrap">
+          <TabsTrigger value="pending">
+            Pending ({pending.length})
+          </TabsTrigger>
+          <TabsTrigger value="confirmed">
+            Confirmed ({confirmed.length})
+          </TabsTrigger>
+          <TabsTrigger value="all">All ({appointments.length})</TabsTrigger>
+          <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="pending" className="mt-4 space-y-3">
         {pending.length === 0 ? (
-          <EmptyState message="No pending requests" />
+          <EmptyState
+            compact
+            icon={CalendarDays}
+            headline="No pending requests"
+            description="New appointment requests will appear here."
+          />
         ) : (
           pending.map((a) => <AppointmentCard key={a.id} appointment={a} />)
         )}
@@ -152,7 +158,12 @@ export function BusinessAppointmentList({
 
       <TabsContent value="confirmed" className="mt-4 space-y-3">
         {confirmed.length === 0 ? (
-          <EmptyState message="No confirmed appointments" />
+          <EmptyState
+            compact
+            icon={CalendarDays}
+            headline="No confirmed appointments"
+            description="Appointments you confirm will show up here."
+          />
         ) : (
           confirmed.map((a) => <AppointmentCard key={a.id} appointment={a} />)
         )}
@@ -160,7 +171,12 @@ export function BusinessAppointmentList({
 
       <TabsContent value="all" className="mt-4 space-y-3">
         {appointments.length === 0 ? (
-          <EmptyState message="No appointments yet" />
+          <EmptyState
+            compact
+            icon={CalendarDays}
+            headline="No appointments yet"
+            description="Appointment requests from customers will appear here."
+          />
         ) : (
           [...appointments]
             .sort(sortDesc)
@@ -170,24 +186,16 @@ export function BusinessAppointmentList({
 
       <TabsContent value="past" className="mt-4 space-y-3">
         {past.length === 0 ? (
-          <EmptyState message="No past appointments" />
+          <EmptyState
+            compact
+            icon={CalendarDays}
+            headline="No past appointments"
+            description="Completed and cancelled appointments will appear here."
+          />
         ) : (
           past.map((a) => <AppointmentCard key={a.id} appointment={a} />)
         )}
       </TabsContent>
     </Tabs>
-  );
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <Card>
-      <CardContent className="flex flex-col items-center py-8 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <CalendarDays className="size-6" />
-        </div>
-        <p className="mt-3 text-sm font-medium">{message}</p>
-      </CardContent>
-    </Card>
   );
 }

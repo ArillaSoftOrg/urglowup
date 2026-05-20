@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { SearchX } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface EmptyFilterStateProps {
   clearHref: string;
@@ -7,18 +7,12 @@ interface EmptyFilterStateProps {
 
 export function EmptyFilterState({ clearHref }: EmptyFilterStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <SearchX className="size-10 text-muted-foreground" />
-      <p className="mt-3 font-medium">Filtrelerinize uygun uzman bulunamadı</p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Aramanızı değiştirmeyi veya bazı filtreleri kaldırmayı deneyin.
-      </p>
-      <Link
-        href={clearHref}
-        className="mt-4 text-sm text-primary underline-offset-4 hover:underline"
-      >
-        Tüm filtreleri temizle
-      </Link>
-    </div>
+    <EmptyState
+      icon={SearchX}
+      headline="Filtrelerinize uygun uzman bulunamadı"
+      description="Aramanızı değiştirmeyi veya bazı filtreleri kaldırmayı deneyin."
+      action={{ label: "Tüm filtreleri temizle", href: clearHref, variant: "outline" }}
+      surface="cream"
+    />
   );
 }

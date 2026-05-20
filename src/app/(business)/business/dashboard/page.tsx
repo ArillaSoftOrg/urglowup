@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -25,9 +24,23 @@ import Link from "next/link";
 import { nowInBusinessTimezone } from "@/lib/constants/booking";
 import { calculateProfileCompletion } from "@/lib/profile-completion";
 import { ProfileCompletionCard } from "@/components/business/profile-completion-card";
+import { StatCard } from "@/components/business/stat-card";
+import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { env } from "@/lib/env";
 
 export const metadata = { title: "Dashboard" };
+
+const BUSINESS_STATUS_BADGE: Record<
+  string,
+  { variant: "success" | "warning" | "destructive" | "secondary"; label: string }
+> = {
+  ACTIVE_PRIVATE: { variant: "success", label: "Active (Private)" },
+  ACTIVE_MARKETPLACE: { variant: "success", label: "Marketplace" },
+  PENDING_APPROVAL: { variant: "warning", label: "Pending Review" },
+  DRAFT: { variant: "secondary", label: "Draft" },
+  SUSPENDED: { variant: "destructive", label: "Suspended" },
+  REJECTED: { variant: "destructive", label: "Rejected" },
+};
 
 export default async function DashboardPage() {
   const { businessId } = await requireBusiness();
@@ -37,7 +50,6 @@ export default async function DashboardPage() {
   const todayEnd = new Date(todayStart);
   todayEnd.setDate(todayEnd.getDate() + 1);
 
-  // Week boundaries (Monday–Sunday)
   const dayOfWeek = now.getDay();
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStart = new Date(todayStart);
@@ -113,139 +125,91 @@ export default async function DashboardPage() {
   const completion = calculateProfileCompletion(business);
   const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
   const publicUrl = `${appUrl}/b/${business.slug}`;
+  const statusBadge =
+    BUSINESS_STATUS_BADGE[business.status] ?? { variant: "secondary" as const, label: business.status };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Welcome back, {business.name}
-        </p>
-      </div>
+      <BusinessPageHeader
+        title="Dashboard"
+        description={`Welcome back, ${business.name}`}
+      />
 
-      {/* Profile completion — hidden when 100% */}
       {completion.score < 100 && (
         <ProfileCompletionCard completion={completion} />
       )}
 
-      {/* Summary cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link href="/business/appointments?tab=pending">
-          <Card className="transition-colors hover:bg-accent/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Requests
-              </CardTitle>
-              <AlertCircle className="size-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingCount}</div>
-              <p className="text-xs text-muted-foreground">
-                Awaiting your response
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Today&apos;s Appointments
-            </CardTitle>
-            <CalendarCheck className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{todayCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Confirmed for today
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">This Week</CardTitle>
-            <CalendarDays className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{weekCount}</div>
-            <p className="text-xs text-muted-foreground">
-              Pending + confirmed this week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Services
-            </CardTitle>
-            <Scissors className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeServiceCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {totalServiceCount} total service
-              {totalServiceCount !== 1 ? "s" : ""}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Working Hours
-            </CardTitle>
-            <Clock className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Badge variant={hoursConfigured ? "default" : "secondary"}>
+        <StatCard
+          icon={AlertCircle}
+          label="Pending Requests"
+          value={pendingCount}
+          hint="Awaiting your response"
+          href="/business/appointments?tab=pending"
+          iconTone="warning"
+        />
+        <StatCard
+          icon={CalendarCheck}
+          label="Today's Appointments"
+          value={todayCount}
+          hint="Confirmed for today"
+          iconTone="pink"
+        />
+        <StatCard
+          icon={CalendarDays}
+          label="This Week"
+          value={weekCount}
+          hint="Pending + confirmed"
+          iconTone="info"
+        />
+        <StatCard
+          icon={Scissors}
+          label="Active Services"
+          value={activeServiceCount}
+          hint={`${totalServiceCount} total service${totalServiceCount !== 1 ? "s" : ""}`}
+          href="/business/services"
+          iconTone="pink"
+        />
+        <StatCard
+          icon={Clock}
+          label="Working Hours"
+          value={
+            <Badge variant={hoursConfigured ? "success" : "secondary"}>
               {hoursConfigured ? "Configured" : "Not set"}
             </Badge>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {hoursConfigured
-                ? "Weekly schedule is set up"
-                : "Set your working hours"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Public Link</CardTitle>
-            <Link2 className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Badge
-              variant={
-                business.status === "ACTIVE_PRIVATE" ||
-                business.status === "ACTIVE_MARKETPLACE"
-                  ? "default"
-                  : "secondary"
-              }
-            >
-              {business.status.replace(/_/g, " ").toLowerCase()}
-            </Badge>
-            <p className="mt-1 text-xs text-muted-foreground">
-              /b/{business.slug}
-            </p>
-          </CardContent>
-        </Card>
+          }
+          hint={
+            hoursConfigured ? "Weekly schedule is set up" : "Set your working hours"
+          }
+          href="/business/hours"
+          iconTone="muted"
+        />
+        <StatCard
+          icon={Link2}
+          label="Public Link"
+          value={
+            <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+          }
+          hint={`/b/${business.slug}`}
+          href="/business/public-link"
+          iconTone="muted"
+        />
       </div>
 
-      {/* Quick links */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-          <CardDescription>Jump to common tasks</CardDescription>
+      <Card className="bg-surface-cream">
+        <CardHeader className="pb-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Quick Actions
+          </p>
+          <CardTitle className="text-lg">Jump to common tasks</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Link
               href="/business/services"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 px-4 py-3"
+                "h-auto justify-start gap-3 bg-card px-4 py-3"
               )}
             >
               <Scissors className="size-5 shrink-0" />
@@ -262,7 +226,7 @@ export default async function DashboardPage() {
               href="/business/hours"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 px-4 py-3"
+                "h-auto justify-start gap-3 bg-card px-4 py-3"
               )}
             >
               <Clock className="size-5 shrink-0" />
@@ -279,7 +243,7 @@ export default async function DashboardPage() {
               href="/business/media"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 px-4 py-3"
+                "h-auto justify-start gap-3 bg-card px-4 py-3"
               )}
             >
               <ImageIcon className="size-5 shrink-0" />
@@ -296,7 +260,7 @@ export default async function DashboardPage() {
               href="/business/appointments"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 px-4 py-3"
+                "h-auto justify-start gap-3 bg-card px-4 py-3"
               )}
             >
               <CalendarCheck className="size-5 shrink-0" />
@@ -313,7 +277,7 @@ export default async function DashboardPage() {
               href="/business/public-link"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 px-4 py-3"
+                "h-auto justify-start gap-3 bg-card px-4 py-3"
               )}
             >
               <Link2 className="size-5 shrink-0" />
@@ -332,7 +296,7 @@ export default async function DashboardPage() {
               rel="noopener noreferrer"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 px-4 py-3"
+                "h-auto justify-start gap-3 bg-card px-4 py-3"
               )}
             >
               <ExternalLink className="size-5 shrink-0" />

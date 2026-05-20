@@ -1,5 +1,6 @@
 import { Store } from "lucide-react";
 import { BusinessCard } from "./business-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
 interface BusinessGridProps {
@@ -13,10 +14,11 @@ export function BusinessGrid({
 }: BusinessGridProps) {
   if (businesses.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Store className="size-10 text-muted-foreground" />
-        <p className="mt-3 text-muted-foreground">{emptyMessage}</p>
-      </div>
+      <EmptyState
+        icon={Store}
+        headline={emptyMessage}
+        surface="cream"
+      />
     );
   }
 

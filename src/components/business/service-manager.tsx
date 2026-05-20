@@ -20,10 +20,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import {
   Clock,
   Plus,
   Pencil,
-  X,
   Scissors,
   Power,
 } from "lucide-react";
@@ -72,9 +80,7 @@ function ServiceForm({
   const initial: ServiceActionState = { success: false };
 
   const [state, formAction, isPending] = useActionState(action, initial);
-  const [priceType, setPriceType] = useState(
-    service?.priceType ?? "FIXED"
-  );
+  const [priceType, setPriceType] = useState(service?.priceType ?? "FIXED");
 
   const priceDisabled =
     priceType === "CONSULTATION_REQUIRED" || priceType === "FREE_CONSULTATION";
@@ -98,6 +104,8 @@ function ServiceForm({
       <CardContent>
         <form action={formAction} className="space-y-4">
           {isEdit && <input type="hidden" name="serviceId" value={service.id} />}
+          {/* Hidden input ensures priceType is always in FormData */}
+          <input type="hidden" name="priceType" value={priceType} />
 
           {state.message && !state.success && (
             <p className="text-sm text-destructive">{state.message}</p>
@@ -150,21 +158,25 @@ function ServiceForm({
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="priceType">Price type</Label>
-              <select
-                id="priceType"
-                name="priceType"
+              <Label>Price type</Label>
+              <Select
                 value={priceType}
-                onChange={(e) => setPriceType(e.target.value)}
-                className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                onValueChange={(v) => { if (v !== null) setPriceType(v); }}
               >
-                <option value="FIXED">Fixed price</option>
-                <option value="STARTS_FROM">Starts from</option>
-                <option value="CONSULTATION_REQUIRED">
-                  Price on consultation
-                </option>
-                <option value="FREE_CONSULTATION">Free consultation</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FIXED">Fixed price</SelectItem>
+                  <SelectItem value="STARTS_FROM">Starts from</SelectItem>
+                  <SelectItem value="CONSULTATION_REQUIRED">
+                    Price on consultation
+                  </SelectItem>
+                  <SelectItem value="FREE_CONSULTATION">
+                    Free consultation
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -244,50 +256,48 @@ function ServiceCard({
   }
 
   return (
-    <div
-      className={`flex items-start justify-between gap-4 rounded-lg border p-4 ${
-        !service.isActive ? "opacity-60" : ""
-      }`}
-    >
-      <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium">{service.name}</p>
-          <Badge variant={service.isActive ? "default" : "secondary"}>
-            {service.isActive ? "Active" : "Inactive"}
-          </Badge>
+    <Card className={service.isActive ? undefined : "opacity-60"}>
+      <CardContent className="flex items-start justify-between gap-4 p-4">
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">{service.name}</p>
+            <Badge variant={service.isActive ? "pink" : "secondary"}>
+              {service.isActive ? "Active" : "Inactive"}
+            </Badge>
+          </div>
+          {service.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {service.description}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="size-3" />
+              {service.durationMinutes} min
+            </span>
+            {price && <span>{price}</span>}
+            <span className="text-[10px]">
+              {PRICE_TYPE_LABELS[service.priceType]}
+            </span>
+          </div>
         </div>
-        {service.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {service.description}
-          </p>
-        )}
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Clock className="size-3" />
-            {service.durationMinutes} min
-          </span>
-          {price && <span>{price}</span>}
-          <span className="text-[10px]">
-            {PRICE_TYPE_LABELS[service.priceType]}
-          </span>
-        </div>
-      </div>
 
-      <div className="flex shrink-0 gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggle}
-          disabled={toggling}
-          title={service.isActive ? "Deactivate" : "Activate"}
-        >
-          <Power className="size-4" />
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onEdit} title="Edit">
-          <Pencil className="size-4" />
-        </Button>
-      </div>
-    </div>
+        <div className="flex shrink-0 gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggle}
+            disabled={toggling}
+            title={service.isActive ? "Deactivate" : "Activate"}
+          >
+            <Power className="size-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onEdit} title="Edit">
+            <Pencil className="size-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -320,41 +330,31 @@ export function ServiceManager({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Services</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your business services
-          </p>
-        </div>
-        {!showForm && (
-          <Button onClick={handleAdd} className="gap-1.5">
-            <Plus className="size-4" />
-            Add Service
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Services"
+        description="Manage your business services"
+        action={
+          !showForm ? (
+            <Button onClick={handleAdd} className="gap-1.5">
+              <Plus className="size-4" />
+              Add Service
+            </Button>
+          ) : undefined
+        }
+      />
 
       {showForm && (
         <ServiceForm service={editingService} onClose={handleClose} />
       )}
 
       {initialServices.length === 0 && !showForm ? (
-        <Card>
-          <CardContent className="flex flex-col items-center py-12 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-brand-pink">
-              <Scissors className="size-6 text-brand-pink-foreground" />
-            </div>
-            <p className="mt-4 text-sm font-medium">No services yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Add your first service to get started
-            </p>
-            <Button onClick={handleAdd} className="mt-4 gap-1.5">
-              <Plus className="size-4" />
-              Add Service
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Scissors}
+          headline="No services yet"
+          description="Add your first service to start accepting bookings."
+          action={{ label: "Add Service", onClick: handleAdd }}
+          surface="pink"
+        />
       ) : (
         <div className="space-y-3">
           {initialServices.map((service) => (

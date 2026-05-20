@@ -49,18 +49,21 @@ export default async function ExplorePage({ searchParams }: PageProps) {
     <div className="container mx-auto px-4 py-10">
       {/* Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           Güzellik &amp; Kişisel Bakım
+        </p>
+        <h1 className="mt-1.5 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
+          Uzmanları Keşfet
         </h1>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground md:text-base">
           Size yakın uzmanları keşfedin — gerçek çalışmaları görün, yorumları
           okuyun ve randevu alın.
         </p>
       </div>
 
       {/* Search & Filters */}
-      <div className="mb-8 rounded-xl border bg-card p-4 shadow-sm">
-        <Suspense fallback={<div className="h-10 animate-pulse rounded-md bg-muted" />}>
+      <div className="mb-8 rounded-2xl bg-surface-cream px-5 py-4">
+        <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
           <FilterBar
             categories={activeCategories.map((c) => ({ name: c.name, slug: c.slug }))}
             cities={cities}
@@ -73,7 +76,22 @@ export default async function ExplorePage({ searchParams }: PageProps) {
       {/* Browse sections — hidden when any filter is active */}
       {!hasAnyFilter && activeCategories.length > 0 && (
         <section className="mb-10">
-          <h2 className="mb-4 text-xl font-semibold">Kategoriye Göre Gözat</h2>
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Kategoriler
+              </p>
+              <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em]">
+                Ne arıyorsun?
+              </h2>
+            </div>
+            <Link
+              href="/explore"
+              className="shrink-0 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Tümünü keşfet →
+            </Link>
+          </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {activeCategories.map((category) => (
               <CategoryCard key={category.id} category={category} />
@@ -84,13 +102,20 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
       {!hasAnyFilter && cities.length > 0 && (
         <section className="mb-10">
-          <h2 className="mb-4 text-xl font-semibold">Şehre Göre Gözat</h2>
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Şehirler
+            </p>
+            <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em]">
+              Şehrine göre gözat
+            </h2>
+          </div>
           <div className="flex flex-wrap gap-2">
             {cities.map(({ city, count }) => (
               <Link
                 key={city}
                 href={`/city/${encodeURIComponent(city)}`}
-                className="inline-flex items-center gap-1.5 rounded-full border bg-card px-4 py-1.5 text-sm transition-colors hover:bg-accent"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background px-4 py-1.5 text-sm transition-colors hover:bg-surface-cream"
               >
                 {city}
                 <span className="text-xs text-muted-foreground">({count})</span>
@@ -102,17 +127,14 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
       {/* Results */}
       <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
+        <div className="mb-4">
+          <p className="text-sm font-medium text-muted-foreground">
             {hasAnyFilter
               ? `${businesses.length} uzman bulundu`
-              : "Tüm Uzmanlar"}
-            {!hasAnyFilter && businesses.length > 0 && (
-              <span className="ml-2 text-base font-normal text-muted-foreground">
-                ({businesses.length})
-              </span>
-            )}
-          </h2>
+              : businesses.length > 0
+                ? `Tüm uzmanlar · ${businesses.length} sonuç`
+                : "Tüm Uzmanlar"}
+          </p>
         </div>
 
         {businesses.length === 0 && hasAnyFilter ? (

@@ -17,6 +17,29 @@
   --color-brand-cream: var(--brand-cream);
   --color-brand-pink-foreground: var(--brand-pink-foreground);
   --color-brand-purple-foreground: var(--brand-purple-foreground);
+
+  /* Surface tints */
+  --color-surface-pink: var(--surface-pink);
+  --color-surface-purple: var(--surface-purple);
+  --color-surface-cream: var(--surface-cream);
+  --color-surface-pink-hover: var(--surface-pink-hover);
+
+  /* Shadows */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Semantic status */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-neutral: var(--neutral);
+  --color-neutral-foreground: var(--neutral-foreground);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -72,8 +95,8 @@
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --input: oklch(0.90 0.008 10);
+  --ring: oklch(0.72 0.06 10);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -87,6 +110,28 @@
   --brand-cream: oklch(0.97 0.01 85);
   --brand-pink-foreground: oklch(0.25 0.05 10);
   --brand-purple-foreground: oklch(0.25 0.05 300);
+
+  /* Surface tints */
+  --surface-pink: oklch(0.97 0.008 10);
+  --surface-purple: oklch(0.97 0.007 300);
+  --surface-cream: oklch(0.98 0.008 85);
+  --surface-pink-hover: oklch(0.94 0.015 10);
+
+  /* Shadows — warm undertone */
+  --shadow-xs: 0 1px 2px oklch(0.20 0.01 10 / 0.06);
+  --shadow-sm: 0 1px 3px oklch(0.20 0.01 10 / 0.08), 0 1px 2px oklch(0.20 0.01 10 / 0.04);
+  --shadow-md: 0 4px 6px oklch(0.20 0.01 10 / 0.06), 0 2px 4px oklch(0.20 0.01 10 / 0.04);
+  --shadow-lg: 0 10px 15px oklch(0.20 0.01 10 / 0.06), 0 4px 6px oklch(0.20 0.01 10 / 0.03);
+
+  /* Semantic status */
+  --success: oklch(0.93 0.05 145);
+  --success-foreground: oklch(0.28 0.08 145);
+  --warning: oklch(0.94 0.06 80);
+  --warning-foreground: oklch(0.30 0.09 65);
+  --info: oklch(0.92 0.04 240);
+  --info-foreground: oklch(0.28 0.08 240);
+  --neutral: oklch(0.93 0.005 85);
+  --neutral-foreground: oklch(0.40 0.01 85);
 
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -116,7 +161,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.60 0.08 10);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -130,6 +175,28 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Surface tints (dark) */
+  --surface-pink: oklch(0.22 0.015 10);
+  --surface-purple: oklch(0.22 0.015 300);
+  --surface-cream: oklch(0.22 0.008 85);
+  --surface-pink-hover: oklch(0.28 0.020 10);
+
+  /* Shadows (dark) */
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.20);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.30), 0 1px 2px oklch(0 0 0 / 0.15);
+  --shadow-md: 0 4px 6px oklch(0 0 0 / 0.25), 0 2px 4px oklch(0 0 0 / 0.15);
+  --shadow-lg: 0 10px 15px oklch(0 0 0 / 0.30), 0 4px 6px oklch(0 0 0 / 0.15);
+
+  /* Semantic status (dark) */
+  --success: oklch(0.30 0.08 145);
+  --success-foreground: oklch(0.88 0.10 145);
+  --warning: oklch(0.32 0.10 75);
+  --warning-foreground: oklch(0.90 0.12 80);
+  --info: oklch(0.28 0.07 240);
+  --info-foreground: oklch(0.88 0.10 240);
+  --neutral: oklch(0.28 0.005 85);
+  --neutral-foreground: oklch(0.80 0.01 85);
 }
 
 @layer base {
@@ -141,5 +208,20 @@
   }
   html {
     @apply font-sans;
+  }
+  h1 {
+    @apply text-4xl font-bold leading-[1.1] tracking-[-0.02em] md:text-5xl;
+  }
+  h2 {
+    @apply text-2xl font-semibold leading-snug tracking-[-0.015em];
+  }
+  h3 {
+    @apply text-lg font-semibold leading-snug tracking-[-0.01em];
+  }
+  h4 {
+    @apply text-base font-semibold tracking-[-0.005em];
+  }
+  p {
+    @apply leading-relaxed;
   }
 }

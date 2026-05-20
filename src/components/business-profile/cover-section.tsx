@@ -1,16 +1,14 @@
-import { Building2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import { getOptimizedUrl } from "@/lib/cloudinary";
 
 function optimizeCoverUrl(media: BusinessWithDetails["media"][number] | undefined, url: string | null) {
-  // Use media publicId for Cloudinary transforms if available
   if (media?.publicId) {
     return {
       desktop: getOptimizedUrl(media.publicId, { width: 1200, crop: "limit" }),
       mobile: getOptimizedUrl(media.publicId, { width: 800, crop: "limit" }),
     };
   }
-  // Fallback to raw URL (non-Cloudinary or legacy)
   if (url) return { desktop: url, mobile: url };
   return null;
 }
@@ -32,9 +30,9 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
   return (
     <div className="relative">
       {/* Cover image or gradient fallback */}
-      {coverUrls ? (
-        <div className="h-48 sm:h-64 lg:h-72">
-          <picture>
+      <div className="relative h-56 sm:h-72 lg:h-80">
+        {coverUrls ? (
+          <picture className="block size-full">
             <source media="(min-width: 640px)" srcSet={coverUrls.desktop} />
             <img
               src={coverUrls.mobile}
@@ -42,23 +40,25 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
               className="size-full object-cover"
             />
           </picture>
-        </div>
-      ) : (
-        <div className="h-48 bg-gradient-to-br from-brand-pink via-brand-purple to-brand-cream sm:h-64 lg:h-72" />
-      )}
+        ) : (
+          <div className="size-full bg-gradient-to-br from-[oklch(0.88_0.06_10)] via-[oklch(0.91_0.04_300)] to-[oklch(0.97_0.01_85)]" />
+        )}
+        {/* Gradient overlay anchors the logo and softens the bottom edge */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      </div>
 
       {/* Logo / Avatar overlay */}
       <div className="container mx-auto px-4">
-        <div className="-mt-12 flex items-end gap-4 sm:-mt-16">
+        <div className="-mt-14 flex items-end gap-4 sm:-mt-16">
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={`${business.name} logo`}
-              className="size-24 rounded-2xl border-4 border-background object-cover shadow-lg sm:size-32"
+              className="size-28 rounded-2xl object-cover shadow-lg ring-4 ring-background sm:size-32"
             />
           ) : (
-            <div className="flex size-24 items-center justify-center rounded-2xl border-4 border-background bg-muted shadow-lg sm:size-32">
-              <Building2 className="size-10 text-muted-foreground sm:size-12" />
+            <div className="flex size-28 items-center justify-center rounded-2xl bg-surface-cream shadow-lg ring-4 ring-background sm:size-32">
+              <Sparkles className="size-10 text-brand-pink-foreground sm:size-12" />
             </div>
           )}
         </div>

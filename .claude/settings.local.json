@@ -18,7 +18,21 @@
       "Bash(grep -r \"z\\\\\\\\.object\\\\|z\\\\\\\\.string\\\\|zod\" /c/Users/Yusuf/Desktop/Urglowup/src --include=\"*.ts\" --include=\"*.tsx\")",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "Bash(python -c ':*)",
-      "Bash(dir \"C:\\\\Users\\\\Yusuf\\\\Desktop\\\\Urglowup\" /a)"
+      "Bash(dir \"C:\\\\Users\\\\Yusuf\\\\Desktop\\\\Urglowup\" /a)",
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object -First 10 FullName)",
+      "Bash(Find C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup *)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(Select-Object Name)",
+      "Bash(grep -E \"\\\\.ts$|\\\\.tsx$\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Select-String business *)",
+      "Bash(grep *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\prisma\\\\migrations\" -Directory -ErrorAction SilentlyContinue | Get-ChildItem -Directory | Sort-Object Name -Descending | Select-Object -First 3 | ForEach-Object { $_.Parent.Name + \"\\\\\" + $_.Name })",
+      "Bash(not exist *)",
+      "Bash(git add *)"
     ]
   }
 }

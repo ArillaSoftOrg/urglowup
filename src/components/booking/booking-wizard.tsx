@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { BookingHeader } from "./booking-header";
+import { BusinessChip } from "./business-chip";
 import { ServicePicker } from "./service-picker";
 import { DateTimePicker } from "./date-time-picker";
 import { BookingSummary } from "./booking-summary";
 import { LoginPrompt } from "./login-prompt";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 
-const STEP_LABELS = ["Service", "Date & Time", "Confirm"];
+const STEP_LABELS = ["Hizmet", "Tarih & Saat", "Onayla"];
+const TOTAL_STEPS = STEP_LABELS.length;
 
 export function BookingWizard({
   business,
@@ -34,7 +37,6 @@ export function BookingWizard({
 
   function handleServiceSelect(id: string) {
     setSelectedServiceId(id);
-    // Reset date/time when service changes
     setSelectedDate(null);
     setSelectedTime(null);
     setStep(2);
@@ -42,7 +44,7 @@ export function BookingWizard({
 
   function handleDateSelect(date: Date) {
     setSelectedDate(date);
-    setSelectedTime(null); // Reset time when date changes
+    setSelectedTime(null);
   }
 
   function handleTimeSelect(time: string) {
@@ -54,11 +56,19 @@ export function BookingWizard({
     if (step > 1) setStep(step - 1);
   }
 
-  // Build redirect URL preserving state
   const redirectUrl = `/b/${business.slug}/book${selectedServiceId ? `?service=${selectedServiceId}` : ""}`;
 
   return (
     <div className="space-y-6">
+      <BookingHeader
+        businessName={business.name}
+        businessSlug={business.slug}
+        currentStep={step}
+        totalSteps={TOTAL_STEPS}
+      />
+
+      <BusinessChip business={business} />
+
       {/* Step indicator */}
       <div className="flex items-center gap-2">
         {STEP_LABELS.map((label, i) => {
@@ -68,15 +78,19 @@ export function BookingWizard({
           return (
             <div key={label} className="flex items-center gap-2">
               {i > 0 && (
-                <div className="h-px w-4 bg-border sm:w-8" />
+                <div
+                  className={`h-px w-4 sm:w-8 ${
+                    isDone || isActive ? "bg-brand-pink-foreground/40" : "bg-border"
+                  }`}
+                />
               )}
               <div className="flex items-center gap-1.5">
                 <div
-                  className={`flex size-6 items-center justify-center rounded-full text-xs font-medium ${
+                  className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
                     isActive
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-brand-pink text-brand-pink-foreground ring-2 ring-brand-pink-foreground/20"
                       : isDone
-                        ? "bg-primary/20 text-primary"
+                        ? "bg-surface-pink text-brand-pink-foreground"
                         : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -84,7 +98,11 @@ export function BookingWizard({
                 </div>
                 <span
                   className={`hidden text-sm sm:inline ${
-                    isActive ? "font-medium" : "text-muted-foreground"
+                    isActive
+                      ? "font-semibold text-foreground"
+                      : isDone
+                        ? "text-foreground/70"
+                        : "text-muted-foreground"
                   }`}
                 >
                   {label}
@@ -102,9 +120,10 @@ export function BookingWizard({
           variant="ghost"
           size="sm"
           onClick={goBack}
+          className="gap-1.5"
         >
           <ArrowLeft className="size-4" />
-          Back
+          Geri
         </Button>
       )}
 
@@ -128,8 +147,11 @@ export function BookingWizard({
         />
       )}
 
-      {step === 3 && selectedService && selectedDate && selectedTime && (
-        isLoggedIn ? (
+      {step === 3 &&
+        selectedService &&
+        selectedDate &&
+        selectedTime &&
+        (isLoggedIn ? (
           <BookingSummary
             business={business}
             service={selectedService}
@@ -140,8 +162,7 @@ export function BookingWizard({
           />
         ) : (
           <LoginPrompt redirectUrl={redirectUrl} />
-        )
-      )}
+        ))}
     </div>
   );
 }

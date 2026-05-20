@@ -2,6 +2,7 @@ import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getBusinessMedia, getMediaCounts } from "@/lib/queries/media";
 import { MediaGrid } from "@/components/business/media-grid";
+import { BusinessPageHeader } from "@/components/business/business-page-header";
 
 export const metadata = { title: "Media" };
 
@@ -20,12 +21,10 @@ export default async function MediaPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Media</h1>
-        <p className="text-muted-foreground">
-          Manage your cover image, logo, and portfolio.
-        </p>
-      </div>
+      <BusinessPageHeader
+        title="Media"
+        description="Manage your cover image, logo, and portfolio."
+      />
 
       <MediaGrid
         media={media}

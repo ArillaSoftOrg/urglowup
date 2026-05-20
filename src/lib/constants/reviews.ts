@@ -1,4 +1,5 @@
 import type { ReviewStatus } from "@/generated/prisma/enums";
+import type { BadgeVariant } from "@/components/ui/badge";
 
 export const MIN_RATING = 1;
 export const MAX_RATING = 5;
@@ -24,6 +25,13 @@ export const REVIEW_STATUS_COLORS: Record<ReviewStatus, string> = {
   APPROVED: "bg-green-100 text-green-800",
   HIDDEN: "bg-gray-100 text-gray-800",
   REMOVED: "bg-red-100 text-red-800",
+};
+
+export const REVIEW_STATUS_VARIANTS: Record<ReviewStatus, BadgeVariant> = {
+  PENDING: "warning",
+  APPROVED: "success",
+  HIDDEN: "neutral",
+  REMOVED: "destructive",
 };
 
 /** Statuses that allow the customer to edit their review */
@@ -54,3 +62,6 @@ export const GOOGLE_REVIEW_ATTRIBUTION_TEXT =
 
 /** Tailwind classes for the Google source badge */
 export const GOOGLE_BADGE_CLASS = "bg-blue-100 text-blue-800";
+
+/** Badge variant for the Google source badge */
+export const GOOGLE_BADGE_VARIANT: BadgeVariant = "info";

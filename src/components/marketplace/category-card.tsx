@@ -30,7 +30,7 @@ export function CategoryCard({ category }: { category: MarketplaceCategory }) {
       href={`/category/${slug}`}
       className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="relative h-28 w-full overflow-hidden">
+      <div className="relative h-32 w-full overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}

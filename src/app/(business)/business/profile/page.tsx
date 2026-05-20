@@ -1,10 +1,57 @@
+import { notFound } from "next/navigation";
+import { requireBusiness } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { BusinessPageHeader } from "@/components/business/business-page-header";
+import { ProfileEditForm } from "@/components/business/profile-edit-form";
+
 export const metadata = { title: "Business Profile" };
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const { businessId } = await requireBusiness();
+
+  const business = await db.business.findUnique({
+    where: { id: businessId },
+    select: {
+      name: true,
+      slug: true,
+      description: true,
+      phone: true,
+      whatsapp: true,
+      instagramUrl: true,
+      address: true,
+      city: true,
+      district: true,
+      status: true,
+      categories: {
+        include: { category: { select: { name: true } } },
+        take: 1,
+      },
+    },
+  });
+
+  if (!business) notFound();
+
+  const profileData = {
+    name: business.name,
+    slug: business.slug,
+    description: business.description,
+    phone: business.phone,
+    whatsapp: business.whatsapp,
+    instagramUrl: business.instagramUrl,
+    address: business.address,
+    city: business.city,
+    district: business.district,
+    status: business.status,
+    categoryName: business.categories[0]?.category.name ?? null,
+  };
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Business Profile</h1>
-      <p className="mt-4 text-muted-foreground">Edit your business profile.</p>
+    <div className="space-y-6">
+      <BusinessPageHeader
+        title="Business Profile"
+        description="Update your public business information."
+      />
+      <ProfileEditForm business={profileData} />
     </div>
   );
 }

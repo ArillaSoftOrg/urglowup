@@ -15,6 +15,7 @@ import { CopyButton } from "@/components/business/copy-button";
 import { QRCodeCard } from "@/components/business/qr-code-card";
 import { InstagramBioText, WhatsAppShareText } from "@/components/business/sharing-texts";
 import { ProfileCompletionCard } from "@/components/business/profile-completion-card";
+import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { AlertCircle, ExternalLink, Link2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -37,21 +38,18 @@ export default async function PublicLinkPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Share Your Booking Page</h1>
-        <p className="mt-1 text-muted-foreground">
-          Share your link with customers so they can book appointments and view your services.
-        </p>
-      </div>
+      <BusinessPageHeader
+        title="Share Your Booking Page"
+        description="Share your link with customers so they can book appointments and view your services."
+      />
 
       {/* Status warning */}
       {!isVisible && (
-        <div className="flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+        <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/15 p-4 text-sm text-warning-foreground">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           <div>
             <p className="font-medium">Your profile is not publicly visible</p>
-            <p className="mt-0.5 text-yellow-700">
+            <p className="mt-0.5 opacity-80">
               Your account status is <strong>{business.status}</strong>. Complete your profile
               setup to make your booking page accessible to customers.
             </p>
@@ -60,7 +58,7 @@ export default async function PublicLinkPage() {
       )}
 
       {/* Public URL */}
-      <Card>
+      <Card className="bg-surface-cream">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link2 className="size-5" />
@@ -71,7 +69,7 @@ export default async function PublicLinkPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
+          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-2.5">
             <span className="flex-1 truncate text-sm font-medium">{publicUrl}</span>
           </div>
           <div className="flex flex-wrap gap-2">

@@ -81,19 +81,22 @@ export default async function CityPage({ params, searchParams }: PageProps) {
         <Link href="/" className="hover:underline">
           Ana Sayfa
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 text-border" />
         <Link href="/explore" className="hover:underline">
           Keşfet
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 text-border" />
         <span className="font-medium text-foreground">{city}</span>
       </nav>
 
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2">
-          <MapPin className="size-5 text-muted-foreground" />
-          <h1 className="text-3xl font-bold tracking-tight">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Şehir
+        </p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <MapPin className="size-5 shrink-0 text-muted-foreground" />
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">
             {city} Uzmanları
           </h1>
         </div>
@@ -105,7 +108,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-10 animate-pulse rounded-md bg-muted" />}>
+      <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
         <FilterBar
           categories={categories.map((c) => ({ name: c.name, slug: c.slug }))}
           districts={districtList}
@@ -117,13 +120,15 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       {/* District navigation pills — hidden when district filter is active */}
       {districtList.length > 0 && !filters.district && (
         <div>
-          <p className="mb-2 text-sm font-medium">İlçeye göre gözat:</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            İlçeye göre gözat
+          </p>
           <div className="flex flex-wrap gap-2">
             {districtList.map((district) => (
               <Link
                 key={district}
                 href={`/city/${encodeURIComponent(city)}/${encodeURIComponent(district)}`}
-                className="inline-flex items-center rounded-full border bg-card px-3 py-1 text-sm transition-colors hover:bg-accent"
+                className="inline-flex items-center rounded-full border border-border/60 bg-surface-cream px-4 py-1.5 text-sm transition-colors hover:bg-surface-pink"
               >
                 {district}
               </Link>

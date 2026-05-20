@@ -70,26 +70,29 @@ export default async function DistrictPage({ params, searchParams }: PageProps) 
         <Link href="/" className="hover:underline">
           Ana Sayfa
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 text-border" />
         <Link href="/explore" className="hover:underline">
           Keşfet
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 text-border" />
         <Link
           href={`/city/${encodeURIComponent(city)}`}
           className="hover:underline"
         >
           {city}
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 text-border" />
         <span className="font-medium text-foreground">{district}</span>
       </nav>
 
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2">
-          <MapPin className="size-5 text-muted-foreground" />
-          <h1 className="text-3xl font-bold tracking-tight">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          İlçe
+        </p>
+        <div className="mt-1.5 flex items-center gap-2">
+          <MapPin className="size-5 shrink-0 text-muted-foreground" />
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">
             {district}, {city}
           </h1>
         </div>
@@ -101,7 +104,7 @@ export default async function DistrictPage({ params, searchParams }: PageProps) 
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-10 animate-pulse rounded-md bg-muted" />}>
+      <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
         <FilterBar
           categories={categories.map((c) => ({ name: c.name, slug: c.slug }))}
           showCategory

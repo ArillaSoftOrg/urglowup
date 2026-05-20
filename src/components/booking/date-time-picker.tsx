@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
+import { CalendarOff } from "lucide-react";
 import { getAvailableSlots } from "@/app/(public)/b/[slug]/book/actions";
 import {
   MAX_ADVANCE_DAYS,
@@ -42,7 +44,6 @@ export function DateTimePicker({
   const [isPending, startTransition] = useTransition();
   const [slotsLoaded, setSlotsLoaded] = useState(false);
 
-  // Build set of closed days
   const closedDays = new Set<number>();
   for (const hour of business.hours) {
     if (!hour.isOpen) {
@@ -73,11 +74,8 @@ export function DateTimePicker({
   }
 
   function isDateDisabled(date: Date): boolean {
-    // Past dates
     if (date < today) return true;
-    // Beyond max advance
     if (date > maxDate) return true;
-    // Closed day
     if (closedDays.has(date.getDay())) return true;
     return false;
   }
@@ -85,31 +83,38 @@ export function DateTimePicker({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold">Pick a date &amp; time</h2>
+        <h2 className="text-lg font-semibold">Tarih ve saat seçin</h2>
         <p className="text-sm text-muted-foreground">
-          Select when you&apos;d like your appointment
+          Randevunuz için uygun bir zaman belirleyin
         </p>
       </div>
 
-      <div className="flex flex-col gap-6 sm:flex-row">
+      <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
         {/* Calendar */}
-        <div className="shrink-0">
-          <Calendar
-            mode="single"
-            selected={selectedDate ?? undefined}
-            onSelect={handleDateSelect}
-            disabled={isDateDisabled}
-            startMonth={today}
-            endMonth={maxDate}
-          />
+        <div className="space-y-2">
+          <div className="rounded-xl border bg-card p-2 shadow-sm">
+            <Calendar
+              mode="single"
+              selected={selectedDate ?? undefined}
+              onSelect={handleDateSelect}
+              disabled={isDateDisabled}
+              startMonth={today}
+              endMonth={maxDate}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Geçmiş ve kapalı günler seçilemez.
+          </p>
         </div>
 
         {/* Time slots */}
         <div className="flex-1">
           {!selectedDate && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Select a date to see available times
-            </p>
+            <div className="flex h-full items-center justify-center rounded-xl bg-surface-cream px-4 py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Tarih seçildikten sonra uygun saatler burada görünür.
+              </p>
+            </div>
           )}
 
           {selectedDate && isPending && (
@@ -121,28 +126,34 @@ export function DateTimePicker({
           )}
 
           {selectedDate && slotsLoaded && !isPending && slots.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No available slots for this date. Please try another day.
-            </p>
+            <EmptyState
+              icon={CalendarOff}
+              headline="Uygun saat yok"
+              description="Bu tarihte uygun saat kalmadı. Lütfen başka bir gün deneyin."
+              surface="cream"
+              compact
+            />
           )}
 
           {selectedDate && slotsLoaded && !isPending && slots.length > 0 && (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {slots.map((slot) => (
-                <Button
-                  key={slot}
-                  type="button"
-                  variant={selectedTime === slot ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "text-sm",
-                    selectedTime === slot && "ring-2 ring-primary ring-offset-1"
-                  )}
-                  onClick={() => onSelectTime(slot)}
-                >
-                  {slot}
-                </Button>
-              ))}
+              {slots.map((slot) => {
+                const isSelected = selectedTime === slot;
+                return (
+                  <Button
+                    key={slot}
+                    type="button"
+                    variant={isSelected ? "brand" : "outline"}
+                    className={cn(
+                      "h-10 text-sm font-medium",
+                      isSelected && "ring-2 ring-brand-pink-foreground/30"
+                    )}
+                    onClick={() => onSelectTime(slot)}
+                  >
+                    {slot}
+                  </Button>
+                );
+              })}
             </div>
           )}
         </div>

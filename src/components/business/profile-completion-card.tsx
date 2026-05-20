@@ -40,7 +40,7 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
       : "Almost there! A few more items will complete your profile.";
 
   return (
-    <Card>
+    <Card className="bg-surface-cream">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Profile Setup</CardTitle>
@@ -54,7 +54,7 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
         {/* Progress bar */}
         <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className="h-full rounded-full bg-brand-pink-foreground transition-all"
             style={{ width: `${score}%` }}
           />
         </div>

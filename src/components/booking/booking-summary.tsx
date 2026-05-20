@@ -5,30 +5,45 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CalendarCheck, Clock, Loader2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  CalendarCheck,
+  Clock,
+  Hourglass,
+  Loader2,
+  AlertCircle,
+  Info,
+  Sparkles,
+} from "lucide-react";
 import { createAppointmentRequest } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingActionState } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 
 type Service = BookingBusiness["services"][number];
 
-function formatPrice(service: Service) {
-  if (service.priceType === "FREE_CONSULTATION") return "Free consultation";
+function formatPrice(service: Service): {
+  amount: string | null;
+  qualifier: string | null;
+} {
+  if (service.priceType === "FREE_CONSULTATION")
+    return { amount: "Ücretsiz danışma", qualifier: null };
   if (service.priceType === "CONSULTATION_REQUIRED")
-    return "Price on consultation";
-  if (!service.price) return null;
-  const amount = `$${Number(service.price)}`;
-  if (service.priceType === "STARTS_FROM") return `From ${amount}`;
-  return amount;
+    return { amount: "Fiyat için danışın", qualifier: null };
+  if (!service.price) return { amount: null, qualifier: null };
+
+  const amount = `₺${Number(service.price)}`;
+  if (service.priceType === "STARTS_FROM")
+    return { amount, qualifier: "itibaren" };
+  return { amount, qualifier: null };
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
+  return new Intl.DateTimeFormat("tr-TR", {
     weekday: "long",
-    year: "numeric",
-    month: "long",
     day: "numeric",
-  });
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
 export function BookingSummary({
@@ -53,44 +68,103 @@ export function BookingSummary({
     FormData
   >(createAppointmentRequest, { success: false });
 
-  const price = formatPrice(service);
+  const { amount, qualifier } = formatPrice(service);
+  const fieldError = (key: string) => state.errors?.[key];
+
+  if (state.success) {
+    return (
+      <EmptyState
+        icon={CalendarCheck}
+        headline="Randevu talebiniz alındı!"
+        description="İşletme talebinizi inceleyecek ve onaylandığında bilgilendirileceksiniz."
+        surface="pink"
+        action={{
+          label: "Randevularım",
+          href: "/account/appointments",
+          variant: "brand",
+        }}
+        secondaryAction={{
+          label: "İşletme profiline dön",
+          href: `/b/${business.slug}`,
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold">Confirm your appointment</h2>
+        <h2 className="text-lg font-semibold">
+          Randevu özetinizi onaylayın
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Review the details and submit your request
+          Detayları kontrol edin ve talebinizi gönderin
         </p>
       </div>
 
-      <Card>
-        <CardContent className="space-y-3 p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-medium">{business.name}</p>
-              <p className="text-sm text-muted-foreground">{service.name}</p>
+      <Card className="bg-surface-cream">
+        <CardContent className="space-y-4 p-4">
+          {/* Header strip: logo + name + service + price */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              {business.logoUrl ? (
+                <img
+                  src={business.logoUrl}
+                  alt={business.name}
+                  className="size-12 shrink-0 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-pink/20">
+                  <Sparkles className="size-5 text-brand-pink-foreground" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{business.name}</p>
+                <p className="truncate text-sm text-muted-foreground">
+                  {service.name}
+                </p>
+              </div>
             </div>
-            {price && (
-              <p className="text-sm font-medium">{price}</p>
+            {amount && (
+              <div className="shrink-0 text-right">
+                {qualifier && (
+                  <p className="text-xs text-muted-foreground">{qualifier}</p>
+                )}
+                <p className="text-base font-bold">{amount}</p>
+              </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <CalendarCheck className="size-4" />
-              {formatDate(date)}
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock className="size-4" />
-              {time}
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock className="size-3" />
-              {service.durationMinutes} min
-            </span>
+
+          <div className="border-t border-border/50" />
+
+          {/* Detail rows */}
+          <div className="space-y-2.5 text-sm">
+            <div className="flex items-center gap-3">
+              <CalendarCheck className="size-4 shrink-0 text-muted-foreground" />
+              <span className="w-14 text-xs text-muted-foreground">Tarih</span>
+              <span className="font-medium">{formatDate(date)}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="size-4 shrink-0 text-muted-foreground" />
+              <span className="w-14 text-xs text-muted-foreground">Saat</span>
+              <span className="font-medium">{time}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Hourglass className="size-4 shrink-0 text-muted-foreground" />
+              <span className="w-14 text-xs text-muted-foreground">Süre</span>
+              <span className="font-medium">{service.durationMinutes} dk</span>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Trust callout */}
+      <div className="flex items-start gap-2.5 rounded-lg bg-surface-pink/60 p-3">
+        <Info className="mt-0.5 size-4 shrink-0 text-brand-pink-foreground" />
+        <p className="text-xs text-foreground/80">
+          Talebiniz işletmeye iletilir. Onaylandığında size bildirilir.
+        </p>
+      </div>
 
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="businessId" value={business.id} />
@@ -99,57 +173,54 @@ export function BookingSummary({
         <input type="hidden" name="time" value={time} />
 
         <div className="space-y-2">
-          <Label htmlFor="customerNote">Note (optional)</Label>
+          <Label htmlFor="customerNote">Not (isteğe bağlı)</Label>
           <Textarea
             id="customerNote"
             name="customerNote"
-            placeholder="Any preferences or special requests..."
+            placeholder="Tercihleriniz veya özel istekleriniz..."
             maxLength={500}
             value={customerNote}
             onChange={(e) => onNoteChange(e.target.value)}
+            disabled={isPending}
           />
-          <p className="text-xs text-muted-foreground">
-            {customerNote.length}/500 characters
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {customerNote.length}/500 karakter
+            </p>
+            {fieldError("customerNote") && (
+              <p className="text-xs text-destructive">
+                {fieldError("customerNote")}
+              </p>
+            )}
+          </div>
         </div>
 
         {state.message && !state.success && (
-          <p className="text-sm text-destructive">{state.message}</p>
-        )}
-
-        {state.success && (
-          <div className="rounded-md border border-green-200 bg-green-50 p-3">
-            <p className="text-sm font-medium text-green-800">
-              {state.message}
-            </p>
-            <p className="mt-1 text-xs text-green-700">
-              You can track your appointment in{" "}
-              <a
-                href="/account/appointments"
-                className="underline hover:no-underline"
-              >
-                My Appointments
-              </a>
-              .
-            </p>
+          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+            <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <p className="text-sm text-destructive">{state.message}</p>
           </div>
         )}
 
-        {!state.success && (
-          <Button type="submit" className="w-full" size="lg" disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <CalendarCheck className="size-4" />
-                Request Appointment
-              </>
-            )}
-          </Button>
-        )}
+        <Button
+          type="submit"
+          variant="brand"
+          className="w-full"
+          size="lg"
+          disabled={isPending}
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Gönderiliyor…
+            </>
+          ) : (
+            <>
+              <CalendarCheck className="size-4" />
+              Randevu Talep Et
+            </>
+          )}
+        </Button>
       </form>
     </div>
   );

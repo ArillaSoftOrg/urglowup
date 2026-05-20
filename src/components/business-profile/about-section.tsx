@@ -10,9 +10,9 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
   if (!business.description) return null;
 
   return (
-    <Card>
+    <Card className="bg-surface-cream">
       <CardHeader>
-        <CardTitle>About</CardTitle>
+        <CardTitle>Hakkında</CardTitle>
       </CardHeader>
       <CardContent>
         <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">

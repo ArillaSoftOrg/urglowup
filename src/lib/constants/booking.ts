@@ -1,4 +1,5 @@
 import type { AppointmentStatus } from "@/generated/prisma/enums";
+import type { BadgeVariant } from "@/components/ui/badge";
 
 export const MIN_ADVANCE_HOURS = 2;
 export const MAX_ADVANCE_DAYS = 60;
@@ -51,13 +52,13 @@ export const STATUS_TRANSITIONS: Record<
 };
 
 export const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  REJECTED: "Rejected",
-  CANCELLED_BY_CUSTOMER: "Cancelled",
-  CANCELLED_BY_BUSINESS: "Cancelled by business",
-  COMPLETED: "Completed",
-  NO_SHOW: "No-show",
+  PENDING: "Bekliyor",
+  CONFIRMED: "Onaylandı",
+  REJECTED: "Reddedildi",
+  CANCELLED_BY_CUSTOMER: "Müşteri iptal etti",
+  CANCELLED_BY_BUSINESS: "İşletme iptal etti",
+  COMPLETED: "Tamamlandı",
+  NO_SHOW: "Gelmedi",
 };
 
 export const STATUS_COLORS: Record<AppointmentStatus, string> = {
@@ -68,6 +69,16 @@ export const STATUS_COLORS: Record<AppointmentStatus, string> = {
   CANCELLED_BY_BUSINESS: "bg-gray-100 text-gray-800",
   COMPLETED: "bg-blue-100 text-blue-800",
   NO_SHOW: "bg-orange-100 text-orange-800",
+};
+
+export const STATUS_VARIANTS: Record<AppointmentStatus, BadgeVariant> = {
+  PENDING: "warning",
+  CONFIRMED: "success",
+  REJECTED: "destructive",
+  CANCELLED_BY_CUSTOMER: "neutral",
+  CANCELLED_BY_BUSINESS: "neutral",
+  COMPLETED: "info",
+  NO_SHOW: "secondary",
 };
 
 export function nowInBusinessTimezone(): Date {

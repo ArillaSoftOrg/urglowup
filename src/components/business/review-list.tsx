@@ -3,10 +3,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Star, MessageSquare } from "lucide-react";
 import {
   REVIEW_STATUS_LABELS,
-  REVIEW_STATUS_COLORS,
+  REVIEW_STATUS_VARIANTS,
 } from "@/lib/constants/reviews";
 import type { BusinessReview } from "@/lib/queries/reviews";
 
@@ -51,38 +52,40 @@ function ReviewStats({
   const maxCount = Math.max(...Object.values(ratingDistribution), 1);
 
   return (
-    <Card>
-      <CardContent className="p-4">
+    <Card className="bg-surface-cream">
+      <CardContent className="p-4 sm:p-6">
         <div className="flex items-start gap-6">
           {/* Average */}
-          <div className="text-center">
-            <p className="text-4xl font-bold">
+          <div className="min-w-[5rem] text-center">
+            <p className="text-4xl font-bold tracking-[-0.02em]">
               {averageRating?.toFixed(1) ?? "—"}
             </p>
-            <Stars rating={Math.round(averageRating ?? 0)} />
+            <div className="flex justify-center">
+              <Stars rating={Math.round(averageRating ?? 0)} />
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">
               {totalCount} review{totalCount !== 1 ? "s" : ""}
             </p>
           </div>
 
           {/* Distribution */}
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 space-y-1.5">
             {[5, 4, 3, 2, 1].map((star) => {
               const count = ratingDistribution[star] ?? 0;
               const pct = totalCount > 0 ? (count / maxCount) * 100 : 0;
               return (
                 <div key={star} className="flex items-center gap-2 text-sm">
-                  <span className="w-3 text-right text-muted-foreground">
+                  <span className="w-3 text-right text-xs text-muted-foreground">
                     {star}
                   </span>
-                  <Star className="size-3 text-muted-foreground/50" />
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <Star className="size-3 text-amber-400" />
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-amber-400 transition-all"
+                      className="h-full rounded-full bg-brand-pink transition-all"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="w-6 text-right text-xs text-muted-foreground">
+                  <span className="w-5 text-right text-xs text-muted-foreground">
                     {count}
                   </span>
                 </div>
@@ -120,7 +123,7 @@ function BusinessReviewCard({ review }: { review: BusinessReview }) {
             <p className="truncate text-sm font-medium">
               {name || "Customer"}
             </p>
-            <Badge className={`text-[10px] ${REVIEW_STATUS_COLORS[review.status]}`}>
+            <Badge variant={REVIEW_STATUS_VARIANTS[review.status]}>
               {REVIEW_STATUS_LABELS[review.status]}
             </Badge>
           </div>
@@ -173,15 +176,13 @@ export function BusinessReviewList({
         </CardHeader>
         <CardContent>
           {reviews.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <MessageSquare className="size-6" />
-              </div>
-              <p className="mt-3 text-sm font-medium">No reviews yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Reviews from your customers will appear here.
-              </p>
-            </div>
+            <EmptyState
+              icon={MessageSquare}
+              headline="No reviews yet"
+              description="Reviews from customers with completed appointments will appear here."
+              surface="cream"
+              compact
+            />
           ) : (
             <div className="space-y-4">
               {reviews.map((review) => (

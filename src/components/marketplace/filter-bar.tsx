@@ -198,7 +198,7 @@ export function FilterBar({
 
         {/* Has portfolio */}
         <Button
-          variant={currentHasMedia ? "default" : "outline"}
+          variant={currentHasMedia ? "brand" : "outline"}
           size="sm"
           className="h-9"
           onClick={() => navigate({ hasMedia: currentHasMedia ? undefined : "true" })}
@@ -208,7 +208,7 @@ export function FilterBar({
 
         {/* Has hours */}
         <Button
-          variant={currentHasHours ? "default" : "outline"}
+          variant={currentHasHours ? "brand" : "outline"}
           size="sm"
           className="h-9"
           onClick={() => navigate({ hasHours: currentHasHours ? undefined : "true" })}
@@ -223,7 +223,7 @@ export function FilterBar({
           {chips.map((chip) => (
             <Badge
               key={chip.key}
-              variant="secondary"
+              variant="pink"
               className="flex items-center gap-1 pr-1"
             >
               {chip.label}

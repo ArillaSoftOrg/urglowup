@@ -19,21 +19,17 @@ const DAY_ORDER = [
 ] as const;
 
 const DAY_SHORT: Record<string, string> = {
-  MONDAY: "Mon",
-  TUESDAY: "Tue",
-  WEDNESDAY: "Wed",
-  THURSDAY: "Thu",
-  FRIDAY: "Fri",
-  SATURDAY: "Sat",
-  SUNDAY: "Sun",
+  MONDAY: "Pzt",
+  TUESDAY: "Sal",
+  WEDNESDAY: "Çar",
+  THURSDAY: "Per",
+  FRIDAY: "Cum",
+  SATURDAY: "Cmt",
+  SUNDAY: "Paz",
 };
 
 function formatTime(time: string) {
-  const [h, m] = time.split(":");
-  const hour = parseInt(h, 10);
-  const ampm = hour >= 12 ? "PM" : "AM";
-  const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${h12}:${m} ${ampm}`;
+  return time.substring(0, 5);
 }
 
 function getTodayDayOfWeek(): string {
@@ -83,30 +79,30 @@ export function HoursSection({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Clock className="size-5" />
-            Working Hours
+            Çalışma Saatleri
           </CardTitle>
-          <Badge variant={open ? "default" : "secondary"}>
-            {open ? "Open now" : "Closed"}
+          <Badge variant={open ? "success" : "neutral"}>
+            {open ? "Şu an açık" : "Kapalı"}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-1">
           {sorted.map((hour) => {
             if (!hour) return null;
             const isToday = hour.dayOfWeek === today;
             return (
               <div
                 key={hour.dayOfWeek}
-                className={`flex items-center justify-between rounded px-2 py-1.5 text-sm ${
-                  isToday ? "bg-accent font-medium" : ""
+                className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-sm ${
+                  isToday ? "bg-surface-pink font-semibold" : ""
                 }`}
               >
                 <span>{DAY_SHORT[hour.dayOfWeek]}</span>
-                <span className="text-muted-foreground">
+                <span className={isToday ? "text-foreground" : "text-muted-foreground"}>
                   {hour.isOpen && hour.openTime && hour.closeTime
-                    ? `${formatTime(hour.openTime)} - ${formatTime(hour.closeTime)}`
-                    : "Closed"}
+                    ? `${formatTime(hour.openTime)} – ${formatTime(hour.closeTime)}`
+                    : "Kapalı"}
                 </span>
               </div>
             );

@@ -1,12 +1,12 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Star, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { GoogleReviewsPlaceholder } from "./google-reviews-placeholder";
@@ -38,19 +38,25 @@ function RatingSummary({ summary }: { summary: ReviewSummary }) {
   if (summary.totalCount === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 pb-2">
+    <div className="flex items-center gap-3 pb-3">
       <span className="text-3xl font-bold">
         {summary.averageRating?.toFixed(1)}
       </span>
       <div>
         <Stars rating={Math.round(summary.averageRating ?? 0)} />
         <p className="mt-0.5 text-sm text-muted-foreground">
-          {summary.totalCount} verified review
-          {summary.totalCount !== 1 ? "s" : ""}
+          {summary.totalCount} doğrulanmış değerlendirme
         </p>
       </div>
     </div>
   );
+}
+
+function formatReviewDate(date: Date) {
+  return new Intl.DateTimeFormat("tr-TR", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
 }
 
 export function ReviewsSection({
@@ -64,88 +70,87 @@ export function ReviewsSection({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Reviews</CardTitle>
-          {reviewSummary.totalCount > 0 && (
-            <CardDescription>
-              {reviewSummary.totalCount} verified review
-              {reviewSummary.totalCount !== 1 ? "s" : ""}
-            </CardDescription>
-          )}
+          <CardTitle>Değerlendirmeler</CardTitle>
         </CardHeader>
         <CardContent>
           {business.reviews.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-brand-cream">
-                <MessageSquare className="size-6 text-muted-foreground" />
-              </div>
-              <p className="mt-3 text-sm font-medium">No reviews yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Be the first to review after your appointment.
-              </p>
-            </div>
+            <EmptyState
+              icon={MessageSquare}
+              headline="Henüz değerlendirme yok"
+              description="Randevunuzun ardından ilk değerlendirmeyi siz yapın."
+              surface="cream"
+              compact
+            />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-0">
               <RatingSummary summary={reviewSummary} />
 
-              {business.reviews.map((review) => {
-                const name = [
-                  review.customer.firstName,
-                  review.customer.lastName,
-                ]
-                  .filter(Boolean)
-                  .join(" ");
-                const initials = [
-                  review.customer.firstName,
-                  review.customer.lastName,
-                ]
-                  .filter(Boolean)
-                  .map((n) => n!.charAt(0).toUpperCase())
-                  .join("");
+              <div className="divide-y divide-border/50">
+                {business.reviews.map((review) => {
+                  const name = [
+                    review.customer.firstName,
+                    review.customer.lastName,
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+                  const initials = [
+                    review.customer.firstName,
+                    review.customer.lastName,
+                  ]
+                    .filter(Boolean)
+                    .map((n) => n!.charAt(0).toUpperCase())
+                    .join("");
 
-                return (
-                  <div key={review.id} className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar size="sm">
-                        {review.customer.avatarUrl && (
-                          <AvatarImage
-                            src={review.customer.avatarUrl}
-                            alt={name}
-                          />
-                        )}
-                        <AvatarFallback>{initials || "U"}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {name || "Customer"}
-                        </p>
-                        <Stars rating={review.rating} />
+                  return (
+                    <div key={review.id} className="space-y-2 py-4 first:pt-0">
+                      <div className="flex items-start gap-3">
+                        <Avatar size="sm">
+                          {review.customer.avatarUrl && (
+                            <AvatarImage
+                              src={review.customer.avatarUrl}
+                              alt={name}
+                            />
+                          )}
+                          <AvatarFallback>{initials || "M"}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="truncate text-sm font-medium">
+                              {name || "Müşteri"}
+                            </p>
+                            {review.appointmentId && (
+                              <Badge variant="success" className="shrink-0 text-xs">
+                                Doğrulanmış randevu
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="mt-0.5 flex items-center gap-2">
+                            <Stars rating={review.rating} />
+                            <span className="text-xs text-muted-foreground">
+                              {formatReviewDate(review.createdAt)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      {review.appointmentId && (
-                        <Badge
-                          variant="outline"
-                          className="ml-auto shrink-0 text-xs"
-                        >
-                          Verified appointment
-                        </Badge>
+                      {review.comment && (
+                        <p className="pl-9 text-sm text-muted-foreground">
+                          {review.comment}
+                        </p>
                       )}
                     </div>
-                    {review.comment && (
-                      <p className="pl-9 text-sm text-muted-foreground">
-                        {review.comment}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          <div className="mt-4 border-t pt-3">
+          <div className="mt-4 flex items-center gap-2.5 rounded-lg bg-surface-cream p-3">
+            <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
             <Link
               href="/account/reviews"
               className="text-sm font-medium text-primary hover:underline"
             >
-              Had an appointment? Leave a review
+              Randevunuz tamamlandı mı? Değerlendirme bırakın
             </Link>
           </div>
         </CardContent>

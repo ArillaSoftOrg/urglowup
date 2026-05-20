@@ -3,15 +3,15 @@ import { getConnection } from "@/lib/external/connection-service";
 import { getReviewCacheStats } from "@/lib/external/review-cache-service";
 import {
   CONNECTION_STATUS_LABELS,
-  CONNECTION_STATUS_COLORS,
   SYNC_STATUS_LABELS,
-  SYNC_STATUS_COLORS,
   MANUAL_SYNC_COOLDOWN_MS,
 } from "@/lib/constants/external";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { SyncNowButton } from "./sync-now-button";
+import type { BadgeVariant } from "@/components/ui/badge";
 
 export const metadata = { title: "Integrations" };
 
@@ -34,6 +34,19 @@ function formatDateTime(date: Date): string {
     minute: "2-digit",
   });
 }
+
+const CONNECTION_STATUS_VARIANTS: Record<string, BadgeVariant> = {
+  ACTIVE: "success",
+  EXPIRED: "warning",
+  DISCONNECTED: "neutral",
+  ERROR: "destructive",
+};
+
+const SYNC_STATUS_VARIANTS: Record<string, BadgeVariant> = {
+  IDLE: "neutral",
+  SYNCING: "info",
+  ERROR: "destructive",
+};
 
 export default async function IntegrationsPage() {
   const { businessId } = await requireBusiness();
@@ -59,18 +72,16 @@ export default async function IntegrationsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Integrations</h1>
-        <p className="text-muted-foreground">
-          Connect external services to display additional content on your profile.
-        </p>
-      </div>
+      <BusinessPageHeader
+        title="Integrations"
+        description="Connect external services to display additional content on your profile."
+      />
 
       {/* Google Business Profile card */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
               <CardTitle>Google Business Profile</CardTitle>
               <CardDescription>
                 Display your Google reviews and photos on your UrGlowUp profile.
@@ -78,12 +89,7 @@ export default async function IntegrationsPage() {
               </CardDescription>
             </div>
             {connection && (
-              <Badge
-                className={
-                  CONNECTION_STATUS_COLORS[connection.status] ??
-                  "bg-gray-100 text-gray-800"
-                }
-              >
+              <Badge variant={CONNECTION_STATUS_VARIANTS[connection.status] ?? "neutral"}>
                 {CONNECTION_STATUS_LABELS[connection.status] ?? connection.status}
               </Badge>
             )}
@@ -96,64 +102,61 @@ export default async function IntegrationsPage() {
               {googleConfigured ? (
                 <>
                   <p className="text-sm text-muted-foreground">
-                    Google Business Profile henüz bağlanmadı.
+                    Google Business Profile is not connected yet.
                   </p>
                   <a
                     href="/api/integrations/google/start"
                     className={buttonVariants()}
                   >
-                    Google Business Profile Bağla
+                    Connect Google Business Profile
                   </a>
                 </>
               ) : (
-                <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
-                  Google entegrasyonu henüz yapılandırılmadı.
+                <div className="rounded-xl border border-warning/30 bg-warning/15 p-3 text-sm text-warning-foreground">
+                  Google integration is not configured yet. Contact support to enable this feature.
                 </div>
               )}
             </div>
           ) : (
             <>
               {/* Connection details */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 gap-3 rounded-xl bg-surface-cream p-4 text-sm sm:grid-cols-2">
                 <div>
-                  <p className="font-medium text-muted-foreground">Account</p>
-                  <p>{connection.providerAccountName ?? connection.providerAccountId}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Account</p>
+                  <p className="mt-0.5 font-medium">{connection.providerAccountName ?? connection.providerAccountId}</p>
                 </div>
                 {connection.providerLocationName && (
                   <div>
-                    <p className="font-medium text-muted-foreground">Location</p>
-                    <p>{connection.providerLocationName}</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Location</p>
+                    <p className="mt-0.5 font-medium">{connection.providerLocationName}</p>
                   </div>
                 )}
                 <div>
-                  <p className="font-medium text-muted-foreground">Sync Status</p>
-                  <Badge
-                    className={
-                      SYNC_STATUS_COLORS[connection.syncStatus] ??
-                      "bg-gray-100 text-gray-800"
-                    }
-                  >
-                    {SYNC_STATUS_LABELS[connection.syncStatus] ?? connection.syncStatus}
-                  </Badge>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sync Status</p>
+                  <div className="mt-1">
+                    <Badge variant={SYNC_STATUS_VARIANTS[connection.syncStatus] ?? "neutral"}>
+                      {SYNC_STATUS_LABELS[connection.syncStatus] ?? connection.syncStatus}
+                    </Badge>
+                  </div>
                 </div>
                 <div>
-                  <p className="font-medium text-muted-foreground">Last Synced</p>
-                  <p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Last Synced</p>
+                  <p className="mt-0.5">
                     {connection.lastSyncAt
-                      ? `${formatRelativeTime(connection.lastSyncAt)} (${formatDateTime(connection.lastSyncAt)})`
+                      ? `${formatRelativeTime(connection.lastSyncAt)}`
                       : "Never"}
                   </p>
                 </div>
                 {connection.nextSyncAt && (
                   <div>
-                    <p className="font-medium text-muted-foreground">Next Sync</p>
-                    <p>{formatDateTime(connection.nextSyncAt)}</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next Sync</p>
+                    <p className="mt-0.5">{formatDateTime(connection.nextSyncAt)}</p>
                   </div>
                 )}
                 {reviewStats && (
                   <div>
-                    <p className="font-medium text-muted-foreground">Cached Reviews</p>
-                    <p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Cached Reviews</p>
+                    <p className="mt-0.5">
                       {reviewStats.visibleCount} visible
                       {reviewStats.totalCached !== reviewStats.visibleCount
                         ? ` (${reviewStats.totalCached} total)`
@@ -168,7 +171,7 @@ export default async function IntegrationsPage() {
 
               {/* Error display */}
               {connection.syncStatus === "ERROR" && connection.lastError && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
                   <p className="font-medium">Sync error</p>
                   <p className="mt-1">{connection.lastError}</p>
                 </div>
@@ -176,18 +179,18 @@ export default async function IntegrationsPage() {
 
               {/* EXPIRED status — reconnect prompt */}
               {connection.status === "EXPIRED" && (
-                <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 space-y-2">
-                  <p className="font-medium">Yeniden bağlantı gerekiyor</p>
+                <div className="space-y-2 rounded-xl border border-warning/30 bg-warning/15 p-3 text-sm text-warning-foreground">
+                  <p className="font-medium">Reconnection required</p>
                   <p>
-                    Google erişim tokenınızın süresi doldu. Senkronizasyona devam etmek için
-                    lütfen Google Business Profile hesabınızı yeniden bağlayın.
+                    Your Google access token has expired. Please reconnect your Google Business
+                    Profile account to continue syncing.
                   </p>
                   {googleConfigured && (
                     <a
                       href="/api/integrations/google/start"
                       className={buttonVariants({ variant: "outline", size: "sm" })}
                     >
-                      Google Business Profile Bağla
+                      Reconnect Google Business Profile
                     </a>
                   )}
                 </div>
@@ -195,7 +198,7 @@ export default async function IntegrationsPage() {
 
               {/* Manual sync button */}
               {connection.status === "ACTIVE" && (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <SyncNowButton
                     isSyncing={connection.syncStatus === "SYNCING"}
                     isInCooldown={isInCooldown}
