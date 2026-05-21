@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -77,11 +78,11 @@ export function GalleryLightbox({ items }: { items: GalleryItem[] }) {
                 </div>
               </>
             ) : (
-              <img
+              <Image
                 src={item.thumbnailUrl}
                 alt={item.title ?? "Portfolio"}
-                className="size-full object-cover transition-transform group-hover:scale-105"
-                loading="lazy"
+                fill
+                className="object-cover transition-transform group-hover:scale-105"
               />
             )}
             {item.title && (
@@ -152,6 +153,7 @@ export function GalleryLightbox({ items }: { items: GalleryItem[] }) {
                 playsInline
               />
             ) : (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={current.id}
                 src={current.url}
