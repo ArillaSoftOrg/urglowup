@@ -17,18 +17,6 @@ function pickGradient(name: string): string {
   return COVER_GRADIENTS[index];
 }
 
-function StarRating({ avg, count }: { avg: number; count: number }) {
-  const rounded = Math.round(avg * 10) / 10;
-  return (
-    <span className="flex shrink-0 items-center gap-1">
-      <Star className="size-3 fill-amber-400 text-amber-400" />
-      <span className="font-medium text-foreground">{rounded.toFixed(1)}</span>
-      <span>·</span>
-      <span>{count} yorum</span>
-    </span>
-  );
-}
-
 export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
   const { name, slug, coverImageUrl, city, district, categories, reviewCount, reviewAvg } = business;
   const gradient = pickGradient(name);
@@ -38,10 +26,10 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
   return (
     <Link
       href={`/b/${slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+      className="group flex flex-col transition-transform active:scale-[0.98]"
     >
-      {/* Media — aspect-ratio driven, no logo overlay */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden">
+      {/* Media tile */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
@@ -51,32 +39,29 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
         ) : (
           <div className={`size-full bg-gradient-to-br ${gradient}`} />
         )}
-      </div>
-
-      {/* Body */}
-      <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <p className="line-clamp-1 text-sm font-semibold leading-tight">{name}</p>
-
-        {firstCategory && (
-          <span className="inline-flex w-fit items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            {firstCategory.name}
+        {reviewCount === 0 && (
+          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
+            Yeni
           </span>
         )}
+      </div>
 
-        {/* Single-line metadata: rating/status · location */}
-        <p className="mt-auto flex items-center gap-1 truncate text-xs text-muted-foreground">
-          {reviewCount > 0 && reviewAvg !== null ? (
-            <StarRating avg={reviewAvg} count={reviewCount} />
-          ) : (
-            <span className="shrink-0">Yeni işletme</span>
+      {/* Text block */}
+      <div className="flex flex-col gap-1 pt-2">
+        <div className="flex items-start justify-between gap-2">
+          <p className="line-clamp-2 text-sm font-semibold leading-tight">{name}</p>
+          {reviewCount > 0 && reviewAvg !== null && (
+            <span className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-foreground">
+              <Star className="size-3 fill-amber-400 text-amber-400" />
+              {(Math.round(reviewAvg * 10) / 10).toFixed(1)}
+            </span>
           )}
-          {locationLabel && (
-            <>
-              <span className="shrink-0">·</span>
-              <span className="truncate">{locationLabel}</span>
-            </>
-          )}
-        </p>
+        </div>
+        {(firstCategory || locationLabel) && (
+          <p className="truncate text-xs text-muted-foreground">
+            {[firstCategory?.name, locationLabel].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </div>
     </Link>
   );
