@@ -25,17 +25,17 @@ function pickGradient(name: string): string {
 }
 
 export function CategoryCard({ category }: { category: MarketplaceCategory }) {
-  const { name, slug, imageUrl, colorHex, iconName, businessCount } = category;
+  const { name, slug, imageUrl, colorHex, iconName } = category;
   const gradient = pickGradient(name);
   const IconComponent = iconName && CATEGORY_ICONS[iconName as keyof typeof CATEGORY_ICONS];
 
   return (
     <Link
       href={`/category/${slug}`}
-      className="group relative block w-full overflow-hidden rounded-xl shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
+      className="group flex flex-col transition-transform active:scale-[0.98]"
     >
-      <div className="relative aspect-[4/3] w-full">
-        {/* Background: image, color, or gradient fallback */}
+      {/* Media tile */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -50,32 +50,18 @@ export function CategoryCard({ category }: { category: MarketplaceCategory }) {
         ) : (
           <div className={`size-full bg-gradient-to-br ${gradient}`} />
         )}
-
-        {/* Bottom gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-
-        {/* Icon badge — top-left */}
-        {IconComponent && (
-          <div
-            className="absolute left-2.5 top-2.5 flex size-9 items-center justify-center rounded-full shadow-sm sm:size-10"
-            style={colorHex ? { backgroundColor: colorHex } : { backgroundColor: "rgba(0, 0, 0, 0.3)" }}
-          >
-            <IconComponent className="size-[18px] text-white sm:size-5" />
+        {!imageUrl && IconComponent && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <IconComponent className="size-8 text-white/80 sm:size-10" />
           </div>
         )}
+      </div>
 
-        {/* Text overlay — bottom */}
-        <div className="absolute inset-x-0 bottom-0 px-2.5 pb-2.5">
-          <p className="truncate text-[15px] font-semibold leading-tight text-white drop-shadow-sm">
-            {getCategoryLabel(slug, name)}
-          </p>
-          <p className="mt-0.5 text-[12px] text-white/85">
-            {businessCount} işletme
-          </p>
-        </div>
-
-        {/* Inset ring for definition */}
-        <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10" />
+      {/* Text block */}
+      <div className="flex flex-col gap-1 pt-2">
+        <p className="line-clamp-1 text-sm font-semibold leading-tight">
+          {getCategoryLabel(slug, name)}
+        </p>
       </div>
     </Link>
   );
