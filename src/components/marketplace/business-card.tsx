@@ -1,16 +1,15 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Star, MapPin } from "lucide-react";
+import { Star } from "lucide-react";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
-// Deterministic gradient based on business name initial
+// Deterministic gradient based on business name initial — softer tones
 const COVER_GRADIENTS = [
-  "from-rose-400 to-pink-600",
-  "from-purple-400 to-violet-600",
-  "from-sky-400 to-blue-600",
-  "from-amber-400 to-orange-500",
-  "from-teal-400 to-emerald-600",
-  "from-fuchsia-400 to-pink-600",
+  "from-rose-200 to-pink-300",
+  "from-purple-200 to-violet-300",
+  "from-sky-200 to-blue-300",
+  "from-amber-200 to-orange-300",
+  "from-teal-200 to-emerald-300",
+  "from-stone-200 to-zinc-300",
 ];
 
 function pickGradient(name: string): string {
@@ -21,28 +20,28 @@ function pickGradient(name: string): string {
 function StarRating({ avg, count }: { avg: number; count: number }) {
   const rounded = Math.round(avg * 10) / 10;
   return (
-    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+    <span className="flex shrink-0 items-center gap-1">
       <Star className="size-3 fill-amber-400 text-amber-400" />
       <span className="font-medium text-foreground">{rounded.toFixed(1)}</span>
       <span>·</span>
-      <span>{count} değerlendirme</span>
-    </div>
+      <span>{count} yorum</span>
+    </span>
   );
 }
 
 export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
-  const { name, slug, coverImageUrl, logoUrl, city, district, categories, reviewCount, reviewAvg } = business;
+  const { name, slug, coverImageUrl, city, district, categories, reviewCount, reviewAvg } = business;
   const gradient = pickGradient(name);
-  const visibleCategories = categories.slice(0, 2);
-  const locationParts = [district, city].filter(Boolean);
+  const firstCategory = categories[0]?.category ?? null;
+  const locationLabel = district || city || null;
 
   return (
     <Link
       href={`/b/${slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
     >
-      {/* Cover */}
-      <div className="relative h-28 w-full overflow-hidden sm:h-36 lg:h-44 xl:h-52">
+      {/* Media — aspect-ratio driven, no logo overlay */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
@@ -50,53 +49,34 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
             className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div
-            className={`size-full bg-gradient-to-br ${gradient}`}
-          />
-        )}
-
-        {/* Logo overlay */}
-        {logoUrl && (
-          <div className="absolute bottom-2 left-3 size-8 overflow-hidden rounded-lg border-2 border-background bg-background shadow-sm sm:size-10">
-            <img
-              src={logoUrl}
-              alt={`${name} logo`}
-              className="size-full object-cover"
-            />
-          </div>
+          <div className={`size-full bg-gradient-to-br ${gradient}`} />
         )}
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col gap-2 p-2.5 sm:gap-2.5 sm:p-3.5">
-        <p className="truncate text-sm font-semibold leading-tight sm:text-base">{name}</p>
+      <div className="flex flex-1 flex-col gap-1.5 p-3">
+        <p className="line-clamp-1 text-sm font-semibold leading-tight">{name}</p>
 
-        {visibleCategories.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {visibleCategories.map(({ category }, i) => (
-              <Badge key={category.slug} variant="neutral" className={i > 0 ? "text-xs max-sm:hidden" : "text-xs"}>
-                {category.name}
-              </Badge>
-            ))}
-          </div>
+        {firstCategory && (
+          <span className="inline-flex w-fit items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            {firstCategory.name}
+          </span>
         )}
 
-        <div className="mt-auto flex items-center justify-between gap-2">
+        {/* Single-line metadata: rating/status · location */}
+        <p className="mt-auto flex items-center gap-1 truncate text-xs text-muted-foreground">
           {reviewCount > 0 && reviewAvg !== null ? (
             <StarRating avg={reviewAvg} count={reviewCount} />
           ) : (
-            <span className="text-xs text-muted-foreground">Henüz değerlendirme yok</span>
+            <span className="shrink-0">Yeni işletme</span>
           )}
-
-          {locationParts.length > 0 && (
-            <div className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-              <MapPin className="size-3" />
-              <span className="max-w-[100px] truncate">
-                {locationParts.join(", ")}
-              </span>
-            </div>
+          {locationLabel && (
+            <>
+              <span className="shrink-0">·</span>
+              <span className="truncate">{locationLabel}</span>
+            </>
           )}
-        </div>
+        </p>
       </div>
     </Link>
   );
