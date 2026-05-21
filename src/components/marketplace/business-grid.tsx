@@ -23,7 +23,7 @@ export function BusinessGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
       {businesses.map((business) => (
         <BusinessCard key={business.id} business={business} />
       ))}

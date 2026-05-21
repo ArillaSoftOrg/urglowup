@@ -287,16 +287,16 @@ export function FilterBar({
         </Button>
       </div>
 
-      {/* Desktop: full inline filter bar */}
-      <div className="hidden flex-wrap items-center gap-2 md:flex">
-        <div className="flex min-w-[180px] flex-1 items-center gap-1.5">
+      {/* Desktop: 2-row filter layout */}
+      <div className="hidden flex-col gap-3 md:flex">
+        <div className="flex items-center gap-1.5">
           <Input
             type="search"
             placeholder="Uzman ara..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            className="h-9"
+            className="h-9 flex-1"
           />
           <Button
             variant="outline"
@@ -308,7 +308,9 @@ export function FilterBar({
             <Search className="size-4" />
           </Button>
         </div>
-        <FilterControls {...filterControlsProps} />
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterControls {...filterControlsProps} />
+        </div>
       </div>
 
       {/* Mobile filter sheet */}

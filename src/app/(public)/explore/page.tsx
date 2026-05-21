@@ -47,41 +47,41 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-10">
-      {/* Header */}
-      <div className="mb-5 text-center sm:mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Güzellik &amp; Kişisel Bakım
-        </p>
-        <h1 className="mt-1.5 text-3xl font-semibold tracking-[-0.02em] md:text-4xl">
-          Uzmanları Keşfet
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground md:text-base">
-          Size yakın uzmanları keşfedin — gerçek çalışmaları görün, yorumları
-          okuyun ve randevu alın.
-        </p>
-      </div>
-
-      {/* Search & Filters */}
-      <div className="mb-6 rounded-2xl bg-surface-cream px-5 py-4 sm:mb-8">
-        <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
-          <FilterBar
-            categories={activeCategories.map((c) => ({ name: c.name, slug: c.slug }))}
-            cities={cities}
-            showCategory
-            showCity
-          />
-        </Suspense>
+      {/* Hero + Search — unified control zone */}
+      <div className="mb-8 overflow-hidden rounded-3xl border border-border/60 bg-surface-cream sm:mb-10 lg:mb-12">
+        <div className="relative px-6 py-8 text-center sm:px-10 sm:py-10 md:py-12">
+          <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-[600px] -translate-x-1/2 rounded-full bg-brand-pink/10 blur-3xl" />
+          <p className="relative text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+            Güzellik &amp; Kişisel Bakım
+          </p>
+          <h1 className="relative mt-2 text-3xl font-semibold tracking-[-0.025em] sm:text-4xl md:text-5xl">
+            Uzmanları Keşfet
+          </h1>
+          <p className="relative mx-auto mt-2.5 max-w-md text-sm text-muted-foreground md:text-base">
+            Size yakın uzmanları keşfedin — gerçek çalışmaları görün, yorumları okuyun ve randevu alın.
+          </p>
+        </div>
+        <div className="border-t border-border/40 bg-background/50 px-5 py-4 sm:px-8">
+          <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
+            <FilterBar
+              categories={activeCategories.map((c) => ({ name: c.name, slug: c.slug }))}
+              cities={cities}
+              showCategory
+              showCity
+            />
+          </Suspense>
+        </div>
       </div>
 
       {/* Browse sections — hidden when any filter is active */}
       {!hasAnyFilter && activeCategories.length > 0 && (
-        <section className="mb-7 sm:mb-10">
+        <section className="mb-8 sm:mb-10 lg:mb-12">
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 Kategoriler
               </p>
-              <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em]">
+              <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
                 Ne arıyorsun?
               </h2>
             </div>
@@ -94,7 +94,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
           </div>
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
             {activeCategories.map((category) => (
-              <div key={category.id} className="w-[42vw] max-w-[160px] shrink-0 snap-start sm:w-auto">
+              <div key={category.id} className="w-[44vw] max-w-[180px] shrink-0 snap-start sm:w-auto">
                 <CategoryCard category={category} />
               </div>
             ))}
@@ -103,12 +103,12 @@ export default async function ExplorePage({ searchParams }: PageProps) {
       )}
 
       {!hasAnyFilter && cities.length > 0 && (
-        <section className="mb-7 sm:mb-10">
+        <section className="mb-8 sm:mb-10 lg:mb-12">
           <div className="mb-4">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Şehirler
             </p>
-            <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em]">
+            <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
               Şehrine göre gözat
             </h2>
           </div>
@@ -130,7 +130,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
       {/* Results */}
       <section>
         <div className="mb-4">
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="text-sm font-medium text-muted-foreground md:text-base">
             {hasAnyFilter
               ? `${businesses.length} uzman bulundu`
               : businesses.length > 0

@@ -31,6 +31,8 @@ export type MarketplaceCategory = {
   slug: string;
   description: string | null;
   imageUrl: string | null;
+  colorHex?: string | null;
+  iconName?: string | null;
   sortOrder: number;
   /** Count of active visible businesses in this category */
   businessCount: number;

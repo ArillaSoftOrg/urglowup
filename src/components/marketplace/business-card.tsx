@@ -5,12 +5,12 @@ import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
 // Deterministic gradient based on business name initial
 const COVER_GRADIENTS = [
-  "from-pink-100 to-rose-200",
-  "from-purple-100 to-violet-200",
-  "from-sky-100 to-blue-200",
-  "from-amber-100 to-orange-200",
-  "from-teal-100 to-emerald-200",
-  "from-fuchsia-100 to-pink-200",
+  "from-rose-400 to-pink-600",
+  "from-purple-400 to-violet-600",
+  "from-sky-400 to-blue-600",
+  "from-amber-400 to-orange-500",
+  "from-teal-400 to-emerald-600",
+  "from-fuchsia-400 to-pink-600",
 ];
 
 function pickGradient(name: string): string {
@@ -42,7 +42,7 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
       className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
       {/* Cover */}
-      <div className="relative h-28 w-full overflow-hidden sm:h-36 lg:h-44">
+      <div className="relative h-28 w-full overflow-hidden sm:h-36 lg:h-44 xl:h-52">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}

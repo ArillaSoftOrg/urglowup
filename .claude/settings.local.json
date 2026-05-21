@@ -37,7 +37,9 @@
       "Bash(git push *)",
       "Bash(Select-Object Name, PSIsContainer)",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\prisma\\\\migrations\" -Directory | Sort-Object CreationTime -Descending | Select-Object -First 3 | ForEach-Object { $_.Name })",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s \"http://localhost:3000/explore\")"
     ]
   }
 }
