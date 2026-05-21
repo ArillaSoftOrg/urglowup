@@ -87,7 +87,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
               Tüm kategoriler →
             </Link>
           </div>
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 sm:gap-4 md:grid-cols-4 xl:grid-cols-5">
             {activeCategories.map((category) => (
               <div key={category.id} className="w-[40vw] max-w-[165px] shrink-0 snap-start sm:w-auto">
                 <CategoryCard category={category} />
@@ -99,7 +99,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
       {!hasAnyFilter && cities.length > 0 && (
         <section className="mb-8 lg:mb-10">
-          <h2 className="mb-4 text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
+          <h2 className="mb-3 text-base font-semibold">
             Bölgeye göre keşfet
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -119,15 +119,11 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
       {/* Results */}
       <section>
-        <div className="mb-4">
-          <p className="text-sm font-medium text-muted-foreground md:text-base">
-            {hasAnyFilter
-              ? `${businesses.length} uzman bulundu`
-              : businesses.length > 0
-                ? `Tüm uzmanlar · ${businesses.length} sonuç`
-                : "Tüm Uzmanlar"}
+        {hasAnyFilter && (
+          <p className="mb-4 text-sm font-medium text-muted-foreground md:text-base">
+            {businesses.length} uzman bulundu
           </p>
-        </div>
+        )}
 
         {businesses.length === 0 && hasAnyFilter ? (
           <EmptyFilterState clearHref="/explore" />
