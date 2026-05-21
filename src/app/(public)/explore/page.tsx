@@ -9,7 +9,7 @@ import {
 } from "@/lib/queries/marketplace";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
-import { FilterBar } from "@/components/marketplace/filter-bar";
+import { SearchPanel } from "@/components/marketplace/search-panel";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 
 export const metadata: Metadata = {
@@ -47,27 +47,21 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-10">
-      {/* Hero + Search — unified control zone */}
-      <div className="mb-7 overflow-hidden rounded-3xl border border-border/60 bg-surface-cream lg:mb-12">
-        <div className="relative px-6 py-8 text-center sm:px-10 sm:py-10 md:py-12">
-          <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-[600px] -translate-x-1/2 rounded-full bg-brand-pink/10 blur-3xl" />
-          <p className="relative text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-            Güzellik &amp; Kişisel Bakım
-          </p>
-          <h1 className="relative mt-2 text-3xl font-semibold tracking-[-0.025em] sm:text-4xl md:text-5xl">
-            Uzmanları Keşfet
-          </h1>
-          <p className="relative mx-auto mt-2.5 max-w-md text-sm text-muted-foreground md:text-base">
-            Size yakın uzmanları keşfedin — gerçek çalışmaları görün, yorumları okuyun ve randevu alın.
-          </p>
-        </div>
-        <div className="border-t border-border/40 bg-background/50 px-5 py-4 sm:px-8">
+      {/* Compact search panel */}
+      <div className="mb-6 overflow-hidden rounded-3xl border border-border/60 bg-surface-cream lg:mb-10">
+        <div className="px-5 py-5 sm:px-8 sm:py-6">
+          <div className="mb-3 sm:mb-4">
+            <h1 className="text-xl font-semibold tracking-[-0.02em] sm:text-2xl">
+              Uzmanını bul
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Hizmet, işletme veya kategoriye göre arama yap.
+            </p>
+          </div>
           <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
-            <FilterBar
+            <SearchPanel
               categories={activeCategories.map((c) => ({ name: c.name, slug: c.slug }))}
               cities={cities}
-              showCategory
-              showCity
             />
           </Suspense>
         </div>
