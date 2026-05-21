@@ -48,7 +48,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
   return (
     <div className="container mx-auto px-4 py-6 sm:py-10">
       {/* Hero + Search — unified control zone */}
-      <div className="mb-8 overflow-hidden rounded-3xl border border-border/60 bg-surface-cream sm:mb-10 lg:mb-12">
+      <div className="mb-7 overflow-hidden rounded-3xl border border-border/60 bg-surface-cream lg:mb-12">
         <div className="relative px-6 py-8 text-center sm:px-10 sm:py-10 md:py-12">
           <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-[600px] -translate-x-1/2 rounded-full bg-brand-pink/10 blur-3xl" />
           <p className="relative text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
@@ -75,7 +75,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
       {/* Browse sections — hidden when any filter is active */}
       {!hasAnyFilter && activeCategories.length > 0 && (
-        <section className="mb-8 sm:mb-10 lg:mb-12">
+        <section className="mb-9 lg:mb-12">
           <div className="mb-5 flex items-end justify-between gap-4">
             <h2 className="text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
               Ne arıyorsun?
@@ -98,7 +98,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
       )}
 
       {!hasAnyFilter && cities.length > 0 && (
-        <section className="mb-8 sm:mb-10 lg:mb-12">
+        <section className="mb-8 lg:mb-10">
           <h2 className="mb-4 text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
             Bölgeye göre keşfet
           </h2>
