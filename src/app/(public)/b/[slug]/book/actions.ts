@@ -16,6 +16,7 @@ import {
   sendNewRequestEmailToBusiness,
   sendRequestReceivedEmailToCustomer,
 } from "@/lib/email-notifications";
+import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
 import type { DayOfWeek } from "@/generated/prisma/enums";
 
 // ─── Schemas ────────────────────────────────────────────────────
@@ -237,6 +238,15 @@ export async function createAppointmentRequest(
       await sendRequestReceivedEmailToCustomer(appointment.id);
     } catch (err) {
       console.error("[email] createAppointmentRequest → customer:", err);
+    }
+  });
+
+  // WhatsApp confirmation to customer — errors absorbed internally, never breaks booking
+  after(async () => {
+    try {
+      await sendBookingConfirmationWhatsApp(appointment.id);
+    } catch (err) {
+      console.error("[whatsapp] createAppointmentRequest → unexpected:", err);
     }
   });
 

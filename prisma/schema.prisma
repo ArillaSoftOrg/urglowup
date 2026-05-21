@@ -96,6 +96,17 @@ enum MediaStatus {
   REMOVED
 }
 
+enum NotificationChannel {
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
 enum DayOfWeek {
   MONDAY
   TUESDAY
@@ -255,10 +266,27 @@ model Appointment {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  review Review?
+  review           Review?
+  notificationLogs NotificationLog[]
 
   @@index([businessId, status])
   @@index([customerId])
+}
+
+model NotificationLog {
+  id                String              @id @default(cuid())
+  appointmentId     String
+  appointment       Appointment         @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  channel           NotificationChannel
+  recipientPhone    String
+  templateName      String
+  status            NotificationStatus
+  providerMessageId String?
+  errorMessage      String?
+  createdAt         DateTime            @default(now())
+  sentAt            DateTime?
+
+  @@unique([appointmentId, channel, templateName])
 }
 
 model Review {

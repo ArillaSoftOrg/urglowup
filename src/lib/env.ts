@@ -32,6 +32,14 @@ const envSchema = z.object({
   // Google Maps (Maps Phase 1)
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
   GOOGLE_MAPS_SERVER_API_KEY: z.string().optional(),
+  // WhatsApp Business Cloud API
+  WHATSAPP_NOTIFICATIONS_ENABLED: z.string().optional(),
+  WHATSAPP_DRY_RUN: z.string().optional(),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+  WHATSAPP_ACCESS_TOKEN: z.string().optional(),
+  WHATSAPP_TEMPLATE_BOOKING_CONFIRMED: z.string().optional(),
+  WHATSAPP_TEMPLATE_LANGUAGE: z.string().optional(),
+  WHATSAPP_API_VERSION: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);
