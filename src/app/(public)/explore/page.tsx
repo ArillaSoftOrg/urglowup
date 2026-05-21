@@ -49,13 +49,13 @@ export default async function ExplorePage({ searchParams }: PageProps) {
     <div className="container mx-auto px-4 py-6 sm:py-10">
       {/* Compact search panel */}
       <div className="mb-6 overflow-hidden rounded-3xl border border-border/60 bg-surface-cream lg:mb-10">
-        <div className="px-5 py-5 sm:px-8 sm:py-6">
+        <div className="px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
           <div className="mb-3 sm:mb-4">
-            <h1 className="text-xl font-semibold tracking-[-0.02em] sm:text-2xl">
-              Uzmanını bul
+            <h1 className="text-lg font-semibold tracking-[-0.02em] sm:text-xl md:text-2xl">
+              Hizmet ara
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Hizmet, işletme veya kategoriye göre arama yap.
+            <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm">
+              Hizmet, işletme veya kategori ara.
             </p>
           </div>
           <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>

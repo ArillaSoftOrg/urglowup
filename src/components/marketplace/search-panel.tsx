@@ -103,8 +103,8 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
         />
         {cities && cities.length > 0 && (
           <Select
-            value={currentCity || "_all"}
-            onValueChange={(v) => navigate({ city: v && v !== "_all" ? v : undefined })}
+            value={currentCity || ""}
+            onValueChange={(v) => navigate({ city: v === "_all" || !v ? undefined : v })}
           >
             <SelectTrigger className="h-9 w-full">
               <SelectValue placeholder="Bölge veya ilçe seç" />
@@ -156,11 +156,11 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
         />
         {cities && cities.length > 0 && (
           <Select
-            value={currentCity || "_all"}
-            onValueChange={(v) => navigate({ city: v && v !== "_all" ? v : undefined })}
+            value={currentCity || ""}
+            onValueChange={(v) => navigate({ city: v === "_all" || !v ? undefined : v })}
           >
             <SelectTrigger className="h-9 w-[160px]">
-              <SelectValue />
+              <SelectValue placeholder="Bölge veya ilçe seç" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_all">Bölge veya ilçe seç</SelectItem>
@@ -174,11 +174,11 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
         )}
         {categories && categories.length > 0 && (
           <Select
-            value={currentCategory || "_all"}
-            onValueChange={(v) => navigate({ category: v && v !== "_all" ? v : undefined })}
+            value={currentCategory || ""}
+            onValueChange={(v) => navigate({ category: v === "_all" || !v ? undefined : v })}
           >
             <SelectTrigger className="h-9 w-[180px]">
-              <SelectValue />
+              <SelectValue placeholder="Kategori seç" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_all">Kategori seç</SelectItem>
@@ -224,11 +224,11 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
             {categories && categories.length > 0 && (
               <div className="md:hidden">
                 <Select
-                  value={currentCategory || "_all"}
-                  onValueChange={(v) => navigate({ category: v && v !== "_all" ? v : undefined })}
+                  value={currentCategory || ""}
+                  onValueChange={(v) => navigate({ category: v === "_all" || !v ? undefined : v })}
                 >
                   <SelectTrigger className="h-9 w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="Kategori seç" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_all">Kategori seç</SelectItem>
@@ -243,11 +243,11 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
             )}
             {/* Advanced filters - all viewports */}
             <Select
-              value={currentMinRating || "_all"}
-              onValueChange={(v) => navigate({ minRating: v && v !== "_all" ? v : undefined })}
+              value={currentMinRating || ""}
+              onValueChange={(v) => navigate({ minRating: v === "_all" || !v ? undefined : v })}
             >
               <SelectTrigger className="h-9 w-full">
-                <SelectValue />
+                <SelectValue placeholder="Tüm puanlar" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">Tüm puanlar</SelectItem>
