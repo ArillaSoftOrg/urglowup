@@ -75,7 +75,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
   );
 
   return (
-    <div className="container mx-auto space-y-8 px-4 py-10">
+    <div className="container mx-auto space-y-5 px-4 py-6 sm:space-y-8 sm:py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link href="/" className="hover:underline">

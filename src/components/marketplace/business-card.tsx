@@ -42,7 +42,7 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
       className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
       {/* Cover */}
-      <div className="relative h-44 w-full overflow-hidden">
+      <div className="relative h-28 w-full overflow-hidden sm:h-36 lg:h-44">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
@@ -57,7 +57,7 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
 
         {/* Logo overlay */}
         {logoUrl && (
-          <div className="absolute bottom-2 left-3 size-10 overflow-hidden rounded-lg border-2 border-background bg-background shadow-sm">
+          <div className="absolute bottom-2 left-3 size-8 overflow-hidden rounded-lg border-2 border-background bg-background shadow-sm sm:size-10">
             <img
               src={logoUrl}
               alt={`${name} logo`}
@@ -68,13 +68,13 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col gap-2.5 p-3.5">
-        <p className="truncate font-semibold leading-tight">{name}</p>
+      <div className="flex flex-1 flex-col gap-2 p-2.5 sm:gap-2.5 sm:p-3.5">
+        <p className="truncate text-sm font-semibold leading-tight sm:text-base">{name}</p>
 
         {visibleCategories.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {visibleCategories.map(({ category }) => (
-              <Badge key={category.slug} variant="neutral" className="text-xs">
+            {visibleCategories.map(({ category }, i) => (
+              <Badge key={category.slug} variant="neutral" className={i > 0 ? "text-xs max-sm:hidden" : "text-xs"}>
                 {category.name}
               </Badge>
             ))}

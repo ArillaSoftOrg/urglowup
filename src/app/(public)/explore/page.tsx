@@ -46,9 +46,9 @@ export default async function ExplorePage({ searchParams }: PageProps) {
   );
 
   return (
-    <div className="container mx-auto px-4 py-10">
+    <div className="container mx-auto px-4 py-6 sm:py-10">
       {/* Header */}
-      <div className="mb-8 text-center">
+      <div className="mb-5 text-center sm:mb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           Güzellik &amp; Kişisel Bakım
         </p>
@@ -62,7 +62,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
       </div>
 
       {/* Search & Filters */}
-      <div className="mb-8 rounded-2xl bg-surface-cream px-5 py-4">
+      <div className="mb-6 rounded-2xl bg-surface-cream px-5 py-4 sm:mb-8">
         <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
           <FilterBar
             categories={activeCategories.map((c) => ({ name: c.name, slug: c.slug }))}
@@ -75,7 +75,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
       {/* Browse sections — hidden when any filter is active */}
       {!hasAnyFilter && activeCategories.length > 0 && (
-        <section className="mb-10">
+        <section className="mb-7 sm:mb-10">
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
@@ -92,16 +92,18 @@ export default async function ExplorePage({ searchParams }: PageProps) {
               Tümünü keşfet →
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
             {activeCategories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
+              <div key={category.id} className="w-[42vw] max-w-[160px] shrink-0 snap-start sm:w-auto">
+                <CategoryCard category={category} />
+              </div>
             ))}
           </div>
         </section>
       )}
 
       {!hasAnyFilter && cities.length > 0 && (
-        <section className="mb-10">
+        <section className="mb-7 sm:mb-10">
           <div className="mb-4">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Şehirler

@@ -4,16 +4,18 @@ import { getCategoryLabel } from "@/lib/category-labels";
 
 // Deterministic gradient fallback when no imageUrl
 const CATEGORY_GRADIENTS = [
-  "from-pink-100 to-rose-200",
-  "from-purple-100 to-violet-200",
-  "from-sky-100 to-blue-200",
-  "from-amber-100 to-orange-200",
-  "from-teal-100 to-emerald-200",
-  "from-fuchsia-100 to-pink-200",
-  "from-lime-100 to-green-200",
-  "from-red-100 to-orange-200",
-  "from-indigo-100 to-blue-200",
-  "from-cyan-100 to-teal-200",
+  "from-rose-400 to-pink-600",
+  "from-purple-400 to-violet-600",
+  "from-sky-400 to-blue-600",
+  "from-amber-400 to-orange-500",
+  "from-teal-400 to-emerald-600",
+  "from-fuchsia-400 to-pink-600",
+  "from-lime-400 to-green-500",
+  "from-red-400 to-rose-600",
+  "from-indigo-400 to-blue-600",
+  "from-cyan-400 to-teal-500",
+  "from-orange-400 to-red-500",
+  "from-emerald-400 to-cyan-500",
 ];
 
 function pickGradient(name: string): string {
@@ -28,21 +30,24 @@ export function CategoryCard({ category }: { category: MarketplaceCategory }) {
   return (
     <Link
       href={`/category/${slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+      className="group flex w-full flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="relative h-32 w-full overflow-hidden">
+      <div className="relative h-24 w-full overflow-hidden sm:h-28">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={name}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          <>
+            <img
+              src={imageUrl}
+              alt={name}
+              className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/25 to-transparent" />
+          </>
         ) : (
           <div className={`size-full bg-gradient-to-br ${gradient}`} />
         )}
       </div>
-      <div className="p-3">
-        <p className="font-medium leading-tight">{getCategoryLabel(slug, name)}</p>
+      <div className="p-2.5">
+        <p className="text-sm font-medium leading-tight">{getCategoryLabel(slug, name)}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {businessCount} işletme
         </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Plus, Tag, Trash2, Pencil } from "lucide-react";
+import { ImagePlus, Loader2, Plus, Tag, Trash2, Pencil } from "lucide-react";
 import {
   createCategory,
   updateCategory,
@@ -72,6 +72,76 @@ function CategoryForm({
   const [slugTouched, setSlugTouched] = useState(!!initial.slug);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setUploadError("Invalid file type. Allowed: JPEG, PNG, WebP");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("File too large. Maximum: 10 MB");
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    try {
+      const signRes = await fetch("/api/media/sign-upload-category", { method: "POST" });
+      if (!signRes.ok) {
+        const data = await signRes.json();
+        throw new Error(data.error || "Failed to get upload signature.");
+      }
+      const { signature, timestamp, apiKey, cloudName, folder } = await signRes.json();
+
+      const secureUrl = await new Promise<string>((resolve, reject) => {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("api_key", apiKey);
+        fd.append("timestamp", String(timestamp));
+        fd.append("signature", signature);
+        fd.append("folder", folder);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`);
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve((JSON.parse(xhr.responseText) as { secure_url: string }).secure_url);
+          } else {
+            try {
+              const err = JSON.parse(xhr.responseText) as { error?: { message?: string } };
+              reject(new Error(err.error?.message || "Upload failed."));
+            } catch {
+              reject(new Error("Upload failed."));
+            }
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error during upload."));
+        xhr.send(fd);
+      });
+
+      setFields((prev) => ({ ...prev, imageUrl: secureUrl }));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  }
 
   function handleNameChange(value: string) {
     setFields((prev) => ({
@@ -149,15 +219,67 @@ function CategoryForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="imageUrl">Image URL</Label>
-          <Input
-            id="imageUrl"
-            value={fields.imageUrl}
-            onChange={(e) =>
-              setFields((prev) => ({ ...prev, imageUrl: e.target.value }))
-            }
-            placeholder="https://..."
+          <Label>Category Image</Label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileUpload}
+            className="hidden"
           />
+          {fields.imageUrl ? (
+            <div className="overflow-hidden rounded-md border">
+              <img
+                src={fields.imageUrl}
+                alt="Preview"
+                className="h-24 w-full object-cover"
+              />
+              <div className="flex items-center justify-between border-t bg-muted/50 px-2 py-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-1 py-0.5 text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  Replace
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-1 py-0.5 text-xs text-destructive hover:text-destructive"
+                  onClick={() => setFields((prev) => ({ ...prev, imageUrl: "" }))}
+                  disabled={uploading}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  {uploadProgress > 0 ? `${uploadProgress}%` : "Uploading..."}
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="size-4" />
+                  Upload image
+                </>
+              )}
+            </Button>
+          )}
+          {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="sortOrder">Sort Order</Label>

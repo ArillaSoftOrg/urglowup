@@ -32,7 +32,12 @@
       "Bash(grep *)",
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\prisma\\\\migrations\" -Directory -ErrorAction SilentlyContinue | Get-ChildItem -Directory | Sort-Object Name -Descending | Select-Object -First 3 | ForEach-Object { $_.Parent.Name + \"\\\\\" + $_.Name })",
       "Bash(not exist *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\prisma\\\\migrations\" -Directory | Sort-Object CreationTime -Descending | Select-Object -First 3 | ForEach-Object { $_.Name })",
+      "Bash(git *)"
     ]
   }
 }
