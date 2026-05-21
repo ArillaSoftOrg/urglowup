@@ -77,24 +77,19 @@ export default async function ExplorePage({ searchParams }: PageProps) {
       {!hasAnyFilter && activeCategories.length > 0 && (
         <section className="mb-8 sm:mb-10 lg:mb-12">
           <div className="mb-5 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                Kategoriler
-              </p>
-              <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
-                Ne arıyorsun?
-              </h2>
-            </div>
+            <h2 className="text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
+              Ne arıyorsun?
+            </h2>
             <Link
               href="/explore"
               className="shrink-0 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
-              Tümünü keşfet →
+              Tüm kategoriler →
             </Link>
           </div>
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
             {activeCategories.map((category) => (
-              <div key={category.id} className="w-[44vw] max-w-[180px] shrink-0 snap-start sm:w-auto">
+              <div key={category.id} className="w-[40vw] max-w-[165px] shrink-0 snap-start sm:w-auto">
                 <CategoryCard category={category} />
               </div>
             ))}
@@ -104,14 +99,9 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
       {!hasAnyFilter && cities.length > 0 && (
         <section className="mb-8 sm:mb-10 lg:mb-12">
-          <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Şehirler
-            </p>
-            <h2 className="mt-0.5 text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
-              Şehrine göre gözat
-            </h2>
-          </div>
+          <h2 className="mb-4 text-xl font-semibold tracking-[-0.015em] sm:text-2xl">
+            Bölgeye göre keşfet
+          </h2>
           <div className="flex flex-wrap gap-2">
             {cities.map(({ city, count }) => (
               <Link
