@@ -12,6 +12,7 @@ import { HomeTrustBar } from "@/components/home/home-trust-bar";
 import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeBusinessCTA } from "@/components/home/home-business-cta";
+import { HomeHeroCTAs } from "@/components/home/home-hero-ctas";
 
 export const metadata: Metadata = {
   title: { absolute: "UrGlowUp" },
@@ -51,23 +52,7 @@ export default async function HomePage() {
             Sana yakın güzellik uzmanlarını keşfet. Gerçek çalışmaları gör,
             doğrulanmış yorumları oku ve güvenle randevu al.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/explore"
-              className={cn(buttonVariants({ size: "lg" }), "px-8 shadow-sm")}
-            >
-              Uzmanları Keşfet
-            </Link>
-            <Link
-              href="/for-business"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "px-8"
-              )}
-            >
-              İşletmeler İçin
-            </Link>
-          </div>
+          <HomeHeroCTAs />
         </div>
       </section>
 

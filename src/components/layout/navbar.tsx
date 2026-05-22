@@ -3,6 +3,7 @@ import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { UserRole } from "@/generated/prisma/enums";
+import { NavbarMobileMenu } from "./navbar-mobile-menu";
 
 export async function Navbar() {
   const user = await getCurrentUser();
@@ -52,6 +53,9 @@ export async function Navbar() {
               </SignUpButton>
             </>
           )}
+          <div className="md:hidden">
+            <NavbarMobileMenu navLink={navLink} />
+          </div>
         </div>
       </div>
     </header>
