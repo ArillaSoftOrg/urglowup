@@ -1,17 +1,27 @@
 import type { ReviewStatus } from "@/generated/prisma/enums";
 import type { BadgeVariant } from "@/components/ui/badge";
 
-export const MIN_RATING = 1;
-export const MAX_RATING = 5;
+export const MIN_RATING = 0;
+export const MAX_RATING = 10;
 export const MAX_COMMENT_LENGTH = 1000;
 
+/** Labels for the 5 star positions (each star = 2 points on the 0–10 scale) */
 export const RATING_LABELS: Record<number, string> = {
-  1: "Poor",
-  2: "Fair",
-  3: "Good",
-  4: "Very Good",
-  5: "Excellent",
+  2:  "Poor",
+  4:  "Fair",
+  6:  "Good",
+  8:  "Very Good",
+  10: "Excellent",
 };
+
+/** Returns a human-readable quality label for any 0–10 float rating */
+export function getRatingLabel(rating: number): string {
+  if (rating >= 9) return "Excellent";
+  if (rating >= 7) return "Very Good";
+  if (rating >= 5) return "Good";
+  if (rating >= 3) return "Fair";
+  return "Poor";
+}
 
 export const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
   PENDING: "Pending",

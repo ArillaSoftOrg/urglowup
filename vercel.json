@@ -7,6 +7,10 @@
     {
       "path": "/api/internal/cache-cleanup",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/internal/rating-recalc",
+      "schedule": "0 4 * * *"
     }
   ]
 }

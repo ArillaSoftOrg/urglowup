@@ -7,7 +7,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Star, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { GoogleReviewsPlaceholder } from "./google-reviews-placeholder";
 import type { BusinessWithDetails } from "@/lib/queries/business";
@@ -15,23 +15,6 @@ import type { BusinessWithDetails } from "@/lib/queries/business";
 interface ReviewSummary {
   averageRating: number | null;
   totalCount: number;
-}
-
-function Stars({ rating }: { rating: number }) {
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star
-          key={i}
-          className={`size-3.5 ${
-            i < rating
-              ? "fill-amber-400 text-amber-400"
-              : "text-muted-foreground/30"
-          }`}
-        />
-      ))}
-    </div>
-  );
 }
 
 function RatingSummary({ summary }: { summary: ReviewSummary }) {
@@ -43,7 +26,7 @@ function RatingSummary({ summary }: { summary: ReviewSummary }) {
         {summary.averageRating?.toFixed(1)}
       </span>
       <div>
-        <Stars rating={Math.round(summary.averageRating ?? 0)} />
+        <p className="text-sm font-medium text-muted-foreground">/ 10</p>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {summary.totalCount} doğrulanmış değerlendirme
         </p>
@@ -125,7 +108,10 @@ export function ReviewsSection({
                             )}
                           </div>
                           <div className="mt-0.5 flex items-center gap-2">
-                            <Stars rating={review.rating} />
+                            <span className="text-sm font-semibold tabular-nums">
+                              {(review.rating as number).toFixed(1)}
+                              <span className="text-xs font-normal text-muted-foreground"> / 10</span>
+                            </span>
                             <span className="text-xs text-muted-foreground">
                               {formatReviewDate(review.createdAt)}
                             </span>

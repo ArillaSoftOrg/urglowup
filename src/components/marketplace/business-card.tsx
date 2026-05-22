@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star } from "lucide-react";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
 // Deterministic gradient based on business name initial — softer tones
@@ -53,9 +52,9 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
         <div className="flex items-start justify-between gap-2">
           <p className="line-clamp-2 text-sm font-semibold leading-tight">{name}</p>
           {reviewCount > 0 && reviewAvg !== null && (
-            <span className="flex shrink-0 items-center gap-0.5 text-xs font-medium text-foreground">
-              <Star className="size-3 fill-amber-400 text-amber-400" />
+            <span className="shrink-0 text-xs font-medium tabular-nums text-foreground">
               {(Math.round(reviewAvg * 10) / 10).toFixed(1)}
+              <span className="text-muted-foreground"> / 10</span>
             </span>
           )}
         </div>

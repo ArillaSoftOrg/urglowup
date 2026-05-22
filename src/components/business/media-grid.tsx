@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -244,6 +245,7 @@ function DeleteMediaButton({
   label?: string;
   size?: "default" | "sm";
 }) {
+  const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -261,6 +263,7 @@ function DeleteMediaButton({
         setError(data.error || "Delete failed.");
       } else {
         setConfirmOpen(false);
+        router.refresh();
       }
     });
   }
@@ -315,17 +318,26 @@ function DeleteMediaButton({
 }
 
 function DeleteMediaDropdownItem({ mediaId }: { mediaId: string }) {
+  const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function handleDelete() {
+    setError(null);
     startTransition(async () => {
       const res = await fetch("/api/media/delete", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mediaId }),
       });
-      if (res.ok) setConfirmOpen(false);
+      if (res.ok) {
+        setConfirmOpen(false);
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Delete failed.");
+      }
     });
   }
 
@@ -350,6 +362,7 @@ function DeleteMediaDropdownItem({ mediaId }: { mediaId: string }) {
               undone.
             </DialogDescription>
           </DialogHeader>
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button
               variant="outline"

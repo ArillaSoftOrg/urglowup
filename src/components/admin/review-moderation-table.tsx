@@ -38,13 +38,14 @@ function formatDate(date: Date): string {
 }
 
 function StarRating({ rating }: { rating: number }) {
+  const filledStars = Math.round(rating / 2);
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
           className={`size-3 ${
-            i < rating
+            i < filledStars
               ? "fill-amber-400 text-amber-400"
               : "text-muted-foreground/30"
           }`}

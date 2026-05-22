@@ -64,38 +64,52 @@ export type BusinessReview = Awaited<
 >[number];
 
 export async function getBusinessReviewStats(businessId: string) {
-  const [aggregate, distribution] = await Promise.all([
-    db.review.aggregate({
+  const [reviews, cachedStats] = await Promise.all([
+    db.review.findMany({
       where: { businessId, status: "APPROVED", source: "URGLOWUP" },
-      _avg: { rating: true },
-      _count: { rating: true },
+      select: { rating: true },
     }),
-    db.review.groupBy({
-      by: ["rating"],
-      where: { businessId, status: "APPROVED", source: "URGLOWUP" },
-      _count: { rating: true },
+    db.businessRatingStats.findUnique({
+      where: { businessId },
+      select: { bayesianScore: true, rawReviewCount: true },
     }),
   ]);
 
-  const ratingDistribution: Record<number, number> = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-  };
-  for (const row of distribution) {
-    ratingDistribution[row.rating] = row._count.rating;
+  const totalCount = reviews.length;
+  const rawAverage =
+    totalCount > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalCount
+      : null;
+
+  // Prefer Bayesian score as the displayed average when available
+  const averageRating = cachedStats?.bayesianScore ?? rawAverage;
+
+  // Distribution by star tier: 1–5 stars, each star = 2 points on the 0–10 scale
+  const ratingDistribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const r of reviews) {
+    const star = Math.min(5, Math.max(1, Math.ceil(r.rating / 2)));
+    ratingDistribution[star] = (ratingDistribution[star] ?? 0) + 1;
   }
 
   return {
-    averageRating: aggregate._avg.rating,
-    totalCount: aggregate._count.rating,
+    averageRating,
+    totalCount: cachedStats?.rawReviewCount ?? totalCount,
     ratingDistribution,
   };
 }
 
 export async function getBusinessReviewSummary(businessId: string) {
+  // Prefer precomputed Bayesian score when available
+  const cached = await db.businessRatingStats.findUnique({
+    where: { businessId },
+    select: { bayesianScore: true, rawReviewCount: true },
+  });
+
+  if (cached?.bayesianScore != null) {
+    return { averageRating: cached.bayesianScore, totalCount: cached.rawReviewCount };
+  }
+
+  // Fallback to raw aggregate (0–10 scale after migration)
   const aggregate = await db.review.aggregate({
     where: { businessId, status: "APPROVED", source: "URGLOWUP" },
     _avg: { rating: true },
@@ -106,4 +120,8 @@ export async function getBusinessReviewSummary(businessId: string) {
     averageRating: aggregate._avg.rating,
     totalCount: aggregate._count.rating,
   };
+}
+
+export async function getBusinessRatingStatsCached(businessId: string) {
+  return db.businessRatingStats.findUnique({ where: { businessId } });
 }

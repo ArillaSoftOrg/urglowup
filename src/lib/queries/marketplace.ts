@@ -21,7 +21,7 @@ export type MarketplaceBusiness = {
   categories: Array<{ category: { name: string; slug: string } }>;
   /** Count of approved UrGlowUp reviews */
   reviewCount: number;
-  /** Average rating (1–5), or null if no reviews */
+  /** Bayesian-adjusted average rating (0–10), or null if no reviews */
   reviewAvg: number | null;
 };
 
@@ -51,7 +51,7 @@ export interface BusinessFilters {
   district?: string;
   /** Free-text search: business name, description, city, district, service names, category names */
   q?: string;
-  /** Minimum average rating (post-query filter). One of: 3, 4, 4.5 */
+  /** Minimum Bayesian rating (post-query filter). One of: 6, 8, 9 */
   minRating?: number;
   /** Require at least one active portfolio/before-after media item */
   hasMedia?: boolean;
@@ -61,7 +61,7 @@ export interface BusinessFilters {
 
 // ─── Filter parser ──────────────────────────────────────────────
 
-const VALID_MIN_RATINGS = [3, 4, 4.5] as const;
+const VALID_MIN_RATINGS = [6, 8, 9] as const;
 type ValidMinRating = (typeof VALID_MIN_RATINGS)[number];
 
 export interface ParsedFilters {
@@ -162,9 +162,8 @@ export async function getMarketplaceBusinesses(
           category: { select: { name: true, slug: true } },
         },
       },
-      reviews: {
-        where: { status: "APPROVED", source: "URGLOWUP" },
-        select: { rating: true },
+      ratingStats: {
+        select: { bayesianScore: true, rawReviewCount: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -172,14 +171,12 @@ export async function getMarketplaceBusinesses(
   });
 
   const mapped = raw.map((b) => {
-    const reviewCount = b.reviews.length;
-    const reviewAvg =
-      reviewCount > 0
-        ? b.reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
-        : null;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { reviews: _reviews, ...rest } = b;
-    return { ...rest, reviewCount, reviewAvg };
+    const { ratingStats, ...rest } = b;
+    return {
+      ...rest,
+      reviewCount: ratingStats?.rawReviewCount ?? 0,
+      reviewAvg: ratingStats?.bayesianScore ?? null,
+    };
   });
 
   return minRating != null

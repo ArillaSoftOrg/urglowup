@@ -39,7 +39,12 @@
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\prisma\\\\migrations\" -Directory | Sort-Object CreationTime -Descending | Select-Object -First 3 | ForEach-Object { $_.Name })",
       "Bash(git *)",
       "Bash(curl -s http://localhost:3000/)",
-      "Bash(curl -s \"http://localhost:3000/explore\")"
+      "Bash(curl -s \"http://localhost:3000/explore\")",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\" -Directory | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\src\" -Recurse -Directory | ForEach-Object { $_.FullName.Replace\\('C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\', ''\\) } | Sort-Object)",
+      "Bash(npx eslint *)",
+      "Bash(powershell -Command \"Start-Sleep -Seconds 3\")",
+      "Bash(Find-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\src\\\\app\\\\api\" -Recurse -Name \"route.ts\")"
     ]
   }
 }

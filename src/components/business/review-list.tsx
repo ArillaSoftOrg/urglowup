@@ -12,13 +12,14 @@ import {
 import type { BusinessReview } from "@/lib/queries/reviews";
 
 function Stars({ rating }: { rating: number }) {
+  const filledStars = Math.round(rating / 2);
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
           className={`size-3.5 ${
-            i < rating
+            i < filledStars
               ? "fill-amber-400 text-amber-400"
               : "text-muted-foreground/30"
           }`}
@@ -61,7 +62,7 @@ function ReviewStats({
               {averageRating?.toFixed(1) ?? "—"}
             </p>
             <div className="flex justify-center">
-              <Stars rating={Math.round(averageRating ?? 0)} />
+              <Stars rating={averageRating ?? 0} />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               {totalCount} review{totalCount !== 1 ? "s" : ""}

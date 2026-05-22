@@ -236,16 +236,19 @@ export function BusinessDetailView({
                         {name || "Customer"}
                       </span>
                       <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <Star
-                            key={i}
-                            className={`size-3 ${
-                              i < r.rating
-                                ? "fill-amber-400 text-amber-400"
-                                : "text-muted-foreground/30"
-                            }`}
-                          />
-                        ))}
+                        {(() => {
+                          const filledStars = Math.round(r.rating / 2);
+                          return Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`size-3 ${
+                                i < filledStars
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          ));
+                        })()}
                       </div>
                     </div>
                     {r.comment && (

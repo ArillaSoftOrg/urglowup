@@ -252,9 +252,9 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">Tüm puanlar</SelectItem>
-                <SelectItem value="3">3+ yıldız</SelectItem>
-                <SelectItem value="4">4+ yıldız</SelectItem>
-                <SelectItem value="4.5">4.5+ yıldız</SelectItem>
+                <SelectItem value="6">6+ puan</SelectItem>
+                <SelectItem value="8">8+ puan</SelectItem>
+                <SelectItem value="9">9+ puan</SelectItem>
               </SelectContent>
             </Select>
             <Button

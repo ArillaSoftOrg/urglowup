@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { EDITABLE_STATUSES, MAX_COMMENT_LENGTH } from "@/lib/constants/reviews";
+import { getGlobalAverage, recalculateBusinessStats } from "@/lib/ratings/calculator";
 
 export type ReviewActionState = {
   success: boolean;
@@ -13,7 +14,7 @@ export type ReviewActionState = {
 
 const submitSchema = z.object({
   appointmentId: z.string().min(1, "Appointment is required"),
-  rating: z.coerce.number().int().min(1, "Rating is required").max(5),
+  rating: z.coerce.number().min(0.1, "Rating is required").max(10),
   comment: z
     .string()
     .max(MAX_COMMENT_LENGTH, `Comment must be under ${MAX_COMMENT_LENGTH} characters`)
@@ -23,7 +24,7 @@ const submitSchema = z.object({
 
 const updateSchema = z.object({
   reviewId: z.string().min(1),
-  rating: z.coerce.number().int().min(1, "Rating is required").max(5),
+  rating: z.coerce.number().min(0.1, "Rating is required").max(10),
   comment: z
     .string()
     .max(MAX_COMMENT_LENGTH, `Comment must be under ${MAX_COMMENT_LENGTH} characters`)
@@ -100,17 +101,24 @@ export async function submitReview(
     };
   }
 
+  // Appointment-linked reviews get full trust weight; unlinked get reduced weight
+  const trustWeight = appointmentId ? 1.0 : 0.75;
+
   await db.review.create({
     data: {
       businessId: appointment.businessId,
       customerId: user.id,
       appointmentId,
       rating,
+      trustWeight,
       comment: comment || null,
       source: "URGLOWUP",
       status: "APPROVED", // Auto-approve for MVP; Phase 9 may change to PENDING
     },
   });
+
+  const globalAvg = await getGlobalAverage();
+  await recalculateBusinessStats(appointment.businessId, globalAvg);
 
   const slug = await getBusinessSlug(appointment.businessId);
   revalidateReviewPaths(slug);
@@ -166,6 +174,9 @@ export async function updateReview(
     data: { rating, comment: comment || null },
   });
 
+  const globalAvg = await getGlobalAverage();
+  await recalculateBusinessStats(review.businessId, globalAvg);
+
   const slug = await getBusinessSlug(review.businessId);
   revalidateReviewPaths(slug);
 
@@ -199,6 +210,9 @@ export async function removeReview(
     where: { id: reviewId },
     data: { status: "REMOVED" },
   });
+
+  const globalAvg = await getGlobalAverage();
+  await recalculateBusinessStats(review.businessId, globalAvg);
 
   const slug = await getBusinessSlug(review.businessId);
   revalidateReviewPaths(slug);

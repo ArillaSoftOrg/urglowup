@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, BadgeCheck, Star } from "lucide-react";
 
@@ -47,6 +48,13 @@ export function HomeVerifiedCallout() {
                 </li>
               ))}
             </ul>
+
+            <Link
+              href="/puanlama-sistemi"
+              className="mt-6 inline-block text-sm font-medium text-brand-pink-foreground underline-offset-4 hover:underline"
+            >
+              Puanlama sistemimizi incele →
+            </Link>
           </div>
 
           <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-background p-6 shadow-sm md:w-56">
