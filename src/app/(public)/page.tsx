@@ -13,8 +13,6 @@ import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeBusinessCTA } from "@/components/home/home-business-cta";
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: { absolute: "UrGlowUp" },
   description:

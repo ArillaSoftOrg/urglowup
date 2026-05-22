@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth";
+import { UserRole } from "@/generated/prisma/enums";
 
 export async function Navbar() {
-  const { userId } = await auth();
+  const user = await getCurrentUser();
+
+  const navLink = user
+    ? user.role === UserRole.BUSINESS_OWNER
+      ? { label: "İşletme Paneliniz", href: "/business/dashboard" }
+      : user.role === UserRole.ADMIN
+        ? { label: "Admin Paneli", href: "/admin" }
+        : { label: "Hesabım", href: "/account" }
+    : { label: "İşletmeler İçin", href: "/for-business" };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -21,15 +30,15 @@ export async function Navbar() {
             Keşfet
           </Link>
           <Link
-            href="/for-business"
+            href={navLink.href}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            İşletmeler İçin
+            {navLink.label}
           </Link>
         </nav>
 
         <div className="flex items-center gap-3">
-          {userId ? (
+          {user ? (
             <UserButton />
           ) : (
             <>
