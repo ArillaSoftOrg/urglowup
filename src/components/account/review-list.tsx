@@ -42,7 +42,7 @@ function Stars({ rating }: { rating: number }) {
 }
 
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
+  return new Date(date).toLocaleDateString("tr-TR", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -82,13 +82,13 @@ function ReviewableAppointmentCard({
           </p>
           <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
             <CalendarCheck className="size-3" />
-            {formatDate(appointment.requestedDate)} at{" "}
+            {formatDate(appointment.requestedDate)} tarihinde{" "}
             {appointment.requestedTime}
           </div>
         </div>
         <Button size="sm" onClick={() => setShowForm(true)}>
           <Star className="size-3" />
-          Write a review
+          Yorum yaz
         </Button>
       </CardContent>
     </Card>
@@ -144,7 +144,7 @@ function ReviewCard({ review }: { review: CustomerReview }) {
             {review.appointment && (
               <p className="text-xs text-muted-foreground">
                 {review.appointment.service?.name} &middot;{" "}
-                {formatDate(review.appointment.requestedDate)} at{" "}
+                {formatDate(review.appointment.requestedDate)} tarihinde{" "}
                 {review.appointment.requestedTime}
               </p>
             )}
@@ -156,11 +156,11 @@ function ReviewCard({ review }: { review: CustomerReview }) {
 
         {isRemoved ? (
           <p className="text-sm italic text-muted-foreground">
-            Review removed
+            Yorum kaldırıldı
           </p>
         ) : isHidden ? (
           <p className="text-sm italic text-muted-foreground">
-            Review hidden by moderator
+            Yorum moderatör tarafından gizlendi
           </p>
         ) : (
           <>
@@ -183,7 +183,7 @@ function ReviewCard({ review }: { review: CustomerReview }) {
                 onClick={() => setEditing(true)}
               >
                 <Pencil className="size-3" />
-                Edit
+                Düzenle
               </Button>
               <Button
                 variant="ghost"
@@ -192,7 +192,7 @@ function ReviewCard({ review }: { review: CustomerReview }) {
                 onClick={() => setConfirmRemove(true)}
               >
                 <Trash2 className="size-3" />
-                Remove
+                Kaldır
               </Button>
             </div>
           )}
@@ -202,11 +202,9 @@ function ReviewCard({ review }: { review: CustomerReview }) {
       <Dialog open={confirmRemove} onOpenChange={setConfirmRemove}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove review?</DialogTitle>
+            <DialogTitle>Yorum kaldırılsın mı?</DialogTitle>
             <DialogDescription>
-              Your review will be removed from the public page. This action
-              cannot be undone and you won&apos;t be able to write a new review
-              for this appointment.
+              Yorumunuz herkese açık sayfadan kaldırılacak. Bu işlem geri alınamaz ve bu randevu için yeni yorum yazamazsınız.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -215,7 +213,7 @@ function ReviewCard({ review }: { review: CustomerReview }) {
               onClick={() => setConfirmRemove(false)}
               disabled={isPending}
             >
-              Keep review
+              Yorumu koru
             </Button>
             <Button
               variant="destructive"
@@ -225,10 +223,10 @@ function ReviewCard({ review }: { review: CustomerReview }) {
               {isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Removing...
+                  Kaldırılıyor...
                 </>
               ) : (
-                "Remove"
+                "Kaldır"
               )}
             </Button>
           </DialogFooter>
@@ -257,7 +255,7 @@ export function CustomerReviewList({
     <div className="space-y-6">
       {reviewableAppointments.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Ready to review</h2>
+          <h2 className="text-lg font-semibold">Yorum bekleyen</h2>
           <div className="space-y-3">
             {reviewableAppointments.map((apt) => (
               <ReviewableAppointmentCard key={apt.id} appointment={apt} />
@@ -268,7 +266,7 @@ export function CustomerReviewList({
 
       {reviews.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Your reviews</h2>
+          <h2 className="text-lg font-semibold">Yorumlarınız</h2>
           <div className="space-y-3">
             {reviews.map((review) => (
               <ReviewCard key={review.id} review={review} />

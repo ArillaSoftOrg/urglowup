@@ -49,13 +49,11 @@ interface ServiceOption {
 
 function CoverLogoSection({
   cover,
-  logo,
 }: {
   cover: BusinessMediaItem | undefined;
-  logo: BusinessMediaItem | undefined;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div>
       <Card className="bg-surface-cream">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Cover Image</CardTitle>
@@ -87,38 +85,6 @@ function CoverLogoSection({
           </div>
         </CardContent>
       </Card>
-
-      <Card className="bg-surface-cream">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Logo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {logo ? (
-            <div className="relative mx-auto size-24 overflow-hidden rounded-xl">
-              <Image
-                src={logo.url}
-                alt="Logo"
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="mx-auto flex size-24 items-center justify-center rounded-xl border-2 border-dashed bg-muted/40">
-              <ImageIcon className="size-8 text-muted-foreground" />
-            </div>
-          )}
-          <div className="flex justify-center gap-2">
-            <MediaUploadButton
-              mediaType="LOGO"
-              label={logo ? "Change logo" : "Upload logo"}
-              size="sm"
-            />
-            {logo && (
-              <DeleteMediaButton mediaId={logo.id} label="Remove" size="sm" />
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -132,7 +98,10 @@ function MediaItemCard({
   media: BusinessMediaItem;
   services: ServiceOption[];
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const isVideo = media.type === "PORTFOLIO_VIDEO";
   const isImage =
     media.type !== "PORTFOLIO_VIDEO" &&
@@ -148,6 +117,24 @@ function MediaItemCard({
   function handleSetAsLogo() {
     startTransition(async () => {
       await setAsLogo(media.id);
+    });
+  }
+
+  function handleDelete() {
+    setDeleteError(null);
+    startTransition(async () => {
+      const res = await fetch("/api/media/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mediaId: media.id }),
+      });
+      if (res.ok) {
+        setDeleteOpen(false);
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setDeleteError(data.error || "Delete failed.");
+      }
     });
   }
 
@@ -225,11 +212,56 @@ function MediaItemCard({
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DeleteMediaDropdownItem mediaId={media.id} />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  setDeleteOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="size-4" />
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete media?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove this media. This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -317,81 +349,6 @@ function DeleteMediaButton({
   );
 }
 
-function DeleteMediaDropdownItem({ mediaId }: { mediaId: string }) {
-  const router = useRouter();
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function handleDelete() {
-    setError(null);
-    startTransition(async () => {
-      const res = await fetch("/api/media/delete", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mediaId }),
-      });
-      if (res.ok) {
-        setConfirmOpen(false);
-        router.refresh();
-      } else {
-        const data = await res.json();
-        setError(data.error || "Delete failed.");
-      }
-    });
-  }
-
-  return (
-    <>
-      <DropdownMenuItem
-        onClick={(e) => {
-          e.preventDefault();
-          setConfirmOpen(true);
-        }}
-        className="text-destructive"
-      >
-        <Trash2 className="size-4" />
-        Delete
-      </DropdownMenuItem>
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete media?</DialogTitle>
-            <DialogDescription>
-              This will permanently remove this media. This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmOpen(false)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isPending}
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
 // ─── Main Grid ──────────────────────────────────────────────────
 
 export function MediaGrid({
@@ -406,7 +363,6 @@ export function MediaGrid({
   services: ServiceOption[];
 }) {
   const cover = media.find((m) => m.type === "COVER");
-  const logo = media.find((m) => m.type === "LOGO");
 
   const portfolioMedia = media.filter(
     (m) => m.type !== "COVER" && m.type !== "LOGO"
@@ -417,7 +373,7 @@ export function MediaGrid({
   return (
     <div className="space-y-6">
       {/* Cover & Logo */}
-      <CoverLogoSection cover={cover} logo={logo} />
+      <CoverLogoSection cover={cover} />
 
       {/* Portfolio */}
       <Card>

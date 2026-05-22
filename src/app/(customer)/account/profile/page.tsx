@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ProfileForm } from "@/components/account/profile-form";
 
-export const metadata = { title: "Profile" };
+export const metadata = { title: "Profil" };
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
@@ -23,21 +23,21 @@ export default async function ProfilePage() {
     .join("");
 
   const displayName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ") || "Your profile";
+    [user.firstName, user.lastName].filter(Boolean).join(" ") || "Profiliniz";
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Profil</h1>
         <p className="text-muted-foreground">
-          Update your personal information.
+          Kişisel bilgilerinizi güncelleyin.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Photo</CardTitle>
-          <CardDescription>Your profile photo from your login provider.</CardDescription>
+          <CardTitle>Fotoğraf</CardTitle>
+          <CardDescription>Giriş sağlayıcınızdan gelen profil fotoğrafınız.</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           <Avatar className="size-16" size="lg">
@@ -59,9 +59,9 @@ export default async function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>Kişisel Bilgiler</CardTitle>
           <CardDescription>
-            Update your name and contact details.
+            Ad ve iletişim bilgilerinizi güncelleyin.
           </CardDescription>
         </CardHeader>
         <CardContent>

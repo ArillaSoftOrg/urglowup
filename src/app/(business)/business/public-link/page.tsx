@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireBusiness } from "@/lib/auth";
 import { getBusinessForPublicLink } from "@/lib/queries/business";
 import { calculateProfileCompletion } from "@/lib/profile-completion";
-import { env } from "@/lib/env";
+import { getAppUrl } from "@/lib/get-app-url";
 import {
   Card,
   CardContent,
@@ -28,8 +28,7 @@ export default async function PublicLinkPage() {
   const business = await getBusinessForPublicLink(businessId);
   if (!business) notFound();
 
-  const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  const publicUrl = `${appUrl}/b/${business.slug}`;
+  const publicUrl = getAppUrl(`/b/${business.slug}`);
 
   const completion = calculateProfileCompletion(business);
 

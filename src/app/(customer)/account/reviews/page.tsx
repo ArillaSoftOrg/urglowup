@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Star } from "lucide-react";
 
-export const metadata = { title: "My Reviews" };
+export const metadata = { title: "Yorumlarım" };
 
 export default async function ReviewsPage() {
   const user = await getCurrentUser();
@@ -30,9 +30,9 @@ export default async function ReviewsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">My Reviews</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Yorumlarım</h1>
         <p className="text-muted-foreground">
-          Reviews you&apos;ve written for businesses.
+          İşletmeler için yazdığınız yorumlar.
         </p>
       </div>
 
@@ -47,10 +47,9 @@ export default async function ReviewsPage() {
             <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Star className="size-6" />
             </div>
-            <CardTitle>No reviews yet</CardTitle>
+            <CardTitle>Henüz yorum yok</CardTitle>
             <CardDescription className="max-w-sm">
-              After a completed appointment, you&apos;ll be able to leave a
-              review for the business. Your reviews will appear here.
+              Tamamlanan bir randevudan sonra işletme için yorum yazabilirsiniz. Yorumlarınız burada görünecek.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
@@ -58,7 +57,7 @@ export default async function ReviewsPage() {
               href="/account/appointments"
               className="inline-flex items-center text-sm font-medium text-primary hover:underline"
             >
-              View appointments
+              Randevuları görüntüle
             </a>
           </CardContent>
         </Card>

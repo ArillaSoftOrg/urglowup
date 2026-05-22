@@ -36,12 +36,12 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="firstName">First name</Label>
+          <Label htmlFor="firstName">Ad</Label>
           <Input
             id="firstName"
             name="firstName"
             defaultValue={defaultValues.firstName}
-            placeholder="Enter your first name"
+            placeholder="Adınızı girin"
           />
           {state.errors?.firstName && (
             <p className="text-sm text-destructive">{state.errors.firstName}</p>
@@ -49,12 +49,12 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="lastName">Last name</Label>
+          <Label htmlFor="lastName">Soyad</Label>
           <Input
             id="lastName"
             name="lastName"
             defaultValue={defaultValues.lastName}
-            placeholder="Enter your last name"
+            placeholder="Soyadınızı girin"
           />
           {state.errors?.lastName && (
             <p className="text-sm text-destructive">{state.errors.lastName}</p>
@@ -63,13 +63,13 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone number</Label>
+        <Label htmlFor="phone">Telefon numarası</Label>
         <Input
           id="phone"
           name="phone"
           type="tel"
           defaultValue={defaultValues.phone}
-          placeholder="+1 (555) 000-0000"
+          placeholder="+90 (5XX) XXX XX XX"
         />
         {state.errors?.phone && (
           <p className="text-sm text-destructive">{state.errors.phone}</p>
@@ -77,7 +77,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
       </div>
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Saving..." : "Save changes"}
+        {pending ? "Kaydediliyor..." : "Değişiklikleri kaydet"}
       </Button>
     </form>
   );

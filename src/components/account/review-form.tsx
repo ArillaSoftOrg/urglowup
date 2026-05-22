@@ -37,12 +37,12 @@ function getTrackColor(v: number): string {
 // ─── Descriptive label ────────────────────────────────────────────────────────
 
 function getRatingLabel(v: number): string {
-  if (v < 2) return "Terrible";
-  if (v < 4) return "Poor";
-  if (v < 6) return "Fair";
-  if (v < 7.5) return "Good";
-  if (v < 9) return "Very Good";
-  return "Perfect";
+  if (v < 2) return "Berbat";
+  if (v < 4) return "Kötü";
+  if (v < 6) return "Orta";
+  if (v < 7.5) return "İyi";
+  if (v < 9) return "Çok İyi";
+  return "Mükemmel";
 }
 
 // ─── RatingSlider ─────────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ function RatingSlider({
             transformOrigin: "left center",
           }}
         >
-          Terrible
+          Berbat
         </span>
         <span
           className="text-xs font-medium text-muted-foreground transition-all duration-150"
@@ -169,7 +169,7 @@ function RatingSlider({
             transformOrigin: "right center",
           }}
         >
-          Perfect
+          Mükemmel
         </span>
       </div>
     </div>
@@ -227,7 +227,7 @@ export function ReviewForm({
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <CalendarCheck className="size-3" />
-            {requestedDate} at {requestedTime}
+            {requestedDate} tarihinde {requestedTime}
           </div>
         </div>
 
@@ -241,21 +241,21 @@ export function ReviewForm({
           <input type="hidden" name="rating" value={rating} />
 
           <div className="space-y-2">
-            <Label>Rating</Label>
+            <Label>Puan</Label>
             <RatingSlider value={rating} onChange={setRating} />
             {rating === 0 && state.message?.includes("Rating") && (
-              <p className="text-sm text-destructive">Please select a rating</p>
+              <p className="text-sm text-destructive">Lütfen bir puan seçin</p>
             )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor={`comment-${appointmentId || reviewId}`}>
-              Comment (optional)
+              Yorum (isteğe bağlı)
             </Label>
             <Textarea
               id={`comment-${appointmentId || reviewId}`}
               name="comment"
-              placeholder="Share your experience..."
+              placeholder="Deneyiminizi paylaşın..."
               maxLength={MAX_COMMENT_LENGTH}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
@@ -279,12 +279,12 @@ export function ReviewForm({
               {isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  {isEdit ? "Updating..." : "Submitting..."}
+                  {isEdit ? "Güncelleniyor..." : "Gönderiliyor..."}
                 </>
               ) : isEdit ? (
-                "Update review"
+                "Yorumu güncelle"
               ) : (
-                "Submit review"
+                "Yorum gönder"
               )}
             </Button>
             {onCancel && (
@@ -295,7 +295,7 @@ export function ReviewForm({
                 onClick={onCancel}
                 disabled={isPending}
               >
-                Cancel
+                İptal
               </Button>
             )}
           </div>

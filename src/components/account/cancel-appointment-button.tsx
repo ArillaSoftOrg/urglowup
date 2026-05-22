@@ -41,14 +41,13 @@ export function CancelAppointmentButton({
         render={<Button variant="outline" size="sm" />}
       >
         <X className="size-3" />
-        Cancel
+        İptal Et
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancel appointment?</DialogTitle>
+          <DialogTitle>Randevu iptal edilsin mi?</DialogTitle>
           <DialogDescription>
-            This will cancel your appointment request. This action cannot be
-            undone.
+            Randevu isteğiniz iptal edilecek. Bu işlem geri alınamaz.
           </DialogDescription>
         </DialogHeader>
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -58,7 +57,7 @@ export function CancelAppointmentButton({
             onClick={() => setOpen(false)}
             disabled={isPending}
           >
-            Keep appointment
+            Randevuyu koru
           </Button>
           <Button
             variant="destructive"
@@ -68,10 +67,10 @@ export function CancelAppointmentButton({
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Cancelling...
+                İptal ediliyor...
               </>
             ) : (
-              "Yes, cancel"
+              "Evet, iptal et"
             )}
           </Button>
         </DialogFooter>

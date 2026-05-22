@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCustomerAppointments } from "@/lib/queries/appointments";
 import { CustomerAppointmentList } from "@/components/account/appointment-list";
 
-export const metadata = { title: "My Appointments" };
+export const metadata = { title: "Randevularım" };
 
 export default async function AppointmentsPage() {
   const user = await getCurrentUser();
@@ -14,9 +14,9 @@ export default async function AppointmentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">My Appointments</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Randevularım</h1>
         <p className="text-muted-foreground">
-          Track and manage your appointment requests.
+          Randevu isteklerinizi takip edin ve yönetin.
         </p>
       </div>
 

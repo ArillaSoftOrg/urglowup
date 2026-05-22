@@ -17,30 +17,30 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export const metadata = { title: "My Account" };
+export const metadata = { title: "Hesabım" };
 
 const quickLinks = [
   {
-    title: "Profile",
-    description: "Manage your personal information",
+    title: "Profil",
+    description: "Kişisel bilgilerinizi yönetin",
     href: "/account/profile",
     icon: UserRound,
   },
   {
-    title: "Appointments",
-    description: "View your appointment requests",
+    title: "Randevularım",
+    description: "Randevu isteklerinizi görüntüleyin",
     href: "/account/appointments",
     icon: CalendarDays,
   },
   {
-    title: "Favorites",
-    description: "Businesses you've saved",
+    title: "Favorilerim",
+    description: "Kaydettiğiniz işletmeler",
     href: "/account/favorites",
     icon: Heart,
   },
   {
-    title: "Reviews",
-    description: "Reviews you've written",
+    title: "Yorumlarım",
+    description: "Yazdığınız yorumlar",
     href: "/account/reviews",
     icon: Star,
   },
@@ -61,9 +61,9 @@ export default async function AccountPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">My Account</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Hesabım</h1>
         <p className="text-muted-foreground">
-          Manage your profile and view your activity.
+          Profilinizi yönetin ve aktivitelerinizi görüntüleyin.
         </p>
       </div>
 

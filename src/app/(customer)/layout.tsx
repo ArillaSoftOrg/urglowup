@@ -4,11 +4,11 @@ import { Navbar } from "@/components/layout/navbar";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 
 const accountNav = [
-  { title: "Overview", href: "/account" },
-  { title: "Profile", href: "/account/profile" },
-  { title: "Appointments", href: "/account/appointments" },
-  { title: "Favorites", href: "/account/favorites" },
-  { title: "Reviews", href: "/account/reviews" },
+  { title: "Genel Bakış", href: "/account" },
+  { title: "Profil", href: "/account/profile" },
+  { title: "Randevularım", href: "/account/appointments" },
+  { title: "Favorilerim", href: "/account/favorites" },
+  { title: "Yorumlarım", href: "/account/reviews" },
 ];
 
 export default async function CustomerLayout({

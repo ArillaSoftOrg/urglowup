@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
+import { getAppUrl } from "@/lib/get-app-url";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 import {
   Card,
@@ -62,8 +62,7 @@ export default async function SettingsPage() {
 
   if (!business) notFound();
 
-  const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  const publicUrl = `${appUrl}/b/${business.slug}`;
+  const publicUrl = getAppUrl(`/b/${business.slug}`);
 
   return (
     <div className="space-y-6">

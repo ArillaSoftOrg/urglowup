@@ -26,7 +26,7 @@ import { calculateProfileCompletion } from "@/lib/profile-completion";
 import { ProfileCompletionCard } from "@/components/business/profile-completion-card";
 import { StatCard } from "@/components/business/stat-card";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
-import { env } from "@/lib/env";
+import { getAppUrl } from "@/lib/get-app-url";
 
 export const metadata = { title: "Dashboard" };
 
@@ -123,8 +123,7 @@ export default async function DashboardPage() {
 
   const hoursConfigured = hoursCount > 0;
   const completion = calculateProfileCompletion(business);
-  const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  const publicUrl = `${appUrl}/b/${business.slug}`;
+  const publicUrl = getAppUrl(`/b/${business.slug}`);
   const statusBadge =
     BUSINESS_STATUS_BADGE[business.status] ?? { variant: "secondary" as const, label: business.status };
 

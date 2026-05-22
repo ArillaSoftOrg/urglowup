@@ -15,7 +15,7 @@ import {
 import type { CustomerAppointment } from "@/lib/queries/appointments";
 
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
+  return new Date(date).toLocaleDateString("tr-TR", {
     weekday: "short",
     year: "numeric",
     month: "short",
@@ -35,7 +35,7 @@ function ReviewAction({ appointment }: { appointment: CustomerAppointment }) {
         className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
       >
         <Star className="size-3" />
-        Write a review
+        Yorum yaz
       </Link>
     );
   }
@@ -44,20 +44,20 @@ function ReviewAction({ appointment }: { appointment: CustomerAppointment }) {
     return (
       <span className="flex items-center gap-1 text-xs text-muted-foreground">
         <Star className="size-3 fill-amber-400 text-amber-400" />
-        Reviewed ({review.rating}/5)
+        Yorumlandı ({review.rating}/5)
       </span>
     );
   }
 
   if (review.status === "REMOVED") {
     return (
-      <span className="text-xs text-muted-foreground">Review removed</span>
+      <span className="text-xs text-muted-foreground">Yorum kaldırıldı</span>
     );
   }
 
   // HIDDEN
   return (
-    <span className="text-xs text-muted-foreground">Review hidden</span>
+    <span className="text-xs text-muted-foreground">Yorum gizlendi</span>
   );
 }
 
@@ -106,13 +106,13 @@ function AppointmentCard({
             </div>
             {appointment.customerNote && (
               <p className="text-xs text-muted-foreground">
-                <span className="font-medium">Your note:</span>{" "}
+                <span className="font-medium">Notunuz:</span>{" "}
                 {appointment.customerNote}
               </p>
             )}
             {appointment.businessNote && (
               <p className="text-xs text-muted-foreground">
-                <span className="font-medium">Business note:</span>{" "}
+                <span className="font-medium">İşletme notu:</span>{" "}
                 {appointment.businessNote}
               </p>
             )}
@@ -154,14 +154,14 @@ export function CustomerAppointmentList({
     <Tabs defaultValue="upcoming">
       <TabsList>
         <TabsTrigger value="upcoming">
-          Upcoming ({upcoming.length})
+          Yaklaşan ({upcoming.length})
         </TabsTrigger>
-        <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
+        <TabsTrigger value="past">Geçmiş ({past.length})</TabsTrigger>
       </TabsList>
 
       <TabsContent value="upcoming" className="mt-4 space-y-3">
         {upcoming.length === 0 ? (
-          <EmptyState message="No upcoming appointments" />
+          <EmptyState message="Yaklaşan randevu yok" />
         ) : (
           upcoming.map((a) => <AppointmentCard key={a.id} appointment={a} />)
         )}
@@ -169,7 +169,7 @@ export function CustomerAppointmentList({
 
       <TabsContent value="past" className="mt-4 space-y-3">
         {past.length === 0 ? (
-          <EmptyState message="No past appointments" />
+          <EmptyState message="Geçmiş randevu yok" />
         ) : (
           past.map((a) => <AppointmentCard key={a.id} appointment={a} />)
         )}
@@ -188,9 +188,9 @@ function EmptyState({ message }: { message: string }) {
         <p className="mt-3 text-sm font-medium">{message}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           <Link href="/" className="text-primary hover:underline">
-            Discover businesses
+            İşletmeleri keşfet
           </Link>{" "}
-          to book an appointment
+          randevu almak için
         </p>
       </CardContent>
     </Card>
