@@ -13,7 +13,6 @@ interface SyncNowButtonProps {
 export function SyncNowButton({
   isSyncing,
   isInCooldown,
-  cooldownEndsAt: _cooldownEndsAt,
 }: SyncNowButtonProps) {
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);

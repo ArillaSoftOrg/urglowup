@@ -2,7 +2,6 @@
 
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import type { DayOfWeek } from "@/generated/prisma/enums";
 
@@ -19,29 +18,6 @@ const DAYS: DayOfWeek[] = [
 ];
 
 const SLOT_INTERVALS = [15, 30, 45, 60] as const;
-
-// ─── Schema ─────────────────────────────────────────────────────
-
-const daySchema = z
-  .object({
-    dayOfWeek: z.enum([
-      "MONDAY",
-      "TUESDAY",
-      "WEDNESDAY",
-      "THURSDAY",
-      "FRIDAY",
-      "SATURDAY",
-      "SUNDAY",
-    ]),
-    isOpen: z.string().optional(), // "on" or absent
-    openTime: z.string().optional().or(z.literal("")),
-    closeTime: z.string().optional().or(z.literal("")),
-    slotIntervalMinutes: z.coerce.number().int(),
-  })
-  .transform((d) => ({
-    ...d,
-    isOpen: d.isOpen === "on",
-  }));
 
 // ─── Types ──────────────────────────────────────────────────────
 

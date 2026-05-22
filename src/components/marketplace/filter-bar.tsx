@@ -186,6 +186,7 @@ export function FilterBar({
 
   // Keep input in sync when URL changes externally (browser back/forward)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL→state sync for back/forward navigation
     setInputValue(searchParams.get("q") ?? "");
   }, [searchParams]);
 

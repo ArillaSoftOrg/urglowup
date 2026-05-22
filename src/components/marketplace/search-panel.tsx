@@ -45,6 +45,7 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
   const [inputValue, setInputValue] = useState(currentQ);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL→state sync for back/forward navigation
     setInputValue(searchParams.get("q") ?? "");
   }, [searchParams]);
 

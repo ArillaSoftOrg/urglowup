@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,9 +73,11 @@ function MediaRow({ item }: { item: AdminMedia }) {
             preload="metadata"
           />
         ) : (
-          <img
+          <Image
             src={item.url}
             alt={item.title ?? "Media"}
+            width={56}
+            height={56}
             className="size-full object-cover"
           />
         )}

@@ -14,7 +14,7 @@ interface ProfileCompletionCardProps {
 }
 
 export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps) {
-  const { score, completedCount, totalCount, missing, items } = completion;
+  const { score, completedCount, totalCount, items } = completion;
 
   if (score === 100) {
     return (

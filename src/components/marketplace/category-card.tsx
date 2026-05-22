@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { MarketplaceCategory } from "@/lib/queries/marketplace";
 import { getCategoryLabel } from "@/lib/category-labels";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
@@ -37,10 +38,11 @@ export function CategoryCard({ category }: { category: MarketplaceCategory }) {
       {/* Media tile */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={name}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : colorHex ? (
           <div

@@ -95,8 +95,10 @@ export default async function SelectLocationPage() {
     redirect("/business/integrations");
   }
 
+  // eslint-disable-next-line react-hooks/purity -- server component; Date.now() runs once per request, not in a render cycle
+  const now = Date.now();
   if (
-    Date.now() > pending.expiresAt ||
+    now > pending.expiresAt ||
     pending.userId !== user.id ||
     pending.businessId !== businessId
   ) {
@@ -112,7 +114,7 @@ export default async function SelectLocationPage() {
   }
 
   // Fetch locations from Google
-  let locations: LocationItem[] = [];
+  const locations: LocationItem[] = [];
   let fetchError: string | null = null;
 
   try {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Star } from "lucide-react";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
@@ -31,10 +32,11 @@ export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
       {/* Media tile */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
         {coverImageUrl ? (
-          <img
+          <Image
             src={coverImageUrl}
             alt={`${name} kapak görseli`}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className={`size-full bg-gradient-to-br ${gradient}`} />

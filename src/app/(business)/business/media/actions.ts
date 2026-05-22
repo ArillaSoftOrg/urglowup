@@ -68,7 +68,7 @@ export async function saveMediaRecord(
     return { success: false, message: result.error.issues[0].message };
   }
 
-  const { publicId, url, mediaType, resourceType, format, bytes, duration, title, relatedServiceId } =
+  const { publicId, url, mediaType, resourceType, duration, title, relatedServiceId } =
     result.data;
 
   // Validate resource type matches media type

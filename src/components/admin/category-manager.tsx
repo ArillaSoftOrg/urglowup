@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -228,11 +229,12 @@ function CategoryForm({
             className="hidden"
           />
           {fields.imageUrl ? (
-            <div className="overflow-hidden rounded-md border">
-              <img
+            <div className="relative h-24 overflow-hidden rounded-md border">
+              <Image
                 src={fields.imageUrl}
                 alt="Preview"
-                className="h-24 w-full object-cover"
+                fill
+                className="object-cover"
               />
               <div className="flex items-center justify-between border-t bg-muted/50 px-2 py-1">
                 <Button

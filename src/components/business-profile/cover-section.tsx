@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Sparkles } from "lucide-react";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import { getOptimizedUrl } from "@/lib/cloudinary";
@@ -32,14 +33,14 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
       {/* Cover image or gradient fallback */}
       <div className="relative h-56 sm:h-72 lg:h-80">
         {coverUrls ? (
-          <picture className="block size-full">
-            <source media="(min-width: 640px)" srcSet={coverUrls.desktop} />
-            <img
-              src={coverUrls.mobile}
-              alt={`${business.name} cover`}
-              className="size-full object-cover"
-            />
-          </picture>
+          <Image
+            src={coverUrls.desktop}
+            alt={`${business.name} cover`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 800px, 1200px"
+            priority
+          />
         ) : (
           <div className="size-full bg-gradient-to-br from-[oklch(0.88_0.06_10)] via-[oklch(0.91_0.04_300)] to-[oklch(0.97_0.01_85)]" />
         )}
@@ -51,11 +52,14 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
       <div className="container mx-auto px-4">
         <div className="-mt-14 flex items-end gap-4 sm:-mt-16">
           {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={`${business.name} logo`}
-              className="size-28 rounded-2xl object-cover shadow-lg ring-4 ring-background sm:size-32"
-            />
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shadow-lg ring-4 ring-background">
+              <Image
+                src={logoUrl}
+                alt={`${business.name} logo`}
+                fill
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="flex size-28 items-center justify-center rounded-2xl bg-surface-cream shadow-lg ring-4 ring-background sm:size-32">
               <Sparkles className="size-10 text-brand-pink-foreground sm:size-12" />

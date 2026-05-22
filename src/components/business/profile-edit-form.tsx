@@ -33,14 +33,6 @@ function FieldError({ errors, name }: { errors?: Record<string, string[]>; name:
   return <p className="mt-1 text-xs text-destructive">{msgs[0]}</p>;
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-      {children}
-    </p>
-  );
-}
-
 export function ProfileEditForm({ business }: { business: BusinessProfileData }) {
   const initial: ProfileActionState = { success: false };
   const [state, formAction, isPending] = useActionState(updateBusinessProfile, initial);

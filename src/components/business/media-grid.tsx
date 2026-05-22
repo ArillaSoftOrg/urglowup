@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useTransition } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,6 @@ import {
   MAX_VIDEOS_PER_BUSINESS,
 } from "@/lib/constants/media";
 import type { BusinessMediaItem } from "@/lib/queries/media";
-import type { MediaType } from "@/generated/prisma/enums";
 
 interface ServiceOption {
   id: string;
@@ -49,11 +49,9 @@ interface ServiceOption {
 function CoverLogoSection({
   cover,
   logo,
-  services,
 }: {
   cover: BusinessMediaItem | undefined;
   logo: BusinessMediaItem | undefined;
-  services: ServiceOption[];
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -64,10 +62,11 @@ function CoverLogoSection({
         <CardContent className="space-y-3">
           {cover ? (
             <div className="relative aspect-[3/1] overflow-hidden rounded-lg">
-              <img
+              <Image
                 src={cover.url}
                 alt="Cover"
-                className="size-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
           ) : (
@@ -95,10 +94,11 @@ function CoverLogoSection({
         <CardContent className="space-y-3">
           {logo ? (
             <div className="relative mx-auto size-24 overflow-hidden rounded-xl">
-              <img
+              <Image
                 src={logo.url}
                 alt="Logo"
-                className="size-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
           ) : (
@@ -167,10 +167,11 @@ function MediaItemCard({
             </div>
           </>
         ) : (
-          <img
+          <Image
             src={media.url}
             alt={media.title ?? "Media"}
-            className="size-full object-cover"
+            fill
+            className="object-cover"
           />
         )}
 
@@ -403,7 +404,7 @@ export function MediaGrid({
   return (
     <div className="space-y-6">
       {/* Cover & Logo */}
-      <CoverLogoSection cover={cover} logo={logo} services={services} />
+      <CoverLogoSection cover={cover} logo={logo} />
 
       {/* Portfolio */}
       <Card>
@@ -467,8 +468,6 @@ export function MediaGrid({
                 services={services}
                 emptyHeadline="No portfolio media yet"
                 emptyDescription="Upload images, videos, or before/after photos to build your portfolio."
-                uploadType="PORTFOLIO_IMAGE"
-                uploadLabel="Upload image"
               />
             </TabsContent>
             <TabsContent value="images" className="mt-4">
@@ -477,8 +476,6 @@ export function MediaGrid({
                 services={services}
                 emptyHeadline="No images yet"
                 emptyDescription="Upload portfolio images and before/after photos to showcase your work."
-                uploadType="PORTFOLIO_IMAGE"
-                uploadLabel="Upload image"
               />
             </TabsContent>
             <TabsContent value="videos" className="mt-4">
@@ -487,8 +484,6 @@ export function MediaGrid({
                 services={services}
                 emptyHeadline="No videos yet"
                 emptyDescription="Upload short videos (up to 60 seconds) to show your work in action."
-                uploadType="PORTFOLIO_VIDEO"
-                uploadLabel="Upload video"
               />
             </TabsContent>
           </Tabs>
@@ -503,15 +498,11 @@ function PortfolioGrid({
   services,
   emptyHeadline,
   emptyDescription,
-  uploadType,
-  uploadLabel,
 }: {
   items: BusinessMediaItem[];
   services: ServiceOption[];
   emptyHeadline: string;
   emptyDescription: string;
-  uploadType: MediaType;
-  uploadLabel: string;
 }) {
   if (items.length === 0) {
     return (

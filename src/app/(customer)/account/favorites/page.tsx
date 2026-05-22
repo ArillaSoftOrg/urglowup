@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -31,12 +32,12 @@ export default function FavoritesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center text-sm font-medium text-primary hover:underline"
           >
             Discover businesses
-          </a>
+          </Link>
         </CardContent>
       </Card>
     </div>

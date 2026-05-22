@@ -1,4 +1,4 @@
-import { Button, Link, Section, Text } from "@react-email/components";
+import { Button, Section, Text } from "@react-email/components";
 import { EmailLayout } from "./components/email-layout";
 
 export interface AppointmentRequestEmailProps {

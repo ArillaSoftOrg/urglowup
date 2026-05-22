@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -108,9 +109,11 @@ export function BookingSummary({
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               {business.logoUrl ? (
-                <img
+                <Image
                   src={business.logoUrl}
                   alt={business.name}
+                  width={48}
+                  height={48}
                   className="size-12 shrink-0 rounded-xl object-cover"
                 />
               ) : (
