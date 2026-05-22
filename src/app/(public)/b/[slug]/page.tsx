@@ -28,11 +28,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "İşletme Bulunamadı" };
   }
 
+  const description =
+    business.description ??
+    `${business.name} profilini, hizmetlerini ve değerlendirmelerini UrGlowUp'ta inceleyin.`;
+
   return {
     title: business.name,
-    description:
-      business.description ??
-      `${business.name} profilini, hizmetlerini ve değerlendirmelerini UrGlowUp'ta inceleyin.`,
+    description,
+    openGraph: {
+      title: business.name,
+      description,
+      url: `/b/${slug}`,
+      type: "website",
+      ...(business.coverImageUrl && {
+        images: [{ url: business.coverImageUrl }],
+      }),
+    },
+    alternates: { canonical: `/b/${slug}` },
   };
 }
 

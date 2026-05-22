@@ -32,9 +32,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { city: rawCity, district: rawDistrict } = await params;
   const city = decodeURIComponent(rawCity);
   const district = decodeURIComponent(rawDistrict);
+  const title = `${district}, ${city} — Güzellik & Kişisel Bakım`;
+  const description = `${district}, ${city}'deki güzellik ve kişisel bakım uzmanlarını UrGlowUp'ta keşfedin.`;
   return {
-    title: `${district}, ${city} — Güzellik & Kişisel Bakım`,
-    description: `${district}, ${city}'deki güzellik ve kişisel bakım uzmanlarını UrGlowUp'ta keşfedin.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/city/${encodeURIComponent(city)}/${encodeURIComponent(district)}`,
+    },
+    alternates: {
+      canonical: `/city/${encodeURIComponent(city)}/${encodeURIComponent(district)}`,
+    },
   };
 }
 

@@ -267,3 +267,17 @@ export async function getMarketplaceDistricts(): Promise<
       r.city !== null && r.district !== null
   );
 }
+
+/**
+ * Returns slugs and last-modified timestamps for all active visible businesses.
+ * Used exclusively by the sitemap — no row limit.
+ */
+export async function getAllMarketplaceBusinessSlugs(): Promise<
+  Array<{ slug: string; updatedAt: Date }>
+> {
+  return db.business.findMany({
+    where: ACTIVE_VISIBLE,
+    select: { slug: true, updatedAt: true },
+    orderBy: { updatedAt: "desc" },
+  });
+}

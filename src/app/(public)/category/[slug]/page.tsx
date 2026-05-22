@@ -34,11 +34,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!category) return { title: "Kategori Bulunamadı" };
 
   const displayName = getCategoryLabel(slug, category.name);
+  const description =
+    category.description ??
+    `UrGlowUp'ta ${displayName} uzmanlarını keşfedin.`;
+
   return {
     title: displayName,
-    description:
-      category.description ??
-      `UrGlowUp'ta ${displayName} uzmanlarını keşfedin.`,
+    description,
+    openGraph: {
+      title: displayName,
+      description,
+      url: `/category/${slug}`,
+      ...(category.imageUrl && {
+        images: [{ url: category.imageUrl }],
+      }),
+    },
+    alternates: { canonical: `/category/${slug}` },
   };
 }
 

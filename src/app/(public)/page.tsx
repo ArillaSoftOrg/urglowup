@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,6 +14,19 @@ import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeBusinessCTA } from "@/components/home/home-business-cta";
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: { absolute: "UrGlowUp" },
+  description:
+    "Discover beauty and personal care businesses, view real work, and request appointments with confidence.",
+  openGraph: {
+    title: "UrGlowUp",
+    description:
+      "Discover beauty and personal care businesses, view real work, and request appointments with confidence.",
+    url: "/",
+  },
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const [categories, businesses] = await Promise.all([

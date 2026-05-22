@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: "Güzellik & Kişisel Bakım Uzmanlarını Keşfet",
   description:
     "Size yakın güzellik ve kişisel bakım uzmanlarını keşfedin. Kuaförler, nail salonu, cilt bakımı ve daha fazlasını bulun.",
+  openGraph: {
+    title: "Güzellik & Kişisel Bakım Uzmanlarını Keşfet",
+    description:
+      "Size yakın güzellik ve kişisel bakım uzmanlarını keşfedin. Kuaförler, nail salonu, cilt bakımı ve daha fazlasını bulun.",
+    url: "/explore",
+  },
+  alternates: { canonical: "/explore" },
 };
 
 interface PageProps {

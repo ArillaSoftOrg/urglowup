@@ -9,12 +9,23 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://urglowup.vercel.app"
+  ),
   title: {
     default: "UrGlowUp",
     template: "%s | UrGlowUp",
   },
   description:
     "Discover beauty and personal care businesses, view real work, and request appointments with confidence.",
+  openGraph: {
+    siteName: "UrGlowUp",
+    type: "website",
+    locale: "tr_TR",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

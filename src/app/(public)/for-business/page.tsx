@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -16,7 +17,17 @@ import {
   Zap,
 } from "lucide-react";
 
-export const metadata = { title: "For Business" };
+export const metadata: Metadata = {
+  title: "For Business",
+  description:
+    "List your beauty or personal care business on UrGlowUp and get discovered by new customers.",
+  openGraph: {
+    title: "For Business | UrGlowUp",
+    description:
+      "List your beauty or personal care business on UrGlowUp and get discovered by new customers.",
+    url: "/for-business",
+  },
+};
 
 const features = [
   {

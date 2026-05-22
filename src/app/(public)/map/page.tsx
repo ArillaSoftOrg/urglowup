@@ -5,7 +5,15 @@ import { Map } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Map",
-  description: "Map discovery for beauty and personal care professionals.",
+  description:
+    "Yakınındaki güzellik ve kişisel bakım uzmanlarını harita üzerinde keşfet.",
+  openGraph: {
+    title: "Map | UrGlowUp",
+    description:
+      "Yakınındaki güzellik ve kişisel bakım uzmanlarını harita üzerinde keşfet.",
+    url: "/map",
+  },
+  alternates: { canonical: "/map" },
 };
 
 export default function MapPage() {

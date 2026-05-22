@@ -29,9 +29,17 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city: rawCity } = await params;
   const city = decodeURIComponent(rawCity);
+  const title = `${city} — Güzellik & Kişisel Bakım`;
+  const description = `${city}'deki güzellik ve kişisel bakım uzmanlarını UrGlowUp'ta keşfedin.`;
   return {
-    title: `${city} — Güzellik & Kişisel Bakım`,
-    description: `${city}'deki güzellik ve kişisel bakım uzmanlarını UrGlowUp'ta keşfedin.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/city/${encodeURIComponent(city)}`,
+    },
+    alternates: { canonical: `/city/${encodeURIComponent(city)}` },
   };
 }
 
