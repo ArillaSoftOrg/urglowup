@@ -245,6 +245,12 @@ model BusinessMedia {
   description      String?
   relatedServiceId String?
   relatedService   BusinessService? @relation(fields: [relatedServiceId], references: [id], onDelete: SetNull)
+  cropX            Int?
+  cropY            Int?
+  cropWidth        Int?
+  cropHeight       Int?
+  originalWidth    Int?
+  originalHeight   Int?
   status           MediaStatus      @default(ACTIVE)
   sortOrder        Int              @default(0)
   createdAt        DateTime         @default(now())

@@ -5,9 +5,12 @@ import { getOptimizedUrl } from "@/lib/cloudinary";
 
 function optimizeCoverUrl(media: BusinessWithDetails["media"][number] | undefined, url: string | null) {
   if (media?.publicId) {
+    const cropMeta = media.cropX != null
+      ? { x: media.cropX, y: media.cropY!, width: media.cropWidth!, height: media.cropHeight! }
+      : undefined;
     return {
-      desktop: getOptimizedUrl(media.publicId, { width: 1200, crop: "limit" }),
-      mobile: getOptimizedUrl(media.publicId, { width: 800, crop: "limit" }),
+      desktop: getOptimizedUrl(media.publicId, { width: 1200, crop: "limit" }, cropMeta),
+      mobile: getOptimizedUrl(media.publicId, { width: 800, crop: "limit" }, cropMeta),
     };
   }
   if (url) return { desktop: url, mobile: url };
@@ -31,7 +34,7 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
   return (
     <div className="relative">
       {/* Cover image or gradient fallback */}
-      <div className="relative h-56 sm:h-72 lg:h-80">
+      <div className="relative aspect-[16/9] w-full">
         {coverUrls ? (
           <Image
             src={coverUrls.desktop}

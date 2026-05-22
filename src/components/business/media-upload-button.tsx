@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2, ImagePlus } from "lucide-react";
-import { saveMediaRecord } from "@/app/(business)/business/media/actions";
+import { saveMediaRecord, saveCropMeta } from "@/app/(business)/business/media/actions";
 import {
   ALLOWED_IMAGE_MIMES,
   ALLOWED_VIDEO_MIMES,
@@ -14,6 +15,19 @@ import {
   formatFileSize,
 } from "@/lib/constants/media";
 import type { MediaType } from "@/generated/prisma/enums";
+
+const CropDialog = dynamic(() => import("./crop-dialog"), { ssr: false });
+
+const CROP_ASPECTS: Partial<Record<MediaType, number>> = {
+  COVER: 16 / 9,
+};
+
+type CropPending = {
+  mediaId: string;
+  imageUrl: string;
+  naturalWidth: number;
+  naturalHeight: number;
+};
 
 interface MediaUploadButtonProps {
   mediaType: MediaType;
@@ -34,6 +48,8 @@ export function MediaUploadButton({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [cropPending, setCropPending] = useState<CropPending | null>(null);
+  const [cropSaving, setCropSaving] = useState(false);
   const [, startTransition] = useTransition();
 
   const isVideo = mediaType === "PORTFOLIO_VIDEO";
@@ -132,20 +148,51 @@ export function MediaUploadButton({
           bytes: cloudinaryResponse.bytes as number,
           duration: cloudinaryResponse.duration as number | undefined,
           title: "",
+          originalWidth: cloudinaryResponse.width as number | undefined,
+          originalHeight: cloudinaryResponse.height as number | undefined,
         });
 
         if (!result.success) {
           setError(result.message ?? "Failed to save media record.");
+          setUploading(false);
+          setProgress(0);
+          return;
         }
 
-        setUploading(false);
-        setProgress(0);
+        // Open crop dialog for supported image types
+        const supportsCrop = mediaType === "COVER" || mediaType === "PORTFOLIO_IMAGE";
+        if (result.mediaId && supportsCrop && cloudinaryResponse.resource_type === "image") {
+          setCropPending({
+            mediaId: result.mediaId,
+            imageUrl: cloudinaryResponse.secure_url as string,
+            naturalWidth: (cloudinaryResponse.width as number) ?? 2000,
+            naturalHeight: (cloudinaryResponse.height as number) ?? 1500,
+          });
+          setProgress(0);
+        } else {
+          setUploading(false);
+          setProgress(0);
+        }
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
       setUploading(false);
       setProgress(0);
     }
+  }
+
+  async function handleCropConfirm(crop: { x: number; y: number; width: number; height: number }) {
+    if (!cropPending) return;
+    setCropSaving(true);
+    await saveCropMeta(cropPending.mediaId, crop);
+    setCropSaving(false);
+    setCropPending(null);
+    setUploading(false);
+  }
+
+  function handleCropSkip() {
+    setCropPending(null);
+    setUploading(false);
   }
 
   const buttonLabel =
@@ -189,6 +236,18 @@ export function MediaUploadButton({
         )}
       </Button>
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+
+      {cropPending && (
+        <CropDialog
+          open={true}
+          onOpenChange={(v) => { if (!v) handleCropSkip(); }}
+          imageUrl={cropPending.imageUrl}
+          aspect={CROP_ASPECTS[mediaType]}
+          onConfirm={handleCropConfirm}
+          onSkip={handleCropSkip}
+          isPending={cropSaving}
+        />
+      )}
     </div>
   );
 }

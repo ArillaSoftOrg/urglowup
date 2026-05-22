@@ -41,6 +41,15 @@ const saveMediaSchema = z.object({
   duration: z.number().optional(),
   title: z.string().max(100).optional().or(z.literal("")),
   relatedServiceId: z.string().optional().or(z.literal("")),
+  originalWidth: z.number().int().positive().optional(),
+  originalHeight: z.number().int().positive().optional(),
+});
+
+const saveCropMetaSchema = z.object({
+  x: z.number().int().min(0),
+  y: z.number().int().min(0),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
 });
 
 const updateMetaSchema = z.object({
@@ -68,7 +77,7 @@ export async function saveMediaRecord(
     return { success: false, message: result.error.issues[0].message };
   }
 
-  const { publicId, url, mediaType, resourceType, duration, title, relatedServiceId } =
+  const { publicId, url, mediaType, resourceType, duration, title, relatedServiceId, originalWidth, originalHeight } =
     result.data;
 
   // Validate resource type matches media type
@@ -144,6 +153,8 @@ export async function saveMediaRecord(
       title: title || null,
       relatedServiceId: relatedServiceId || null,
       sortOrder: nextSort,
+      originalWidth: originalWidth ?? null,
+      originalHeight: originalHeight ?? null,
     },
   });
 
@@ -306,4 +317,41 @@ export async function setAsLogo(
 
   revalidate();
   return { success: true, message: "Logo updated." };
+}
+
+// ─── Save Crop Metadata ─────────────────────────────────────────
+
+export async function saveCropMeta(
+  mediaId: string,
+  crop: { x: number; y: number; width: number; height: number }
+): Promise<MediaActionState> {
+  const { businessId } = await requireBusiness();
+
+  const media = await db.businessMedia.findUnique({
+    where: { id: mediaId },
+  });
+  if (!media || media.businessId !== businessId) {
+    return { success: false, message: "Media not found." };
+  }
+
+  const result = saveCropMetaSchema.safeParse(crop);
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const { x, y, width, height } = result.data;
+
+  if (media.originalWidth && media.originalHeight) {
+    if (x + width > media.originalWidth || y + height > media.originalHeight) {
+      return { success: false, message: "Crop region exceeds image bounds." };
+    }
+  }
+
+  await db.businessMedia.update({
+    where: { id: mediaId },
+    data: { cropX: x, cropY: y, cropWidth: width, cropHeight: height },
+  });
+
+  revalidate();
+  return { success: true, message: "Crop saved." };
 }

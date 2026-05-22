@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,17 +29,24 @@ import {
   ImageIcon,
   Film,
   Loader2,
+  Crop,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MediaUploadButton } from "./media-upload-button";
 import { MediaEditDialog } from "./media-edit-dialog";
-import { setAsCover, setAsLogo } from "@/app/(business)/business/media/actions";
+import { setAsCover, setAsLogo, saveCropMeta } from "@/app/(business)/business/media/actions";
 import {
   MEDIA_TYPE_LABELS,
   MAX_IMAGES_PER_BUSINESS,
   MAX_VIDEOS_PER_BUSINESS,
 } from "@/lib/constants/media";
 import type { BusinessMediaItem } from "@/lib/queries/media";
+
+const CropDialog = dynamic(() => import("./crop-dialog"), { ssr: false });
+
+const CROP_ASPECTS: Partial<Record<string, number>> = {
+  COVER: 16 / 9,
+};
 
 interface ServiceOption {
   id: string;
@@ -60,7 +68,7 @@ function CoverLogoSection({
         </CardHeader>
         <CardContent className="space-y-3">
           {cover ? (
-            <div className="relative aspect-[3/1] overflow-hidden rounded-lg">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
               <Image
                 src={cover.url}
                 alt="Cover"
@@ -69,7 +77,7 @@ function CoverLogoSection({
               />
             </div>
           ) : (
-            <div className="flex aspect-[3/1] items-center justify-center rounded-lg border-2 border-dashed bg-muted/40">
+            <div className="flex aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed bg-muted/40">
               <ImageIcon className="size-8 text-muted-foreground" />
             </div>
           )}
@@ -102,11 +110,22 @@ function MediaItemCard({
   const [isPending, startTransition] = useTransition();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSaving, setCropSaving] = useState(false);
   const isVideo = media.type === "PORTFOLIO_VIDEO";
   const isImage =
     media.type !== "PORTFOLIO_VIDEO" &&
     media.type !== "COVER" &&
     media.type !== "LOGO";
+  const supportsCrop = media.type === "COVER" || media.type === "PORTFOLIO_IMAGE";
+
+  async function handleCropConfirm(crop: { x: number; y: number; width: number; height: number }) {
+    setCropSaving(true);
+    await saveCropMeta(media.id, crop);
+    setCropSaving(false);
+    setCropOpen(false);
+    router.refresh();
+  }
 
   function handleSetAsCover() {
     startTransition(async () => {
@@ -201,6 +220,15 @@ function MediaItemCard({
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {supportsCrop && (
+                <>
+                  <DropdownMenuItem onClick={() => setCropOpen(true)}>
+                    <Crop className="size-4" />
+                    Edit crop
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               {isImage && (
                 <>
                   <DropdownMenuItem onClick={handleSetAsCover}>
@@ -262,6 +290,23 @@ function MediaItemCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {cropOpen && (
+        <CropDialog
+          open={cropOpen}
+          onOpenChange={(v) => { if (!v && !cropSaving) setCropOpen(false); }}
+          imageUrl={media.url}
+          aspect={CROP_ASPECTS[media.type]}
+          initialCrop={
+            media.cropX != null
+              ? { x: media.cropX, y: media.cropY!, width: media.cropWidth!, height: media.cropHeight! }
+              : undefined
+          }
+          onConfirm={handleCropConfirm}
+          onSkip={() => setCropOpen(false)}
+          isPending={cropSaving}
+        />
+      )}
     </div>
   );
 }

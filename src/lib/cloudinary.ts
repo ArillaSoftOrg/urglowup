@@ -58,7 +58,10 @@ export async function deleteFromCloudinary(
 }
 
 /**
- * Build an optimized Cloudinary delivery URL with transforms.
+ * Build an optimized Cloudinary delivery URL with optional crop region.
+ * When cropMeta is provided, a two-step transformation is applied:
+ * 1. Extract the user-selected region (c_crop)
+ * 2. Resize/optimize within the extracted region
  */
 export function getOptimizedUrl(
   publicId: string,
@@ -68,19 +71,27 @@ export function getOptimizedUrl(
     quality?: string;
     format?: string;
     crop?: string;
-  }
+  },
+  cropMeta?: { x: number; y: number; width: number; height: number }
 ): string {
   ensureConfigured();
 
-  const transformations: Record<string, string | number | undefined> = {};
-  if (transforms?.width) transformations.width = transforms.width;
-  if (transforms?.height) transformations.height = transforms.height;
-  if (transforms?.crop) transformations.crop = transforms.crop;
-  transformations.quality = transforms?.quality ?? "auto";
-  transformations.fetch_format = transforms?.format ?? "auto";
+  const resizeStep: Record<string, string | number | undefined> = {};
+  if (transforms?.width) resizeStep.width = transforms.width;
+  if (transforms?.height) resizeStep.height = transforms.height;
+  if (transforms?.crop) resizeStep.crop = transforms.crop;
+  resizeStep.quality = transforms?.quality ?? "auto";
+  resizeStep.fetch_format = transforms?.format ?? "auto";
+
+  const transformation = cropMeta
+    ? [
+        { crop: "crop", x: cropMeta.x, y: cropMeta.y, width: cropMeta.width, height: cropMeta.height },
+        resizeStep,
+      ]
+    : [resizeStep];
 
   return cloudinary.url(publicId, {
     secure: true,
-    transformation: [transformations],
+    transformation,
   });
 }
