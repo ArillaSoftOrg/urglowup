@@ -7,10 +7,14 @@ import {
   getMarketplaceCities,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
+import { getExplorePosts } from "@/lib/queries/posts";
+import { getCurrentUser } from "@/lib/auth";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
 import { SearchPanel } from "@/components/marketplace/search-panel";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
+import { ExploreTabs } from "@/components/explore/explore-tabs";
+import { PostFeed } from "@/components/explore/post-feed";
 
 export const metadata: Metadata = {
   title: "Güzellik & Kişisel Bakım Uzmanlarını Keşfet",
@@ -31,9 +35,73 @@ interface PageProps {
 
 export default async function ExplorePage({ searchParams }: PageProps) {
   const rawParams = await searchParams;
+  const tab = (rawParams.tab as string) ?? "isletmeler";
   const filters = parseMarketplaceFilters(rawParams);
 
-  const [businesses, categories, cities] = await Promise.all([
+  const categories = await getMarketplaceCategories();
+  const activeCategories = categories.filter((c) => c.businessCount > 0);
+
+  return (
+    <div className="container mx-auto px-4 py-6 sm:py-10">
+      {/* Tab switcher */}
+      <Suspense fallback={<div className="mb-6 h-10" />}>
+        <ExploreTabs activeTab={tab} />
+      </Suspense>
+
+      {tab === "ilham" ? (
+        <InspirationTab
+          categories={activeCategories.map((c) => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+          }))}
+        />
+      ) : (
+        <BusinessesTab
+          filters={filters}
+          activeCategories={activeCategories}
+          rawParams={rawParams}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── İlham Tab ────────────────────────────────────────────────────
+
+async function InspirationTab({
+  categories,
+}: {
+  categories: Array<{ id: string; name: string; slug: string }>;
+}) {
+  const user = await getCurrentUser().catch(() => null);
+  const { posts, nextCursor } = await getExplorePosts({
+    take: 20,
+    userId: user?.id,
+  });
+
+  return (
+    <PostFeed
+      initialPosts={posts}
+      initialNextCursor={nextCursor}
+      categories={categories}
+      isLoggedIn={!!user}
+    />
+  );
+}
+
+// ─── Keşfet Tab ───────────────────────────────────────────────────
+
+async function BusinessesTab({
+  filters,
+  activeCategories,
+  rawParams,
+}: {
+  filters: ReturnType<typeof parseMarketplaceFilters>;
+  activeCategories: Awaited<ReturnType<typeof getMarketplaceCategories>>;
+  rawParams: Record<string, string | string[] | undefined>;
+}) {
+  const [businesses, cities] = await Promise.all([
     getMarketplaceBusinesses({
       q:            filters.q,
       categorySlug: filters.categorySlug,
@@ -42,18 +110,16 @@ export default async function ExplorePage({ searchParams }: PageProps) {
       hasMedia:     filters.hasMedia || undefined,
       hasHours:     filters.hasHours || undefined,
     }),
-    getMarketplaceCategories(),
     getMarketplaceCities(),
   ]);
 
-  const activeCategories = categories.filter((c) => c.businessCount > 0);
   const hasAnyFilter = !!(
     filters.q || filters.categorySlug || filters.city ||
     filters.minRating || filters.hasMedia || filters.hasHours
   );
 
   return (
-    <div className="container mx-auto px-4 py-6 sm:py-10">
+    <>
       {/* Compact search panel */}
       <div className="mb-6 overflow-hidden rounded-3xl border border-border/60 bg-surface-cream lg:mb-10">
         <div className="px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
@@ -135,6 +201,6 @@ export default async function ExplorePage({ searchParams }: PageProps) {
           />
         )}
       </section>
-    </div>
+    </>
   );
 }

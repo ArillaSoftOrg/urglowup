@@ -10,6 +10,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ProfileForm } from "@/components/account/profile-form";
+import { MapPin, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = { title: "Profil" };
 
@@ -74,6 +76,25 @@ export default async function ProfilePage() {
           />
         </CardContent>
       </Card>
+
+      <Link href="/account/address" className="group block">
+        <Card className="transition-colors group-hover:bg-accent/50">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <MapPin className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Hizmet Adresi</p>
+              <p className="text-xs text-muted-foreground">
+                {user.serviceAddress
+                  ? user.serviceAddress
+                  : "Eve veya konumunuza servis için adres ekleyin."}
+              </p>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground shrink-0" />
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   );
 }

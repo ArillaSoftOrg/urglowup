@@ -1,0 +1,379 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
+import { Upload, Loader2, X, Video, Image as ImageIcon, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { createPost } from "@/app/(business)/business/posts/actions";
+import {
+  ALLOWED_IMAGE_MIMES,
+  ALLOWED_VIDEO_MIMES,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_VIDEO_SIZE_BYTES,
+} from "@/lib/constants/media";
+
+const MAX_MEDIA_PER_POST = 10;
+const ACCEPT = [...ALLOWED_IMAGE_MIMES, ...ALLOWED_VIDEO_MIMES].join(",");
+
+interface UploadedMedia {
+  url: string;
+  publicId: string;
+  type: "IMAGE" | "VIDEO";
+  sortOrder: number;
+  width?: number;
+  height?: number;
+  duration?: number;
+  previewUrl: string;
+}
+
+interface PostCreateDialogProps {
+  services: Array<{ id: string; name: string }>;
+  categories: Array<{ id: string; name: string }>;
+}
+
+export function PostCreateDialog({ services, categories }: PostCreateDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [media, setMedia] = useState<UploadedMedia[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [relatedServiceId, setRelatedServiceId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function reset() {
+    setMedia([]);
+    setDescription("");
+    setRelatedServiceId("");
+    setCategoryId("");
+    setUploadError(null);
+    setSubmitError(null);
+  }
+
+  async function handleFiles(files: FileList) {
+    const remaining = MAX_MEDIA_PER_POST - media.length;
+    if (remaining <= 0) {
+      setUploadError(`En fazla ${MAX_MEDIA_PER_POST} dosya ekleyebilirsiniz.`);
+      return;
+    }
+
+    const toUpload = Array.from(files).slice(0, remaining);
+    setUploadError(null);
+    setUploading(true);
+
+    for (const file of toUpload) {
+      const isVideo = file.type.startsWith("video/");
+      const allowedMimes = isVideo
+        ? (ALLOWED_VIDEO_MIMES as readonly string[])
+        : (ALLOWED_IMAGE_MIMES as readonly string[]);
+      const maxSize = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+
+      if (!allowedMimes.includes(file.type)) {
+        setUploadError(
+          `Desteklenmeyen dosya türü: ${file.name}. İzin verilenler: JPEG, PNG, WebP, MP4, MOV, WebM.`
+        );
+        continue;
+      }
+      if (file.size > maxSize) {
+        setUploadError(
+          `Dosya çok büyük: ${file.name}. ${isVideo ? "Video maks. 100MB" : "Görsel maks. 10MB"}.`
+        );
+        continue;
+      }
+
+      try {
+        // Get Cloudinary signature
+        const signRes = await fetch("/api/media/sign-upload-post", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileType: isVideo ? "video" : "image" }),
+        });
+        if (!signRes.ok) {
+          const data = await signRes.json();
+          throw new Error(data.error || "İmza alınamadı.");
+        }
+        const { signature, timestamp, apiKey, cloudName, folder, resourceType } =
+          await signRes.json();
+
+        // Upload to Cloudinary
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("api_key", apiKey);
+        formData.append("timestamp", String(timestamp));
+        formData.append("signature", signature);
+        formData.append("folder", folder);
+
+        const uploadRes = await new Promise<Record<string, unknown>>(
+          (resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(
+              "POST",
+              `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`
+            );
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
+              } else {
+                try {
+                  const err = JSON.parse(xhr.responseText);
+                  reject(new Error(err.error?.message || "Yükleme başarısız."));
+                } catch {
+                  reject(new Error("Yükleme başarısız."));
+                }
+              }
+            };
+            xhr.onerror = () => reject(new Error("Ağ hatası."));
+            xhr.send(formData);
+          }
+        );
+
+        const previewUrl = URL.createObjectURL(file);
+        setMedia((prev) => [
+          ...prev,
+          {
+            url: uploadRes.secure_url as string,
+            publicId: uploadRes.public_id as string,
+            type: isVideo ? "VIDEO" : "IMAGE",
+            sortOrder: prev.length,
+            width: uploadRes.width as number | undefined,
+            height: uploadRes.height as number | undefined,
+            duration: uploadRes.duration as number | undefined,
+            previewUrl,
+          },
+        ]);
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : "Yükleme başarısız.");
+      }
+    }
+
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function removeMedia(index: number) {
+    setMedia((prev) =>
+      prev
+        .filter((_, i) => i !== index)
+        .map((m, i) => ({ ...m, sortOrder: i }))
+    );
+  }
+
+  function handleSubmit() {
+    if (media.length === 0) {
+      setSubmitError("En az bir görsel veya video ekleyin.");
+      return;
+    }
+    setSubmitError(null);
+
+    startTransition(async () => {
+      const result = await createPost({
+        description: description || undefined,
+        relatedServiceId: relatedServiceId || undefined,
+        categoryId: categoryId || undefined,
+        media: media.map((m) => ({
+          url: m.url,
+          publicId: m.publicId,
+          type: m.type,
+          sortOrder: m.sortOrder,
+          width: m.width,
+          height: m.height,
+          duration: m.duration,
+        })),
+      });
+
+      if (result.success) {
+        reset();
+        setOpen(false);
+      } else {
+        setSubmitError(result.message ?? "Gönderi oluşturulamadı.");
+      }
+    });
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <SheetTrigger
+        render={<Button variant="default" />}
+      >
+        <Plus className="size-4" />
+        Yeni Gönderi
+      </SheetTrigger>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+        <div className="border-b p-4">
+          <SheetTitle className="text-base font-semibold">Yeni Gönderi</SheetTitle>
+        </div>
+
+        <div className="flex-1 space-y-5 overflow-y-auto p-4">
+          {/* Media upload zone */}
+          <div className="space-y-2">
+            <Label>Görseller / Videolar</Label>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept={ACCEPT}
+              onChange={(e) => e.target.files && handleFiles(e.target.files)}
+              className="hidden"
+            />
+
+            {media.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {media.map((m, i) => (
+                  <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                    {m.type === "VIDEO" ? (
+                      <video
+                        src={m.previewUrl}
+                        className="size-full object-cover"
+                        muted
+                        preload="metadata"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.previewUrl}
+                        alt=""
+                        className="size-full object-cover"
+                      />
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => removeMedia(i)}
+                        className="flex size-6 items-center justify-center rounded-full bg-white text-black"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                    {m.type === "VIDEO" && (
+                      <Video className="absolute bottom-1 right-1 size-3.5 text-white drop-shadow" />
+                    )}
+                    {m.type === "IMAGE" && (
+                      <ImageIcon className="absolute bottom-1 right-1 size-3.5 text-white drop-shadow" />
+                    )}
+                  </div>
+                ))}
+
+                {media.length < MAX_MEDIA_PER_POST && (
+                  <button
+                    type="button"
+                    onClick={() => inputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <Loader2 className="size-5 animate-spin" />
+                    ) : (
+                      <Plus className="size-5" />
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {media.length === 0 && (
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                disabled={uploading}
+                className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+              >
+                {uploading ? (
+                  <Loader2 className="size-8 animate-spin" />
+                ) : (
+                  <Upload className="size-8" />
+                )}
+                <span className="text-sm">
+                  {uploading ? "Yükleniyor..." : "Görsel veya video ekle"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  JPEG, PNG, WebP, MP4, MOV, WebM • Maks. {MAX_MEDIA_PER_POST} dosya
+                </span>
+              </button>
+            )}
+
+            {uploadError && (
+              <p className="text-xs text-destructive">{uploadError}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Açıklama (isteğe bağlı)</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Hizmet, ilham veya detaylar hakkında bir şeyler yazın..."
+              rows={3}
+              maxLength={2000}
+            />
+          </div>
+
+          {/* Service */}
+          {services.length > 0 && (
+            <div className="space-y-2">
+              <Label>İlgili hizmet (isteğe bağlı)</Label>
+              <Select value={relatedServiceId} onValueChange={(v) => setRelatedServiceId(v ?? "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Hizmet seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Category */}
+          {categories.length > 0 && (
+            <div className="space-y-2">
+              <Label>Kategori (isteğe bağlı)</Label>
+              <Select value={categoryId} onValueChange={(v) => setCategoryId(v ?? "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Kategori seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {submitError && (
+            <p className="text-sm text-destructive">{submitError}</p>
+          )}
+        </div>
+
+        <div className="border-t p-4">
+          <Button onClick={handleSubmit} disabled={uploading || media.length === 0} className="w-full">
+            Paylaş
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}

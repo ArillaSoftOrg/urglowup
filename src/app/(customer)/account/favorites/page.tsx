@@ -1,18 +1,18 @@
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Heart } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getCustomerFavorites } from "@/lib/queries/favorites";
+import { BusinessGrid } from "@/components/marketplace/business-grid";
 
 export const metadata = { title: "Favorilerim" };
 
-export default function FavoritesPage() {
+export default async function FavoritesPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const favorites = await getCustomerFavorites(user.id);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Favorilerim</h1>
         <p className="text-muted-foreground">
@@ -20,25 +20,10 @@ export default function FavoritesPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader className="items-center text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Heart className="size-6" />
-          </div>
-          <CardTitle>Henüz favori yok</CardTitle>
-          <CardDescription className="max-w-sm">
-            Bir işletmeyi favorilediğinizde buraya eklenecek ve kolayca tekrar bulabileceksiniz.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center text-sm font-medium text-primary hover:underline"
-          >
-            İşletmeleri keşfet
-          </Link>
-        </CardContent>
-      </Card>
+      <BusinessGrid
+        businesses={favorites}
+        emptyMessage="Henüz favori işletmeniz yok. İşletmeleri keşfedin ve beğendiklerinizi kaydedin."
+      />
     </div>
   );
 }
