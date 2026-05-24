@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Heart, CalendarDays, MessageSquare, ArrowRight,
+  Heart, CalendarDays, MessageSquare,
   Volume2, VolumeX, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,7 +29,6 @@ export function PostCard({
   const [activeIndex, setActiveIndex] = useState(0);
   const [muted, setMuted] = useState(true);
   const [videoCanPlay, setVideoCanPlay] = useState(false);
-  // Defer rendering <video> until card scrolls near the viewport
   const [nearViewport, setNearViewport] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -40,17 +39,13 @@ export function PostCard({
   const isVideo = currentMedia?.type === "VIDEO";
   const hasMultiple = post.media.length > 1;
 
-  // Compute container dimensions: portrait shrinks, landscape fills width
   const mw = currentMedia?.width;
   const mh = currentMedia?.height;
   const ar = mw && mh ? mw / mh : null;
 
-  // Container style: sized to the media's own aspect ratio, no side gutters
   const mediaContainerStyle: React.CSSProperties = ar
     ? {
         aspectRatio: `${mw} / ${mh}`,
-        // Portrait: width = maxHeight * ar (narrower than feed)
-        // Landscape: width = 100% (fills feed)
         width: `min(100%, ${(MAX_MEDIA_HEIGHT * ar).toFixed(2)}px)`,
       }
     : {
@@ -58,7 +53,6 @@ export function PostCard({
         maxHeight: `${MAX_MEDIA_HEIGHT}px`,
       };
 
-  // Fire once when card enters the "pre-load zone" (500px before viewport)
   useEffect(() => {
     const card = cardRef.current;
     if (!card) return;
@@ -75,7 +69,6 @@ export function PostCard({
     return () => obs.disconnect();
   }, []);
 
-  // In-viewport play / pause — re-subscribes whenever video element changes
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -90,7 +83,6 @@ export function PostCard({
     return () => obs.disconnect();
   }, [activeIndex, nearViewport]);
 
-  // React's `muted` prop doesn't update after mount — set imperatively
   useEffect(() => {
     if (videoRef.current) videoRef.current.muted = muted;
   }, [muted]);
@@ -120,11 +112,11 @@ export function PostCard({
   }
 
   return (
-    <div ref={cardRef} className="overflow-hidden rounded-2xl border bg-background">
+    <div ref={cardRef} className="border-b border-border/60 py-4 transition-colors hover:bg-accent/20">
       {/* ── Header ── */}
-      <div className="flex items-center gap-2.5 px-3 pt-3 pb-2">
+      <div className="flex items-center gap-2.5 px-4 pb-2">
         <Link href={`/b/${post.business.slug}`} className="shrink-0">
-          <Avatar className="size-8">
+          <Avatar className="size-9">
             {post.business.logoUrl && (
               <AvatarImage src={post.business.logoUrl} alt={post.business.name} />
             )}
@@ -155,7 +147,7 @@ export function PostCard({
 
       {/* ── Description ── */}
       {post.description && (
-        <p className="px-3 pb-2 text-sm leading-relaxed text-foreground">
+        <p className="px-4 pb-2 text-sm leading-relaxed text-foreground">
           {post.description}
         </p>
       )}
@@ -163,11 +155,10 @@ export function PostCard({
       {/* ── Media ── */}
       {post.media.length > 0 && (
         <div
-          className="mx-3 mb-3"
+          className="mb-3 px-4"
           onTouchStart={hasMultiple ? handleTouchStart : undefined}
           onTouchEnd={hasMultiple ? handleTouchEnd : undefined}
         >
-          {/* Container sized to match media aspect ratio — no side gutters */}
           <div
             className={cn(
               "relative overflow-hidden rounded-xl",
@@ -193,13 +184,11 @@ export function PostCard({
                     onWaiting={() => setVideoCanPlay(false)}
                   />
                 )}
-                {/* Spinner: covers the container while buffering */}
                 {!videoCanPlay && (
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                   </div>
                 )}
-                {/* Mute toggle button */}
                 <button
                   onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
                   className="absolute bottom-3 right-3 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm hover:bg-black/80"
@@ -209,7 +198,6 @@ export function PostCard({
                 </button>
               </>
             ) : ar ? (
-              /* Image with known dimensions: fill the ratio-correct container */
               <Image
                 src={currentMedia.url}
                 alt={post.description ?? "Gönderi görseli"}
@@ -218,7 +206,6 @@ export function PostCard({
                 sizes="(max-width: 480px) 100vw, 480px"
               />
             ) : (
-              /* Image without stored dimensions: natural sizing */
               <Image
                 src={currentMedia.url}
                 alt={post.description ?? "Gönderi görseli"}
@@ -232,6 +219,11 @@ export function PostCard({
             {/* ── Multi-media navigation ── */}
             {hasMultiple && (
               <>
+                {/* Counter pill — top-right */}
+                <div className="absolute top-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm pointer-events-none">
+                  {activeIndex + 1}/{post.media.length}
+                </div>
+
                 {/* Left arrow — desktop only */}
                 {activeIndex > 0 && (
                   <button
@@ -252,20 +244,6 @@ export function PostCard({
                     <ChevronRight className="size-4" />
                   </button>
                 )}
-                {/* Dot indicators */}
-                <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
-                  {post.media.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={(e) => { e.stopPropagation(); handleSlideChange(i); }}
-                      className={cn(
-                        "size-2 rounded-full ring-1 ring-black/20 transition-all",
-                        i === activeIndex ? "bg-white" : "bg-white/55"
-                      )}
-                      aria-label={`Medya ${i + 1}`}
-                    />
-                  ))}
-                </div>
               </>
             )}
           </div>
@@ -273,7 +251,7 @@ export function PostCard({
       )}
 
       {/* ── Actions ── */}
-      <div className="flex items-center gap-1 px-3 pb-3">
+      <div className="flex items-center gap-1 px-4">
         <button
           onClick={handleSave}
           aria-label={savedByCurrentUser ? "Kaydı kaldır" : "Kaydet"}
@@ -302,13 +280,6 @@ export function PostCard({
         >
           <MessageSquare className="size-3.5" />
           Mesaj
-        </Link>
-
-        <Link
-          href={`/b/${post.business.slug}`}
-          className="ml-auto flex items-center rounded-lg bg-muted px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <ArrowRight className="size-3.5" />
         </Link>
       </div>
     </div>

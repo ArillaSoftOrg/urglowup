@@ -122,20 +122,20 @@ export function PostFeed({
         onSelect={handleCategorySelect}
       />
 
-      <div className="mx-auto max-w-[480px] space-y-4">
+      <div className="mx-auto max-w-[480px]">
         {loading && posts.length === 0 ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="animate-pulse overflow-hidden rounded-2xl border bg-background">
-              <div className="flex items-center gap-2.5 px-3 py-3">
-                <div className="size-8 shrink-0 rounded-full bg-muted" />
+            <div key={i} className="animate-pulse border-b border-border/60 py-4">
+              <div className="flex items-center gap-2.5 px-4 pb-2">
+                <div className="size-9 shrink-0 rounded-full bg-muted" />
                 <div className="space-y-1.5">
                   <div className="h-3 w-28 rounded bg-muted" />
                   <div className="h-2 w-20 rounded bg-muted" />
                 </div>
               </div>
-              <div className="mx-3 mb-3 h-3 rounded bg-muted" />
-              <div className="h-64 w-full bg-muted" />
-              <div className="flex gap-1 p-3 pt-2">
+              <div className="mb-3 px-4 h-3 rounded bg-muted" />
+              <div className="mx-4 h-56 rounded-xl bg-muted" />
+              <div className="flex gap-1 px-4 pt-3">
                 <div className="h-7 w-16 rounded-lg bg-muted" />
                 <div className="h-7 w-24 rounded-lg bg-muted" />
                 <div className="h-7 w-16 rounded-lg bg-muted" />
