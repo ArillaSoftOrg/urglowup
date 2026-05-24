@@ -15,9 +15,10 @@ interface PostManagerProps {
   }>;
   services: Array<{ id: string; name: string }>;
   categories: Array<{ id: string; name: string }>;
+  styleTags: Array<{ id: string; name: string; slug: string }>;
 }
 
-export function PostManager({ posts, services, categories }: PostManagerProps) {
+export function PostManager({ posts, services, categories, styleTags }: PostManagerProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -27,7 +28,7 @@ export function PostManager({ posts, services, categories }: PostManagerProps) {
             İşletmenizin görsel paylaşımları.
           </p>
         </div>
-        <PostCreateDialog services={services} categories={categories} />
+        <PostCreateDialog services={services} categories={categories} styleTags={styleTags} />
       </div>
 
       {posts.length === 0 ? (

@@ -21,12 +21,14 @@ export type ExplorePost = {
   }>;
   relatedService: { name: string } | null;
   category: { name: string; slug: string } | null;
+  styleTags: Array<{ id: string; name: string; slug: string }>;
   savedByCurrentUser: boolean;
   saveCount: number;
 };
 
 export async function getExplorePosts(opts: {
   categoryId?: string;
+  styleTagId?: string;
   cursor?: string;
   take?: number;
   userId?: string;
@@ -37,6 +39,7 @@ export async function getExplorePosts(opts: {
     where: {
       status: "ACTIVE",
       ...(opts.categoryId ? { categoryId: opts.categoryId } : {}),
+      ...(opts.styleTagId ? { styleTags: { some: { styleTagId: opts.styleTagId } } } : {}),
       ...(opts.cursor
         ? { createdAt: { lt: new Date(opts.cursor) } }
         : {}),
@@ -63,6 +66,9 @@ export async function getExplorePosts(opts: {
       },
       relatedService: { select: { name: true } },
       category: { select: { name: true, slug: true } },
+      styleTags: {
+        select: { styleTag: { select: { id: true, name: true, slug: true } } },
+      },
       _count: { select: { saves: true } },
     },
   });
@@ -91,6 +97,7 @@ export async function getExplorePosts(opts: {
     media: row.media,
     relatedService: row.relatedService,
     category: row.category,
+    styleTags: row.styleTags.map((pt) => pt.styleTag),
     savedByCurrentUser: savedPostIds.has(row.id),
     saveCount: row._count.saves,
   }));

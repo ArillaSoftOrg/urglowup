@@ -152,6 +152,21 @@ export function PostCard({
         </p>
       )}
 
+      {/* ── Style Tags ── */}
+      {post.styleTags.length > 0 && (
+        <div className="flex flex-wrap gap-1 px-4 pb-2">
+          {post.styleTags.map((tag) => (
+            <Link
+              key={tag.id}
+              href={`/styles/${tag.slug}`}
+              className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              #{tag.name}
+            </Link>
+          ))}
+        </div>
+      )}
+
       {/* ── Media ── */}
       {post.media.length > 0 && (
         <div

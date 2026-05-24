@@ -5,6 +5,7 @@ import {
   getMarketplaceCities,
   getMarketplaceDistricts,
 } from "@/lib/queries/marketplace";
+import { getAllStyleTags } from "@/lib/queries/style-tags";
 
 export const revalidate = 86400;
 
@@ -12,16 +13,18 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "https://urglowup.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [businesses, categories, cities, districts] = await Promise.all([
+  const [businesses, categories, cities, districts, styleTags] = await Promise.all([
     getAllMarketplaceBusinessSlugs(),
     getMarketplaceCategories(),
     getMarketplaceCities(),
     getMarketplaceDistricts(),
+    getAllStyleTags(),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL,                   changeFrequency: "daily",   priority: 1.0 },
     { url: `${BASE_URL}/explore`,      changeFrequency: "daily",   priority: 0.9 },
+    { url: `${BASE_URL}/styles`,       changeFrequency: "weekly",  priority: 0.6 },
     { url: `${BASE_URL}/for-business`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/map`,          changeFrequency: "weekly",  priority: 0.4 },
   ];
@@ -51,11 +54,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority:        0.5,
   }));
 
+  const styleTagPages: MetadataRoute.Sitemap = styleTags
+    .filter((t) => t.postCount > 0)
+    .map((t) => ({
+      url:             `${BASE_URL}/styles/${t.slug}`,
+      changeFrequency: "weekly" as const,
+      priority:        0.65,
+    }));
+
   return [
     ...staticPages,
     ...businessPages,
     ...categoryPages,
     ...cityPages,
     ...districtPages,
+    ...styleTagPages,
   ];
 }

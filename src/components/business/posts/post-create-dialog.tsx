@@ -43,9 +43,12 @@ interface UploadedMedia {
 interface PostCreateDialogProps {
   services: Array<{ id: string; name: string }>;
   categories: Array<{ id: string; name: string }>;
+  styleTags: Array<{ id: string; name: string; slug: string }>;
 }
 
-export function PostCreateDialog({ services, categories }: PostCreateDialogProps) {
+const MAX_STYLE_TAGS = 5;
+
+export function PostCreateDialog({ services, categories, styleTags }: PostCreateDialogProps) {
   const [open, setOpen] = useState(false);
   const [media, setMedia] = useState<UploadedMedia[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -53,6 +56,7 @@ export function PostCreateDialog({ services, categories }: PostCreateDialogProps
   const [description, setDescription] = useState("");
   const [relatedServiceId, setRelatedServiceId] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,8 +66,17 @@ export function PostCreateDialog({ services, categories }: PostCreateDialogProps
     setDescription("");
     setRelatedServiceId("");
     setCategoryId("");
+    setSelectedTagIds([]);
     setUploadError(null);
     setSubmitError(null);
+  }
+
+  function toggleTag(id: string) {
+    setSelectedTagIds((prev) => {
+      if (prev.includes(id)) return prev.filter((t) => t !== id);
+      if (prev.length >= MAX_STYLE_TAGS) return prev;
+      return [...prev, id];
+    });
   }
 
   async function handleFiles(files: FileList) {
@@ -186,6 +199,7 @@ export function PostCreateDialog({ services, categories }: PostCreateDialogProps
         description: description || undefined,
         relatedServiceId: relatedServiceId || undefined,
         categoryId: categoryId || undefined,
+        styleTagIds: selectedTagIds,
         media: media.map((m) => ({
           url: m.url,
           publicId: m.publicId,
@@ -360,6 +374,38 @@ export function PostCreateDialog({ services, categories }: PostCreateDialogProps
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {/* Style Tags */}
+          {styleTags.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Stil etiketleri (isteğe bağlı)</Label>
+                <span className="text-xs text-muted-foreground">
+                  {selectedTagIds.length}/{MAX_STYLE_TAGS}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {styleTags.map((tag) => {
+                  const selected = selectedTagIds.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      disabled={!selected && selectedTagIds.length >= MAX_STYLE_TAGS}
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                        selected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-40"
+                      }`}
+                    >
+                      #{tag.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 

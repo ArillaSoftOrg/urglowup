@@ -131,17 +131,17 @@ enum DayOfWeek {
 // ─── Models ──────────────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  firstName String?
-  lastName  String?
+  id             String   @id @default(cuid())
+  clerkId        String   @unique
+  email          String   @unique
+  firstName      String?
+  lastName       String?
   phone          String?
   serviceAddress String?
   avatarUrl      String?
-  role      UserRole @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role           UserRole @default(CUSTOMER)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   business            Business?
   appointments        Appointment[]
@@ -149,7 +149,7 @@ model User {
   favorites           Favorite[]
   adminActions        AdminAction[]
   externalConnections BusinessExternalConnection[]
-  taggedPosts         Post[]     @relation("TaggedPosts")
+  taggedPosts         Post[]                       @relation("TaggedPosts")
   postSaves           PostSave[]
 }
 
@@ -208,6 +208,7 @@ model BusinessCategory {
 
   businesses BusinessToCategory[]
   posts      Post[]
+  styleTags  StyleTag[]
 }
 
 model BusinessToCategory {
@@ -428,9 +429,9 @@ model BusinessExternalConnection {
 }
 
 model ExternalReviewCache {
-  id                      String                   @id @default(cuid())
+  id                      String                     @id @default(cuid())
   businessId              String
-  business                Business                 @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business                Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   connectionId            String
   connection              BusinessExternalConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
   provider                ExternalProvider
@@ -444,20 +445,20 @@ model ExternalReviewCache {
   createTime              DateTime?
   updateTime              DateTime?
   merchantReply           String?
-  mediaItemsJson          String?                  // JSON array of media items from Google (read-only reference)
+  mediaItemsJson          String? // JSON array of media items from Google (read-only reference)
   // Attribution / source — must always be preserved
-  attribution             String?                  // e.g. "Google"
-  sourceUrl               String?                  // Direct link to the review on Google Maps
+  attribution             String? // e.g. "Google"
+  sourceUrl               String? // Direct link to the review on Google Maps
   // Cache lifecycle
   fetchedAt               DateTime
-  expiresAt               DateTime                 // fetchedAt + 30 days
+  expiresAt               DateTime // fetchedAt + 30 days
   // Display control — HIDDEN_BY_BUSINESS is intentionally absent:
   // businesses control visibility at the section level via showExternalReviews,
   // not by cherry-picking individual reviews.
-  visibilityStatus        ExternalReviewVisibility @default(VISIBLE)
-  displayOrder            Int                      @default(0)
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
+  visibilityStatus        ExternalReviewVisibility   @default(VISIBLE)
+  displayOrder            Int                        @default(0)
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
 
   @@unique([businessId, provider, providerReviewId])
   @@index([businessId, provider])
@@ -485,8 +486,9 @@ model Post {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
-  media PostMedia[]
-  saves PostSave[]
+  media     PostMedia[]
+  saves     PostSave[]
+  styleTags PostStyleTag[]
 
   @@index([businessId, status])
   @@index([categoryId, status])
@@ -521,34 +523,65 @@ model PostSave {
   @@index([userId])
 }
 
+// ─── Style Tags ──────────────────────────────────────────────────
+
+model StyleTag {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  slug        String            @unique
+  description String?
+  categoryId  String?
+  category    BusinessCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  isActive    Boolean           @default(true)
+  sortOrder   Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  posts PostStyleTag[]
+
+  @@index([categoryId, isActive])
+  @@index([isActive, sortOrder])
+}
+
+model PostStyleTag {
+  postId     String
+  styleTagId String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  styleTag   StyleTag @relation(fields: [styleTagId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([postId, styleTagId])
+  @@index([styleTagId])
+}
+
 // ─── External Source Cache (Google Business Profile) ─────────────────────────
 
 model ExternalMediaCache {
-  id                   String                  @id @default(cuid())
+  id                   String                     @id @default(cuid())
   businessId           String
-  business             Business                @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business             Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   connectionId         String
   connection           BusinessExternalConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
   provider             ExternalProvider
   // Google media identifier
   providerMediaId      String
-  mediaFormat          String                  // "PHOTO" | "VIDEO" as returned by Google API
-  category             String?                 // Google media category (EXTERIOR, INTERIOR, FOOD, etc.)
+  mediaFormat          String // "PHOTO" | "VIDEO" as returned by Google API
+  category             String? // Google media category (EXTERIOR, INTERIOR, FOOD, etc.)
   // URLs — direct Google CDN only, NEVER Cloudinary
-  sourceUrl            String                  // Full-size Google CDN URL
-  thumbnailUrl         String?                 // Thumbnail URL from Google CDN
+  sourceUrl            String // Full-size Google CDN URL
+  thumbnailUrl         String? // Thumbnail URL from Google CDN
   // Attribution / source — must always be preserved
-  attribution          String?                 // e.g. "Google"
+  attribution          String? // e.g. "Google"
   createTime           DateTime?
   // Cache lifecycle
   fetchedAt            DateTime
-  expiresAt            DateTime                // fetchedAt + 30 days
+  expiresAt            DateTime // fetchedAt + 30 days
   // Display control — businesses may curate individual photos
-  visibilityStatus     ExternalMediaVisibility @default(VISIBLE)
-  displayOrder         Int                     @default(0)
-  isFeaturedByBusiness Boolean                 @default(false)
-  createdAt            DateTime                @default(now())
-  updatedAt            DateTime                @updatedAt
+  visibilityStatus     ExternalMediaVisibility    @default(VISIBLE)
+  displayOrder         Int                        @default(0)
+  isFeaturedByBusiness Boolean                    @default(false)
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
 
   @@unique([businessId, provider, providerMediaId])
   @@index([businessId, provider])

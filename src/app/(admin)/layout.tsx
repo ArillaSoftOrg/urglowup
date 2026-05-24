@@ -10,6 +10,7 @@ const adminNav = [
   { title: "Media", href: "/admin/media" },
   { title: "Reviews", href: "/admin/reviews" },
   { title: "Categories", href: "/admin/categories" },
+  { title: "Style Tags", href: "/admin/style-tags" },
   { title: "Marketplace", href: "/admin/marketplace" },
 ];
 

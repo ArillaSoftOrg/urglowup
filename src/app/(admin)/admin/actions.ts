@@ -732,3 +732,148 @@ export async function deleteCategory(
   revalidateAdmin();
   return { success: true, message: "Category deleted." };
 }
+
+// ─── Style Tag Actions ─────────────────────────────────────────
+
+const styleTagSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(100)
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and dashes"),
+  description: z.string().max(500).optional().or(z.literal("")),
+  categoryId: z.string().optional().or(z.literal("")),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+});
+
+function revalidateStyleTagPaths() {
+  revalidatePath("/admin/style-tags");
+  revalidatePath("/styles", "layout");
+  revalidatePath("/explore");
+}
+
+export async function createStyleTag(
+  _prev: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = styleTagSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    description: formData.get("description"),
+    categoryId: formData.get("categoryId"),
+    sortOrder: formData.get("sortOrder"),
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  try {
+    const tag = await db.styleTag.create({
+      data: {
+        name: result.data.name,
+        slug: result.data.slug,
+        description: result.data.description || null,
+        categoryId: result.data.categoryId || null,
+        sortOrder: result.data.sortOrder,
+      },
+    });
+
+    await logAdminAction(admin.id, "styleTag.create", "StyleTag", tag.id, `name: ${tag.name}`);
+    revalidateStyleTagPaths();
+    return { success: true, message: "Style tag created." };
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "code" in err && (err as { code: string }).code === "P2002") {
+      return { success: false, message: "A style tag with this slug already exists." };
+    }
+    throw err;
+  }
+}
+
+export async function updateStyleTag(
+  _prev: AdminActionState,
+  formData: FormData
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const styleTagId = formData.get("styleTagId") as string;
+  if (!styleTagId) return { success: false, message: "Style tag ID is required." };
+
+  const result = styleTagSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    description: formData.get("description"),
+    categoryId: formData.get("categoryId"),
+    sortOrder: formData.get("sortOrder"),
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const existing = await db.styleTag.findUnique({ where: { id: styleTagId }, select: { name: true, slug: true } });
+  if (!existing) return { success: false, message: "Style tag not found." };
+
+  try {
+    await db.styleTag.update({
+      where: { id: styleTagId },
+      data: {
+        name: result.data.name,
+        slug: result.data.slug,
+        description: result.data.description || null,
+        categoryId: result.data.categoryId || null,
+        sortOrder: result.data.sortOrder,
+      },
+    });
+
+    await logAdminAction(admin.id, "styleTag.update", "StyleTag", styleTagId, `${existing.name} → ${result.data.name}`);
+    revalidateStyleTagPaths();
+    if (existing.slug !== result.data.slug) revalidatePath(`/styles/${existing.slug}`);
+    revalidatePath(`/styles/${result.data.slug}`);
+    return { success: true, message: "Style tag updated." };
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "code" in err && (err as { code: string }).code === "P2002") {
+      return { success: false, message: "A style tag with this slug already exists." };
+    }
+    throw err;
+  }
+}
+
+export async function toggleStyleTagActive(styleTagId: string): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const tag = await db.styleTag.findUnique({ where: { id: styleTagId }, select: { isActive: true, name: true } });
+  if (!tag) return { success: false, message: "Style tag not found." };
+
+  const next = !tag.isActive;
+  await db.styleTag.update({ where: { id: styleTagId }, data: { isActive: next } });
+  await logAdminAction(admin.id, "styleTag.toggle", "StyleTag", styleTagId, `isActive: ${tag.isActive} → ${next}`);
+  revalidateStyleTagPaths();
+  return { success: true, message: next ? "Style tag activated." : "Style tag deactivated." };
+}
+
+export async function deleteStyleTag(styleTagId: string): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const tag = await db.styleTag.findUnique({
+    where: { id: styleTagId },
+    select: { name: true, _count: { select: { posts: true } } },
+  });
+
+  if (!tag) return { success: false, message: "Style tag not found." };
+
+  if (tag._count.posts > 0) {
+    return {
+      success: false,
+      message: `${tag._count.posts} gönderi bu etiketi kullanıyor. Silmek yerine devre dışı bırakın.`,
+    };
+  }
+
+  await db.styleTag.delete({ where: { id: styleTagId } });
+  await logAdminAction(admin.id, "styleTag.delete", "StyleTag", styleTagId, `name: ${tag.name}`);
+  revalidateStyleTagPaths();
+  return { success: true, message: "Style tag deleted." };
+}

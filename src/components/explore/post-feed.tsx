@@ -6,6 +6,14 @@ import { PostCard } from "./post-card";
 import { PostFeedCategoryFilter } from "./post-feed-category-filter";
 import type { ExplorePost } from "@/lib/queries/posts";
 
+type StyleTagData = {
+  id: string;
+  name: string;
+  slug: string;
+  categoryId: string | null;
+  postCount: number;
+};
+
 interface PostFeedProps {
   initialPosts: ExplorePost[];
   initialNextCursor: string | null;
@@ -22,8 +30,18 @@ export function PostFeed({
   const [posts, setPosts] = useState<ExplorePost[]>(initialPosts);
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
+  const [selectedStyleTagId, setSelectedStyleTagId] = useState<string | undefined>(undefined);
+  const [styleTags, setStyleTags] = useState<StyleTagData[]>([]);
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Fetch style tags once on mount
+  useEffect(() => {
+    fetch("/api/style-tags")
+      .then((r) => r.json())
+      .then((data: StyleTagData[]) => setStyleTags(data))
+      .catch(() => {});
+  }, []);
 
   // Optimistic save state: map of postId -> savedByCurrentUser
   const [optimisticSaves, setOptimisticSaves] = useOptimistic<
@@ -34,13 +52,39 @@ export function PostFeed({
     [action.postId]: action.saved,
   }));
 
+  function buildParams(extra?: Record<string, string>) {
+    const params = new URLSearchParams({ take: "20" });
+    if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
+    if (selectedStyleTagId) params.set("styleTagId", selectedStyleTagId);
+    if (extra) Object.entries(extra).forEach(([k, v]) => params.set(k, v));
+    return params;
+  }
+
   // Reset feed when category changes
   async function handleCategorySelect(categoryId: string | undefined) {
     setSelectedCategoryId(categoryId);
+    setSelectedStyleTagId(undefined);
     setLoading(true);
     try {
       const params = new URLSearchParams({ take: "20" });
       if (categoryId) params.set("categoryId", categoryId);
+      const res = await fetch(`/api/posts?${params.toString()}`);
+      const data = await res.json();
+      setPosts(data.posts);
+      setNextCursor(data.nextCursor);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Reset feed when style tag changes
+  async function handleStyleTagSelect(styleTagId: string | undefined) {
+    setSelectedStyleTagId(styleTagId);
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ take: "20" });
+      if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
+      if (styleTagId) params.set("styleTagId", styleTagId);
       const res = await fetch(`/api/posts?${params.toString()}`);
       const data = await res.json();
       setPosts(data.posts);
@@ -55,8 +99,7 @@ export function PostFeed({
     if (!nextCursor || loading) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ cursor: nextCursor, take: "20" });
-      if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
+      const params = buildParams({ cursor: nextCursor });
       const res = await fetch(`/api/posts?${params.toString()}`);
       const data = await res.json();
       setPosts((prev) => [...prev, ...data.posts]);
@@ -64,7 +107,8 @@ export function PostFeed({
     } finally {
       setLoading(false);
     }
-  }, [nextCursor, loading, selectedCategoryId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextCursor, loading, selectedCategoryId, selectedStyleTagId]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -120,6 +164,9 @@ export function PostFeed({
         categories={categories}
         selectedCategoryId={selectedCategoryId}
         onSelect={handleCategorySelect}
+        styleTags={styleTags}
+        selectedStyleTagId={selectedStyleTagId}
+        onStyleTagSelect={handleStyleTagSelect}
       />
 
       <div className="mx-auto max-w-[480px]">

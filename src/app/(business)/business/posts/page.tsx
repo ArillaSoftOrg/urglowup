@@ -30,6 +30,19 @@ export default async function BusinessPostsPage() {
   ]);
 
   const categories = categoryLinks.map((c) => c.category);
+  const categoryIds = categoryLinks.map((c) => c.category.id);
+
+  const styleTags = await db.styleTag.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { categoryId: null },
+        { categoryId: { in: categoryIds } },
+      ],
+    },
+    select: { id: true, name: true, slug: true },
+    orderBy: { sortOrder: "asc" },
+  });
 
   return (
     <PostManager
@@ -39,6 +52,7 @@ export default async function BusinessPostsPage() {
       }))}
       services={services}
       categories={categories}
+      styleTags={styleTags}
     />
   );
 }

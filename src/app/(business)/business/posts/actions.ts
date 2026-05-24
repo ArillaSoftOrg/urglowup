@@ -31,6 +31,7 @@ const createPostSchema = z
     description: z.string().max(2000).optional().or(z.literal("")),
     relatedServiceId: z.string().optional().or(z.literal("")),
     categoryId: z.string().optional().or(z.literal("")),
+    styleTagIds: z.array(z.string()).max(5).default([]),
     media: z.array(postMediaItemSchema).max(10).default([]),
   })
   .refine(
@@ -50,7 +51,7 @@ export async function createPost(
     return { success: false, message: result.error.issues[0].message };
   }
 
-  const { description, relatedServiceId, categoryId, media } = result.data;
+  const { description, relatedServiceId, categoryId, styleTagIds, media } = result.data;
 
   // Validate relatedServiceId belongs to this business
   if (relatedServiceId) {
@@ -73,7 +74,36 @@ export async function createPost(
     }
   }
 
-  await db.post.create({
+  // Validate style tags: each must be active and belong to a category the business is registered under
+  let validatedTagIds: string[] = [];
+  if (styleTagIds.length > 0) {
+    const businessCategoryIds = await db.businessToCategory.findMany({
+      where: { businessId },
+      select: { categoryId: true },
+    });
+    const bizCatSet = new Set(businessCategoryIds.map((r) => r.categoryId));
+
+    const tags = await db.styleTag.findMany({
+      where: { id: { in: styleTagIds }, isActive: true },
+      select: { id: true, categoryId: true },
+    });
+
+    if (tags.length !== styleTagIds.length) {
+      return { success: false, message: "Bir veya daha fazla stil etiketi geçersiz." };
+    }
+
+    // Allow tags whose categoryId is null (universal) or matches a business category
+    const invalid = tags.find(
+      (t) => t.categoryId !== null && !bizCatSet.has(t.categoryId)
+    );
+    if (invalid) {
+      return { success: false, message: "Seçilen stil etiketi bu işletme kategorisiyle uyuşmuyor." };
+    }
+
+    validatedTagIds = tags.map((t) => t.id);
+  }
+
+  const post = await db.post.create({
     data: {
       businessId,
       description: description || null,
@@ -93,9 +123,25 @@ export async function createPost(
         },
       },
     },
+    select: { id: true },
   });
 
+  if (validatedTagIds.length > 0) {
+    await db.postStyleTag.createMany({
+      data: validatedTagIds.map((styleTagId) => ({ postId: post.id, styleTagId })),
+    });
+    // Revalidate Atlas guide pages for affected tags
+    const tagSlugs = await db.styleTag.findMany({
+      where: { id: { in: validatedTagIds } },
+      select: { slug: true },
+    });
+    for (const { slug } of tagSlugs) {
+      revalidatePath(`/styles/${slug}`);
+    }
+  }
+
   revalidatePath("/business/posts");
+  revalidatePath("/explore");
   return { success: true, message: "Gönderi paylaşıldı." };
 }
 
