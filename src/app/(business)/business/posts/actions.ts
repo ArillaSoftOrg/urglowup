@@ -26,12 +26,17 @@ const postMediaItemSchema = z.object({
   duration: z.number().positive().optional(),
 });
 
-const createPostSchema = z.object({
-  description: z.string().max(2000).optional().or(z.literal("")),
-  relatedServiceId: z.string().optional().or(z.literal("")),
-  categoryId: z.string().optional().or(z.literal("")),
-  media: z.array(postMediaItemSchema).min(1).max(10),
-});
+const createPostSchema = z
+  .object({
+    description: z.string().max(2000).optional().or(z.literal("")),
+    relatedServiceId: z.string().optional().or(z.literal("")),
+    categoryId: z.string().optional().or(z.literal("")),
+    media: z.array(postMediaItemSchema).max(10).default([]),
+  })
+  .refine(
+    (d) => (d.description?.trim().length ?? 0) > 0 || d.media.length > 0,
+    { message: "Açıklama veya en az bir görsel/video ekleyin." }
+  );
 
 // ─── Create Post ────────────────────────────────────────────────
 

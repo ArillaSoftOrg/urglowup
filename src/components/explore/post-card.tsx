@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, CalendarDays, MessageSquare, ArrowRight } from "lucide-react";
+import { Heart, CalendarDays, MessageSquare, ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ExplorePost } from "@/lib/queries/posts";
 
@@ -23,13 +22,16 @@ export function PostCard({
   onSaveToggle,
 }: PostCardProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [muted, setMuted] = useState(true);
+  // Tracks whether the current video slide has buffered enough to play
+  const [videoCanPlay, setVideoCanPlay] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
 
-  const firstMedia = post.media[activeIndex] ?? post.media[0];
-  const isVideo = firstMedia?.type === "VIDEO";
+  const activeMedia = post.media[activeIndex] ?? post.media[0];
+  const isVideo = activeMedia?.type === "VIDEO";
+  const showVideoSpinner = isVideo && !videoCanPlay;
 
-  // Pause/play video based on viewport intersection
+  // Viewport-based play/pause
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -49,6 +51,18 @@ export function PostCard({
     return () => observer.disconnect();
   }, [activeIndex]);
 
+  // React's muted prop doesn't reliably sync at runtime — set imperatively
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = muted;
+    }
+  }, [muted]);
+
+  function handleSlideChange(i: number) {
+    setActiveIndex(i);
+    setVideoCanPlay(false);
+  }
+
   function handleSave() {
     if (!isLoggedIn) {
       window.location.href = "/login";
@@ -58,71 +72,13 @@ export function PostCard({
   }
 
   return (
-    <div
-      ref={cardRef}
-      className="overflow-hidden rounded-2xl border bg-card shadow-sm"
-    >
-      {/* Media area */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
-        {firstMedia ? (
-          isVideo ? (
-            <video
-              ref={videoRef}
-              src={firstMedia.url}
-              className="size-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-            />
-          ) : (
-            <Image
-              src={firstMedia.url}
-              alt={post.description ?? "Gönderi görseli"}
-              fill
-              className="object-cover"
-              sizes="(max-width: 480px) 100vw, 480px"
-            />
-          )
-        ) : (
-          <div className="size-full bg-muted" />
-        )}
-
-        {/* Dot indicators for multiple media */}
-        {post.media.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {post.media.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveIndex(i)}
-                className={cn(
-                  "size-1.5 rounded-full transition-all",
-                  i === activeIndex
-                    ? "scale-125 bg-white"
-                    : "bg-white/60"
-                )}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Category chip */}
-        {post.category && (
-          <span className="absolute left-3 top-3 rounded-full bg-black/50 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
-            {post.category.name}
-          </span>
-        )}
-      </div>
-
-      {/* Business meta */}
-      <div className="flex items-center gap-2.5 px-3 pt-3">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+      {/* Business header */}
+      <div className="flex items-center gap-2.5 px-3 py-3">
         <Link href={`/b/${post.business.slug}`} className="shrink-0">
           <Avatar className="size-8">
             {post.business.logoUrl && (
-              <AvatarImage
-                src={post.business.logoUrl}
-                alt={post.business.name}
-              />
+              <AvatarImage src={post.business.logoUrl} alt={post.business.name} />
             )}
             <AvatarFallback className="text-xs">
               {post.business.name.charAt(0).toUpperCase()}
@@ -142,13 +98,83 @@ export function PostCard({
             </p>
           )}
         </div>
+        {post.category && (
+          <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            {post.category.name}
+          </span>
+        )}
       </div>
 
       {/* Description */}
       {post.description && (
-        <p className="line-clamp-2 px-3 pt-1.5 text-sm text-muted-foreground">
+        <p className="px-3 pb-3 text-sm leading-relaxed">
           {post.description}
         </p>
+      )}
+
+      {/* Media */}
+      {post.media.length > 0 && (
+        <div className="relative w-full overflow-hidden bg-black">
+          {isVideo ? (
+            <>
+              <video
+                ref={videoRef}
+                src={activeMedia.url}
+                className="block w-full max-h-[560px] object-contain"
+                autoPlay
+                muted
+                loop
+                playsInline
+                onClick={() => setMuted((m) => !m)}
+                onCanPlay={() => setVideoCanPlay(true)}
+                onWaiting={() => setVideoCanPlay(false)}
+              />
+              {showVideoSpinner && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="size-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                </div>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
+                className="absolute bottom-3 right-3 rounded-full bg-black/50 p-1.5 text-white backdrop-blur-sm transition-opacity hover:bg-black/70"
+                aria-label={muted ? "Sesi aç" : "Sesi kapat"}
+              >
+                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </button>
+            </>
+          ) : (
+            <Image
+              src={activeMedia.url}
+              alt={post.description ?? "Gönderi görseli"}
+              width={activeMedia.width ?? 600}
+              height={activeMedia.height ?? 600}
+              style={{
+                width: "100%",
+                height: "auto",
+                maxHeight: "560px",
+                objectFit: "contain",
+                display: "block",
+              }}
+              sizes="(max-width: 480px) 100vw, 480px"
+            />
+          )}
+
+          {/* Dot indicators for multiple media */}
+          {post.media.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+              {post.media.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSlideChange(i)}
+                  className={cn(
+                    "size-1.5 rounded-full transition-all",
+                    i === activeIndex ? "scale-125 bg-white" : "bg-white/60"
+                  )}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Action row */}

@@ -125,10 +125,22 @@ export function PostFeed({
       <div className="mx-auto max-w-[480px] space-y-4">
         {loading && posts.length === 0 ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-[4/5] w-full animate-pulse rounded-2xl bg-muted"
-            />
+            <div key={i} className="animate-pulse overflow-hidden rounded-2xl border bg-card shadow-sm">
+              <div className="flex items-center gap-2.5 px-3 py-3">
+                <div className="size-8 shrink-0 rounded-full bg-muted" />
+                <div className="space-y-1.5">
+                  <div className="h-3 w-28 rounded bg-muted" />
+                  <div className="h-2 w-20 rounded bg-muted" />
+                </div>
+              </div>
+              <div className="mx-3 mb-3 h-3 rounded bg-muted" />
+              <div className="h-64 w-full bg-muted" />
+              <div className="flex gap-1 p-3 pt-2">
+                <div className="h-7 w-16 rounded-lg bg-muted" />
+                <div className="h-7 w-24 rounded-lg bg-muted" />
+                <div className="h-7 w-16 rounded-lg bg-muted" />
+              </div>
+            </div>
           ))
         ) : (
           posts.map((post) => {

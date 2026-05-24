@@ -175,8 +175,8 @@ export function PostCreateDialog({ services, categories }: PostCreateDialogProps
   }
 
   function handleSubmit() {
-    if (media.length === 0) {
-      setSubmitError("En az bir görsel veya video ekleyin.");
+    if (media.length === 0 && !description.trim()) {
+      setSubmitError("Açıklama veya en az bir görsel/video ekleyin.");
       return;
     }
     setSubmitError(null);
@@ -369,7 +369,7 @@ export function PostCreateDialog({ services, categories }: PostCreateDialogProps
         </div>
 
         <div className="border-t p-4">
-          <Button onClick={handleSubmit} disabled={uploading || media.length === 0} className="w-full">
+          <Button onClick={handleSubmit} disabled={uploading || (media.length === 0 && !description.trim())} className="w-full">
             Paylaş
           </Button>
         </div>
