@@ -18,6 +18,8 @@ interface PostCardProps {
   onSaveToggle: (postId: string, currentlySaved: boolean) => void;
 }
 
+const MAX_MEDIA_HEIGHT = 560;
+
 export function PostCard({
   post,
   isLoggedIn,
@@ -37,6 +39,24 @@ export function PostCard({
   const currentMedia = post.media[activeIndex] ?? post.media[0];
   const isVideo = currentMedia?.type === "VIDEO";
   const hasMultiple = post.media.length > 1;
+
+  // Compute container dimensions: portrait shrinks, landscape fills width
+  const mw = currentMedia?.width;
+  const mh = currentMedia?.height;
+  const ar = mw && mh ? mw / mh : null;
+
+  // Container style: sized to the media's own aspect ratio, no side gutters
+  const mediaContainerStyle: React.CSSProperties = ar
+    ? {
+        aspectRatio: `${mw} / ${mh}`,
+        // Portrait: width = maxHeight * ar (narrower than feed)
+        // Landscape: width = 100% (fills feed)
+        width: `min(100%, ${(MAX_MEDIA_HEIGHT * ar).toFixed(2)}px)`,
+      }
+    : {
+        width: "100%",
+        maxHeight: `${MAX_MEDIA_HEIGHT}px`,
+      };
 
   // Fire once when card enters the "pre-load zone" (500px before viewport)
   useEffect(() => {
@@ -143,99 +163,112 @@ export function PostCard({
       {/* ── Media ── */}
       {post.media.length > 0 && (
         <div
-          className="relative mx-3 mb-3 overflow-hidden rounded-xl"
+          className="mx-3 mb-3"
           onTouchStart={hasMultiple ? handleTouchStart : undefined}
           onTouchEnd={hasMultiple ? handleTouchEnd : undefined}
         >
-          {isVideo ? (
-            /* Video slot: stays black, constrains height */
-            <div
-              className={cn("relative w-full cursor-pointer bg-black", !videoCanPlay && "min-h-[200px]")}
-              onClick={() => setMuted((m) => !m)}
-            >
-              {nearViewport && (
-                <video
-                  key={activeIndex}
-                  ref={videoRef}
-                  src={currentMedia.url}
-                  className="block w-full max-h-[560px] object-contain"
-                  preload="metadata"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  onCanPlay={() => setVideoCanPlay(true)}
-                  onWaiting={() => setVideoCanPlay(false)}
-                />
-              )}
-              {/* Spinner: covers the container while buffering */}
-              {!videoCanPlay && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                </div>
-              )}
-              {/* Mute toggle button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
-                className="absolute bottom-3 right-3 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm hover:bg-black/80"
-                aria-label={muted ? "Sesi aç" : "Sesi kapat"}
-              >
-                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-              </button>
-            </div>
-          ) : (
-            /* Image: natural aspect ratio, muted bars if letterboxed */
-            <div className="w-full bg-muted">
+          {/* Container sized to match media aspect ratio — no side gutters */}
+          <div
+            className={cn(
+              "relative overflow-hidden rounded-xl",
+              isVideo && "bg-black cursor-pointer",
+            )}
+            style={mediaContainerStyle}
+            onClick={isVideo ? () => setMuted((m) => !m) : undefined}
+          >
+            {isVideo ? (
+              <>
+                {nearViewport && (
+                  <video
+                    key={activeIndex}
+                    ref={videoRef}
+                    src={currentMedia.url}
+                    className="block w-full h-full object-cover"
+                    preload="metadata"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    onCanPlay={() => setVideoCanPlay(true)}
+                    onWaiting={() => setVideoCanPlay(false)}
+                  />
+                )}
+                {/* Spinner: covers the container while buffering */}
+                {!videoCanPlay && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  </div>
+                )}
+                {/* Mute toggle button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
+                  className="absolute bottom-3 right-3 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm hover:bg-black/80"
+                  aria-label={muted ? "Sesi aç" : "Sesi kapat"}
+                >
+                  {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+                </button>
+              </>
+            ) : ar ? (
+              /* Image with known dimensions: fill the ratio-correct container */
               <Image
                 src={currentMedia.url}
                 alt={post.description ?? "Gönderi görseli"}
-                width={currentMedia.width ?? 600}
-                height={currentMedia.height ?? 600}
-                className="block h-auto w-full max-h-[560px] object-contain"
+                fill
+                className="object-cover"
                 sizes="(max-width: 480px) 100vw, 480px"
               />
-            </div>
-          )}
+            ) : (
+              /* Image without stored dimensions: natural sizing */
+              <Image
+                src={currentMedia.url}
+                alt={post.description ?? "Gönderi görseli"}
+                width={600}
+                height={600}
+                className="block w-full h-auto object-contain"
+                sizes="(max-width: 480px) 100vw, 480px"
+              />
+            )}
 
-          {/* ── Multi-media navigation ── */}
-          {hasMultiple && (
-            <>
-              {/* Left arrow — desktop only */}
-              {activeIndex > 0 && (
-                <button
-                  onClick={goPrev}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70"
-                  aria-label="Önceki"
-                >
-                  <ChevronLeft className="size-4" />
-                </button>
-              )}
-              {/* Right arrow — desktop only */}
-              {activeIndex < post.media.length - 1 && (
-                <button
-                  onClick={goNext}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70"
-                  aria-label="Sonraki"
-                >
-                  <ChevronRight className="size-4" />
-                </button>
-              )}
-              {/* Dot indicators */}
-              <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
-                {post.media.map((_, i) => (
+            {/* ── Multi-media navigation ── */}
+            {hasMultiple && (
+              <>
+                {/* Left arrow — desktop only */}
+                {activeIndex > 0 && (
                   <button
-                    key={i}
-                    onClick={(e) => { e.stopPropagation(); handleSlideChange(i); }}
-                    className={cn(
-                      "size-2 rounded-full ring-1 ring-black/20 transition-all",
-                      i === activeIndex ? "bg-white" : "bg-white/55"
-                    )}
-                    aria-label={`Medya ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+                    onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70"
+                    aria-label="Önceki"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                )}
+                {/* Right arrow — desktop only */}
+                {activeIndex < post.media.length - 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); goNext(); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70"
+                    aria-label="Sonraki"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                )}
+                {/* Dot indicators */}
+                <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+                  {post.media.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); handleSlideChange(i); }}
+                      className={cn(
+                        "size-2 rounded-full ring-1 ring-black/20 transition-all",
+                        i === activeIndex ? "bg-white" : "bg-white/55"
+                      )}
+                      aria-label={`Medya ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
 
