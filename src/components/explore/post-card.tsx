@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, CalendarDays, MessageSquare, ArrowRight, Volume2, VolumeX } from "lucide-react";
+import {
+  Heart, CalendarDays, MessageSquare, ArrowRight,
+  Volume2, VolumeX, ChevronLeft, ChevronRight,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ExplorePost } from "@/lib/queries/posts";
@@ -23,58 +26,83 @@ export function PostCard({
 }: PostCardProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [muted, setMuted] = useState(true);
-  // Tracks whether the current video slide has buffered enough to play
   const [videoCanPlay, setVideoCanPlay] = useState(false);
+  // Defer rendering <video> until card scrolls near the viewport
+  const [nearViewport, setNearViewport] = useState(false);
+
+  const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const touchStartX = useRef(0);
 
-  const activeMedia = post.media[activeIndex] ?? post.media[0];
-  const isVideo = activeMedia?.type === "VIDEO";
-  const showVideoSpinner = isVideo && !videoCanPlay;
+  const currentMedia = post.media[activeIndex] ?? post.media[0];
+  const isVideo = currentMedia?.type === "VIDEO";
+  const hasMultiple = post.media.length > 1;
 
-  // Viewport-based play/pause
+  // Fire once when card enters the "pre-load zone" (500px before viewport)
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNearViewport(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: "500px 0px" }
+    );
+    obs.observe(card);
+    return () => obs.disconnect();
+  }, []);
+
+  // In-viewport play / pause — re-subscribes whenever video element changes
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-
-    const observer = new IntersectionObserver(
+    const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
+        if (entry.isIntersecting) video.play().catch(() => {});
+        else video.pause();
       },
       { threshold: 0.5 }
     );
+    obs.observe(video);
+    return () => obs.disconnect();
+  }, [activeIndex, nearViewport]);
 
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, [activeIndex]);
-
-  // React's muted prop doesn't reliably sync at runtime — set imperatively
+  // React's `muted` prop doesn't update after mount — set imperatively
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = muted;
-    }
+    if (videoRef.current) videoRef.current.muted = muted;
   }, [muted]);
 
   function handleSlideChange(i: number) {
+    if (i === activeIndex) return;
+    videoRef.current?.pause();
     setActiveIndex(i);
     setVideoCanPlay(false);
   }
 
+  const goNext = () => { if (activeIndex < post.media.length - 1) handleSlideChange(activeIndex + 1); };
+  const goPrev = () => { if (activeIndex > 0) handleSlideChange(activeIndex - 1); };
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchEnd(e: React.TouchEvent) {
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (delta < -40) goNext();
+    else if (delta > 40) goPrev();
+  }
+
   function handleSave() {
-    if (!isLoggedIn) {
-      window.location.href = "/login";
-      return;
-    }
+    if (!isLoggedIn) { window.location.href = "/login"; return; }
     onSaveToggle(post.id, savedByCurrentUser);
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-      {/* Business header */}
-      <div className="flex items-center gap-2.5 px-3 py-3">
+    <div ref={cardRef} className="overflow-hidden rounded-2xl border bg-background">
+      {/* ── Header ── */}
+      <div className="flex items-center gap-2.5 px-3 pt-3 pb-2">
         <Link href={`/b/${post.business.slug}`} className="shrink-0">
           <Avatar className="size-8">
             {post.business.logoUrl && (
@@ -88,12 +116,12 @@ export function PostCard({
         <div className="min-w-0 flex-1">
           <Link
             href={`/b/${post.business.slug}`}
-            className="truncate text-sm font-semibold hover:underline"
+            className="block truncate text-sm font-semibold leading-tight hover:underline"
           >
             {post.business.name}
           </Link>
           {post.relatedService && (
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-xs leading-tight text-muted-foreground">
               {post.relatedService.name}
             </p>
           )}
@@ -105,80 +133,114 @@ export function PostCard({
         )}
       </div>
 
-      {/* Description */}
+      {/* ── Description ── */}
       {post.description && (
-        <p className="px-3 pb-3 text-sm leading-relaxed">
+        <p className="px-3 pb-2 text-sm leading-relaxed text-foreground">
           {post.description}
         </p>
       )}
 
-      {/* Media */}
+      {/* ── Media ── */}
       {post.media.length > 0 && (
-        <div className="relative w-full overflow-hidden bg-black">
+        <div
+          className="relative mx-3 mb-3 overflow-hidden rounded-xl"
+          onTouchStart={hasMultiple ? handleTouchStart : undefined}
+          onTouchEnd={hasMultiple ? handleTouchEnd : undefined}
+        >
           {isVideo ? (
-            <>
-              <video
-                ref={videoRef}
-                src={activeMedia.url}
-                className="block w-full max-h-[560px] object-contain"
-                autoPlay
-                muted
-                loop
-                playsInline
-                onClick={() => setMuted((m) => !m)}
-                onCanPlay={() => setVideoCanPlay(true)}
-                onWaiting={() => setVideoCanPlay(false)}
-              />
-              {showVideoSpinner && (
+            /* Video slot: stays black, constrains height */
+            <div
+              className={cn("relative w-full cursor-pointer bg-black", !videoCanPlay && "min-h-[200px]")}
+              onClick={() => setMuted((m) => !m)}
+            >
+              {nearViewport && (
+                <video
+                  key={activeIndex}
+                  ref={videoRef}
+                  src={currentMedia.url}
+                  className="block w-full max-h-[560px] object-contain"
+                  preload="metadata"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  onCanPlay={() => setVideoCanPlay(true)}
+                  onWaiting={() => setVideoCanPlay(false)}
+                />
+              )}
+              {/* Spinner: covers the container while buffering */}
+              {!videoCanPlay && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="size-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 </div>
               )}
+              {/* Mute toggle button */}
               <button
                 onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
-                className="absolute bottom-3 right-3 rounded-full bg-black/50 p-1.5 text-white backdrop-blur-sm transition-opacity hover:bg-black/70"
+                className="absolute bottom-3 right-3 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm hover:bg-black/80"
                 aria-label={muted ? "Sesi aç" : "Sesi kapat"}
               >
                 {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
               </button>
-            </>
+            </div>
           ) : (
-            <Image
-              src={activeMedia.url}
-              alt={post.description ?? "Gönderi görseli"}
-              width={activeMedia.width ?? 600}
-              height={activeMedia.height ?? 600}
-              style={{
-                width: "100%",
-                height: "auto",
-                maxHeight: "560px",
-                objectFit: "contain",
-                display: "block",
-              }}
-              sizes="(max-width: 480px) 100vw, 480px"
-            />
+            /* Image: natural aspect ratio, muted bars if letterboxed */
+            <div className="w-full bg-muted">
+              <Image
+                src={currentMedia.url}
+                alt={post.description ?? "Gönderi görseli"}
+                width={currentMedia.width ?? 600}
+                height={currentMedia.height ?? 600}
+                className="block h-auto w-full max-h-[560px] object-contain"
+                sizes="(max-width: 480px) 100vw, 480px"
+              />
+            </div>
           )}
 
-          {/* Dot indicators for multiple media */}
-          {post.media.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-              {post.media.map((_, i) => (
+          {/* ── Multi-media navigation ── */}
+          {hasMultiple && (
+            <>
+              {/* Left arrow — desktop only */}
+              {activeIndex > 0 && (
                 <button
-                  key={i}
-                  onClick={() => handleSlideChange(i)}
-                  className={cn(
-                    "size-1.5 rounded-full transition-all",
-                    i === activeIndex ? "scale-125 bg-white" : "bg-white/60"
-                  )}
-                />
-              ))}
-            </div>
+                  onClick={goPrev}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70"
+                  aria-label="Önceki"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+              )}
+              {/* Right arrow — desktop only */}
+              {activeIndex < post.media.length - 1 && (
+                <button
+                  onClick={goNext}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70"
+                  aria-label="Sonraki"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+              )}
+              {/* Dot indicators */}
+              <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+                {post.media.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => { e.stopPropagation(); handleSlideChange(i); }}
+                    className={cn(
+                      "size-2 rounded-full ring-1 ring-black/20 transition-all",
+                      i === activeIndex ? "bg-white" : "bg-white/55"
+                    )}
+                    aria-label={`Medya ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
 
-      {/* Action row */}
-      <div className="flex items-center gap-1 p-3 pt-2">
+      {/* ── Actions ── */}
+      <div className="flex items-center gap-1 px-3 pb-3">
         <button
           onClick={handleSave}
           aria-label={savedByCurrentUser ? "Kaydı kaldır" : "Kaydet"}
@@ -189,12 +251,7 @@ export function PostCard({
               : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
           )}
         >
-          <Heart
-            className={cn(
-              "size-3.5",
-              savedByCurrentUser && "fill-rose-500 text-rose-500"
-            )}
-          />
+          <Heart className={cn("size-3.5", savedByCurrentUser && "fill-rose-500 text-rose-500")} />
           Kaydet
         </button>
 
@@ -216,7 +273,7 @@ export function PostCard({
 
         <Link
           href={`/b/${post.business.slug}`}
-          className="ml-auto flex items-center gap-1 rounded-lg bg-muted px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="ml-auto flex items-center rounded-lg bg-muted px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <ArrowRight className="size-3.5" />
         </Link>
