@@ -116,9 +116,9 @@ export default async function LocaleRatingSystemPage({ params }: PageProps) {
             Rating System
           </Badge>
           <h1 className="text-3xl font-bold leading-[1.1] tracking-[-0.02em] md:text-5xl">
-            Scores aren't just numbers —{" "}
+            Scores aren&apos;t just numbers —{" "}
             <span className="text-brand-pink-foreground">
-              they're built from real experiences.
+              they&apos;re built from real experiences.
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">

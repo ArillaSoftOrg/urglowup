@@ -30,7 +30,7 @@ function Stars({ rating }: { rating: number }) {
 }
 
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
+  return new Date(date).toLocaleDateString("tr-TR", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -55,7 +55,7 @@ function ReviewStats({
   return (
     <Card className="bg-surface-cream">
       <CardContent className="p-4 sm:p-6">
-        <div className="flex items-start gap-6">
+        <div className="flex items-start gap-3 sm:gap-6">
           {/* Average */}
           <div className="min-w-[5rem] text-center">
             <p className="text-4xl font-bold tracking-[-0.02em]">
@@ -65,7 +65,7 @@ function ReviewStats({
               <Stars rating={averageRating ?? 0} />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              {totalCount} review{totalCount !== 1 ? "s" : ""}
+              {totalCount} değerlendirme
             </p>
           </div>
 
@@ -122,7 +122,7 @@ function BusinessReviewCard({ review }: { review: BusinessReview }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="truncate text-sm font-medium">
-              {name || "Customer"}
+              {name || "Müşteri"}
             </p>
             <Badge variant={REVIEW_STATUS_VARIANTS[review.status]}>
               {REVIEW_STATUS_LABELS[review.status]}
@@ -142,7 +142,7 @@ function BusinessReviewCard({ review }: { review: BusinessReview }) {
       {review.appointment && (
         <p className="pl-9 text-xs text-muted-foreground">
           {review.appointment.service?.name} &middot;{" "}
-          {formatDate(review.appointment.requestedDate)} at{" "}
+          {formatDate(review.appointment.requestedDate)} &middot;{" "}
           {review.appointment.requestedTime}
         </p>
       )}
@@ -173,14 +173,14 @@ export function BusinessReviewList({
 
       <Card>
         <CardHeader>
-          <CardTitle>All Reviews</CardTitle>
+          <CardTitle>Tüm Değerlendirmeler</CardTitle>
         </CardHeader>
         <CardContent>
           {reviews.length === 0 ? (
             <EmptyState
               icon={MessageSquare}
-              headline="No reviews yet"
-              description="Reviews from customers with completed appointments will appear here."
+              headline="Henüz değerlendirme yok"
+              description="Tamamlanan randevular için müşteri değerlendirmeleri burada görünür."
               surface="cream"
               compact
             />

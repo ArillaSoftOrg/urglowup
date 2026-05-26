@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { ProfileEditForm } from "@/components/business/profile-edit-form";
 
-export const metadata = { title: "Business Profile" };
+export const metadata = { title: "İşletme Profili" };
 
 export default async function ProfilePage() {
   const { businessId } = await requireBusiness();
@@ -48,8 +48,8 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Business Profile"
-        description="Update your public business information."
+        title="İşletme Profili"
+        description="Herkese açık işletme bilgilerinizi güncelleyin."
       />
       <ProfileEditForm business={profileData} />
     </div>

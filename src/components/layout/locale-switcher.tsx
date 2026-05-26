@@ -66,6 +66,7 @@ export function LocaleSwitcher({ isLoggedIn = false }: LocaleSwitcherProps) {
         router.push(targetPath);
       });
     } else {
+      // eslint-disable-next-line react-hooks/immutability
       document.cookie = `NEXT_LOCALE=${target}; path=/; max-age=31536000; SameSite=Lax`;
       router.push(targetPath);
     }

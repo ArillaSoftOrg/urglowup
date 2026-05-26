@@ -63,9 +63,9 @@ export default function CropDialog({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Crop image</DialogTitle>
+          <DialogTitle>Görüntüyü Kırp</DialogTitle>
           <DialogDescription>
-            Drag to reposition. Use the slider or scroll to zoom.
+            Yeniden konumlandırmak için sürükleyin. Yakınlaştırmak için kaydırıcıyı veya kaydırmayı kullanın.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,7 +84,7 @@ export default function CropDialog({
 
         <div className="px-1">
           <label className="mb-1 block text-xs text-muted-foreground">
-            Zoom
+            Yakınlaştır
           </label>
           <input
             type="range"
@@ -99,7 +99,7 @@ export default function CropDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={onSkip} disabled={isPending}>
-            Skip
+            Geç
           </Button>
           <Button
             onClick={handleConfirm}
@@ -108,10 +108,10 @@ export default function CropDialog({
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving...
+                Kaydediliyor...
               </>
             ) : (
-              "Apply crop"
+              "Kırpmayı Uygula"
             )}
           </Button>
         </DialogFooter>

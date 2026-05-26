@@ -54,29 +54,29 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
       {/* Basic Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Basic Information</CardTitle>
-          <CardDescription>Your business name and description visible on your public profile.</CardDescription>
+          <CardTitle className="text-base">Temel Bilgiler</CardTitle>
+          <CardDescription>Herkese açık profilinizde görünen işletme adı ve açıklaması.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="name">Business Name <span className="text-destructive">*</span></Label>
+            <Label htmlFor="name">İşletme Adı <span className="text-destructive">*</span></Label>
             <Input
               id="name"
               name="name"
               defaultValue={business.name}
-              placeholder="My Beauty Studio"
+              placeholder="örn. Güzellik Stüdyom"
               className="mt-1.5"
             />
             <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="name" />
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Açıklama</Label>
             <Textarea
               id="description"
               name="description"
               defaultValue={business.description ?? ""}
-              placeholder="Tell customers about your business, specialties, and experience…"
+              placeholder="Müşterilere işletmeniz ve uzmanlıklarınız hakkında bilgi verin..."
               className="mt-1.5 min-h-[100px] resize-none"
               maxLength={1000}
             />
@@ -84,12 +84,12 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
           </div>
 
           <div className="rounded-xl bg-surface-cream p-3">
-            <p className="text-xs font-medium text-muted-foreground">Category</p>
+            <p className="text-xs font-medium text-muted-foreground">Kategori</p>
             <div className="mt-1 flex items-center gap-2">
               {business.categoryName ? (
                 <Badge variant="secondary">{business.categoryName}</Badge>
               ) : (
-                <span className="text-sm text-muted-foreground">No category set</span>
+                <span className="text-sm text-muted-foreground">Kategori seçilmedi</span>
               )}
             </div>
           </div>
@@ -101,14 +101,14 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Phone className="size-4" />
-            Contact Details
+            İletişim Bilgileri
           </CardTitle>
-          <CardDescription>How customers can reach you.</CardDescription>
+          <CardDescription>Müşterilerin size nasıl ulaşabileceği.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">Telefon</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -138,25 +138,25 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <MapPin className="size-4" />
-            Location
+            Konum
           </CardTitle>
-          <CardDescription>Your business address shown on your public profile.</CardDescription>
+          <CardDescription>Herkese açık profilinizde gösterilen işletme adresi.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="address">Street Address</Label>
+            <Label htmlFor="address">Cadde / Sokak</Label>
             <Input
               id="address"
               name="address"
               defaultValue={business.address ?? ""}
-              placeholder="123 Main Street, Suite 4"
+              placeholder="Atatürk Cad. No:1 Kat:3"
               className="mt-1.5"
             />
             <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="address" />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">Şehir</Label>
               <Input
                 id="city"
                 name="city"
@@ -167,7 +167,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
               <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="city" />
             </div>
             <div>
-              <Label htmlFor="district">District / Neighbourhood</Label>
+              <Label htmlFor="district">İlçe / Semt</Label>
               <Input
                 id="district"
                 name="district"
@@ -186,13 +186,13 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Link className="size-4" />
-            Social Media
+            Sosyal Medya
           </CardTitle>
-          <CardDescription>Add your social profiles so customers can follow you.</CardDescription>
+          <CardDescription>Sosyal medya profillerinizi ekleyin.</CardDescription>
         </CardHeader>
         <CardContent>
           <div>
-            <Label htmlFor="instagramUrl">Instagram URL</Label>
+            <Label htmlFor="instagramUrl">Instagram Bağlantısı</Label>
             <Input
               id="instagramUrl"
               name="instagramUrl"
@@ -207,7 +207,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
 
       <div className="flex justify-end">
         <Button type="submit" variant="brand" disabled={isPending}>
-          {isPending ? "Saving…" : "Save Profile"}
+          {isPending ? "Kaydediliyor..." : "Profili Kaydet"}
         </Button>
       </div>
     </form>

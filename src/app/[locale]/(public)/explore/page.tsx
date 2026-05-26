@@ -66,13 +66,11 @@ export default async function LocaleExplorePage({ params, searchParams }: PagePr
             name: c.name,
             slug: c.slug,
           }))}
-          locale={locale}
         />
       ) : (
         <BusinessesTab
           filters={filters}
           activeCategories={activeCategories}
-          rawParams={rawParams}
           dict={dict}
           locale={locale}
           p={p}
@@ -84,10 +82,8 @@ export default async function LocaleExplorePage({ params, searchParams }: PagePr
 
 async function InspirationTab({
   categories,
-  locale,
 }: {
   categories: Array<{ id: string; name: string; slug: string }>;
-  locale: string;
 }) {
   const user = await getCurrentUser().catch(() => null);
   const { posts, nextCursor } = await getExplorePosts({
@@ -108,14 +104,12 @@ async function InspirationTab({
 async function BusinessesTab({
   filters,
   activeCategories,
-  rawParams,
   dict,
   locale,
   p,
 }: {
   filters: ReturnType<typeof parseMarketplaceFilters>;
   activeCategories: Awaited<ReturnType<typeof getMarketplaceCategories>>;
-  rawParams: Record<string, string | string[] | undefined>;
   dict: Awaited<ReturnType<typeof getDictionary>>;
   locale: string;
   p: (path: string) => string;

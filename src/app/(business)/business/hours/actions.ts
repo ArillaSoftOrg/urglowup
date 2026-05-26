@@ -63,17 +63,17 @@ export async function saveBusinessHours(
     const slotInterval = parseInt(slotRaw, 10) || 30;
 
     if (!SLOT_INTERVALS.includes(slotInterval as (typeof SLOT_INTERVALS)[number])) {
-      errors[day] = "Invalid slot interval";
+      errors[day] = "Geçersiz aralık değeri";
       continue;
     }
 
     if (isOpen) {
       if (!openTime || !closeTime) {
-        errors[day] = "Open and close times are required for open days";
+        errors[day] = "Açık günler için açılış ve kapanış saati zorunludur";
         continue;
       }
       if (closeTime <= openTime) {
-        errors[day] = "Close time must be after open time";
+        errors[day] = "Kapanış saati açılış saatinden sonra olmalıdır";
         continue;
       }
     }
@@ -98,10 +98,10 @@ export async function saveBusinessHours(
   }
 
   if (Object.keys(errors).length > 0) {
-    return { success: false, errors, message: "Some days have errors" };
+    return { success: false, errors, message: "Bazı günlerde hata var" };
   }
 
   revalidatePath("/business/hours");
   revalidatePath("/business/dashboard");
-  return { success: true, message: "Working hours saved" };
+  return { success: true, message: "Çalışma saatleri kaydedildi" };
 }

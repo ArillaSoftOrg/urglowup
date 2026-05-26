@@ -89,9 +89,7 @@ const steps = [
   },
 ];
 
-export default async function LocaleForBusinessPage({ params }: PageProps) {
-  const { locale } = await params;
-
+export default async function LocaleForBusinessPage() {
   return (
     <div>
       {/* Hero */}

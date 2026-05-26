@@ -30,17 +30,17 @@ const STATUS_VARIANTS: Record<string, "success" | "warning" | "destructive" | "n
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  COMPLETED: "Completed",
-  CONFIRMED: "Confirmed",
-  PENDING: "Pending",
-  REJECTED: "Rejected",
-  CANCELLED_BY_CUSTOMER: "Cancelled",
-  CANCELLED_BY_BUSINESS: "Cancelled",
-  NO_SHOW: "No show",
+  COMPLETED: "Tamamlandı",
+  CONFIRMED: "Onaylandı",
+  PENDING: "Beklemede",
+  REJECTED: "Reddedildi",
+  CANCELLED_BY_CUSTOMER: "İptal",
+  CANCELLED_BY_BUSINESS: "İptal",
+  NO_SHOW: "Gelmedi",
 };
 
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
+  return new Date(date).toLocaleDateString("tr-TR", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -61,8 +61,8 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
     return (
       <EmptyState
         icon={Users}
-        headline="No customers yet"
-        description="Customers who book appointments with you will appear here."
+        headline="Henüz müşteri yok"
+        description="Randevu alan müşteriler burada görünür."
         surface="cream"
       />
     );
@@ -73,7 +73,7 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>
-            All Customers
+            Tüm Müşteriler
             <span className="ml-2 text-sm font-normal text-muted-foreground">
               ({customers.length})
             </span>
@@ -81,7 +81,7 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email…"
+              placeholder="Ad veya e-posta ile ara..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8"
@@ -92,7 +92,7 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
       <CardContent className="p-0">
         {filtered.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-muted-foreground">
-            No customers match &ldquo;{search}&rdquo;
+            &ldquo;{search}&rdquo; için müşteri bulunamadı
           </div>
         ) : (
           <ul className="divide-y divide-border/50">
@@ -113,7 +113,7 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
-                      {fullName || "Unknown Customer"}
+                      {fullName || "Bilinmeyen Müşteri"}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {customer.email}
@@ -124,13 +124,13 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
                   <div className="hidden shrink-0 text-center sm:block">
                     <p className="text-sm font-semibold">{customer.appointmentCount}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      appt{customer.appointmentCount !== 1 ? "s" : ""}
+                      randevu
                     </p>
                   </div>
 
                   {/* Last appointment */}
                   <div className="hidden shrink-0 text-right sm:block">
-                    <p className="text-xs text-muted-foreground">Last visit</p>
+                    <p className="text-xs text-muted-foreground">Son ziyaret</p>
                     <p className="text-xs font-medium">
                       {formatDate(customer.lastAppointmentDate)}
                     </p>

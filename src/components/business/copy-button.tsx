@@ -14,7 +14,7 @@ interface CopyButtonProps {
 
 export function CopyButton({
   value,
-  label = "Copy",
+  label = "Kopyala",
   variant = "outline",
   size = "sm",
   className,
@@ -51,7 +51,7 @@ export function CopyButton({
       {copied ? (
         <>
           <Check className="size-4" />
-          Copied!
+          Kopyalandı!
         </>
       ) : (
         <>

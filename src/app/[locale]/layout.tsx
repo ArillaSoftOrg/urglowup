@@ -7,13 +7,12 @@ export function generateStaticParams() {
   return INTL_LOCALES.map((locale) => ({ locale }));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function LocaleLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: any;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   if (!INTL_LOCALES.includes(locale as IntlLocale)) {

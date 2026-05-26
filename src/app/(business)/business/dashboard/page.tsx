@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -17,7 +16,6 @@ import {
   ArrowRight,
   AlertCircle,
   CalendarDays,
-  ExternalLink,
   ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,8 +23,6 @@ import { nowInBusinessTimezone } from "@/lib/constants/booking";
 import { calculateProfileCompletion } from "@/lib/profile-completion";
 import { ProfileCompletionCard } from "@/components/business/profile-completion-card";
 import { StatCard } from "@/components/business/stat-card";
-import { BusinessPageHeader } from "@/components/business/business-page-header";
-import { getAppUrl } from "@/lib/get-app-url";
 
 export const metadata = { title: "Kontrol Paneli" };
 
@@ -60,7 +56,7 @@ export default async function DashboardPage() {
   const [
     business,
     activeServiceCount,
-    totalServiceCount,
+    ,
     hoursCount,
     pendingCount,
     todayCount,
@@ -123,189 +119,159 @@ export default async function DashboardPage() {
 
   const hoursConfigured = hoursCount > 0;
   const completion = calculateProfileCompletion(business);
-  const publicUrl = getAppUrl(`/b/${business.slug}`);
   const statusBadge =
     BUSINESS_STATUS_BADGE[business.status] ?? { variant: "secondary" as const, label: business.status };
 
   return (
-    <div className="space-y-6">
-      <BusinessPageHeader
-        title="Kontrol Paneli"
-        description={`Tekrar hoş geldiniz, ${business.name}`}
-      />
+    <div className="space-y-4">
+      {/* Compact header: business name + status badge */}
+      <div className="flex items-center gap-3">
+        <h1 className="min-w-0 flex-1 truncate text-xl font-bold tracking-tight">
+          {business.name}
+        </h1>
+        <Badge variant={statusBadge.variant} className="shrink-0">
+          {statusBadge.label}
+        </Badge>
+      </div>
 
       {completion.score < 100 && (
         <ProfileCompletionCard completion={completion} />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Operational stats — always 3 columns */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard
           icon={AlertCircle}
-          label="Bekleyen Talepler"
+          label="Bekleyen"
           value={pendingCount}
-          hint="Yanıtınızı bekliyor"
+          hint={pendingCount > 0 ? "Yanıtınızı bekliyor" : "Yeni talep yok"}
           href="/business/appointments?tab=pending"
           iconTone="warning"
+          size="sm"
         />
         <StatCard
           icon={CalendarCheck}
-          label="Bugünkü Randevular"
+          label="Bugün"
           value={todayCount}
-          hint="Bugün için onaylananlar"
+          hint={todayCount > 0 ? "Onaylanan randevular" : "Bugün randevu yok"}
           iconTone="pink"
+          size="sm"
         />
         <StatCard
           icon={CalendarDays}
           label="Bu Hafta"
           value={weekCount}
-          hint="Bekleyen + onaylanan"
+          hint="Bu hafta toplam"
           iconTone="info"
-        />
-        <StatCard
-          icon={Scissors}
-          label="Aktif Hizmetler"
-          value={activeServiceCount}
-          hint={`Toplam: ${totalServiceCount} hizmet`}
-          href="/business/services"
-          iconTone="pink"
-        />
-        <StatCard
-          icon={Clock}
-          label="Çalışma Saatleri"
-          value={
-            <Badge variant={hoursConfigured ? "success" : "secondary"}>
-              {hoursConfigured ? "Ayarlandı" : "Ayarlanmadı"}
-            </Badge>
-          }
-          hint={
-            hoursConfigured ? "Haftalık program oluşturuldu" : "Çalışma saatlerinizi ayarlayın"
-          }
-          href="/business/hours"
-          iconTone="muted"
-        />
-        <StatCard
-          icon={Link2}
-          label="Yayın Linki"
-          value={
-            <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-          }
-          hint={`/b/${business.slug}`}
-          href="/business/public-link"
-          iconTone="muted"
+          size="sm"
         />
       </div>
 
+      {/* Config status strip */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border bg-card px-4 py-2.5 text-sm">
+        <Link
+          href="/business/services"
+          className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Scissors className="size-3.5 shrink-0" />
+          <span>
+            <span className="font-semibold text-foreground">{activeServiceCount}</span>
+            {" "}aktif hizmet
+          </span>
+        </Link>
+        <span className="select-none text-muted-foreground/40">·</span>
+        <Link
+          href="/business/hours"
+          className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Clock className="size-3.5 shrink-0" />
+          <span>{hoursConfigured ? "Saatler ayarlı" : "Saatler ayarlanmadı"}</span>
+        </Link>
+        <span className="select-none text-muted-foreground/40">·</span>
+        <Link
+          href="/business/public-link"
+          className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Link2 className="size-3.5 shrink-0" />
+          <span>/b/{business.slug}</span>
+        </Link>
+      </div>
+
+      {/* Quick actions */}
       <Card className="bg-surface-cream">
         <CardHeader className="pb-3">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Hızlı İşlemler
           </p>
-          <CardTitle className="text-lg">Sık kullanılan işlemler</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Link
               href="/business/services"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 bg-card px-4 py-3"
+                "h-auto whitespace-normal justify-start gap-3 bg-card px-3 py-3 sm:px-4"
               )}
             >
               <Scissors className="size-5 shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium">Hizmetleri Yönet</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="hidden text-xs text-muted-foreground sm:block">
                   Hizmetleri ekle veya düzenle
                 </p>
               </div>
-              <ArrowRight className="ml-auto size-4 shrink-0" />
-            </Link>
-
-            <Link
-              href="/business/hours"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 bg-card px-4 py-3"
-              )}
-            >
-              <Clock className="size-5 shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-medium">Çalışma Saatleri</p>
-                <p className="text-xs text-muted-foreground">
-                  Haftalık programı ayarla
-                </p>
-              </div>
-              <ArrowRight className="ml-auto size-4 shrink-0" />
+              <ArrowRight className="ml-auto size-4 shrink-0 hidden sm:block" />
             </Link>
 
             <Link
               href="/business/media"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 bg-card px-4 py-3"
+                "h-auto whitespace-normal justify-start gap-3 bg-card px-3 py-3 sm:px-4"
               )}
             >
               <ImageIcon className="size-5 shrink-0" />
               <div className="text-left">
                 <p className="text-sm font-medium">Medya Yükle</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="hidden text-xs text-muted-foreground sm:block">
                   Fotoğraf ve portfolyo ekle
                 </p>
               </div>
-              <ArrowRight className="ml-auto size-4 shrink-0" />
+              <ArrowRight className="ml-auto size-4 shrink-0 hidden sm:block" />
             </Link>
 
             <Link
-              href="/business/appointments"
+              href="/business/hours"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 bg-card px-4 py-3"
+                "h-auto whitespace-normal justify-start gap-3 bg-card px-3 py-3 sm:px-4"
               )}
             >
-              <CalendarCheck className="size-5 shrink-0" />
+              <Clock className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Randevular</p>
-                <p className="text-xs text-muted-foreground">
-                  Randevu taleplerini görüntüle
+                <p className="text-sm font-medium">Çalışma Saatleri</p>
+                <p className="hidden text-xs text-muted-foreground sm:block">
+                  Haftalık programı ayarla
                 </p>
               </div>
-              <ArrowRight className="ml-auto size-4 shrink-0" />
+              <ArrowRight className="ml-auto size-4 shrink-0 hidden sm:block" />
             </Link>
 
             <Link
               href="/business/public-link"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 bg-card px-4 py-3"
+                "h-auto whitespace-normal justify-start gap-3 bg-card px-3 py-3 sm:px-4"
               )}
             >
               <Link2 className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Randevu Linki Paylaş</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm font-medium">Linki Paylaş</p>
+                <p className="hidden text-xs text-muted-foreground sm:block">
                   QR kod, Instagram ve WhatsApp
                 </p>
               </div>
-              <ArrowRight className="ml-auto size-4 shrink-0" />
-            </Link>
-
-            <Link
-              href={publicUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-auto justify-start gap-3 bg-card px-4 py-3"
-              )}
-            >
-              <ExternalLink className="size-5 shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-medium">Profili Görüntüle</p>
-                <p className="text-xs text-muted-foreground">
-                  Randevu sayfanı gör
-                </p>
-              </div>
-              <ArrowRight className="ml-auto size-4 shrink-0" />
+              <ArrowRight className="ml-auto size-4 shrink-0 hidden sm:block" />
             </Link>
           </div>
         </CardContent>

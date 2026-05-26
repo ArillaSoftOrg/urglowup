@@ -280,7 +280,7 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
             />
 
             {media.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {media.map((m, i) => (
                   <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
                     {m.type === "VIDEO" ? (

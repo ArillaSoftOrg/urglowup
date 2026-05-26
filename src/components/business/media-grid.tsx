@@ -64,7 +64,7 @@ function CoverLogoSection({
     <div>
       <Card className="bg-surface-cream">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Cover Image</CardTitle>
+          <CardTitle className="text-sm font-medium">Kapak Fotoğrafı</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {cover ? (
@@ -84,11 +84,11 @@ function CoverLogoSection({
           <div className="flex gap-2">
             <MediaUploadButton
               mediaType="COVER"
-              label={cover ? "Change cover" : "Upload cover"}
+              label={cover ? "Kapağı Değiştir" : "Kapak Yükle"}
               size="sm"
             />
             {cover && (
-              <DeleteMediaButton mediaId={cover.id} label="Remove" size="sm" />
+              <DeleteMediaButton mediaId={cover.id} label="Kaldır" size="sm" />
             )}
           </div>
         </CardContent>
@@ -224,7 +224,7 @@ function MediaItemCard({
                 <>
                   <DropdownMenuItem onClick={() => setCropOpen(true)}>
                     <Crop className="size-4" />
-                    Edit crop
+                    Kırpmayı Düzenle
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -232,10 +232,10 @@ function MediaItemCard({
               {isImage && (
                 <>
                   <DropdownMenuItem onClick={handleSetAsCover}>
-                    Set as cover
+                    Kapak yap
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSetAsLogo}>
-                    Set as logo
+                    Logo yap
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -248,7 +248,7 @@ function MediaItemCard({
                 className="text-destructive"
               >
                 <Trash2 className="size-4" />
-                Delete
+                Sil
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -258,10 +258,9 @@ function MediaItemCard({
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete media?</DialogTitle>
+            <DialogTitle>Medya silinsin mi?</DialogTitle>
             <DialogDescription>
-              This will permanently remove this media. This action cannot be
-              undone.
+              Bu medya kalıcı olarak silinecek. Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
           {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
@@ -271,7 +270,7 @@ function MediaItemCard({
               onClick={() => setDeleteOpen(false)}
               disabled={isPending}
             >
-              Cancel
+              İptal
             </Button>
             <Button
               variant="destructive"
@@ -281,10 +280,10 @@ function MediaItemCard({
               {isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting...
+                  Siliniyor...
                 </>
               ) : (
-                "Delete"
+                "Sil"
               )}
             </Button>
           </DialogFooter>
@@ -358,10 +357,9 @@ function DeleteMediaButton({
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete media?</DialogTitle>
+            <DialogTitle>Medya silinsin mi?</DialogTitle>
             <DialogDescription>
-              This will permanently delete this media from your gallery and
-              Cloudinary. This action cannot be undone.
+              Bu medya galeriden ve Cloudinary&apos;den kalıcı olarak silinecek. Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -371,7 +369,7 @@ function DeleteMediaButton({
               onClick={() => setConfirmOpen(false)}
               disabled={isPending}
             >
-              Cancel
+              İptal
             </Button>
             <Button
               variant="destructive"
@@ -381,10 +379,10 @@ function DeleteMediaButton({
               {isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting...
+                  Siliniyor...
                 </>
               ) : (
-                "Delete"
+                "Sil"
               )}
             </Button>
           </DialogFooter>
@@ -424,7 +422,7 @@ export function MediaGrid({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Portfolio</CardTitle>
+            <CardTitle>Portfolyo</CardTitle>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <ImageIcon className="size-3" />
@@ -442,22 +440,22 @@ export function MediaGrid({
           <div className="flex flex-wrap gap-2">
             <MediaUploadButton
               mediaType="PORTFOLIO_IMAGE"
-              label="Upload image"
+              label="Fotoğraf Yükle"
               size="sm"
             />
             <MediaUploadButton
               mediaType="PORTFOLIO_VIDEO"
-              label="Upload video"
+              label="Video Yükle"
               size="sm"
             />
             <MediaUploadButton
               mediaType="BEFORE_AFTER"
-              label="Before/After"
+              label="Önce/Sonra"
               size="sm"
             />
             <MediaUploadButton
               mediaType="SERVICE_IMAGE"
-              label="Service image"
+              label="Hizmet görseli"
               size="sm"
             />
           </div>
@@ -466,13 +464,13 @@ export function MediaGrid({
           <Tabs defaultValue="all">
             <TabsList>
               <TabsTrigger value="all">
-                All ({portfolioMedia.length})
+                Tümü ({portfolioMedia.length})
               </TabsTrigger>
               <TabsTrigger value="images">
-                Images ({images.length})
+                Fotoğraflar ({images.length})
               </TabsTrigger>
               <TabsTrigger value="videos">
-                Videos ({videos.length})
+                Videolar ({videos.length})
               </TabsTrigger>
             </TabsList>
 
@@ -480,24 +478,24 @@ export function MediaGrid({
               <PortfolioGrid
                 items={portfolioMedia}
                 services={services}
-                emptyHeadline="No portfolio media yet"
-                emptyDescription="Upload images, videos, or before/after photos to build your portfolio."
+                emptyHeadline="Henüz portfolyo içeriği yok"
+                emptyDescription="Portfolyonuzu oluşturmak için fotoğraf, video veya önce/sonra görseli yükleyin."
               />
             </TabsContent>
             <TabsContent value="images" className="mt-4">
               <PortfolioGrid
                 items={images}
                 services={services}
-                emptyHeadline="No images yet"
-                emptyDescription="Upload portfolio images and before/after photos to showcase your work."
+                emptyHeadline="Henüz fotoğraf yok"
+                emptyDescription="Çalışmalarınızı sergilemek için portfolyo fotoğrafları yükleyin."
               />
             </TabsContent>
             <TabsContent value="videos" className="mt-4">
               <PortfolioGrid
                 items={videos}
                 services={services}
-                emptyHeadline="No videos yet"
-                emptyDescription="Upload short videos (up to 60 seconds) to show your work in action."
+                emptyHeadline="Henüz video yok"
+                emptyDescription="Çalışmalarınızı göstermek için kısa videolar yükleyin."
               />
             </TabsContent>
           </Tabs>

@@ -64,7 +64,6 @@ export default async function ExplorePage({ searchParams }: PageProps) {
         <BusinessesTab
           filters={filters}
           activeCategories={activeCategories}
-          rawParams={rawParams}
         />
       )}
     </div>
@@ -128,11 +127,9 @@ async function InspirationTab({
 async function BusinessesTab({
   filters,
   activeCategories,
-  rawParams,
 }: {
   filters: ReturnType<typeof parseMarketplaceFilters>;
   activeCategories: Awaited<ReturnType<typeof getMarketplaceCategories>>;
-  rawParams: Record<string, string | string[] | undefined>;
 }) {
   const [businesses, cities] = await Promise.all([
     getMarketplaceBusinesses({

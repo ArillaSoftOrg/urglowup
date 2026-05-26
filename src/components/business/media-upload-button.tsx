@@ -70,11 +70,11 @@ export function MediaUploadButton({
 
     // Client-side validation
     if (!allowedMimes.includes(file.type)) {
-      setError(`Invalid file type. Allowed: ${isVideo ? "MP4, MOV, WebM" : "JPEG, PNG, WebP"}`);
+      setError(`Geçersiz dosya türü. İzin verilenler: ${isVideo ? "MP4, MOV, WebM" : "JPEG, PNG, WebP"}`);
       return;
     }
     if (file.size > maxSize) {
-      setError(`File too large. Maximum: ${formatFileSize(maxSize)}`);
+      setError(`Dosya çok büyük. Maksimum: ${formatFileSize(maxSize)}`);
       return;
     }
 
@@ -91,7 +91,7 @@ export function MediaUploadButton({
 
       if (!signRes.ok) {
         const data = await signRes.json();
-        throw new Error(data.error || "Failed to get upload signature.");
+        throw new Error(data.error || "Yükleme imzası alınamadı.");
       }
 
       const { signature, timestamp, apiKey, cloudName, folder, resourceType } =
@@ -125,14 +125,14 @@ export function MediaUploadButton({
             } else {
               try {
                 const err = JSON.parse(xhr.responseText);
-                reject(new Error(err.error?.message || "Upload failed."));
+                reject(new Error(err.error?.message || "Yükleme başarısız oldu."));
               } catch {
-                reject(new Error("Upload failed."));
+                reject(new Error("Yükleme başarısız oldu."));
               }
             }
           };
 
-          xhr.onerror = () => reject(new Error("Network error during upload."));
+          xhr.onerror = () => reject(new Error("Yükleme sırasında ağ hatası."));
           xhr.send(formData);
         }
       );
@@ -153,7 +153,7 @@ export function MediaUploadButton({
         });
 
         if (!result.success) {
-          setError(result.message ?? "Failed to save media record.");
+          setError(result.message ?? "Medya kaydedilemedi.");
           setUploading(false);
           setProgress(0);
           return;
@@ -175,7 +175,7 @@ export function MediaUploadButton({
         }
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
+      setError(err instanceof Error ? err.message : "Yükleme başarısız oldu.");
       setUploading(false);
       setProgress(0);
     }
@@ -198,10 +198,10 @@ export function MediaUploadButton({
   const buttonLabel =
     label ??
     (mediaType === "COVER"
-      ? "Upload cover"
+      ? "Kapak Yükle"
       : mediaType === "LOGO"
-        ? "Upload logo"
-        : "Upload");
+        ? "Logo Yükle"
+        : "Yükle");
 
   return (
     <div className={className}>
@@ -222,7 +222,7 @@ export function MediaUploadButton({
         {uploading ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            {progress > 0 ? `${progress}%` : "Uploading..."}
+            {progress > 0 ? `${progress}%` : "Yükleniyor..."}
           </>
         ) : (
           <>

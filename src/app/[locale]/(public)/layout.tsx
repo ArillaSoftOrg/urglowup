@@ -2,13 +2,12 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import type { Locale } from "@/lib/i18n-config";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function LocalePublicLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: any;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   return (

@@ -46,7 +46,7 @@ export function MediaEditDialog({
         relatedServiceId: serviceId,
       });
       if (!result.success) {
-        setError(result.message ?? "Failed to update.");
+        setError(result.message ?? "Güncelleme başarısız oldu.");
       } else {
         setOpen(false);
       }
@@ -64,46 +64,46 @@ export function MediaEditDialog({
         }
       >
         <Pencil className="size-3" />
-        Edit
+        Düzenle
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit media</DialogTitle>
+          <DialogTitle>Medyayı Düzenle</DialogTitle>
           <DialogDescription>
-            Update title, description, or linked service.
+            Başlık, açıklama veya bağlı hizmeti güncelleyin.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor="media-title">Title</Label>
+            <Label htmlFor="media-title">Başlık</Label>
             <Input
               id="media-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
-              placeholder="Add a title..."
+              placeholder="Başlık ekle..."
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="media-desc">Description</Label>
+            <Label htmlFor="media-desc">Açıklama</Label>
             <Textarea
               id="media-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
-              placeholder="Add a description..."
+              placeholder="Açıklama ekle..."
             />
           </div>
           {services.length > 0 && (
             <div className="space-y-1">
-              <Label htmlFor="media-service">Linked service</Label>
+              <Label htmlFor="media-service">Bağlı Hizmet</Label>
               <select
                 id="media-service"
                 value={serviceId}
                 onChange={(e) => setServiceId(e.target.value)}
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm"
               >
-                <option value="">None</option>
+                <option value="">Yok</option>
                 {services.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -120,16 +120,16 @@ export function MediaEditDialog({
             onClick={() => setOpen(false)}
             disabled={isPending}
           >
-            Cancel
+            İptal
           </Button>
           <Button onClick={handleSave} disabled={isPending}>
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving...
+                Kaydediliyor...
               </>
             ) : (
-              "Save"
+              "Kaydet"
             )}
           </Button>
         </DialogFooter>

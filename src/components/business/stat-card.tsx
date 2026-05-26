@@ -10,6 +10,7 @@ interface StatCardProps {
   href?: string;
   surface?: "default" | "cream";
   iconTone?: "pink" | "warning" | "info" | "muted";
+  size?: "default" | "sm";
 }
 
 const TONE_CLASSES: Record<NonNullable<StatCardProps["iconTone"]>, string> = {
@@ -27,6 +28,7 @@ export function StatCard({
   href,
   surface = "default",
   iconTone = "pink",
+  size = "default",
 }: StatCardProps) {
   const body = (
     <Card
@@ -36,21 +38,29 @@ export function StatCard({
         href && "hover:bg-surface-pink/40"
       )}
     >
-      <CardContent className="flex items-start justify-between gap-3 p-4">
-        <div className="min-w-0 space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <div className="text-2xl font-bold">{value}</div>
+      <CardContent
+        className={cn(
+          "flex items-start justify-between gap-2",
+          size === "sm" ? "p-3" : "p-4 gap-3"
+        )}
+      >
+        <div className={cn("min-w-0", size === "sm" ? "space-y-0.5" : "space-y-1")}>
+          <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
+          <div className={cn("font-bold", size === "sm" ? "text-xl" : "text-2xl")}>
+            {value}
+          </div>
           {hint && (
-            <p className="text-xs text-muted-foreground">{hint}</p>
+            <p className="truncate text-xs text-muted-foreground">{hint}</p>
           )}
         </div>
         <div
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-full",
+            "flex shrink-0 items-center justify-center rounded-full",
+            size === "sm" ? "size-8" : "size-10",
             TONE_CLASSES[iconTone]
           )}
         >
-          <Icon className="size-5" />
+          <Icon className={size === "sm" ? "size-4" : "size-5"} />
         </div>
       </CardContent>
     </Card>

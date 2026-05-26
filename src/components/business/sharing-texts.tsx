@@ -18,17 +18,17 @@ export function InstagramBioText({ publicUrl }: SharingTextsProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AtSign className="size-5" />
-          Instagram Bio
+          Instagram Biyografisi
         </CardTitle>
         <CardDescription>
-          Copy this text and paste it into your Instagram bio.
+          Bu metni kopyalayıp Instagram biyografinize yapıştırın.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="rounded-md border bg-muted/50 p-3">
           <p className="text-sm leading-relaxed">{bioText}</p>
         </div>
-        <CopyButton value={bioText} label="Copy Bio Text" />
+        <CopyButton value={bioText} label="Metni Kopyala" />
       </CardContent>
     </Card>
   );
@@ -46,7 +46,7 @@ export function WhatsAppShareText({ publicUrl }: SharingTextsProps) {
           WhatsApp
         </CardTitle>
         <CardDescription>
-          Send this message to your contacts or share your link directly.
+          Bu mesajı kişilerinize gönderin veya linkinizi doğrudan paylaşın.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -54,7 +54,7 @@ export function WhatsAppShareText({ publicUrl }: SharingTextsProps) {
           <p className="text-sm leading-relaxed">{shareText}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <CopyButton value={shareText} label="Copy Message" />
+          <CopyButton value={shareText} label="Mesajı Kopyala" />
           <a
             href={waUrl}
             target="_blank"
@@ -62,7 +62,7 @@ export function WhatsAppShareText({ publicUrl }: SharingTextsProps) {
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             <MessageCircle className="size-4" />
-            Open in WhatsApp
+            WhatsApp&apos;ta Aç
           </a>
         </div>
       </CardContent>

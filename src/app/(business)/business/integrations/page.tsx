@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { requireBusiness } from "@/lib/auth";
 import { getConnection } from "@/lib/external/connection-service";
 import { getReviewCacheStats } from "@/lib/external/review-cache-service";

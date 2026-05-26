@@ -74,10 +74,10 @@ export function QRCodeCard({ publicUrl, businessSlug }: QRCodeCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCode className="size-5" />
-          QR Code
+          QR Kod
         </CardTitle>
         <CardDescription>
-          Print or share this QR code. Scanning it opens your booking page.
+          Bu QR kodu yazdırın veya paylaşın. Taranınca randevu sayfanız açılır.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
@@ -97,12 +97,12 @@ export function QRCodeCard({ publicUrl, businessSlug }: QRCodeCardProps) {
           disabled={downloading || downloadError}
         >
           <Download className="size-4" />
-          {downloading ? "Preparing…" : downloadError ? "Download unavailable" : "Download PNG"}
+          {downloading ? "Hazırlanıyor..." : downloadError ? "İndirme mevcut değil" : "PNG İndir"}
         </Button>
 
         {downloadError && (
           <p className="text-xs text-muted-foreground">
-            PNG download is not available in this browser. You can screenshot the QR code above.
+            Bu tarayıcıda PNG indirme mevcut değil. QR kodu ekran görüntüsü alabilirsiniz.
           </p>
         )}
       </CardContent>

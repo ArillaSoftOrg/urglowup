@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import {
   getCustomerReviews,
   getReviewableAppointments,
@@ -53,12 +54,12 @@ export default async function ReviewsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <a
+            <Link
               href="/account/appointments"
               className="inline-flex items-center text-sm font-medium text-primary hover:underline"
             >
               Randevuları görüntüle
-            </a>
+            </Link>
           </CardContent>
         </Card>
       )}
