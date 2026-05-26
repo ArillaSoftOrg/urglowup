@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     const isAdmin = isAdminEmail(email);
 
     try {
-      await db.user.upsert({
+      const dbUser = await db.user.upsert({
         where: { clerkId: id },
         create: {
           clerkId: id,
@@ -64,7 +64,16 @@ export async function POST(req: Request) {
           // Only promote — never overwrite a role downward
           ...(isAdmin && { role: "ADMIN" }),
         },
+        select: { id: true },
       });
+
+      if (eventType === "user.created") {
+        await db.userPreferences.upsert({
+          where: { userId: dbUser.id },
+          create: { userId: dbUser.id },
+          update: {},
+        });
+      }
     } catch (err) {
       console.error("[clerk-webhook] DB upsert failed:", err);
       return new Response("Internal error", { status: 500 });

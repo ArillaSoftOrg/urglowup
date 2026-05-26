@@ -16,6 +16,7 @@ async function getAppointmentEmailPayload(appointmentId: string) {
   const appt = await db.appointment.findUnique({
     where: { id: appointmentId },
     select: {
+      customerId: true,
       status: true,
       requestedDate: true,
       requestedTime: true,
@@ -35,6 +36,15 @@ async function getAppointmentEmailPayload(appointmentId: string) {
 
   if (!appt) throw new Error(`Appointment ${appointmentId} not found for email`);
   return appt;
+}
+
+async function isEmailTransactionalEnabled(userId: string): Promise<boolean> {
+  const prefs = await db.userPreferences.findUnique({
+    where: { userId },
+    select: { emailTransactional: true },
+  });
+  // Missing row = use default (true)
+  return prefs?.emailTransactional ?? true;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -112,6 +122,11 @@ export async function sendRequestReceivedEmailToCustomer(
     return;
   }
 
+  if (!(await isEmailTransactionalEnabled(appt.customerId))) {
+    console.log(`[email] sendRequestReceivedEmailToCustomer: skipped — customer opted out`);
+    return;
+  }
+
   await sendEmail({
     to: appt.customer.email,
     subject: `Appointment request received at ${appt.business.name}`,
@@ -139,6 +154,11 @@ export async function sendConfirmedEmailToCustomer(
     console.log(
       `[email] sendConfirmedEmailToCustomer: skipped — status is ${appt.status}`
     );
+    return;
+  }
+
+  if (!(await isEmailTransactionalEnabled(appt.customerId))) {
+    console.log(`[email] sendConfirmedEmailToCustomer: skipped — customer opted out`);
     return;
   }
 
@@ -172,6 +192,11 @@ export async function sendRejectedEmailToCustomer(
     return;
   }
 
+  if (!(await isEmailTransactionalEnabled(appt.customerId))) {
+    console.log(`[email] sendRejectedEmailToCustomer: skipped — customer opted out`);
+    return;
+  }
+
   await sendEmail({
     to: appt.customer.email,
     subject: `Your appointment request at ${appt.business.name} was not approved`,
@@ -198,6 +223,11 @@ export async function sendCancelledByBusinessEmailToCustomer(
     console.log(
       `[email] sendCancelledByBusinessEmailToCustomer: skipped — status is ${appt.status}`
     );
+    return;
+  }
+
+  if (!(await isEmailTransactionalEnabled(appt.customerId))) {
+    console.log(`[email] sendCancelledByBusinessEmailToCustomer: skipped — customer opted out`);
     return;
   }
 
@@ -260,6 +290,11 @@ export async function sendReviewRequestEmailToCustomer(
     console.log(
       `[email] sendReviewRequestEmailToCustomer: skipped — status is ${appt.status}`
     );
+    return;
+  }
+
+  if (!(await isEmailTransactionalEnabled(appt.customerId))) {
+    console.log(`[email] sendReviewRequestEmailToCustomer: skipped — customer opted out`);
     return;
   }
 

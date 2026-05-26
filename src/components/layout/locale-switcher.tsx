@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useParams } from "next/navigation";
+import { useTransition } from "react";
+import { updateLocalePreference } from "@/app/(customer)/account/actions";
 
 const LOCALES = ["tr", "en", "de", "ru", "es"] as const;
 type Locale = (typeof LOCALES)[number];
@@ -29,15 +31,29 @@ function getLocalizedPath(
   return `/${targetLocale}${basePath === "/" ? "" : basePath}`;
 }
 
-export function LocaleSwitcher() {
+interface LocaleSwitcherProps {
+  isLoggedIn?: boolean;
+}
+
+export function LocaleSwitcher({ isLoggedIn = false }: LocaleSwitcherProps) {
   const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
+  const [, startTransition] = useTransition();
   const currentLocale = (params.locale as Locale | undefined) ?? "tr";
 
   function switchLocale(target: Locale) {
-    document.cookie = `NEXT_LOCALE=${target}; path=/; max-age=31536000; SameSite=Lax`;
-    router.push(getLocalizedPath(pathname, currentLocale, target));
+    const targetPath = getLocalizedPath(pathname, currentLocale, target);
+
+    if (isLoggedIn) {
+      startTransition(async () => {
+        await updateLocalePreference(target);
+        router.push(targetPath);
+      });
+    } else {
+      document.cookie = `NEXT_LOCALE=${target}; path=/; max-age=31536000; SameSite=Lax`;
+      router.push(targetPath);
+    }
   }
 
   return (

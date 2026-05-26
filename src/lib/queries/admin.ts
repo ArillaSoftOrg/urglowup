@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import type { AppointmentStatus, BusinessStatus, MediaStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
+import type { AppointmentStatus, BusinessStatus, MediaStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
 
 // ─── Dashboard ─────────────────────────────────────────────────
 
@@ -209,3 +209,35 @@ export async function getAdminCategories() {
 export type AdminCategory = Awaited<
   ReturnType<typeof getAdminCategories>
 >[number];
+
+// ─── Posts ─────────────────────────────────────────────────────
+
+export async function getAdminPosts(opts?: {
+  contentType?: PostContentType;
+  status?: PostStatus;
+  cursor?: string;
+  take?: number;
+}) {
+  const take = opts?.take ?? 50;
+
+  return db.post.findMany({
+    where: {
+      ...(opts?.contentType ? { contentType: opts.contentType } : {}),
+      ...(opts?.status ? { status: opts.status } : {}),
+      ...(opts?.cursor ? { createdAt: { lt: new Date(opts.cursor) } } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take,
+    select: {
+      id: true,
+      contentType: true,
+      status: true,
+      description: true,
+      createdAt: true,
+      business: { select: { id: true, name: true, slug: true } },
+      _count: { select: { media: true, saves: true } },
+    },
+  });
+}
+
+export type AdminPost = Awaited<ReturnType<typeof getAdminPosts>>[number];

@@ -9,31 +9,26 @@ import {
 } from "@/components/ui/card";
 import { SignOutButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { Bell, Globe, Lock, LogOut } from "lucide-react";
+import { Globe, LogOut } from "lucide-react";
+import { NotificationPreferencesForm } from "@/components/account/notification-preferences-form";
+import { ConsentPreferencesForm } from "@/components/account/consent-preferences-form";
+import { getUserPreferences } from "@/lib/preferences";
 
 export const metadata = { title: "Ayarlar" };
 
-const comingSoonItems = [
-  {
-    icon: Bell,
-    title: "Bildirimler",
-    description: "E-posta ve SMS bildirim tercihlerinizi yönetin.",
-  },
-  {
-    icon: Globe,
-    title: "Dil",
-    description: "Uygulama dilini seçin.",
-  },
-  {
-    icon: Lock,
-    title: "Gizlilik",
-    description: "Hesap gizlilik ayarlarınızı düzenleyin.",
-  },
-];
+const LOCALE_LABELS: Record<string, string> = {
+  tr: "Türkçe",
+  en: "English",
+  de: "Deutsch",
+  ru: "Русский",
+  es: "Español",
+};
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  const prefs = await getUserPreferences(user.id);
 
   return (
     <div className="space-y-6">
@@ -44,6 +39,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
+      {/* Account */}
       <Card>
         <CardHeader>
           <CardTitle>Hesap</CardTitle>
@@ -66,26 +62,47 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Language */}
       <Card>
         <CardHeader>
-          <CardTitle>Tercihler</CardTitle>
-          <CardDescription>Bu ayarlar yakında kullanıma açılacak.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="size-4" />
+            Dil
+          </CardTitle>
+          <CardDescription>
+            Tercih ettiğiniz dili gezinme çubuğundaki dil seçiciden değiştirebilirsiniz.
+            {prefs.locale && (
+              <span className="block mt-1 text-foreground font-medium">
+                Kayıtlı tercihiniz: {LOCALE_LABELS[prefs.locale] ?? prefs.locale}
+              </span>
+            )}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="divide-y">
-          {comingSoonItems.map((item, i) => (
-            <div key={i} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
-              <div className="flex items-center gap-3">
-                <item.icon className="size-4 text-muted-foreground shrink-0" />
-                <div className="space-y-0.5">
-                  <p className="text-sm font-medium">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.description}</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" disabled className="text-xs text-muted-foreground">
-                Yakında
-              </Button>
-            </div>
-          ))}
+      </Card>
+
+      {/* Notifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bildirimler</CardTitle>
+          <CardDescription>
+            E-posta ve WhatsApp bildirim tercihlerinizi yönetin.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <NotificationPreferencesForm prefs={prefs} />
+        </CardContent>
+      </Card>
+
+      {/* Privacy / Consent */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Gizlilik ve Onay</CardTitle>
+          <CardDescription>
+            Verilerinizin nasıl kullanılacağını kontrol edin. KVKK ve GDPR kapsamında korunmaktadır.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ConsentPreferencesForm prefs={prefs} />
         </CardContent>
       </Card>
     </div>

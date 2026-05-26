@@ -11,6 +11,7 @@ const adminNav = [
   { title: "Reviews", href: "/admin/reviews" },
   { title: "Categories", href: "/admin/categories" },
   { title: "Style Tags", href: "/admin/style-tags" },
+  { title: "Posts", href: "/admin/posts" },
   { title: "Marketplace", href: "/admin/marketplace" },
 ];
 

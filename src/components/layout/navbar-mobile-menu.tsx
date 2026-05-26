@@ -17,6 +17,7 @@ interface NavbarMobileMenuProps {
   exploreHref: string;
   exploreLabel: string;
   openMenuLabel: string;
+  isLoggedIn?: boolean;
 }
 
 export function NavbarMobileMenu({
@@ -24,6 +25,7 @@ export function NavbarMobileMenu({
   exploreHref,
   exploreLabel,
   openMenuLabel,
+  isLoggedIn = false,
 }: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
 
@@ -59,7 +61,7 @@ export function NavbarMobileMenu({
           </Link>
         </nav>
         <div className="border-t px-3 pt-3 pb-2">
-          <LocaleSwitcher />
+          <LocaleSwitcher isLoggedIn={isLoggedIn} />
         </div>
       </SheetContent>
     </Sheet>

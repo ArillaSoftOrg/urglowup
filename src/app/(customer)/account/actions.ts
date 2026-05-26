@@ -3,6 +3,8 @@
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
+import { cookies } from "next/headers";
+import { isValidLocale, type Locale } from "@/lib/i18n-config";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
@@ -59,4 +61,24 @@ export async function updateProfile(
   });
 
   return { success: true, message: "Profile updated successfully" };
+}
+
+export async function updateLocalePreference(locale: Locale): Promise<void> {
+  if (!isValidLocale(locale)) return;
+
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  await db.userPreferences.upsert({
+    where: { userId: user.id },
+    create: { userId: user.id, locale },
+    update: { locale },
+  });
+
+  const jar = await cookies();
+  jar.set("NEXT_LOCALE", locale, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
 }

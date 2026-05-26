@@ -9,7 +9,7 @@ import {
   ADMIN_STATUS_TRANSITIONS,
   MARKETPLACE_VISIBILITY_FOR_STATUS,
 } from "@/lib/constants/business";
-import type { BusinessStatus } from "@/generated/prisma/enums";
+import type { BusinessStatus, PostStatus } from "@/generated/prisma/enums";
 
 export type AdminActionState = {
   success: boolean;
@@ -876,4 +876,37 @@ export async function deleteStyleTag(styleTagId: string): Promise<AdminActionSta
   await logAdminAction(admin.id, "styleTag.delete", "StyleTag", styleTagId, `name: ${tag.name}`);
   revalidateStyleTagPaths();
   return { success: true, message: "Style tag deleted." };
+}
+
+// ─── Post Moderation ────────────────────────────────────────────
+
+export async function adminSetPostStatus(
+  postId: string,
+  status: PostStatus
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const post = await db.post.findUnique({
+    where: { id: postId },
+    select: { status: true, businessId: true },
+  });
+
+  if (!post) {
+    return { success: false, message: "Post not found." };
+  }
+
+  await db.post.update({ where: { id: postId }, data: { status } });
+
+  await logAdminAction(
+    admin.id,
+    "post.set_status",
+    "Post",
+    postId,
+    `${post.status} → ${status}`
+  );
+
+  revalidatePath("/admin/posts");
+  revalidatePath("/explore");
+
+  return { success: true, message: `Post status set to ${status}.` };
 }

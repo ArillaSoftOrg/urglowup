@@ -53,7 +53,7 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
 
         <div className="flex items-center gap-3">
           <div className="hidden md:block">
-            <LocaleSwitcher />
+            <LocaleSwitcher isLoggedIn={!!user} />
           </div>
           {user ? (
             <UserButton />
@@ -75,6 +75,7 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
               exploreHref={p("/explore")}
               exploreLabel={dict.nav.explore}
               openMenuLabel={dict.nav.openMenu}
+              isLoggedIn={!!user}
             />
           </div>
         </div>

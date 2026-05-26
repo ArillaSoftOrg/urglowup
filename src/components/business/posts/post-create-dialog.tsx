@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Upload, Loader2, X, Video, Image as ImageIcon, Plus } from "lucide-react";
+import { Upload, Loader2, X, Video, Image as ImageIcon, Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -48,6 +48,15 @@ interface PostCreateDialogProps {
 
 const MAX_STYLE_TAGS = 5;
 
+type ContentType = "REAL_WORK" | "INSPIRATION" | "EDUCATIONAL" | "PROMOTION";
+
+const CONTENT_TYPES: Array<{ value: ContentType; label: string; description: string }> = [
+  { value: "REAL_WORK", label: "Gerçek Çalışma", description: "Yaptığınız bir çalışma veya sonuç" },
+  { value: "INSPIRATION", label: "İlham", description: "Referans veya mood board" },
+  { value: "EDUCATIONAL", label: "Eğitim / İpucu", description: "Nasıl yapılır veya bilgi paylaşımı" },
+  { value: "PROMOTION", label: "Kampanya / Duyuru", description: "Fiyat, indirim veya hizmet duyurusu" },
+];
+
 export function PostCreateDialog({ services, categories, styleTags }: PostCreateDialogProps) {
   const [open, setOpen] = useState(false);
   const [media, setMedia] = useState<UploadedMedia[]>([]);
@@ -57,6 +66,7 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
   const [relatedServiceId, setRelatedServiceId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [contentType, setContentType] = useState<ContentType | "">("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +77,7 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
     setRelatedServiceId("");
     setCategoryId("");
     setSelectedTagIds([]);
+    setContentType("");
     setUploadError(null);
     setSubmitError(null);
   }
@@ -192,6 +203,10 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
       setSubmitError("Açıklama veya en az bir görsel/video ekleyin.");
       return;
     }
+    if (!contentType) {
+      setSubmitError("Gönderi türünü seçin.");
+      return;
+    }
     setSubmitError(null);
 
     startTransition(async () => {
@@ -200,6 +215,7 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
         relatedServiceId: relatedServiceId || undefined,
         categoryId: categoryId || undefined,
         styleTagIds: selectedTagIds,
+        contentType,
         media: media.map((m) => ({
           url: m.url,
           publicId: m.publicId,
@@ -326,6 +342,36 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
             )}
           </div>
 
+          {/* Content Type */}
+          <div className="space-y-2">
+            <Label>Gönderi türü <span className="text-destructive">*</span></Label>
+            <div className="grid grid-cols-2 gap-2">
+              {CONTENT_TYPES.map((ct) => (
+                <button
+                  key={ct.value}
+                  type="button"
+                  onClick={() => setContentType(ct.value)}
+                  className={`flex flex-col items-start rounded-lg border p-2.5 text-left text-xs transition-colors ${
+                    contentType === ct.value
+                      ? "border-primary bg-primary/5 text-foreground"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                  }`}
+                >
+                  <span className="font-medium">{ct.label}</span>
+                  <span className="mt-0.5 text-[11px] leading-tight opacity-75">{ct.description}</span>
+                </button>
+              ))}
+            </div>
+            {contentType === "PROMOTION" && (
+              <div className="flex items-start gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950">
+                <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Bu gönderi İlham akışında görünmeyecek, yalnızca profilinizde gösterilecektir.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Açıklama (isteğe bağlı)</Label>
@@ -415,7 +461,7 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
         </div>
 
         <div className="border-t p-4">
-          <Button onClick={handleSubmit} disabled={uploading || (media.length === 0 && !description.trim())} className="w-full">
+          <Button onClick={handleSubmit} disabled={uploading || (media.length === 0 && !description.trim()) || !contentType} className="w-full">
             Paylaş
           </Button>
         </div>

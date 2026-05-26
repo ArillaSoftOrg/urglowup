@@ -106,6 +106,13 @@ enum PostStatus {
   REMOVED
 }
 
+enum PostContentType {
+  REAL_WORK
+  INSPIRATION
+  EDUCATIONAL
+  PROMOTION
+}
+
 enum PostMediaType {
   IMAGE
   VIDEO
@@ -116,6 +123,22 @@ enum NotificationStatus {
   SENT
   FAILED
   SKIPPED
+}
+
+enum NotificationLogType {
+  TRANSACTIONAL
+  MARKETING
+}
+
+enum ConsentCategory {
+  PERSONALIZATION
+  ANALYTICS
+  MARKETING
+}
+
+enum ConsentAction {
+  GRANTED
+  REVOKED
 }
 
 enum DayOfWeek {
@@ -151,6 +174,9 @@ model User {
   externalConnections BusinessExternalConnection[]
   taggedPosts         Post[]                       @relation("TaggedPosts")
   postSaves           PostSave[]
+  preferences         UserPreferences?
+  consentAuditLogs    ConsentAuditLog[]
+  notificationLogs    NotificationLog[]
 }
 
 model Business {
@@ -299,19 +325,23 @@ model Appointment {
 }
 
 model NotificationLog {
-  id                String              @id @default(cuid())
-  appointmentId     String
-  appointment       Appointment         @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  channel           NotificationChannel
-  recipientPhone    String
-  templateName      String
-  status            NotificationStatus
-  providerMessageId String?
-  errorMessage      String?
-  createdAt         DateTime            @default(now())
-  sentAt            DateTime?
+  id                 String              @id @default(cuid())
+  appointmentId      String?
+  appointment        Appointment?        @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  recipientUserId    String?
+  recipientUser      User?               @relation(fields: [recipientUserId], references: [id], onDelete: SetNull)
+  notificationType   NotificationLogType @default(TRANSACTIONAL)
+  channel            NotificationChannel
+  recipientPhone     String
+  templateName       String
+  status             NotificationStatus
+  providerMessageId  String?
+  errorMessage       String?
+  createdAt          DateTime            @default(now())
+  sentAt             DateTime?
 
   @@unique([appointmentId, channel, templateName])
+  @@index([recipientUserId])
 }
 
 model Review {
@@ -482,6 +512,7 @@ model Post {
   tagApproved         Boolean           @default(false)
   tagVisible          Boolean           @default(false)
   status              PostStatus        @default(ACTIVE)
+  contentType         PostContentType   @default(REAL_WORK)
   externalPublishMeta Json?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
@@ -492,6 +523,7 @@ model Post {
 
   @@index([businessId, status])
   @@index([categoryId, status])
+  @@index([contentType, status])
   @@index([createdAt(sort: Desc)])
 }
 
@@ -552,6 +584,57 @@ model PostStyleTag {
 
   @@id([postId, styleTagId])
   @@index([styleTagId])
+}
+
+// ─── User Preferences & Consent ─────────────────────────────────
+
+model UserPreferences {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Locale — null means fall back to NEXT_LOCALE cookie / Accept-Language
+  locale String?
+
+  // Consent timestamps — null means not yet consented; kept on revocation for audit
+  personalizationConsentAt DateTime?
+  personalizationRevokedAt DateTime?
+  analyticsConsentAt       DateTime?
+  analyticsRevokedAt       DateTime?
+  marketingConsentAt       DateTime?
+  marketingRevokedAt       DateTime?
+  // Bump this string when privacy policy changes to trigger re-consent
+  consentVersion           String?
+
+  // Notification preferences
+  emailTransactional    Boolean @default(true)
+  whatsappTransactional Boolean @default(true)
+  emailMarketing        Boolean @default(false)
+  whatsappMarketing     Boolean @default(false)
+
+  // Affinity cache — JSON arrays of categoryId / styleTagId strings, ordered by score
+  // null = not yet computed or consent not given
+  preferredCategoryIds Json?
+  preferredStyleTagIds Json?
+  affinityComputedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConsentAuditLog {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  ConsentCategory
+  action    ConsentAction
+  version   String
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime        @default(now())
+
+  @@index([userId, category])
+  @@index([createdAt])
 }
 
 // ─── External Source Cache (Google Business Profile) ─────────────────────────

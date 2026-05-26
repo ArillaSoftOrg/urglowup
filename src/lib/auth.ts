@@ -38,6 +38,12 @@ export async function getCurrentUser() {
     },
   });
 
+  await db.userPreferences.upsert({
+    where: { userId: user.id },
+    create: { userId: user.id },
+    update: {},
+  });
+
   return user;
 }
 

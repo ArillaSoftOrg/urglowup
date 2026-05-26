@@ -8,6 +8,7 @@ async function getAppointmentWhatsAppPayload(appointmentId: string) {
   const appt = await db.appointment.findUnique({
     where: { id: appointmentId },
     select: {
+      customerId: true,
       status: true,
       requestedDate: true,
       requestedTime: true,
@@ -26,6 +27,15 @@ async function getAppointmentWhatsAppPayload(appointmentId: string) {
 
   if (!appt) throw new Error(`Appointment ${appointmentId} not found for WhatsApp`);
   return appt;
+}
+
+async function isWhatsAppTransactionalEnabled(userId: string): Promise<boolean> {
+  const prefs = await db.userPreferences.findUnique({
+    where: { userId },
+    select: { whatsappTransactional: true },
+  });
+  // Missing row = use default (true)
+  return prefs?.whatsappTransactional ?? true;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -113,6 +123,11 @@ export async function sendBookingConfirmationWhatsApp(
     console.log(
       `[whatsapp] sendBookingConfirmationWhatsApp: skipped — status is ${appt.status}`,
     );
+    return;
+  }
+
+  if (!(await isWhatsAppTransactionalEnabled(appt.customerId))) {
+    console.log(`[whatsapp] sendBookingConfirmationWhatsApp: skipped — customer opted out`);
     return;
   }
 

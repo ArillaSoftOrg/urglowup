@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { computeAndStoreUserAffinity } from "@/lib/personalization";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -27,6 +29,8 @@ export async function POST(_request: Request, { params }: Params) {
     create: { userId: user.id, postId },
     update: {},
   });
+
+  after(() => computeAndStoreUserAffinity(user.id));
 
   return NextResponse.json({ saved: true });
 }

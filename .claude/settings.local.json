@@ -50,7 +50,8 @@
       "Bash(dir /s /b)",
       "Bash(Get-Item -Path .)",
       "Bash(Select-Object -Property Name)",
-      "Bash(xargs ls -lh)"
+      "Bash(xargs ls -lh)",
+      "Bash(xargs head -40)"
     ]
   }
 }
