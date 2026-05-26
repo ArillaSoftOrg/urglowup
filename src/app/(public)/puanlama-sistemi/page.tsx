@@ -13,6 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { PuanlamaFaq } from "./puanlama-faq";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
   title: { absolute: "Puanlama Sistemi | UrGlowUp" },
@@ -23,8 +24,9 @@ export const metadata: Metadata = {
     description:
       "UrGlowUp yorum ve puanlama sisteminin nasıl çalıştığını; doğrulanmış yorumları, 0–10 puanlamayı, güncellik etkisini ve adil işletme skorlarını keşfedin.",
     url: "/puanlama-sistemi",
+    locale: "tr_TR",
   },
-  alternates: { canonical: "/puanlama-sistemi" },
+  alternates: buildAlternates("/puanlama-sistemi", "tr"),
 };
 
 const customerCards = [

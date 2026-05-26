@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LocaleSwitcher } from "./locale-switcher";
 import {
   Sheet,
   SheetContent,
@@ -13,16 +14,24 @@ import {
 
 interface NavbarMobileMenuProps {
   navLink: { label: string; href: string };
+  exploreHref: string;
+  exploreLabel: string;
+  openMenuLabel: string;
 }
 
-export function NavbarMobileMenu({ navLink }: NavbarMobileMenuProps) {
+export function NavbarMobileMenu({
+  navLink,
+  exploreHref,
+  exploreLabel,
+  openMenuLabel,
+}: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button variant="ghost" size="icon" aria-label="Menüyü aç" />
+          <Button variant="ghost" size="icon" aria-label={openMenuLabel} />
         }
       >
         <Menu className="size-5" />
@@ -35,11 +44,11 @@ export function NavbarMobileMenu({ navLink }: NavbarMobileMenuProps) {
         </div>
         <nav className="flex flex-col gap-1 p-3">
           <Link
-            href="/explore"
+            href={exploreHref}
             onClick={() => setOpen(false)}
             className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            Keşfet
+            {exploreLabel}
           </Link>
           <Link
             href={navLink.href}
@@ -49,6 +58,9 @@ export function NavbarMobileMenu({ navLink }: NavbarMobileMenuProps) {
             {navLink.label}
           </Link>
         </nav>
+        <div className="border-t px-3 pt-3 pb-2">
+          <LocaleSwitcher />
+        </div>
       </SheetContent>
     </Sheet>
   );

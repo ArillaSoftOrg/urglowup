@@ -13,6 +13,7 @@ import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeBusinessCTA } from "@/components/home/home-business-cta";
 import { HomeHeroCTAs } from "@/components/home/home-hero-ctas";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
   title: { absolute: "UrGlowUp" },
@@ -23,8 +24,9 @@ export const metadata: Metadata = {
     description:
       "Discover beauty and personal care businesses, view real work, and request appointments with confidence.",
     url: "/",
+    locale: "tr_TR",
   },
-  alternates: { canonical: "/" },
+  alternates: buildAlternates("/", "tr"),
 };
 
 export default async function HomePage() {

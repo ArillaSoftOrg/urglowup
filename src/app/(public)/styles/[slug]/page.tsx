@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ChevronRight, CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getStyleTagBySlug, getStyleTagBusinesses, getStyleTagPosts, getAllStyleTags } from "@/lib/queries/style-tags";
+import {
+  getStyleTagBySlug,
+  getStyleTagBusinesses,
+  getStyleTagPosts,
+} from "@/lib/queries/style-tags";
 import { db } from "@/lib/db";
 import { StyleTagGuidePostGrid } from "@/components/explore/style-tag-guide-post-grid";
 import { StyleTagCard } from "@/components/explore/style-tag-card";
+import { buildAlternates } from "@/lib/i18n-metadata";
+import { getAppUrl } from "@/lib/get-app-url";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -30,15 +35,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!tag) return {};
 
   const title = `${tag.name} Nedir? ${tag.name} Stili Hakkında Rehber`;
+  const categoryName = tag.category?.name ?? "güzellik";
   const description = tag.description
     ? `${tag.description} UrGlowUp'ta ${tag.name} yapan işletmeleri keşfedin ve randevu alın.`
-    : `UrGlowUp'ta ${tag.name} yapan işletmeleri keşfedin, ilham alın ve hemen randevu alın.`;
+    : `${tag.name} stili nedir, kime uyar ve nasıl bakım gerektirir? UrGlowUp'ta ${tag.name} yapan ${categoryName} uzmanlarını keşfedin ve kolayca randevu alın.`;
 
   return {
     title,
     description,
-    openGraph: { title, description, url: `/styles/${slug}` },
-    alternates: { canonical: `/styles/${slug}` },
+    robots: tag.postCount === 0 ? { index: false } : undefined,
+    openGraph: {
+      title,
+      description,
+      url: `/styles/${slug}`,
+      ...(tag.coverUrl && { images: [{ url: tag.coverUrl }] }),
+    },
+    alternates: buildAlternates(`/styles/${slug}`, "tr"),
   };
 }
 
@@ -48,9 +60,15 @@ export default async function StyleGuidePage({ params }: PageProps) {
   const tag = await getStyleTagBySlug(slug);
   if (!tag) notFound();
 
+  const categoryName = tag.category?.name ?? "güzellik";
+  const jsonLdDescription = tag.description
+    ?? `${tag.name} stili nedir, kime uyar ve nasıl bakım gerektirir? UrGlowUp'ta ${tag.name} yapan ${categoryName} uzmanlarını keşfedin.`;
+
+  const shortIntro = tag.description?.match(/^[^.!?]*[.!?]/)?.[0]?.trim() ?? null;
+
   const [businesses, postsResult, relatedTags] = await Promise.all([
     getStyleTagBusinesses(tag.id),
-    getStyleTagPosts(tag.id, { take: 12 }),
+    getStyleTagPosts(tag.id, { take: 9 }),
     tag.categoryId
       ? db.styleTag.findMany({
           where: {
@@ -58,7 +76,29 @@ export default async function StyleGuidePage({ params }: PageProps) {
             categoryId: tag.categoryId,
             id: { not: tag.id },
           },
-          select: { id: true, name: true, slug: true, categoryId: true, _count: { select: { posts: { where: { post: { status: "ACTIVE" } } } } } },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            categoryId: true,
+            _count: { select: { posts: { where: { post: { status: "ACTIVE" } } } } },
+            posts: {
+              take: 1,
+              orderBy: { assignedAt: "desc" },
+              where: { post: { status: "ACTIVE" } },
+              select: {
+                post: {
+                  select: {
+                    media: {
+                      take: 1,
+                      orderBy: { sortOrder: "asc" },
+                      select: { url: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
           orderBy: { sortOrder: "asc" },
           take: 8,
         })
@@ -69,56 +109,143 @@ export default async function StyleGuidePage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 space-y-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            name: tag.name,
+            description: jsonLdDescription,
+            url: getAppUrl(`/styles/${slug}`),
+            publisher: {
+              "@type": "Organization",
+              name: "UrGlowUp",
+              url: getAppUrl(),
+            },
+            ...(tag.coverUrl && {
+              image: { "@type": "ImageObject", url: tag.coverUrl },
+            }),
+          }),
+        }}
+      />
+
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
-        <Link href="/" className="hover:text-foreground">Ana Sayfa</Link>
+      <nav className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+        <Link href="/" className="hover:text-foreground">
+          Ana Sayfa
+        </Link>
         <ChevronRight className="size-3" />
-        <Link href="/explore?tab=ilham" className="hover:text-foreground">İlham</Link>
+        <Link href="/explore?tab=ilham" className="hover:text-foreground">
+          İlham
+        </Link>
         <ChevronRight className="size-3" />
-        <Link href="/styles" className="hover:text-foreground">Stil Rehberi</Link>
+        <Link href="/styles" className="hover:text-foreground">
+          Stil Rehberi
+        </Link>
         <ChevronRight className="size-3" />
         <span className="text-foreground">{tag.name}</span>
       </nav>
 
-      {/* Section 1 — Header */}
+      {/* Section 1 — Hero */}
       <div className="space-y-3">
-        <div className="flex items-start gap-3 flex-wrap">
-          <h1 className="text-2xl font-bold tracking-tight">{tag.name}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tag.name}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          {tag.category && (
+            <Link
+              href={`/category/${tag.category.slug}`}
+              className="rounded-full bg-muted px-3 py-0.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              {tag.category.name}
+            </Link>
+          )}
           {tag.postCount > 0 && (
-            <span className="mt-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
               {tag.postCount} gönderi
             </span>
           )}
         </div>
-        {tag.category && (
-          <Link
-            href={`/category/${tag.category.slug}`}
-            className="inline-block rounded-full bg-muted px-3 py-0.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            {tag.category.name}
-          </Link>
+        {shortIntro && (
+          <p className="text-base leading-relaxed">{shortIntro}</p>
         )}
-        {tag.description && (
-          <p className="text-sm leading-relaxed text-muted-foreground">{tag.description}</p>
+        {(posts.length > 0 || businesses.length > 0) && (
+          <div className="flex flex-wrap gap-3 pt-1">
+            {posts.length > 0 && (
+              <a href="#examples" className="text-sm font-medium text-primary hover:underline">
+                Örnekleri gör →
+              </a>
+            )}
+            {businesses.length > 0 && (
+              <a
+                href="#businesses"
+                className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                Randevu al
+              </a>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Section 2 — Bookable businesses */}
-      <section className="space-y-4">
+      {/* Section 2 — Visual examples */}
+      {posts.length > 0 && (
+        <section id="examples" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold">Gerçek Örnekler</h2>
+            {postsResult.nextCursor && (
+              <Link
+                href={`/explore?tab=ilham&styleTagId=${tag.id}`}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Daha fazlasını gör →
+              </Link>
+            )}
+          </div>
+          <StyleTagGuidePostGrid posts={posts} />
+        </section>
+      )}
+
+      {/* Section 3 — Related styles */}
+      {relatedTags.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-base font-semibold">İlgili Stiller</h2>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {relatedTags.map((t) => (
+              <StyleTagCard
+                key={t.id}
+                name={t.name}
+                slug={t.slug}
+                postCount={t._count.posts}
+                coverUrl={t.posts[0]?.post.media[0]?.url ?? null}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Section 4 — Businesses */}
+      <section id="businesses" className="space-y-4">
         <h2 className="text-base font-semibold">Bu Stili Yapan İşletmeler</h2>
         {businesses.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {businesses.slice(0, 6).map((biz) => (
+            {businesses.map((biz) => (
               <div key={biz.id} className="flex items-center gap-3 rounded-xl border p-3">
                 <Avatar className="size-10 shrink-0">
                   {biz.logoUrl && <AvatarImage src={biz.logoUrl} alt={biz.name} />}
-                  <AvatarFallback className="text-xs">{biz.name.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    {biz.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <Link href={`/b/${biz.slug}`} className="block truncate text-sm font-medium hover:underline">
+                  <Link
+                    href={`/b/${biz.slug}`}
+                    className="block truncate text-sm font-medium hover:underline"
+                  >
                     {biz.name}
                   </Link>
-                  {biz.city && <p className="truncate text-xs text-muted-foreground">{biz.city}</p>}
+                  {biz.city && (
+                    <p className="truncate text-xs text-muted-foreground">{biz.city}</p>
+                  )}
                 </div>
                 <Link
                   href={`/b/${biz.slug}/book`}
@@ -131,42 +258,27 @@ export default async function StyleGuidePage({ params }: PageProps) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Henüz bu stili yapan kayıtlı işletme yok.
-          </p>
+          <div className="rounded-xl border border-dashed p-6 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Henüz bu stili yapan kayıtlı işletme yok.
+            </p>
+            <Link
+              href={`/explore?tab=ilham&styleTagId=${tag.id}`}
+              className="text-xs text-primary hover:underline"
+            >
+              İlham akışını keşfet →
+            </Link>
+          </div>
         )}
       </section>
 
-      {/* Section 3 — Post gallery */}
-      {posts.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold">İlhamı Gör</h2>
-            <Link
-              href="/explore?tab=ilham"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              İlham akışında daha fazla gör →
-            </Link>
-          </div>
-          <StyleTagGuidePostGrid posts={posts} />
-        </section>
-      )}
-
-      {/* Section 4 — Related styles */}
-      {relatedTags.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold">İlgili Stiller</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {relatedTags.map((t) => (
-              <StyleTagCard
-                key={t.id}
-                name={t.name}
-                slug={t.slug}
-                postCount={t._count.posts}
-              />
-            ))}
-          </div>
+      {/* Section 5 — SEO guide */}
+      {tag.description && (
+        <section className="space-y-3 border-t pt-8">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Bu stil hakkında bilmen gerekenler
+          </h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">{tag.description}</p>
         </section>
       )}
     </div>

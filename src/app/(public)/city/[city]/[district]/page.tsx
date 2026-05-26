@@ -11,6 +11,7 @@ import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { FilterBar } from "@/components/marketplace/filter-bar";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ChevronRight, MapPin } from "lucide-react";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -42,9 +43,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       url: `/city/${encodeURIComponent(city)}/${encodeURIComponent(district)}`,
     },
-    alternates: {
-      canonical: `/city/${encodeURIComponent(city)}/${encodeURIComponent(district)}`,
-    },
+    alternates: buildAlternates(
+      `/city/${encodeURIComponent(city)}/${encodeURIComponent(district)}`,
+      "tr"
+    ),
   };
 }
 

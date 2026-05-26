@@ -25,14 +25,21 @@ function pickGradient(name: string): string {
   return CATEGORY_GRADIENTS[index];
 }
 
-export function CategoryCard({ category }: { category: MarketplaceCategory }) {
+export function CategoryCard({
+  category,
+  locale,
+}: {
+  category: MarketplaceCategory;
+  locale?: string;
+}) {
   const { name, slug, imageUrl, colorHex, iconName } = category;
   const gradient = pickGradient(name);
   const IconComponent = iconName && CATEGORY_ICONS[iconName as keyof typeof CATEGORY_ICONS];
+  const prefix = locale && locale !== "tr" ? `/${locale}` : "";
 
   return (
     <Link
-      href={`/category/${slug}`}
+      href={`${prefix}/category/${slug}`}
       className="group flex flex-col transition-transform active:scale-[0.98]"
     >
       {/* Media tile */}

@@ -15,6 +15,7 @@ import { SearchPanel } from "@/components/marketplace/search-panel";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ExploreTabs } from "@/components/explore/explore-tabs";
 import { PostFeed } from "@/components/explore/post-feed";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
   title: "Güzellik & Kişisel Bakım Uzmanlarını Keşfet",
@@ -25,8 +26,9 @@ export const metadata: Metadata = {
     description:
       "Size yakın güzellik ve kişisel bakım uzmanlarını keşfedin. Kuaförler, nail salonu, cilt bakımı ve daha fazlasını bulun.",
     url: "/explore",
+    locale: "tr_TR",
   },
-  alternates: { canonical: "/explore" },
+  alternates: buildAlternates("/explore", "tr"),
 };
 
 interface PageProps {

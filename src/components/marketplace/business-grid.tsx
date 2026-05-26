@@ -6,11 +6,13 @@ import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 interface BusinessGridProps {
   businesses: MarketplaceBusiness[];
   emptyMessage?: string;
+  locale?: string;
 }
 
 export function BusinessGrid({
   businesses,
   emptyMessage = "Henüz listelenmiş işletme yok.",
+  locale,
 }: BusinessGridProps) {
   if (businesses.length === 0) {
     return (
@@ -25,7 +27,7 @@ export function BusinessGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
       {businesses.map((business) => (
-        <BusinessCard key={business.id} business={business} />
+        <BusinessCard key={business.id} business={business} locale={locale} />
       ))}
     </div>
   );

@@ -12,6 +12,7 @@ import { FilterBar } from "@/components/marketplace/filter-bar";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ChevronRight, MapPin } from "lucide-react";
 import { db } from "@/lib/db";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       url: `/city/${encodeURIComponent(city)}`,
     },
-    alternates: { canonical: `/city/${encodeURIComponent(city)}` },
+    alternates: buildAlternates(`/city/${encodeURIComponent(city)}`, "tr"),
   };
 }
 

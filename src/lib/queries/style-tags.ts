@@ -8,6 +8,7 @@ export type StyleTagSummary = {
   slug: string;
   categoryId: string | null;
   postCount: number;
+  coverUrl: string | null;
 };
 
 export type StyleTagDetail = StyleTagSummary & {
@@ -48,6 +49,22 @@ export async function getAllStyleTags(): Promise<StyleTagSummary[]> {
       slug: true,
       categoryId: true,
       _count: { select: { posts: { where: { post: { status: "ACTIVE" } } } } },
+      posts: {
+        take: 1,
+        orderBy: { assignedAt: "desc" },
+        where: { post: { status: "ACTIVE" } },
+        select: {
+          post: {
+            select: {
+              media: {
+                take: 1,
+                orderBy: { sortOrder: "asc" },
+                select: { url: true },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -57,11 +74,12 @@ export async function getAllStyleTags(): Promise<StyleTagSummary[]> {
     slug: t.slug,
     categoryId: t.categoryId,
     postCount: t._count.posts,
+    coverUrl: t.posts[0]?.post.media[0]?.url ?? null,
   }));
 }
 
 export async function getStyleTagBySlug(slug: string): Promise<StyleTagDetail | null> {
-  const tag = await db.styleTag.findUnique({
+  const tag = await db.styleTag.findFirst({
     where: { slug, isActive: true },
     select: {
       id: true,
@@ -73,6 +91,22 @@ export async function getStyleTagBySlug(slug: string): Promise<StyleTagDetail | 
       sortOrder: true,
       category: { select: { id: true, name: true, slug: true } },
       _count: { select: { posts: { where: { post: { status: "ACTIVE" } } } } },
+      posts: {
+        take: 1,
+        orderBy: { assignedAt: "desc" },
+        where: { post: { status: "ACTIVE" } },
+        select: {
+          post: {
+            select: {
+              media: {
+                take: 1,
+                orderBy: { sortOrder: "asc" },
+                select: { url: true },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -88,6 +122,7 @@ export async function getStyleTagBySlug(slug: string): Promise<StyleTagDetail | 
     sortOrder: tag.sortOrder,
     category: tag.category,
     postCount: tag._count.posts,
+    coverUrl: tag.posts[0]?.post.media[0]?.url ?? null,
   };
 }
 

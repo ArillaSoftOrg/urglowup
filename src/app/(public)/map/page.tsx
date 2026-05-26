@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Map } from "lucide-react";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
   title: "Map",
@@ -12,8 +13,9 @@ export const metadata: Metadata = {
     description:
       "Yakınındaki güzellik ve kişisel bakım uzmanlarını harita üzerinde keşfet.",
     url: "/map",
+    locale: "tr_TR",
   },
-  alternates: { canonical: "/map" },
+  alternates: buildAlternates("/map", "tr"),
 };
 
 export default function MapPage() {

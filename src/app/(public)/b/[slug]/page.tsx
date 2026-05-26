@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getBusinessBySlug } from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
+import { buildAlternates } from "@/lib/i18n-metadata";
 import { CoverSection } from "@/components/business-profile/cover-section";
 import { ProfileHeader } from "@/components/business-profile/profile-header";
 import { QuickInfoBar } from "@/components/business-profile/quick-info-bar";
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         images: [{ url: business.coverImageUrl }],
       }),
     },
-    alternates: { canonical: `/b/${slug}` },
+    alternates: buildAlternates(`/b/${slug}`, "tr"),
   };
 }
 

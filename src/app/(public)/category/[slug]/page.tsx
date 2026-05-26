@@ -14,6 +14,7 @@ import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { FilterBar } from "@/components/marketplace/filter-bar";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ChevronRight } from "lucide-react";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         images: [{ url: category.imageUrl }],
       }),
     },
-    alternates: { canonical: `/category/${slug}` },
+    alternates: buildAlternates(`/category/${slug}`, "tr"),
   };
 }
 

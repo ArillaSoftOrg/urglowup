@@ -17,15 +17,22 @@ function pickGradient(name: string): string {
   return COVER_GRADIENTS[index];
 }
 
-export function BusinessCard({ business }: { business: MarketplaceBusiness }) {
+export function BusinessCard({
+  business,
+  locale,
+}: {
+  business: MarketplaceBusiness;
+  locale?: string;
+}) {
   const { name, slug, coverImageUrl, city, district, categories, reviewCount, reviewAvg } = business;
   const gradient = pickGradient(name);
   const firstCategory = categories[0]?.category ?? null;
   const locationLabel = district || city || null;
+  const prefix = locale && locale !== "tr" ? `/${locale}` : "";
 
   return (
     <Link
-      href={`/b/${slug}`}
+      href={`${prefix}/b/${slug}`}
       className="group flex flex-col transition-transform active:scale-[0.98]"
     >
       {/* Media tile */}

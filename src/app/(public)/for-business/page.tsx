@@ -16,6 +16,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
   title: "For Business",
@@ -26,7 +27,9 @@ export const metadata: Metadata = {
     description:
       "List your beauty or personal care business on UrGlowUp and get discovered by new customers.",
     url: "/for-business",
+    locale: "tr_TR",
   },
+  alternates: buildAlternates("/for-business", "tr"),
 };
 
 const features = [
