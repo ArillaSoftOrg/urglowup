@@ -28,18 +28,18 @@ import { StatCard } from "@/components/business/stat-card";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { getAppUrl } from "@/lib/get-app-url";
 
-export const metadata = { title: "Dashboard" };
+export const metadata = { title: "Kontrol Paneli" };
 
 const BUSINESS_STATUS_BADGE: Record<
   string,
   { variant: "success" | "warning" | "destructive" | "secondary"; label: string }
 > = {
-  ACTIVE_PRIVATE: { variant: "success", label: "Active (Private)" },
-  ACTIVE_MARKETPLACE: { variant: "success", label: "Marketplace" },
-  PENDING_APPROVAL: { variant: "warning", label: "Pending Review" },
-  DRAFT: { variant: "secondary", label: "Draft" },
-  SUSPENDED: { variant: "destructive", label: "Suspended" },
-  REJECTED: { variant: "destructive", label: "Rejected" },
+  ACTIVE_PRIVATE: { variant: "success", label: "Aktif (Özel)" },
+  ACTIVE_MARKETPLACE: { variant: "success", label: "Vitrin" },
+  PENDING_APPROVAL: { variant: "warning", label: "İnceleniyor" },
+  DRAFT: { variant: "secondary", label: "Taslak" },
+  SUSPENDED: { variant: "destructive", label: "Askıya Alındı" },
+  REJECTED: { variant: "destructive", label: "Reddedildi" },
 };
 
 export default async function DashboardPage() {
@@ -130,8 +130,8 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Dashboard"
-        description={`Welcome back, ${business.name}`}
+        title="Kontrol Paneli"
+        description={`Tekrar hoş geldiniz, ${business.name}`}
       />
 
       {completion.score < 100 && (
@@ -141,51 +141,51 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={AlertCircle}
-          label="Pending Requests"
+          label="Bekleyen Talepler"
           value={pendingCount}
-          hint="Awaiting your response"
+          hint="Yanıtınızı bekliyor"
           href="/business/appointments?tab=pending"
           iconTone="warning"
         />
         <StatCard
           icon={CalendarCheck}
-          label="Today's Appointments"
+          label="Bugünkü Randevular"
           value={todayCount}
-          hint="Confirmed for today"
+          hint="Bugün için onaylananlar"
           iconTone="pink"
         />
         <StatCard
           icon={CalendarDays}
-          label="This Week"
+          label="Bu Hafta"
           value={weekCount}
-          hint="Pending + confirmed"
+          hint="Bekleyen + onaylanan"
           iconTone="info"
         />
         <StatCard
           icon={Scissors}
-          label="Active Services"
+          label="Aktif Hizmetler"
           value={activeServiceCount}
-          hint={`${totalServiceCount} total service${totalServiceCount !== 1 ? "s" : ""}`}
+          hint={`Toplam: ${totalServiceCount} hizmet`}
           href="/business/services"
           iconTone="pink"
         />
         <StatCard
           icon={Clock}
-          label="Working Hours"
+          label="Çalışma Saatleri"
           value={
             <Badge variant={hoursConfigured ? "success" : "secondary"}>
-              {hoursConfigured ? "Configured" : "Not set"}
+              {hoursConfigured ? "Ayarlandı" : "Ayarlanmadı"}
             </Badge>
           }
           hint={
-            hoursConfigured ? "Weekly schedule is set up" : "Set your working hours"
+            hoursConfigured ? "Haftalık program oluşturuldu" : "Çalışma saatlerinizi ayarlayın"
           }
           href="/business/hours"
           iconTone="muted"
         />
         <StatCard
           icon={Link2}
-          label="Public Link"
+          label="Yayın Linki"
           value={
             <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
           }
@@ -198,9 +198,9 @@ export default async function DashboardPage() {
       <Card className="bg-surface-cream">
         <CardHeader className="pb-3">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            Quick Actions
+            Hızlı İşlemler
           </p>
-          <CardTitle className="text-lg">Jump to common tasks</CardTitle>
+          <CardTitle className="text-lg">Sık kullanılan işlemler</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -213,9 +213,9 @@ export default async function DashboardPage() {
             >
               <Scissors className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Manage Services</p>
+                <p className="text-sm font-medium">Hizmetleri Yönet</p>
                 <p className="text-xs text-muted-foreground">
-                  Add or edit your services
+                  Hizmetleri ekle veya düzenle
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />
@@ -230,9 +230,9 @@ export default async function DashboardPage() {
             >
               <Clock className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Working Hours</p>
+                <p className="text-sm font-medium">Çalışma Saatleri</p>
                 <p className="text-xs text-muted-foreground">
-                  Set your weekly schedule
+                  Haftalık programı ayarla
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />
@@ -247,9 +247,9 @@ export default async function DashboardPage() {
             >
               <ImageIcon className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Upload Media</p>
+                <p className="text-sm font-medium">Medya Yükle</p>
                 <p className="text-xs text-muted-foreground">
-                  Add photos and portfolio
+                  Fotoğraf ve portfolyo ekle
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />
@@ -264,9 +264,9 @@ export default async function DashboardPage() {
             >
               <CalendarCheck className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Appointments</p>
+                <p className="text-sm font-medium">Randevular</p>
                 <p className="text-xs text-muted-foreground">
-                  View appointment requests
+                  Randevu taleplerini görüntüle
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />
@@ -281,9 +281,9 @@ export default async function DashboardPage() {
             >
               <Link2 className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">Share Booking Link</p>
+                <p className="text-sm font-medium">Randevu Linki Paylaş</p>
                 <p className="text-xs text-muted-foreground">
-                  QR code, Instagram &amp; WhatsApp
+                  QR kod, Instagram ve WhatsApp
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />
@@ -300,9 +300,9 @@ export default async function DashboardPage() {
             >
               <ExternalLink className="size-5 shrink-0" />
               <div className="text-left">
-                <p className="text-sm font-medium">View Public Profile</p>
+                <p className="text-sm font-medium">Profili Görüntüle</p>
                 <p className="text-xs text-muted-foreground">
-                  See your booking page
+                  Randevu sayfanı gör
                 </p>
               </div>
               <ArrowRight className="ml-auto size-4 shrink-0" />

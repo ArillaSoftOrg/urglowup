@@ -16,7 +16,7 @@ import type { BusinessAppointment } from "@/lib/queries/appointments";
 import { cn } from "@/lib/utils";
 
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
+  return new Date(date).toLocaleDateString("tr-TR", {
     weekday: "short",
     year: "numeric",
     month: "short",
@@ -75,7 +75,7 @@ function AppointmentCard({
                 </span>
                 <span className="flex items-center gap-1">
                   <Timer className="size-3" />
-                  {appointment.service.durationMinutes} min
+                  {appointment.service.durationMinutes} dk
                 </span>
               </div>
               {appointment.customer.email && (
@@ -85,13 +85,13 @@ function AppointmentCard({
               )}
               {appointment.customerNote && (
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-medium">Customer note:</span>{" "}
+                  <span className="font-medium">Müşteri notu:</span>{" "}
                   {appointment.customerNote}
                 </p>
               )}
               {appointment.businessNote && (
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-medium">Your note:</span>{" "}
+                  <span className="font-medium">İşletme notu:</span>{" "}
                   {appointment.businessNote}
                 </p>
               )}
@@ -133,13 +133,13 @@ export function BusinessAppointmentList({
       <div className="overflow-x-auto">
         <TabsList className="flex-nowrap">
           <TabsTrigger value="pending">
-            Pending ({pending.length})
+            Bekleyen ({pending.length})
           </TabsTrigger>
           <TabsTrigger value="confirmed">
-            Confirmed ({confirmed.length})
+            Onaylanan ({confirmed.length})
           </TabsTrigger>
-          <TabsTrigger value="all">All ({appointments.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
+          <TabsTrigger value="all">Tümü ({appointments.length})</TabsTrigger>
+          <TabsTrigger value="past">Geçmiş ({past.length})</TabsTrigger>
         </TabsList>
       </div>
 
@@ -148,8 +148,8 @@ export function BusinessAppointmentList({
           <EmptyState
             compact
             icon={CalendarDays}
-            headline="No pending requests"
-            description="New appointment requests will appear here."
+            headline="Bekleyen talep yok"
+            description="Yeni randevu talepleri burada görünür."
           />
         ) : (
           pending.map((a) => <AppointmentCard key={a.id} appointment={a} />)
@@ -161,8 +161,8 @@ export function BusinessAppointmentList({
           <EmptyState
             compact
             icon={CalendarDays}
-            headline="No confirmed appointments"
-            description="Appointments you confirm will show up here."
+            headline="Onaylanan randevu yok"
+            description="Onayladığınız randevular burada görünür."
           />
         ) : (
           confirmed.map((a) => <AppointmentCard key={a.id} appointment={a} />)
@@ -174,8 +174,8 @@ export function BusinessAppointmentList({
           <EmptyState
             compact
             icon={CalendarDays}
-            headline="No appointments yet"
-            description="Appointment requests from customers will appear here."
+            headline="Henüz randevu yok"
+            description="Müşteri randevu talepleri burada görünür."
           />
         ) : (
           [...appointments]
@@ -189,8 +189,8 @@ export function BusinessAppointmentList({
           <EmptyState
             compact
             icon={CalendarDays}
-            headline="No past appointments"
-            description="Completed and cancelled appointments will appear here."
+            headline="Geçmiş randevu yok"
+            description="Tamamlanan ve iptal edilen randevular burada görünür."
           />
         ) : (
           past.map((a) => <AppointmentCard key={a.id} appointment={a} />)

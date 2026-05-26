@@ -50,19 +50,19 @@ export type ServiceData = {
 };
 
 const PRICE_TYPE_LABELS: Record<string, string> = {
-  FIXED: "Fixed price",
-  STARTS_FROM: "Starts from",
-  CONSULTATION_REQUIRED: "Price on consultation",
-  FREE_CONSULTATION: "Free consultation",
+  FIXED: "Sabit fiyat",
+  STARTS_FROM: "Başlangıç fiyatı",
+  CONSULTATION_REQUIRED: "Danışma ücreti",
+  FREE_CONSULTATION: "Ücretsiz danışma",
 };
 
 function formatPrice(service: ServiceData) {
-  if (service.priceType === "FREE_CONSULTATION") return "Free consultation";
+  if (service.priceType === "FREE_CONSULTATION") return "Ücretsiz danışma";
   if (service.priceType === "CONSULTATION_REQUIRED")
-    return "Price on consultation";
+    return "Danışma ücreti";
   if (service.price == null) return null;
-  const amount = `$${service.price}`;
-  if (service.priceType === "STARTS_FROM") return `From ${amount}`;
+  const amount = `₺${service.price}`;
+  if (service.priceType === "STARTS_FROM") return `Başlangıç ${amount}`;
   return amount;
 }
 
@@ -93,12 +93,12 @@ function ServiceForm({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          {isEdit ? "Edit Service" : "Add Service"}
+          {isEdit ? "Hizmeti Düzenle" : "Hizmet Ekle"}
         </CardTitle>
         <CardDescription>
           {isEdit
-            ? "Update service details"
-            : "Add a new service to your business"}
+            ? "Hizmet bilgilerini güncelleyin"
+            : "İşletmenize yeni hizmet ekleyin"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -113,12 +113,12 @@ function ServiceForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Ad</Label>
               <Input
                 id="name"
                 name="name"
                 defaultValue={service?.name ?? ""}
-                placeholder="e.g. Haircut"
+                placeholder="örn. Saç Kesimi"
                 required
               />
               {state.errors?.name && (
@@ -127,7 +127,7 @@ function ServiceForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="durationMinutes">Duration (minutes)</Label>
+              <Label htmlFor="durationMinutes">Süre (dakika)</Label>
               <Input
                 id="durationMinutes"
                 name="durationMinutes"
@@ -146,19 +146,19 @@ function ServiceForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Açıklama</Label>
             <Textarea
               id="description"
               name="description"
               defaultValue={service?.description ?? ""}
-              placeholder="Describe the service..."
+              placeholder="Hizmet açıklaması..."
               rows={2}
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
-              <Label>Price type</Label>
+              <Label>Fiyat türü</Label>
               <Select
                 value={priceType}
                 onValueChange={(v) => { if (v !== null) setPriceType(v); }}
@@ -167,20 +167,20 @@ function ServiceForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FIXED">Fixed price</SelectItem>
-                  <SelectItem value="STARTS_FROM">Starts from</SelectItem>
+                  <SelectItem value="FIXED">Sabit fiyat</SelectItem>
+                  <SelectItem value="STARTS_FROM">Başlangıç fiyatı</SelectItem>
                   <SelectItem value="CONSULTATION_REQUIRED">
-                    Price on consultation
+                    Danışma ücreti
                   </SelectItem>
                   <SelectItem value="FREE_CONSULTATION">
-                    Free consultation
+                    Ücretsiz danışma
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Fiyat (₺)</Label>
               <Input
                 id="price"
                 name="price"
@@ -197,7 +197,7 @@ function ServiceForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sortOrder">Sort order</Label>
+              <Label htmlFor="sortOrder">Sıra</Label>
               <Input
                 id="sortOrder"
                 name="sortOrder"
@@ -216,19 +216,19 @@ function ServiceForm({
               defaultChecked={service?.isActive ?? true}
               className="size-4 rounded border-input"
             />
-            <Label htmlFor="isActive">Active</Label>
+            <Label htmlFor="isActive">Aktif</Label>
           </div>
 
           <div className="flex gap-2 pt-2">
             <Button type="submit" disabled={isPending}>
               {isPending
-                ? "Saving..."
+                ? "Kaydediliyor..."
                 : isEdit
-                  ? "Update Service"
-                  : "Add Service"}
+                  ? "Hizmeti Güncelle"
+                  : "Hizmet Ekle"}
             </Button>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              İptal
             </Button>
           </div>
         </form>
@@ -262,7 +262,7 @@ function ServiceCard({
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium">{service.name}</p>
             <Badge variant={service.isActive ? "pink" : "secondary"}>
-              {service.isActive ? "Active" : "Inactive"}
+              {service.isActive ? "Aktif" : "Pasif"}
             </Badge>
           </div>
           {service.description && (
@@ -288,11 +288,11 @@ function ServiceCard({
             size="sm"
             onClick={handleToggle}
             disabled={toggling}
-            title={service.isActive ? "Deactivate" : "Activate"}
+            title={service.isActive ? "Devre dışı bırak" : "Etkinleştir"}
           >
             <Power className="size-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onEdit} title="Edit">
+          <Button variant="ghost" size="sm" onClick={onEdit} title="Düzenle">
             <Pencil className="size-4" />
           </Button>
         </div>
@@ -331,13 +331,13 @@ export function ServiceManager({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Services"
-        description="Manage your business services"
+        title="Hizmetler"
+        description="İşletmenizin hizmetlerini yönetin"
         action={
           !showForm ? (
             <Button onClick={handleAdd} className="gap-1.5">
               <Plus className="size-4" />
-              Add Service
+              Hizmet Ekle
             </Button>
           ) : undefined
         }
@@ -350,9 +350,9 @@ export function ServiceManager({
       {initialServices.length === 0 && !showForm ? (
         <EmptyState
           icon={Scissors}
-          headline="No services yet"
-          description="Add your first service to start accepting bookings."
-          action={{ label: "Add Service", onClick: handleAdd }}
+          headline="Henüz hizmet yok"
+          description="Randevu almaya başlamak için ilk hizmetinizi ekleyin."
+          action={{ label: "Hizmet Ekle", onClick: handleAdd }}
           surface="pink"
         />
       ) : (

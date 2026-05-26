@@ -33,7 +33,7 @@ export function AppointmentNoteDialog({
     startTransition(async () => {
       const result = await updateBusinessNote(appointmentId, note);
       if (!result.success) {
-        setError(result.message ?? "Something went wrong.");
+        setError(result.message ?? "Bir hata oluştu.");
       } else {
         setOpen(false);
       }
@@ -51,26 +51,26 @@ export function AppointmentNoteDialog({
         }
       >
         <MessageSquare className="size-4" />
-        {currentNote ? "Edit note" : "Add note"}
+        {currentNote ? "Notu düzenle" : "Not ekle"}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Business note</DialogTitle>
+          <DialogTitle>İşletme notu</DialogTitle>
           <DialogDescription>
-            Add an internal note visible to you and the customer.
+            Size ve müşteriye görünür dahili not ekleyin.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="business-note">Note</Label>
+          <Label htmlFor="business-note">Not</Label>
           <Textarea
             id="business-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={500}
-            placeholder="Add a note..."
+            placeholder="Not ekle..."
           />
           <p className="text-xs text-muted-foreground">
-            {note.length}/500 characters
+            {note.length}/500 karakter
           </p>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -80,16 +80,16 @@ export function AppointmentNoteDialog({
             onClick={() => setOpen(false)}
             disabled={isPending}
           >
-            Cancel
+            İptal
           </Button>
           <Button onClick={handleSave} disabled={isPending}>
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving...
+                Kaydediliyor...
               </>
             ) : (
-              "Save note"
+              "Notu kaydet"
             )}
           </Button>
         </DialogFooter>

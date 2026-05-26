@@ -59,18 +59,18 @@ export function AppointmentActions({
         render={<Button variant="ghost" size="icon" />}
       >
         <MoreHorizontal className="size-4" />
-        <span className="sr-only">Actions</span>
+        <span className="sr-only">İşlemler</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {status === "PENDING" && (
           <>
             <DropdownMenuItem onClick={() => runAction(confirmAppointment)}>
               <Check className="size-4" />
-              Confirm
+              Onayla
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => runAction(rejectAppointment)}>
               <X className="size-4" />
-              Reject
+              Reddet
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>
@@ -80,17 +80,17 @@ export function AppointmentActions({
           <>
             <DropdownMenuItem onClick={() => runAction(completeAppointment)}>
               <CheckCircle className="size-4" />
-              Mark completed
+              Tamamlandı olarak işaretle
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => runAction(markNoShow)}>
               <UserX className="size-4" />
-              Mark no-show
+              Gelmedi olarak işaretle
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => runAction(cancelAppointmentByBusiness)}
             >
               <Ban className="size-4" />
-              Cancel
+              İptal et
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>

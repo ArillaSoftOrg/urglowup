@@ -30,13 +30,13 @@ export type HourData = {
 };
 
 const DAY_LABELS: Record<string, string> = {
-  MONDAY: "Monday",
-  TUESDAY: "Tuesday",
-  WEDNESDAY: "Wednesday",
-  THURSDAY: "Thursday",
-  FRIDAY: "Friday",
-  SATURDAY: "Saturday",
-  SUNDAY: "Sunday",
+  MONDAY: "Pazartesi",
+  TUESDAY: "Salı",
+  WEDNESDAY: "Çarşamba",
+  THURSDAY: "Perşembe",
+  FRIDAY: "Cuma",
+  SATURDAY: "Cumartesi",
+  SUNDAY: "Pazar",
 };
 
 const SLOT_OPTIONS = [
@@ -75,9 +75,9 @@ export function HoursManager({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Working Hours</h1>
+        <h1 className="text-2xl font-bold tracking-[-0.02em]">Çalışma Saatleri</h1>
         <p className="text-sm text-muted-foreground">
-          Set your weekly business hours
+          Haftalık çalışma saatlerinizi belirleyin
         </p>
       </div>
 
@@ -99,10 +99,10 @@ export function HoursManager({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Clock className="size-5" />
-              Weekly Schedule
+              Haftalık Program
             </CardTitle>
             <CardDescription>
-              Toggle days open or closed and set operating hours
+              Günleri açık/kapalı ayarlayın ve çalışma saatlerini belirleyin
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -132,51 +132,50 @@ export function HoursManager({
                       </span>
                       {!isOpen && (
                         <Badge variant="secondary" className="text-[10px]">
-                          Closed
+                          Kapalı
                         </Badge>
                       )}
                     </div>
 
                     {/* Time inputs */}
                     {isOpen && (
-                      <div className="flex flex-1 flex-wrap items-center gap-3">
+                      <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
                         <div className="flex items-center gap-2">
                           <Label
                             htmlFor={`${day}_open`}
-                            className="text-xs text-muted-foreground"
+                            className="w-14 text-xs text-muted-foreground sm:w-auto"
                           >
-                            Open
+                            Açılış
                           </Label>
                           <Input
                             id={`${day}_open`}
                             name={`${day}_openTime`}
                             type="time"
                             defaultValue={hour.openTime ?? "09:00"}
-                            className="w-28"
+                            className="w-full sm:w-28"
                           />
                         </div>
-                        <span className="text-muted-foreground">-</span>
                         <div className="flex items-center gap-2">
                           <Label
                             htmlFor={`${day}_close`}
-                            className="text-xs text-muted-foreground"
+                            className="w-14 text-xs text-muted-foreground sm:w-auto"
                           >
-                            Close
+                            Kapanış
                           </Label>
                           <Input
                             id={`${day}_close`}
                             name={`${day}_closeTime`}
                             type="time"
                             defaultValue={hour.closeTime ?? "18:00"}
-                            className="w-28"
+                            className="w-full sm:w-28"
                           />
                         </div>
                         <div className="flex items-center gap-2">
                           <Label
                             htmlFor={`${day}_slot`}
-                            className="text-xs text-muted-foreground whitespace-nowrap"
+                            className="w-14 text-xs text-muted-foreground whitespace-nowrap sm:w-auto"
                           >
-                            Slot
+                            Aralık
                           </Label>
                           <select
                             id={`${day}_slot`}
@@ -215,7 +214,7 @@ export function HoursManager({
 
             <div className="pt-4">
               <Button type="submit" disabled={isPending} className="gap-1.5">
-                {isPending ? "Saving..." : "Save Working Hours"}
+                {isPending ? "Kaydediliyor..." : "Çalışma Saatlerini Kaydet"}
               </Button>
             </div>
           </CardContent>

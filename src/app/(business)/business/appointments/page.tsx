@@ -3,7 +3,7 @@ import { getBusinessAppointments } from "@/lib/queries/appointments";
 import { BusinessAppointmentList } from "@/components/business/appointment-list";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 
-export const metadata = { title: "Appointments" };
+export const metadata = { title: "Randevular" };
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
@@ -18,8 +18,8 @@ export default async function AppointmentsPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Appointments"
-        description="Manage appointment requests from customers."
+        title="Randevular"
+        description="Müşterilerden gelen randevu taleplerini yönetin."
       />
       <BusinessAppointmentList appointments={appointments} defaultTab={tab} />
     </div>

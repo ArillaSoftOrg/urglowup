@@ -88,11 +88,11 @@ export function HolidaySuggestions({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <CalendarCheck className="size-5" />
-          Public Holiday Suggestions
+          Resmi Tatil Önerileri
         </CardTitle>
         <CardDescription>
-          Only applied holidays block booking slots. Suggested holidays have no
-          effect.
+          Yalnızca uygulanan tatiller randevu slotlarını kapatır. Önerilen
+          tatiller rezervasyonu etkilemez.
         </CardDescription>
       </CardHeader>
 
@@ -100,9 +100,9 @@ export function HolidaySuggestions({
         {/* Pending suggestions */}
         {pending.length > 0 && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-medium text-muted-foreground">
-                Suggestions for {year}
+                {year} Yılı Tatil Önerileri
               </p>
               <div className="flex gap-2">
                 <Button
@@ -111,7 +111,7 @@ export function HolidaySuggestions({
                   onClick={handleApplyAll}
                   disabled={isPending}
                 >
-                  Apply all
+                  Tümünü uygula
                 </Button>
                 <Button
                   variant="ghost"
@@ -119,7 +119,7 @@ export function HolidaySuggestions({
                   onClick={handleDismissAll}
                   disabled={isPending}
                 >
-                  Dismiss all
+                  Tümünü yoksay
                 </Button>
               </div>
             </div>
@@ -128,7 +128,7 @@ export function HolidaySuggestions({
               {pending.map((h) => (
                 <div
                   key={h.id}
-                  className="flex items-center justify-between rounded-xl border border-border/50 bg-surface-cream px-4 py-3"
+                  className="flex flex-col gap-2 rounded-xl border border-border/50 bg-surface-cream px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
                     <span className="text-sm font-medium">
@@ -146,7 +146,7 @@ export function HolidaySuggestions({
                       onClick={() => handleApply(h.id)}
                       disabled={isPending}
                     >
-                      Apply closure
+                      Kapat
                     </Button>
                     <Button
                       variant="ghost"
@@ -167,16 +167,16 @@ export function HolidaySuggestions({
         {applied.length > 0 && (
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">
-              Applied closures
+              Uygulanan kapanışlar
             </p>
             <div className="space-y-2">
               {applied.map((h) => (
                 <div
                   key={h.id}
-                  className="flex items-center justify-between rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3"
+                  className="flex flex-col gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <CalendarX className="size-4 text-destructive" />
+                    <CalendarX className="size-4 shrink-0 text-destructive" />
                     <div>
                       <span className="text-sm font-medium">
                         {formatDate(h.date)}
@@ -187,7 +187,7 @@ export function HolidaySuggestions({
                       </span>
                     </div>
                     <Badge variant="destructive" className="text-[10px]">
-                      Closed
+                      Kapalı
                     </Badge>
                   </div>
                   <Button
@@ -195,9 +195,9 @@ export function HolidaySuggestions({
                     size="sm"
                     onClick={() => handleRemove(h.id)}
                     disabled={isPending}
-                    className="text-destructive hover:text-destructive"
+                    className="shrink-0 text-destructive hover:text-destructive"
                   >
-                    Remove
+                    Kaldır
                   </Button>
                 </div>
               ))}
@@ -207,7 +207,7 @@ export function HolidaySuggestions({
 
         {pending.length === 0 && applied.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            No holidays to display for {year}.
+            {year} için gösterilecek tatil günü yok.
           </p>
         )}
       </CardContent>
