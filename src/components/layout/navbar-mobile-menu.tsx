@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, Sparkles } from "lucide-react";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { LocaleSwitcher } from "./locale-switcher";
 import {
@@ -11,12 +13,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 interface NavbarMobileMenuProps {
   navLink: { label: string; href: string };
   exploreHref: string;
   exploreLabel: string;
   openMenuLabel: string;
+  signInLabel: string;
+  signUpLabel: string;
   isLoggedIn?: boolean;
 }
 
@@ -25,9 +30,21 @@ export function NavbarMobileMenu({
   exploreHref,
   exploreLabel,
   openMenuLabel,
+  signInLabel,
+  signUpLabel,
   isLoggedIn = false,
 }: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  function isActive(href: string) {
+    return pathname === href || pathname.startsWith(href + "/");
+  }
+
+  const links = [
+    { label: exploreLabel, href: exploreHref },
+    { label: navLink.label, href: navLink.href },
+  ];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -38,31 +55,52 @@ export function NavbarMobileMenu({
       >
         <Menu className="size-5" />
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0">
-        <div className="border-b p-4">
+      <SheetContent side="left" className="w-72 p-0">
+        <div className="flex items-center gap-2 border-b p-4">
+          <span className="flex size-6 items-center justify-center rounded-md bg-brand-pink/20">
+            <Sparkles className="size-3.5 text-brand-pink-foreground" />
+          </span>
           <SheetTitle className="text-base font-bold tracking-tight">
             UrGlowUp
           </SheetTitle>
         </div>
-        <nav className="flex flex-col gap-1 p-3">
-          <Link
-            href={exploreHref}
-            onClick={() => setOpen(false)}
-            className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            {exploreLabel}
-          </Link>
-          <Link
-            href={navLink.href}
-            onClick={() => setOpen(false)}
-            className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            {navLink.label}
-          </Link>
+
+        <nav className="flex flex-col gap-0.5 p-3">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className={cn(
+                "rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive(link.href)
+                  ? "bg-brand-pink/10 text-brand-pink-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
-        <div className="border-t px-3 pt-3 pb-2">
+
+        <div className="border-t px-4 py-3">
           <LocaleSwitcher isLoggedIn={isLoggedIn} />
         </div>
+
+        {!isLoggedIn && (
+          <div className="border-t p-3 space-y-1.5">
+            <SignUpButton>
+              <Button variant="brand" size="sm" className="w-full">
+                {signUpLabel}
+              </Button>
+            </SignUpButton>
+            <SignInButton>
+              <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
+                {signInLabel}
+              </Button>
+            </SignInButton>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

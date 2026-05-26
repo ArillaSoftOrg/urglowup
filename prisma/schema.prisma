@@ -151,6 +151,12 @@ enum DayOfWeek {
   SUNDAY
 }
 
+enum HolidaySuggestionState {
+  SUGGESTED
+  APPLIED
+  DISMISSED
+}
+
 // ─── Models ──────────────────────────────────────────────────────
 
 model User {
@@ -217,6 +223,7 @@ model Business {
   externalMediaCache  ExternalMediaCache[]
   ratingStats         BusinessRatingStats?
   posts               Post[]
+  holidaySuggestions  BusinessHolidaySuggestion[]
 
   @@index([city])
   @@index([status])
@@ -276,6 +283,33 @@ model BusinessHour {
   slotIntervalMinutes Int       @default(30)
 
   @@unique([businessId, dayOfWeek])
+}
+
+model PublicHoliday {
+  id      String   @id @default(cuid())
+  country String   @default("TR")
+  date    DateTime @db.Date
+  name    String
+  year    Int
+
+  suggestions BusinessHolidaySuggestion[]
+
+  @@unique([country, date])
+  @@index([country, year])
+}
+
+model BusinessHolidaySuggestion {
+  id         String                 @id @default(cuid())
+  businessId String
+  business   Business               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  holidayId  String
+  holiday    PublicHoliday          @relation(fields: [holidayId], references: [id])
+  state      HolidaySuggestionState @default(SUGGESTED)
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  @@unique([businessId, holidayId])
+  @@index([businessId, state])
 }
 
 model BusinessMedia {

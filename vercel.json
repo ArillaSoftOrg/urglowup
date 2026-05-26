@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/internal/holiday-sync",
+      "schedule": "0 1 * * *"
+    },
+    {
       "path": "/api/internal/sync",
       "schedule": "0 3 * * *"
     },

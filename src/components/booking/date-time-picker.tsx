@@ -54,6 +54,12 @@ export function DateTimePicker({
     }
   }
 
+  const appliedHolidayDates = new Set(
+    business.holidaySuggestions.map((s) =>
+      s.holiday.date.toISOString().slice(0, 10)
+    )
+  );
+
   const now = nowInBusinessTimezone();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const maxDate = new Date(today);
@@ -77,6 +83,8 @@ export function DateTimePicker({
     if (date < today) return true;
     if (date > maxDate) return true;
     if (closedDays.has(date.getDay())) return true;
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    if (appliedHolidayDates.has(dateStr)) return true;
     return false;
   }
 

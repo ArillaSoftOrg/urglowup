@@ -79,6 +79,10 @@ export async function getBusinessForBooking(slug: string) {
         },
       },
       hours: true,
+      holidaySuggestions: {
+        where: { state: "APPLIED" },
+        select: { holiday: { select: { date: true } } },
+      },
     },
   });
 }

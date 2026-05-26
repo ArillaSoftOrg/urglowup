@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Upload, Loader2, X, Video, Image as ImageIcon, Plus, AlertCircle } from "lucide-react";
+import { Upload, Loader2, X, Video, Image as ImageIcon, Plus, AlertCircle, Info, Scissors, Sparkles, BookOpen, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -50,12 +50,26 @@ const MAX_STYLE_TAGS = 5;
 
 type ContentType = "REAL_WORK" | "INSPIRATION" | "EDUCATIONAL" | "PROMOTION";
 
-const CONTENT_TYPES: Array<{ value: ContentType; label: string; description: string }> = [
-  { value: "REAL_WORK", label: "Gerçek Çalışma", description: "Yaptığınız bir çalışma veya sonuç" },
-  { value: "INSPIRATION", label: "İlham", description: "Referans veya mood board" },
-  { value: "EDUCATIONAL", label: "Eğitim / İpucu", description: "Nasıl yapılır veya bilgi paylaşımı" },
-  { value: "PROMOTION", label: "Kampanya / Duyuru", description: "Fiyat, indirim veya hizmet duyurusu" },
+const CONTENT_TYPES: Array<{ value: ContentType; label: string; description: string; icon: React.ElementType }> = [
+  { value: "REAL_WORK",    label: "Gerçek Çalışma",   description: "Yaptığınız bir çalışma veya sonuç",     icon: Scissors  },
+  { value: "INSPIRATION",  label: "İlham",             description: "Referans veya mood board",              icon: Sparkles  },
+  { value: "EDUCATIONAL",  label: "Eğitim / İpucu",    description: "Nasıl yapılır veya bilgi paylaşımı",    icon: BookOpen  },
+  { value: "PROMOTION",    label: "Kampanya / Duyuru", description: "Fiyat, indirim veya hizmet duyurusu",   icon: Megaphone },
 ];
+
+const CONTENT_TYPE_HINTS: Partial<Record<ContentType, { variant: "info" | "warning"; text: string }>> = {
+  PROMOTION:   { variant: "warning", text: "Kampanya gönderileri İlham akışında görünmez. İşletme profilinizde ve duyuru alanlarında gösterilir." },
+  REAL_WORK:   { variant: "info",    text: "Gerçek sonuçlarınızı fotoğraf veya video ile destekleyin — müşteriler bunu çok değerli bulur." },
+  EDUCATIONAL: { variant: "info",    text: "Faydalı bir bakım ipucu veya adım adım rehber yazın. Eğitici içerikler en çok etkileşimi alır." },
+};
+
+const DESCRIPTION_PLACEHOLDERS: Record<ContentType | "", string> = {
+  "":           "Hizmet, ilham veya detaylar hakkında bir şeyler yazın...",
+  REAL_WORK:    "Bu çalışmayı anlatın: ne uygulandı, ne kadar sürdü, sonuç nasıldı?",
+  INSPIRATION:  "Neden ilham verici? Hangi tarzı veya duyguyu yansıtıyor?",
+  EDUCATIONAL:  "Adım adım açıklayın: hangi ürünleri veya teknikleri kullandınız?",
+  PROMOTION:    "Kampanyanın detaylarını paylaşın: ne, ne zaman, kim için?",
+};
 
 export function PostCreateDialog({ services, categories, styleTags }: PostCreateDialogProps) {
   const [open, setOpen] = useState(false);
@@ -236,6 +250,9 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
     });
   }
 
+  const hint = contentType ? CONTENT_TYPE_HINTS[contentType] : undefined;
+  const isSubmitBlocked = !contentType || (media.length === 0 && !description.trim());
+
   return (
     <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <SheetTrigger
@@ -346,29 +363,38 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
           <div className="space-y-2">
             <Label>Gönderi türü <span className="text-destructive">*</span></Label>
             <div className="grid grid-cols-2 gap-2">
-              {CONTENT_TYPES.map((ct) => (
-                <button
-                  key={ct.value}
-                  type="button"
-                  onClick={() => setContentType(ct.value)}
-                  className={`flex flex-col items-start rounded-lg border p-2.5 text-left text-xs transition-colors ${
-                    contentType === ct.value
-                      ? "border-primary bg-primary/5 text-foreground"
-                      : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                  }`}
-                >
-                  <span className="font-medium">{ct.label}</span>
-                  <span className="mt-0.5 text-[11px] leading-tight opacity-75">{ct.description}</span>
-                </button>
-              ))}
+              {CONTENT_TYPES.map((ct) => {
+                const selected = contentType === ct.value;
+                return (
+                  <button
+                    key={ct.value}
+                    type="button"
+                    onClick={() => setContentType(ct.value)}
+                    className={`flex flex-col items-start rounded-lg border p-2.5 text-left text-xs transition-colors ${
+                      selected
+                        ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                    }`}
+                  >
+                    <ct.icon className={`mb-1 size-4 ${selected ? "text-primary" : ""}`} />
+                    <span className="font-medium">{ct.label}</span>
+                    <span className="mt-0.5 text-[11px] leading-tight opacity-75">{ct.description}</span>
+                  </button>
+                );
+              })}
             </div>
-            {contentType === "PROMOTION" && (
-              <div className="flex items-start gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950">
-                <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Bu gönderi İlham akışında görünmeyecek, yalnızca profilinizde gösterilecektir.
-                </p>
-              </div>
+            {hint && (
+              hint.variant === "warning" ? (
+                <div className="flex items-start gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950">
+                  <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <p className="text-xs text-amber-700 dark:text-amber-300">{hint.text}</p>
+                </div>
+              ) : (
+                <div className="flex items-start gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
+                  <Info className="mt-0.5 size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                  <p className="text-xs text-blue-700 dark:text-blue-300">{hint.text}</p>
+                </div>
+              )
             )}
           </div>
 
@@ -379,7 +405,7 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Hizmet, ilham veya detaylar hakkında bir şeyler yazın..."
+              placeholder={DESCRIPTION_PLACEHOLDERS[contentType]}
               rows={3}
               maxLength={2000}
             />
@@ -432,6 +458,9 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
                   {selectedTagIds.length}/{MAX_STYLE_TAGS}
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Doğru etiketler içeriğinizin arayanlara ulaşmasını sağlar.
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {styleTags.map((tag) => {
                   const selected = selectedTagIds.includes(tag.id);
@@ -461,7 +490,14 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
         </div>
 
         <div className="border-t p-4">
-          <Button onClick={handleSubmit} disabled={uploading || (media.length === 0 && !description.trim()) || !contentType} className="w-full">
+          {isSubmitBlocked && (
+            <p className="mb-2 text-center text-xs text-muted-foreground">
+              {!contentType
+                ? "Gönderi türünü seçin."
+                : "Açıklama veya en az bir görsel/video ekleyin."}
+            </p>
+          )}
+          <Button onClick={handleSubmit} disabled={uploading || isSubmitBlocked} className="w-full">
             Paylaş
           </Button>
         </div>

@@ -80,6 +80,16 @@ export async function getAvailableSlots(
   maxDate.setDate(maxDate.getDate() + MAX_ADVANCE_DAYS);
   if (requestedDate > maxDate) return [];
 
+  // Check for an applied holiday closure on this specific date (precedence #2)
+  const appliedHoliday = await db.businessHolidaySuggestion.findFirst({
+    where: {
+      businessId,
+      state: "APPLIED",
+      holiday: { date: new Date(dateString) },
+    },
+  });
+  if (appliedHoliday) return [];
+
   // Get business hour for this day of week
   const dayOfWeek = getDayOfWeek(dateString);
   const [hour, service] = await Promise.all([
