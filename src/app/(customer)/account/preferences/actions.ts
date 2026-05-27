@@ -3,8 +3,9 @@
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getUserPreferences } from "@/lib/preferences";
-import { ConsentAction, ConsentCategory } from "@/generated/prisma/enums";
+import { ConsentAction, ConsentCategory, Theme } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 
 export type PreferencesFormState = {
   success: boolean;
@@ -139,10 +140,76 @@ export async function revokeConsent(
   return { success: true };
 }
 
+// ── Single notification preference toggle ─────────────────────────
+
+type NotificationField =
+  | "emailTransactional"
+  | "whatsappTransactional"
+  | "emailMarketing"
+  | "whatsappMarketing";
+
+export async function updateSingleNotificationPreference(
+  field: NotificationField,
+  value: boolean
+): Promise<PreferencesFormState> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, message: "Not authenticated" };
+
+  if ((field === "emailMarketing" || field === "whatsappMarketing") && value) {
+    const prefs = await getUserPreferences(user.id);
+    const marketingConsentActive =
+      prefs.marketingConsentAt !== null &&
+      (prefs.marketingRevokedAt === null ||
+        prefs.marketingConsentAt > prefs.marketingRevokedAt);
+    if (!marketingConsentActive)
+      return { success: false, message: "Pazarlama onayı gereklidir." };
+  }
+
+  await db.userPreferences.upsert({
+    where: { userId: user.id },
+    create: { userId: user.id, [field]: value },
+    update: { [field]: value },
+  });
+
+  revalidatePath("/account/settings");
+  return { success: true };
+}
+
 // ── Get preferences (for server components) ───────────────────────
 
 export async function getMyPreferences() {
   const user = await getCurrentUser();
   if (!user) return null;
   return getUserPreferences(user.id);
+}
+
+// ── Theme Preference ──────────────────────────────────────────────
+
+const VALID_THEMES = new Set<string>(["LIGHT", "DARK", "SYSTEM"]);
+
+export async function updateThemePreference(
+  theme: Theme
+): Promise<PreferencesFormState> {
+  if (!VALID_THEMES.has(theme)) {
+    return { success: false, message: "Invalid theme" };
+  }
+
+  const jar = await cookies();
+  jar.set("ugl_theme", theme, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+
+  const user = await getCurrentUser();
+  if (user) {
+    await db.userPreferences.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, theme },
+      update: { theme },
+    });
+    revalidatePath("/account/settings");
+  }
+
+  return { success: true, message: "Tema güncellendi." };
 }

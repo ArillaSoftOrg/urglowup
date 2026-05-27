@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-const INTL_LOCALES = ["en", "de", "ru", "es"] as const;
+const INTL_LOCALES = ["en", "de", "ru", "es", "bg"] as const;
 export type IntlLocale = (typeof INTL_LOCALES)[number];
 
 export function generateStaticParams() {

@@ -2,133 +2,119 @@
 
 ## Pre-Deployment
 
-### Environment Variables (Vercel Dashboard → Settings → Environment Variables)
+### Operational Commands
+
+- `npm run release:check`
+  Runs env validation, lint, typecheck, and a production build before deployment.
+- `npm run smoke:deploy -- https://yourdomain.com`
+  Runs a lightweight post-deploy smoke check against the live URL.
+
+### Environment Variables
 
 | Variable | Required | Notes |
 |----------|----------|-------|
 | `DATABASE_URL` | Yes | Neon connection pooler URL |
-| `DIRECT_URL` | Yes | Neon direct URL (for migrations) |
-| `CLERK_SECRET_KEY` | Yes | From Clerk Dashboard → API Keys |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | From Clerk Dashboard → API Keys |
-| `CLERK_WEBHOOK_SECRET` | Yes | From Clerk Dashboard → Webhooks → your endpoint |
+| `DIRECT_URL` | Yes | Neon direct URL for migrations |
+| `NEXT_PUBLIC_APP_URL` | Yes | Public app origin, e.g. `https://urglowup.vercel.app` |
+| `BETTER_AUTH_URL` | Recommended | Usually same as `NEXT_PUBLIC_APP_URL` in production |
+| `BETTER_AUTH_SECRET` | Yes | Long random secret, minimum 32 chars |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | Optional | Comma-separated extra origins for preview/admin aliases |
 | `CLOUDINARY_API_KEY` | Yes | From Cloudinary Console |
 | `CLOUDINARY_API_SECRET` | Yes | From Cloudinary Console |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Yes | From Cloudinary Console |
-| `NEXT_PUBLIC_APP_URL` | Yes | `https://urglowup.vercel.app` |
-| `RESEND_API_KEY` | **Yes** | From Resend Dashboard → API Keys. **Never use `NEXT_PUBLIC_` prefix — server-side only.** |
-| `EMAIL_FROM` | **Yes** | Sender address, e.g. `UrGlowUp <notifications@urglowup.com>`. Domain must be verified in Resend. |
-| `ADMIN_EMAILS` | Recommended | Comma-separated emails that get ADMIN role on first login |
+| `RESEND_API_KEY` | Yes | From Resend Dashboard |
+| `EMAIL_FROM` | Yes | Verified sender address in Resend |
+| `EMAIL_REPLY_TO` | Optional | Support inbox for user replies |
+| `ADMIN_EMAILS` | Recommended | Comma-separated emails promoted to `ADMIN` on login |
+| `GOOGLE_CLIENT_ID` | Optional | Required only for Google Business Profile integration |
+| `GOOGLE_CLIENT_SECRET` | Optional | Required only for Google Business Profile integration |
+| `GOOGLE_REDIRECT_URI` | Optional | Must match your Google OAuth app |
+| `GOOGLE_BUSINESS_PROFILE_SCOPES` | Optional | Usually `https://www.googleapis.com/auth/business.manage` |
+| `OAUTH_TOKEN_ENCRYPTION_KEY` | Recommended | 64-char hex key for encrypted external tokens |
+
+### Better Auth
+
+- [ ] `BETTER_AUTH_SECRET` generated securely
+- [ ] `BETTER_AUTH_URL` set to the production origin if needed
+- [ ] `BETTER_AUTH_TRUSTED_ORIGINS` includes preview/admin aliases if they are allowed to initiate auth flows
+- [ ] Better Auth cookies are issued with the `urglowup` prefix in production
+- [ ] `/api/auth/[...all]` route is deployed and reachable
+- [ ] Register flow works
+- [ ] Login flow works
+- [ ] Forgot-password flow sends reset email
+- [ ] Email verification flow sends verification email
 
 ### Resend Email Setup
 
-- [ ] Account created at resend.com
-- [ ] API key created with **Send** permission (not `NEXT_PUBLIC_` — server-side only)
-- [ ] Sending domain verified in Resend Dashboard → Domains (or use `onboarding@resend.dev` for testing)
-- [ ] `EMAIL_FROM` matches the verified domain (e.g. `UrGlowUp <notifications@urglowup.com>`)
-- [ ] On free plan: monitor daily send limit (100/day). Upgrade before launch.
-
-### Clerk Webhook Setup
-
-- [ ] Webhook endpoint URL set to `https://urglowup.vercel.app/api/webhooks/clerk`
-- [ ] `CLERK_WEBHOOK_SECRET` in Vercel matches the signing secret shown in Clerk Dashboard → Webhooks
-- [ ] Events enabled: `user.created`, `user.updated`, `user.deleted`
-- [ ] Webhook is active (not paused)
+- [ ] Sending domain verified in Resend
+- [ ] `EMAIL_FROM` uses the verified domain
+- [ ] `EMAIL_REPLY_TO` routes to a monitored inbox if user replies should be handled
+- [ ] Verification email is delivered
+- [ ] Password reset email is delivered
 
 ### Cloudinary
 
-- [ ] Signed uploads only — no unsigned upload presets used
-- [ ] Upload folder permissions are set (the app creates folders per business)
+- [ ] Signed uploads only
+- [ ] Upload folder rules are correct
 
 ### Database
 
-- [ ] `DATABASE_URL` uses the **connection pooler** URL from Neon (not the direct URL)
-- [ ] `DIRECT_URL` uses the direct connection URL (used by Prisma for migrations)
-- [ ] All migrations applied: `npx prisma migrate deploy`
+- [ ] `npx prisma migrate deploy` applied successfully
+- [ ] Better Auth tables exist: `Session`, `Account`, `Verification`, `RateLimit`
+- [ ] Latest schema includes `User.name` and `User.emailVerified`
 
 ---
 
 ## Post-Deployment Verification
 
-Run these checks after every production deployment:
-
-- [ ] `GET /api/health` returns `{ "status": "ok" }` with HTTP 200
+- [ ] `npm run smoke:deploy -- https://yourdomain.com` passes
+- [ ] `GET /api/health` returns HTTP 200
 - [ ] Home page loads without errors
-- [ ] Register a new customer account → appears in Admin → Users
-- [ ] Admin email (from `ADMIN_EMAILS`) can access `/admin` after logging in
-- [ ] Business owner can complete onboarding flow
-- [ ] Customer can browse to `/b/[slug]` and request an appointment
-- [ ] Appointment appears in the business dashboard under Appointments → Pending
-- [ ] Business owner can confirm or reject the appointment
-- [ ] Media upload works (signed upload to Cloudinary)
+- [ ] Customer can register
+- [ ] Customer receives verification email
+- [ ] Customer can login after verification
+- [ ] Forgot-password email arrives and reset flow completes
+- [ ] Admin email from `ADMIN_EMAILS` can access `/admin`
+- [ ] Business owner can complete onboarding
+- [ ] Customer can request an appointment
+- [ ] Appointment appears in business dashboard
+- [ ] Media upload works
 
 ---
 
 ## Admin Bootstrap
 
-To grant admin access without touching the database:
+1. Add the email to `ADMIN_EMAILS`
+2. Log in with that account
+3. The account is promoted to `ADMIN` on login
+4. Visit `/admin`
 
-1. Add the email address to `ADMIN_EMAILS` in Vercel environment variables
-2. Redeploy (or wait for next deployment)
-3. The user logs out and logs back in → role is automatically promoted to ADMIN
-4. Navigate to `/admin` — access is granted
+Notes:
 
-**Notes:**
 - Multiple emails: `ADMIN_EMAILS=alice@example.com,bob@example.com`
-- Existing users are promoted on next login — no re-registration needed
-- Removing an email from `ADMIN_EMAILS` does NOT demote the user (safe to remove without side effects)
-- To manually revoke admin, update the `role` field in the database directly
-
----
-
-## Ongoing Operations
-
-### Adding a New Business Category
-
-Admin panel → Categories → Add Category
-
-### Approving a Business
-
-1. Business owner completes onboarding → status becomes `PENDING_APPROVAL`
-2. Admin panel → Businesses → find the business → change status to `ACTIVE_PRIVATE`
-3. Business page at `/b/[slug]` is now publicly accessible
-
-### Promoting to Marketplace
-
-Admin panel → Businesses → find the business → change status to `ACTIVE_MARKETPLACE`
-
-### Suspending a Business
-
-Admin panel → Businesses → find the business → change status to `SUSPENDED`
-The public page returns 404 while suspended.
-
-### Monitoring Webhook Delivery
-
-Clerk Dashboard → Webhooks → your endpoint → Recent Deliveries
-
-Failed deliveries show the response status. A 500 means the DB was temporarily unavailable (svix will retry). A 400 means a signature mismatch (check `CLERK_WEBHOOK_SECRET`).
+- Removing an email from `ADMIN_EMAILS` does not demote an already-promoted user
 
 ---
 
 ## Incident Response
 
-### Users can't log in / protected routes redirect to homepage
+### Users cannot log in
 
-1. Check Clerk Dashboard → user exists and is active
-2. Check `GET /api/health` — is the DB reachable?
-3. Check Vercel Function logs for errors in `getCurrentUser()`
-4. If DB is fine but user has no DB record: the fallback sync in `getCurrentUser()` should create it automatically on next login attempt
+1. Confirm `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`
+2. Confirm `BETTER_AUTH_TRUSTED_ORIGINS` covers the active frontend origin
+3. Confirm `DATABASE_URL` is reachable
+4. Check app logs for Better Auth errors
+5. Verify `Session` and `Account` tables exist
 
-### Admin panel inaccessible (redirect to homepage)
+### Password reset emails are not arriving
 
-1. Confirm the user's email is in `ADMIN_EMAILS` env var
-2. User must log out and log back in to trigger promotion
-3. If `ADMIN_EMAILS` is not set, manually update DB: `UPDATE "User" SET role = 'ADMIN' WHERE email = 'your@email.com'`
+1. Check `RESEND_API_KEY`
+2. Check `EMAIL_FROM`
+3. Confirm sending domain is verified
+4. Check Resend logs for bounces or rejections
 
-### Webhook delivery failing (400 errors in Clerk)
+### Verification emails are not arriving
 
-- `CLERK_WEBHOOK_SECRET` mismatch — regenerate the secret in Clerk Dashboard, update in Vercel, redeploy
-
-### Webhook delivery failing (500 errors in Clerk)
-
-- Transient DB issue — svix will retry automatically (up to 5 times over 24 hours)
-- Check Neon DB status and connection pooler health
+1. Check Resend setup
+2. Confirm `/api/auth/[...all]` is reachable
+3. Inspect application logs for Better Auth email errors

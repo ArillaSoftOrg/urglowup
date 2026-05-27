@@ -19,7 +19,7 @@ export function ExploreTabs({ activeTab }: ExploreTabsProps) {
   const searchParams = useSearchParams();
 
   function switchTab(tab: TabId) {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
     params.set("tab", tab);
     // Reset filters when switching tabs
     params.delete("q");

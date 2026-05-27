@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { ChevronRight } from "lucide-react";
 import { getAllStyleTags } from "@/lib/queries/style-tags";
 import { db } from "@/lib/db";
@@ -30,6 +31,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function LocaleStylesPage({ params }: PageProps) {
+  await connection();
+
   const { locale } = await params;
   const p = (path: string) => `/${locale}${path}`;
 

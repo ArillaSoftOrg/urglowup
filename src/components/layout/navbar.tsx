@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/auth";
 import { UserRole } from "@/generated/prisma/enums";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
@@ -66,17 +66,17 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
             <LocaleSwitcher isLoggedIn={!!user} />
           </div>
           {user ? (
-            <UserButton />
+            <Link href="/account" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+              Hesabım
+            </Link>
           ) : (
             <>
-              <SignInButton>
-                <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-                  {dict.nav.signIn}
-                </Button>
-              </SignInButton>
-              <SignUpButton>
-                <Button variant="brand" size="sm">{dict.nav.signUp}</Button>
-              </SignUpButton>
+              <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "hidden md:inline-flex")}>
+                {dict.nav.signIn}
+              </Link>
+              <Link href="/register" className={buttonVariants({ variant: "brand", size: "sm" })}>
+                {dict.nav.signUp}
+              </Link>
             </>
           )}
           <div className="md:hidden">

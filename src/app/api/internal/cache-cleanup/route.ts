@@ -19,6 +19,8 @@ import { INTERNAL_SECRET_HEADER, CACHE_CLEANUP_BATCH_SIZE } from "@/lib/constant
 import { expireReviews } from "@/lib/external/review-cache-service";
 import { expirePhotos } from "@/lib/external/media-cache-service";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Validates the x-internal-secret header using constant-time comparison.
  * Returns false if INTERNAL_API_SECRET is not configured — fail closed.

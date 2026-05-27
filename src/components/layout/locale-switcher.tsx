@@ -10,8 +10,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { setClientCookie } from "@/lib/cookies";
 
-const LOCALES = ["tr", "en", "de", "ru", "es"] as const;
+const LOCALES = ["tr", "en", "de", "ru", "es", "bg"] as const;
 type Locale = (typeof LOCALES)[number];
 
 const LABELS: Record<Locale, string> = {
@@ -20,6 +21,7 @@ const LABELS: Record<Locale, string> = {
   de: "Deutsch",
   ru: "Русский",
   es: "Español",
+  bg: "Български",
 };
 
 const LOCALE_CODES: Record<Locale, string> = {
@@ -28,6 +30,7 @@ const LOCALE_CODES: Record<Locale, string> = {
   de: "DE",
   ru: "RU",
   es: "ES",
+  bg: "BG",
 };
 
 function getLocalizedPath(
@@ -48,28 +51,66 @@ function getLocalizedPath(
 
 interface LocaleSwitcherProps {
   isLoggedIn?: boolean;
+  variant?: "navbar" | "settings";
+  savedLocale?: Locale;
 }
 
-export function LocaleSwitcher({ isLoggedIn = false }: LocaleSwitcherProps) {
-  const pathname = usePathname();
+export function LocaleSwitcher({
+  isLoggedIn = false,
+  variant = "navbar",
+  savedLocale,
+}: LocaleSwitcherProps) {
+  const pathname = usePathname() ?? "/";
   const router = useRouter();
-  const params = useParams();
+  const params = useParams() ?? {};
   const [, startTransition] = useTransition();
-  const currentLocale = (params.locale as Locale | undefined) ?? "tr";
+  const currentLocale =
+    savedLocale ?? (params.locale as Locale | undefined) ?? "tr";
 
   function switchLocale(target: Locale) {
-    const targetPath = getLocalizedPath(pathname, currentLocale, target);
+    if (variant === "settings") {
+      startTransition(async () => {
+        if (isLoggedIn) {
+          await updateLocalePreference(target);
+        } else {
+          setClientCookie("NEXT_LOCALE", target, 31536000);
+        }
+        router.refresh();
+      });
+      return;
+    }
 
+    const targetPath = getLocalizedPath(pathname, currentLocale, target);
     if (isLoggedIn) {
       startTransition(async () => {
         await updateLocalePreference(target);
         router.push(targetPath);
       });
     } else {
-      // eslint-disable-next-line react-hooks/immutability
-      document.cookie = `NEXT_LOCALE=${target}; path=/; max-age=31536000; SameSite=Lax`;
+      setClientCookie("NEXT_LOCALE", target, 31536000);
       router.push(targetPath);
     }
+  }
+
+  if (variant === "settings") {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {LOCALES.map((locale) => (
+          <button
+            key={locale}
+            onClick={() => switchLocale(locale)}
+            className={[
+              "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+              locale === currentLocale
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
+            ].join(" ")}
+          >
+            {LABELS[locale]}
+          </button>
+        ))}
+      </div>
+    );
   }
 
   return (

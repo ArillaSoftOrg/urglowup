@@ -168,8 +168,8 @@ export function FilterBar({
   showDistrict = false,
 }: FilterBarProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams() ?? new URLSearchParams();
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   // Derive current values from URL (source of truth)

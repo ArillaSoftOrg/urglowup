@@ -1,41 +1,27 @@
 /**
- * Google OAuth start route — initiates the OAuth 2.0 authorization flow.
- *
- * Route:   GET /api/integrations/google/start
- * Access:  BUSINESS_OWNER only
- *
- * Steps:
- *   1. Verify the caller is a logged-in BUSINESS_OWNER with an existing business.
- *   2. Generate a random CSRF nonce.
- *   3. Encrypt { nonce, userId, businessId, expiresAt } → store in httpOnly cookie.
- *   4. Build Google OAuth consent URL and redirect.
+ * Google OAuth start route - initiates the OAuth 2.0 authorization flow.
  */
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import crypto from "crypto";
-import { db } from "@/lib/db";
+import { NextResponse } from "next/server";
 import { UserRole } from "@/generated/prisma/enums";
+import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { getGoogleConfig, buildGoogleAuthUrl } from "@/lib/external/google/config";
 import { encryptTokenWithEnvKey } from "@/lib/external/google/encryption";
+import { STATE_COOKIE } from "../constants";
 
-export const STATE_COOKIE = "google_oauth_state";
-const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+export const dynamic = "force-dynamic";
+const STATE_TTL_MS = 10 * 60 * 1000;
 
 export async function GET(request: Request) {
   const integrationUrl = new URL("/business/integrations", request.url);
+  const user = await getCurrentUser();
 
-  // 1. Auth — must be a logged-in BUSINESS_OWNER
-  const { userId: clerkId } = await auth();
-  if (!clerkId) {
+  if (!user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  const user = await db.user.findUnique({
-    where: { clerkId },
-    select: { id: true, role: true },
-  });
-
-  if (!user || user.role !== UserRole.BUSINESS_OWNER) {
+  if (user.role !== UserRole.BUSINESS_OWNER) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -48,7 +34,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/business/onboarding", request.url));
   }
 
-  // 2. Verify Google OAuth is configured
   let config;
   try {
     config = getGoogleConfig();
@@ -56,7 +41,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(integrationUrl);
   }
 
-  // 3. Generate nonce + encrypted state cookie
   const nonce = crypto.randomUUID();
   const statePayload = JSON.stringify({
     nonce,
@@ -72,10 +56,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(integrationUrl);
   }
 
-  // 4. Redirect to Google consent URL, attach state cookie to the response
-  const authUrl = buildGoogleAuthUrl(config, nonce);
-
-  const response = NextResponse.redirect(authUrl);
+  const response = NextResponse.redirect(buildGoogleAuthUrl(config, nonce));
 
   response.cookies.set(STATE_COOKIE, encryptedState, {
     httpOnly: true,

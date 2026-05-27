@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import {
   getMarketplaceBusinesses,
-  getMarketplaceCities,
   getMarketplaceCategories,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
@@ -15,7 +15,6 @@ import { db } from "@/lib/db";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { getDictionary } from "@/lib/get-dictionary";
 import type { Locale } from "@/lib/i18n-config";
-import { INTL_LOCALES } from "@/lib/i18n-config";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -26,10 +25,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const cities = await getMarketplaceCities();
-  return [...INTL_LOCALES].flatMap((locale) =>
-    cities.map(({ city }) => ({ locale, city: encodeURIComponent(city) }))
-  );
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -52,6 +48,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function LocaleCityPage({ params, searchParams }: PageProps) {
+  await connection();
+
   const { locale, city: rawCity } = await params;
   const dict = await getDictionary(locale as Locale);
   const city = decodeURIComponent(rawCity);

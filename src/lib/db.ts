@@ -11,7 +11,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function getGeneratedMtime(): number {
   try {
-    const p = fileURLToPath(new URL("../../generated/prisma/client.ts", import.meta.url));
+    const p = fileURLToPath(new URL("../generated/prisma/client.ts", import.meta.url));
     return statSync(p).mtimeMs;
   } catch {
     return 0;

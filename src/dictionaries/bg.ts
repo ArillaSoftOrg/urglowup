@@ -1,0 +1,50 @@
+// LOCALE STATUS: review-needed — Added programmatically. Native review required before adding to PRODUCTION_LOCALES.
+import type { Dictionary } from './tr'
+
+const bg: Dictionary = {
+  nav: {
+    explore: 'Разгледай',
+    forBusiness: 'За Бизнеса',
+    account: 'Моят Акаунт',
+    businessPanel: 'Бизнес Панел',
+    adminPanel: 'Админ Панел',
+    signIn: 'Вход',
+    signUp: 'Регистрация',
+    openMenu: 'Отвори менюто',
+  },
+  home: {
+    badge: 'Красота & Лична Грижа',
+    heroTitle: 'Заслужаваш най-добрата грижа',
+    heroBrand: 'за себе си.',
+    heroDescription:
+      'Открий специалисти по красота близо до теб. Виж реални резултати, прочети проверени отзиви и запази час с увереност.',
+    categoriesLabel: 'Категории',
+    categoriesTitle: 'Какво търсиш?',
+    categoriesSeeAll: 'Виж всички →',
+    featuredLabel: 'Препоръчани',
+    featuredTitle: 'Популярни специалисти',
+    featuredDescription: 'Най-предпочитаните специалисти от нашите клиенти.',
+    featuredSeeAll: 'Виж всички специалисти →',
+    ctaExplore: 'Разгледай Специалисти',
+    ctaForBusiness: 'За Бизнеса',
+  },
+  explore: {
+    searchTitle: 'Търси услуги',
+    searchDescription: 'Търси по услуга, бизнес или категория.',
+    regionTitle: 'Разгледай по регион',
+    categoriesTitle: 'Какво търсиш?',
+    allCategories: 'Всички категории →',
+    professionalCount: (n: number) => `${n} специалисти намерени`,
+    emptyMessage: 'Все още няма регистрирани специалисти. Проверете отново скоро.',
+  },
+  locale: {
+    tr: 'Турски',
+    en: 'Английски',
+    de: 'Немски',
+    ru: 'Руски',
+    es: 'Испански',
+    bg: 'Български',
+  },
+}
+
+export default bg

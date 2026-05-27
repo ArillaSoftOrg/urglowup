@@ -60,7 +60,7 @@ Daha sonra yeterli işletme yoğunluğu oluşan şehir veya ilçelerde marketpla
 | Yorum sistemi | Google yorumları + UrGlowUp kullanıcı yorumları |
 | UrGlowUp yorumu | Sadece tamamlanmış randevudan sonra |
 | Google yorumları | Google Maps linki / Place ID üzerinden gösterim |
-| Auth | Clerk |
+| Auth | Better Auth |
 | Database | Neon PostgreSQL |
 | ORM | Prisma |
 | Media | Cloudinary |
@@ -560,7 +560,7 @@ Telefon
 Şifre
 ```
 
-Clerk ile aşağıdaki giriş yöntemleri desteklenmelidir:
+Better Auth ile aşağıdaki giriş yöntemleri desteklenmelidir:
 
 ```text
 E-posta + şifre
@@ -942,7 +942,7 @@ Styling: Tailwind CSS
 UI Library: shadcn/ui
 Database: Neon PostgreSQL
 ORM: Prisma
-Auth: Clerk
+Auth: Better Auth
 Media: Cloudinary
 Deployment: Vercel
 Validation: Zod
@@ -1138,7 +1138,8 @@ AdminAction
 ```text
 User
 - id
-- clerkId
+- name
+- emailVerified
 - email
 - phone
 - name
@@ -1459,30 +1460,37 @@ Fresha benzeri temiz işletme profil yapısı referans alınabilir, ancak birebi
 ```env
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=
 
 # Database
 DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
 
-# Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/register
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/account
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/account
+# Email
+RESEND_API_KEY=
+EMAIL_FROM=
+
+# Admin
+ADMIN_EMAILS=
 
 # Cloudinary
-CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
 
-# Google Maps / Places
-GOOGLE_MAPS_API_KEY=
-GOOGLE_PLACES_API_KEY=
+# Google Business Profile OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=
+GOOGLE_BUSINESS_PROFILE_SCOPES=https://www.googleapis.com/auth/business.manage
 
-# Optional
-SENTRY_DSN=
+# OAuth token encryption
+OAUTH_TOKEN_ENCRYPTION_KEY=
+
+# Google Maps
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+GOOGLE_MAPS_SERVER_API_KEY=
 ```
 
 ---
@@ -1572,7 +1580,7 @@ Tailwind CSS kurulumu
 shadcn/ui kurulumu
 Prisma kurulumu
 Neon PostgreSQL bağlantısı
-Clerk auth kurulumu
+Better Auth kurulumu
 Role yapısı
 Base layout
 Dashboard layout
@@ -1585,8 +1593,8 @@ Admin layout
 Customer register/login
 Business owner register/login
 Admin role kontrolü
-Clerk webhook veya sync yapısı
-User tablosu senkronizasyonu
+Better Auth route handler ve session yapısı
+Prisma-backed auth tablolarÄ± ve user role akÄ±ÅŸÄ±
 Protected route middleware
 Permission helpers
 ```
@@ -1976,7 +1984,7 @@ Admin işletme, medya ve yorumları yönetebilmeli.
 
 ## 31. Kısa Teknik Özet
 
-UrGlowUp, Next.js App Router, TypeScript, Prisma, Neon PostgreSQL, Clerk, Cloudinary ve Tailwind/shadcn-ui ile geliştirilecek web tabanlı bir güzellik ve kişisel bakım randevu platformudur.
+UrGlowUp, Next.js App Router, TypeScript, Prisma, Neon PostgreSQL, Better Auth, Cloudinary ve Tailwind/shadcn-ui ile geliştirilecek web tabanlı bir güzellik ve kişisel bakım randevu platformudur.
 
 İlk MVP müşteri hesabı, işletme hesabı, işletme onboarding’i, public işletme profili, hizmet yönetimi, fotoğraf/video portföy, randevu talep sistemi, Google + UrGlowUp yorumları ve admin panelini kapsar.
 

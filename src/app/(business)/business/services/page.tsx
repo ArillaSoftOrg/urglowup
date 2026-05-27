@@ -5,7 +5,7 @@ import {
   type ServiceData,
 } from "@/components/business/service-manager";
 
-export const metadata = { title: "Services" };
+export const metadata = { title: "Hizmetler" };
 
 export default async function ServicesPage() {
   const { businessId } = await requireBusiness();

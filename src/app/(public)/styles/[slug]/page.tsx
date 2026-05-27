@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ChevronRight, CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,11 +23,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const tags = await db.styleTag.findMany({
-    where: { isActive: true, posts: { some: { post: { status: "ACTIVE" } } } },
-    select: { slug: true },
-  });
-  return tags.map((t) => ({ slug: t.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -55,6 +52,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function StyleGuidePage({ params }: PageProps) {
+  await connection();
+
   const { slug } = await params;
 
   const tag = await getStyleTagBySlug(slug);

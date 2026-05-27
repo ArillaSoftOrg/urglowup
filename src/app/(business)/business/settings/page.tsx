@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireBusiness } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { getAppUrl } from "@/lib/get-app-url";
+import { AlertTriangle, ExternalLink, Globe } from "lucide-react";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants, Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,25 +11,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, ExternalLink, Globe } from "lucide-react";
-import Link from "next/link";
+import { requireBusiness } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { getAppUrl } from "@/lib/get-app-url";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 
-export const metadata = { title: "Settings" };
+export const metadata = { title: "Ayarlar" };
 
 const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "Draft",
-  PENDING_APPROVAL: "Pending Approval",
-  ACTIVE_PRIVATE: "Active (Private)",
-  ACTIVE_MARKETPLACE: "Active (Marketplace)",
-  SUSPENDED: "Suspended",
-  REJECTED: "Rejected",
+  DRAFT: "Taslak",
+  PENDING_APPROVAL: "İnceleniyor",
+  ACTIVE_PRIVATE: "Aktif (Özel)",
+  ACTIVE_MARKETPLACE: "Vitrin",
+  SUSPENDED: "Askıya Alındı",
+  REJECTED: "Reddedildi",
 };
 
-const STATUS_VARIANTS: Record<string, "success" | "warning" | "destructive" | "neutral" | "secondary" | "info"> = {
+const STATUS_VARIANTS: Record<
+  string,
+  "success" | "warning" | "destructive" | "neutral" | "secondary" | "info"
+> = {
   DRAFT: "neutral",
   PENDING_APPROVAL: "warning",
   ACTIVE_PRIVATE: "info",
@@ -38,12 +40,15 @@ const STATUS_VARIANTS: Record<string, "success" | "warning" | "destructive" | "n
 };
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
-  DRAFT: "Your profile is in draft mode and not visible to customers.",
-  PENDING_APPROVAL: "Your profile is awaiting review by the UrGlowUp team.",
-  ACTIVE_PRIVATE: "Your profile is live at your booking link but not yet listed in the marketplace.",
-  ACTIVE_MARKETPLACE: "Your profile is live and visible in the marketplace.",
-  SUSPENDED: "Your profile has been suspended. Contact support for more information.",
-  REJECTED: "Your profile was not approved. Contact support for more information.",
+  DRAFT: "Profiliniz taslak modunda ve müşterilere görünmüyor.",
+  PENDING_APPROVAL: "Profiliniz UrGlowUp ekibi tarafından inceleniyor.",
+  ACTIVE_PRIVATE:
+    "Profiliniz rezervasyon bağlantınızda yayında; ancak henüz vitrine eklenmedi.",
+  ACTIVE_MARKETPLACE: "Profiliniz yayında ve vitrinde görünür.",
+  SUSPENDED:
+    "Profiliniz askıya alındı. Daha fazla bilgi için destek ekibiyle iletişime geçin.",
+  REJECTED:
+    "Profiliniz onaylanmadı. Daha fazla bilgi için destek ekibiyle iletişime geçin.",
 };
 
 export default async function SettingsPage() {
@@ -60,28 +65,29 @@ export default async function SettingsPage() {
     },
   });
 
-  if (!business) notFound();
+  if (!business) {
+    notFound();
+  }
 
   const publicUrl = getAppUrl(`/b/${business.slug}`);
 
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Settings"
-        description="Manage your business account settings."
+        title="Ayarlar"
+        description="İşletme hesabı ayarlarınızı yönetin."
       />
 
-      {/* Business Visibility / Status */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Globe className="size-4" />
-                Profile Status
+                Profil Durumu
               </CardTitle>
               <CardDescription>
-                Your current profile visibility and marketplace status.
+                Güncel profilinizin görünürlüğü ve vitrin durumu.
               </CardDescription>
             </div>
             <Badge variant={STATUS_VARIANTS[business.status] ?? "neutral"}>
@@ -97,18 +103,18 @@ export default async function SettingsPage() {
             <div className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Marketplace Visibility
+                  Vitrin Görünürlüğü
                 </p>
                 <p className="mt-0.5 font-medium">
-                  {business.isMarketplaceVisible ? "Visible" : "Not listed"}
+                  {business.isMarketplaceVisible ? "Görünür" : "Listelenmedi"}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Member Since
+                  Üyelik Tarihi
                 </p>
                 <p className="mt-0.5 font-medium">
-                  {new Date(business.createdAt).toLocaleDateString("en-US", {
+                  {new Date(business.createdAt).toLocaleDateString("tr-TR", {
                     month: "long",
                     year: "numeric",
                   })}
@@ -117,21 +123,20 @@ export default async function SettingsPage() {
             </div>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            To change your profile status, contact{" "}
+            Profil durumunuzu değiştirmek için{" "}
             <a href="mailto:support@urglowup.com" className="underline underline-offset-2">
               support@urglowup.com
-            </a>
-            .
+            </a>{" "}
+            ile iletişime geçin.
           </p>
         </CardContent>
       </Card>
 
-      {/* Slug / Public URL */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Public Booking URL</CardTitle>
+          <CardTitle className="text-base">Rezervasyon Bağlantısı</CardTitle>
           <CardDescription>
-            Your unique booking link shared with customers.
+            Müşterilerinizle paylaştığınız benzersiz rezervasyon bağlantınız.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -149,60 +154,60 @@ export default async function SettingsPage() {
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               <ExternalLink className="size-3.5" />
-              Open Profile
+              Profili Gör
             </Link>
             <Link
               href="/business/public-link"
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >
-              Share options
+              Paylaşım Seçenekleri
             </Link>
           </div>
           <p className="text-xs text-muted-foreground">
-            To change your URL slug, contact{" "}
+            URL değişikliği için{" "}
             <a href="mailto:support@urglowup.com" className="underline underline-offset-2">
               support@urglowup.com
-            </a>
-            .
+            </a>{" "}
+            ile iletişime geçin.
           </p>
         </CardContent>
       </Card>
 
-      {/* Danger Zone */}
       <Card className="border-destructive/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base text-destructive">
             <AlertTriangle className="size-4" />
-            Danger Zone
+            Tehlikeli Bölge
           </CardTitle>
           <CardDescription>
-            Irreversible actions that affect your entire account.
+            Hesabınızı kalıcı olarak etkileyen geri alınamaz işlemler.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium">Delete Business</p>
+              <p className="text-sm font-medium">İşletmeyi Sil</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Permanently delete your business profile, services, media, and all data.
+                İşletme profilinizi, hizmetlerinizi, medyalarınızı ve tüm verilerinizi kalıcı
+                olarak silin.
               </p>
             </div>
             <Button
               variant="destructive"
               size="sm"
               disabled
-              title="Contact support to delete your account"
+              title="Hesabınızı silmek için destek ekibiyle iletişime geçin."
               className="shrink-0"
             >
-              Delete Business
+              İşletmeyi Sil
             </Button>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            To delete your business, contact{" "}
+            İşletmenizi silmek için{" "}
             <a href="mailto:support@urglowup.com" className="underline underline-offset-2">
               support@urglowup.com
-            </a>
-            .
+            </a>{" "}
+            ile iletişime geçin.
           </p>
         </CardContent>
       </Card>

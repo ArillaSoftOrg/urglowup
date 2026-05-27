@@ -56,7 +56,7 @@ function NavLinks({
 }
 
 export function SidebarNav({ items }: SidebarNavProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
 
   return (

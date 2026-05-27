@@ -68,10 +68,10 @@ export const GOOGLE_ATTRIBUTION_FULL =
 // ── Connection status display ─────────────────────────────────────────────────
 
 export const CONNECTION_STATUS_LABELS: Record<string, string> = {
-  ACTIVE: "Active",
-  EXPIRED: "Token Expired",
-  DISCONNECTED: "Disconnected",
-  ERROR: "Error",
+  ACTIVE: "Aktif",
+  EXPIRED: "Token Süresi Doldu",
+  DISCONNECTED: "Bağlantı Kesildi",
+  ERROR: "Hata",
 };
 
 export const CONNECTION_STATUS_COLORS: Record<string, string> = {
@@ -84,9 +84,9 @@ export const CONNECTION_STATUS_COLORS: Record<string, string> = {
 // ── Sync status display ───────────────────────────────────────────────────────
 
 export const SYNC_STATUS_LABELS: Record<string, string> = {
-  IDLE: "Idle",
-  SYNCING: "Syncing",
-  ERROR: "Sync Error",
+  IDLE: "Beklemede",
+  SYNCING: "Senkronize Ediliyor",
+  ERROR: "Senkronizasyon Hatası",
 };
 
 export const SYNC_STATUS_COLORS: Record<string, string> = {

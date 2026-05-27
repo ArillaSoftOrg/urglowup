@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://urglowup.vercel.app"
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://urglowup.vercel.app",
   ),
   title: {
     default: "UrGlowUp",
@@ -36,11 +29,27 @@ export default async function RootLayout({
 }>) {
   const h = await headers();
   const locale = h.get("x-locale") ?? "tr";
+
+  const jar = await cookies();
+  const themeCookie = jar.get("ugl_theme")?.value ?? "SYSTEM";
+  const isDark =
+    themeCookie === "DARK" ? true : themeCookie === "LIGHT" ? false : null;
+
   return (
-    <ClerkProvider>
-      <html lang={locale} className={`${inter.variable} h-full antialiased`}>
-        <body className="min-h-full flex flex-col font-sans">{children}</body>
-      </html>
-    </ClerkProvider>
+    <html
+      lang={locale}
+      className={`h-full antialiased${isDark === true ? " dark" : ""}`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Blocking script: resolves SYSTEM mode and prevents dark-mode flash before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=document.cookie.match(/(?:^|; )ugl_theme=([^;]*)/);var theme=t?decodeURIComponent(t[1]):'SYSTEM';if(theme==='DARK'||(theme==='SYSTEM'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="flex min-h-full flex-col font-sans">{children}</body>
+    </html>
   );
 }

@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import {
   getMarketplaceBusinesses,
-  getMarketplaceCities,
   getMarketplaceCategories,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
@@ -23,8 +23,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const cities = await getMarketplaceCities();
-  return cities.map(({ city }) => ({ city: encodeURIComponent(city) }));
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -45,6 +44,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CityPage({ params, searchParams }: PageProps) {
+  await connection();
+
   const { city: rawCity } = await params;
   const city = decodeURIComponent(rawCity);
   const rawParams = await searchParams;

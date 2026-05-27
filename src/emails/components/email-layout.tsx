@@ -21,23 +21,20 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
       <Preview>{preview}</Preview>
       <Body style={body}>
         <Container style={container}>
-          {/* Header */}
           <Section style={header}>
             <Text style={logo}>UrGlowUp</Text>
           </Section>
 
-          {/* Content */}
           <Section style={content}>{children}</Section>
 
-          {/* Footer */}
           <Hr style={hr} />
           <Section style={footer}>
             <Text style={footerText}>
-              © {new Date().getFullYear()} UrGlowUp. All rights reserved.
+              © {new Date().getFullYear()} UrGlowUp. Tüm hakları saklıdır.
             </Text>
             <Text style={footerText}>
-              This is a transactional email sent because of activity on your
-              UrGlowUp account.
+              Bu e-posta, UrGlowUp hesabınızdaki bir işlem nedeniyle otomatik
+              olarak gönderildi.
             </Text>
           </Section>
         </Container>

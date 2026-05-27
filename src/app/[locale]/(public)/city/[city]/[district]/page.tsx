@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import {
   getMarketplaceBusinesses,
-  getMarketplaceDistricts,
   getMarketplaceCategories,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
@@ -14,7 +14,6 @@ import { ChevronRight, MapPin } from "lucide-react";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { getDictionary } from "@/lib/get-dictionary";
 import type { Locale } from "@/lib/i18n-config";
-import { INTL_LOCALES } from "@/lib/i18n-config";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -25,14 +24,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const combos = await getMarketplaceDistricts();
-  return [...INTL_LOCALES].flatMap((locale) =>
-    combos.map(({ city, district }) => ({
-      locale,
-      city: encodeURIComponent(city),
-      district: encodeURIComponent(district),
-    }))
-  );
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -59,6 +51,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function LocaleDistrictPage({ params, searchParams }: PageProps) {
+  await connection();
+
   const { locale, city: rawCity, district: rawDistrict } = await params;
   const dict = await getDictionary(locale as Locale);
   const city = decodeURIComponent(rawCity);

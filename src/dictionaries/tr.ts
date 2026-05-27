@@ -1,3 +1,4 @@
+// LOCALE STATUS: production
 const tr = {
   nav: {
     explore: 'Keşfet',
@@ -40,6 +41,7 @@ const tr = {
     de: 'Deutsch',
     ru: 'Русский',
     es: 'Español',
+    bg: 'Bulgarca',
   },
 }
 

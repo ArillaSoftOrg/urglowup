@@ -1,0 +1,87 @@
+"use client";
+
+import Link from "next/link";
+import { useActionState } from "react";
+import { signInAction } from "@/app/(auth)/actions";
+import { AuthFormFeedback } from "@/components/auth/auth-form-feedback";
+import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { buildAuthRedirectQuery } from "@/lib/auth-redirect";
+
+export function LoginForm({
+  redirectTo,
+  resetSuccess = false,
+}: {
+  redirectTo?: string;
+  resetSuccess?: boolean;
+}) {
+  const [state, formAction, pending] = useActionState(signInAction, {
+    success: false,
+  });
+  const redirectQuery = buildAuthRedirectQuery(redirectTo);
+
+  return (
+    <form action={formAction} className="space-y-4">
+      {redirectTo ? (
+        <input type="hidden" name="redirectTo" value={redirectTo} />
+      ) : null}
+
+      {resetSuccess ? (
+        <AuthFormFeedback
+          tone="success"
+          message="Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz."
+        />
+      ) : null}
+
+      <AuthFormFeedback message={state.message} tone={state.tone} />
+
+      <div className="space-y-2">
+        <Label htmlFor="email">E-posta</Label>
+        <Input id="email" name="email" type="email" autoComplete="email" />
+        {state.errors?.email ? (
+          <p className="text-sm text-destructive">{state.errors.email}</p>
+        ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="password">Şifre</Label>
+          <Link
+            href={`/forgot-password${redirectQuery}`}
+            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Şifremi unuttum
+          </Link>
+        </div>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+        />
+        {state.errors?.password ? (
+          <p className="text-sm text-destructive">{state.errors.password}</p>
+        ) : null}
+      </div>
+
+      <div className="rounded-md border border-border/70 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+        Doğrulama e-postasını bulamıyorsanız{" "}
+        <Link
+          href={`/verify-email${redirectQuery}`}
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          yeniden gönderin
+        </Link>
+        .
+      </div>
+
+      <BotProtectionFields />
+
+      <Button type="submit" className="w-full" disabled={pending}>
+        {pending ? "Giriş yapılıyor..." : "Giriş yap"}
+      </Button>
+    </form>
+  );
+}

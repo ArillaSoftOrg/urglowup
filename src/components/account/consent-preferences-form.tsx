@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useTransition } from "react";
 import { ShieldCheck, BarChart2, Megaphone } from "lucide-react";
@@ -49,8 +49,8 @@ export function ConsentPreferencesForm({ prefs }: ConsentPreferencesFormProps) {
     <div className="space-y-4">
       <ConsentRow
         icon={<ShieldCheck className="size-4 text-muted-foreground shrink-0" />}
-        title="Ki\u015fiselle\u015ftirme"
-        description="Kaydetti\u011finiz i\u00e7erikler ve rezervasyonlar\u0131n\u0131za g\u00f6re Ke\u015ffet ak\u0131\u015f\u0131n\u0131 ki\u015fiselle\u015ftirmemize izin verin."
+        title="Kişiselleştirme"
+        description="Kaydettiğiniz içerikler ve rezervasyonlarınıza göre Keşfet akışını kişiselleştirmemize izin verin."
         active={personalizationActive}
         disabled={pending}
         onToggle={() => toggle(ConsentCategory.PERSONALIZATION, personalizationActive)}
@@ -58,7 +58,7 @@ export function ConsentPreferencesForm({ prefs }: ConsentPreferencesFormProps) {
       <ConsentRow
         icon={<BarChart2 className="size-4 text-muted-foreground shrink-0" />}
         title="Analitik"
-        description="Platformu iyile\u015ftirmek i\u00e7in gezinme davran\u0131\u015f\u0131n\u0131z\u0131n anonim olarak analiz edilmesine izin verin."
+        description="Platformu iyileştirmek için gezinme davranışınızın anonim olarak analiz edilmesine izin verin."
         active={analyticsActive}
         disabled={pending}
         onToggle={() => toggle(ConsentCategory.ANALYTICS, analyticsActive)}
@@ -66,13 +66,14 @@ export function ConsentPreferencesForm({ prefs }: ConsentPreferencesFormProps) {
       <ConsentRow
         icon={<Megaphone className="size-4 text-muted-foreground shrink-0" />}
         title="Pazarlama"
-        description="Kampanya ve \u00f6zel teklifler i\u00e7in ileti\u015fim almay\u0131 kabul edin."
+        description="Kampanya ve özel teklifler için iletişim almayı kabul edin."
+        note="Bu ayar, yukarıdaki pazarlama bildirim tercihini etkiler."
         active={marketingActive}
         disabled={pending}
         onToggle={() => toggle(ConsentCategory.MARKETING, marketingActive)}
       />
       <p className="text-xs text-muted-foreground">
-        {"Bu se\u00e7imler KVKK ve GDPR kapsam\u0131nda g\u00fcvenli \u015fekilde saklan\u0131r. \u0130stedi\u011finiz zaman geri alabilirsiniz."}
+        Bu seçimler KVKK ve GDPR kapsamında güvenli şekilde saklanır. İstediğiniz zaman geri alabilirsiniz.
       </p>
     </div>
   );
@@ -82,12 +83,13 @@ interface ConsentRowProps {
   icon: React.ReactNode;
   title: string;
   description: string;
+  note?: string;
   active: boolean;
   disabled: boolean;
   onToggle: () => void;
 }
 
-function ConsentRow({ icon, title, description, active, disabled, onToggle }: ConsentRowProps) {
+function ConsentRow({ icon, title, description, note, active, disabled, onToggle }: ConsentRowProps) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex items-start gap-3 min-w-0">
@@ -95,6 +97,7 @@ function ConsentRow({ icon, title, description, active, disabled, onToggle }: Co
         <div className="space-y-0.5">
           <p className="text-sm font-medium">{title}</p>
           <p className="text-xs text-muted-foreground">{description}</p>
+          {note && <p className="text-xs text-muted-foreground/70 italic">{note}</p>}
         </div>
       </div>
       <Button
@@ -104,7 +107,7 @@ function ConsentRow({ icon, title, description, active, disabled, onToggle }: Co
         onClick={onToggle}
         className="shrink-0 text-xs"
       >
-        {active ? "Etkin" : "Devre d\u0131\u015f\u0131"}
+        {active ? "Etkin" : "Devre dışı"}
       </Button>
     </div>
   );

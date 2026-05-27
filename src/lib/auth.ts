@@ -1,48 +1,164 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import React from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { db } from "./db";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js";
 import { UserRole } from "@/generated/prisma/enums";
+import { AuthEmailVerification } from "@/emails/auth-email-verification";
+import { AuthPasswordReset } from "@/emails/auth-password-reset";
 import { isAdminEmail } from "./admin-bootstrap";
+import { db } from "./db";
+import { sendEmail } from "./email";
+import { env } from "./env";
+
+function resolveTrustedOrigins() {
+  const configuredOrigins = env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [];
+
+  return Array.from(
+    new Set(
+      [env.NEXT_PUBLIC_APP_URL, env.BETTER_AUTH_URL, ...configuredOrigins]
+        .filter((value): value is string => Boolean(value))
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .map((value) => new URL(value).origin),
+    ),
+  );
+}
+
+export const auth = betterAuth({
+  appName: "UrGlowUp",
+  baseURL: env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_APP_URL,
+  trustedOrigins: resolveTrustedOrigins(),
+  secret: env.BETTER_AUTH_SECRET,
+  database: prismaAdapter(db, {
+    provider: "postgresql",
+  }),
+  user: {
+    modelName: "User",
+    fields: {
+      image: "avatarUrl",
+    },
+    additionalFields: {
+      firstName: {
+        type: "string",
+        required: false,
+      },
+      lastName: {
+        type: "string",
+        required: false,
+      },
+      phone: {
+        type: "string",
+        required: false,
+      },
+      serviceAddress: {
+        type: "string",
+        required: false,
+      },
+      role: {
+        type: "string",
+        required: true,
+        input: false,
+        defaultValue: UserRole.CUSTOMER,
+      },
+    },
+  },
+  session: {
+    modelName: "Session",
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5,
+    },
+  },
+  account: {
+    modelName: "Account",
+  },
+  verification: {
+    modelName: "Verification",
+  },
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    modelName: "RateLimit",
+    window: 60,
+    max: 100,
+  },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+    autoSignIn: false,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "UrGlowUp sifre sifirlama baglantin",
+        react: React.createElement(AuthPasswordReset, { resetUrl: url }),
+        tags: [
+          { name: "flow", value: "auth" },
+          { name: "template", value: "password-reset" },
+        ],
+      });
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "UrGlowUp hesabini dogrula",
+        react: React.createElement(AuthEmailVerification, {
+          verificationUrl: url,
+        }),
+        tags: [
+          { name: "flow", value: "auth" },
+          { name: "template", value: "email-verification" },
+        ],
+      });
+    },
+  },
+  advanced: {
+    cookiePrefix: "urglowup",
+    trustedProxyHeaders: true,
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for", "x-real-ip"],
+      ipv6Subnet: 64,
+    },
+  },
+  plugins: [nextCookies()],
+});
+
+export async function getSession() {
+  return auth.api.getSession({
+    headers: await headers(),
+  });
+}
 
 export async function getCurrentUser() {
-  const { userId } = await auth();
-  if (!userId) return null;
+  const session = await getSession();
+  const sessionUser = session?.user;
 
-  let user = await db.user.findUnique({ where: { clerkId: userId } });
-
-  if (user) {
-    // Promote to ADMIN if email matches ADMIN_EMAILS and not already ADMIN
-    if (isAdminEmail(user.email) && user.role !== UserRole.ADMIN) {
-      user = await db.user.update({
-        where: { id: user.id },
-        data: { role: UserRole.ADMIN },
-      });
-    }
-    return user;
+  if (!sessionUser) {
+    return null;
   }
 
-  // Fallback sync: create DB user from Clerk data
-  // Covers missed webhooks and local dev without tunnel
-  const client = await clerkClient();
-  const clerkUser = await client.users.getUser(userId);
-  const email = clerkUser.emailAddresses[0].emailAddress;
-
-  user = await db.user.create({
-    data: {
-      clerkId: userId,
-      email,
-      firstName: clerkUser.firstName,
-      lastName: clerkUser.lastName,
-      avatarUrl: clerkUser.imageUrl,
-      ...(isAdminEmail(email) && { role: UserRole.ADMIN }),
-    },
+  let user = await db.user.findUnique({
+    where: { id: sessionUser.id },
   });
 
-  await db.userPreferences.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id },
-    update: {},
-  });
+  if (!user) {
+    return null;
+  }
+
+  if (isAdminEmail(user.email) && user.role !== UserRole.ADMIN) {
+    user = await db.user.update({
+      where: { id: user.id },
+      data: { role: UserRole.ADMIN },
+    });
+  }
 
   return user;
 }

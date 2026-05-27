@@ -4,7 +4,7 @@ import { getBusinessMedia, getMediaCounts } from "@/lib/queries/media";
 import { MediaGrid } from "@/components/business/media-grid";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 
-export const metadata = { title: "Media" };
+export const metadata = { title: "Medya" };
 
 export default async function MediaPage() {
   const { businessId } = await requireBusiness();
@@ -22,8 +22,8 @@ export default async function MediaPage() {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Media"
-        description="Manage your cover image, logo, and portfolio."
+        title="Medya"
+        description="Kapak görselinizi, logonuzu ve portföyünüzü yönetin."
       />
 
       <MediaGrid

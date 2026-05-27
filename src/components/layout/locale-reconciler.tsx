@@ -22,8 +22,8 @@ function getLocalizedPath(pathname: string, from: Locale, to: Locale): string {
 }
 
 export function LocaleReconciler({ dbLocale }: LocaleReconcilerProps) {
-  const params = useParams();
-  const pathname = usePathname();
+  const params = useParams() ?? {};
+  const pathname = usePathname() ?? "/";
   const router = useRouter();
   const reconciled = useRef(false);
 

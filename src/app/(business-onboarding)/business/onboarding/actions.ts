@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { generateUniqueSlug } from "@/lib/slug";
 import { z } from "zod/v4";
 import { redirect } from "next/navigation";
+import { validateBotProtection } from "@/lib/bot-protection";
 
 const onboardingSchema = z.object({
   // Step 1: basics
@@ -42,6 +43,11 @@ export async function completeBusinessOnboarding(
   _prev: OnboardingState,
   formData: FormData
 ): Promise<OnboardingState> {
+  const botProtectionError = await validateBotProtection(formData);
+  if (botProtectionError) {
+    return { success: false, message: botProtectionError };
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, message: "Not authenticated" };

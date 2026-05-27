@@ -1,4 +1,4 @@
-// PLACEHOLDER: Machine-translated. Needs native speaker review before production.
+// LOCALE STATUS: placeholder — Machine-translated. Deprioritized per strategy. Review before adding to PRODUCTION_LOCALES.
 import type { Dictionary } from './tr'
 
 const es: Dictionary = {
@@ -43,6 +43,7 @@ const es: Dictionary = {
     de: 'Deutsch',
     ru: 'Русский',
     es: 'Español',
+    bg: 'Búlgaro',
   },
 }
 

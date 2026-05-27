@@ -9,10 +9,10 @@
  */
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { PENDING_COOKIE } from "@/app/api/integrations/google/constants";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireBusiness } from "@/lib/auth";
 import { decryptTokenWithEnvKey } from "@/lib/external/google/encryption";
-import { PENDING_COOKIE } from "@/app/api/integrations/google/callback/route";
 import { SelectLocationForm } from "./select-location-form";
 import type { LocationItem } from "@/app/api/integrations/google/locations/route";
 

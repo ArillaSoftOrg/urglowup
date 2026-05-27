@@ -1,4 +1,4 @@
-// PLACEHOLDER: Machine-translated. Needs native speaker review before production.
+// LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
 import type { Dictionary } from './tr'
 
 const ru: Dictionary = {
@@ -43,6 +43,7 @@ const ru: Dictionary = {
     de: 'Deutsch',
     ru: 'Русский',
     es: 'Español',
+    bg: 'Болгарский',
   },
 }
 

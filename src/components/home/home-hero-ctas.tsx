@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export async function HomeHeroCTAs() {
-  const { userId } = await auth();
+  const user = await getCurrentUser();
 
   return (
     <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -14,7 +14,7 @@ export async function HomeHeroCTAs() {
       >
         Uzmanları Keşfet
       </Link>
-      {!userId && (
+      {!user && (
         <Link
           href="/for-business"
           className={cn(

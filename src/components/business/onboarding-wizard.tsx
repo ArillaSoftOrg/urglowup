@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
+import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 
 const CATEGORIES = [
   { label: "Hair Salon", value: "hair-salon" },
@@ -401,6 +402,7 @@ export function OnboardingWizard() {
           </Button>
         ) : (
           <form action={formAction}>
+            <BotProtectionFields />
             {/* Hidden fields carry all the wizard data */}
             {Object.entries(fields).map(([key, value]) => (
               <input key={key} type="hidden" name={key} value={value} />

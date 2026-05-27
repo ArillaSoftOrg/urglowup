@@ -65,3 +65,39 @@ test("protected route redirects unauthenticated users to login", async ({
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByLabel("E-posta")).toBeVisible();
 });
+
+test("login 'Şifremi unuttum' link navigates to forgot-password", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByRole("link", { name: "Şifremi unuttum" }).click();
+  await expect(page).toHaveURL(/\/forgot-password/);
+  await expect(
+    page.getByText("Şifreni sıfırla", { exact: true }),
+  ).toBeVisible();
+});
+
+test("forgot-password footer link navigates back to login", async ({
+  page,
+}) => {
+  await page.goto("/forgot-password");
+  await page.getByRole("link", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByLabel("E-posta")).toBeVisible();
+});
+
+test("login page shows password-reset success message when ?reset=success", async ({
+  page,
+}) => {
+  await page.goto("/login?reset=success");
+  await expect(page.getByText("Şifreniz güncellendi")).toBeVisible();
+});
+
+test("verify-email footer link navigates back to login", async ({ page }) => {
+  await page.goto("/verify-email");
+  await expect(
+    page.getByRole("link", { name: "Giriş ekranına dön" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Giriş ekranına dön" }).click();
+  await expect(page).toHaveURL(/\/login/);
+});

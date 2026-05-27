@@ -1,25 +1,12 @@
-/**
- * Google locations API route — fetches available locations for the pending OAuth session.
- *
- * Route:   GET /api/integrations/google/locations
- * Access:  Authenticated users with a valid pending OAuth cookie.
- *
- * Steps:
- *   1. Auth check.
- *   2. Read + decrypt the pending OAuth cookie.
- *   3. Decrypt the access token (plaintext exists only as a local variable).
- *   4. Fetch Google accounts via the Account Management API.
- *   5. Fetch locations for each account via the Business Information API.
- *   6. Return sanitized location data — tokens are never returned.
- */
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
-import { decryptTokenWithEnvKey } from "@/lib/external/google/encryption";
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import { GOOGLE_MY_BUSINESS_ACCOUNT_MGMT_API } from "@/lib/constants/external";
-import { PENDING_COOKIE } from "../callback/route";
+import { decryptTokenWithEnvKey } from "@/lib/external/google/encryption";
+import { PENDING_COOKIE } from "../constants";
 
-// The Business Information API uses this distinct host
+export const dynamic = "force-dynamic";
+
 const BUSINESS_INFO_API =
   "https://mybusinessbusinessinformation.googleapis.com/v1";
 
@@ -58,13 +45,11 @@ export interface LocationItem {
 }
 
 export async function GET() {
-  // 1. Auth check
-  const { userId: clerkId } = await auth();
-  if (!clerkId) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 2. Read + decrypt pending cookie
   const cookieStore = await cookies();
   const encryptedPending = cookieStore.get(PENDING_COOKIE)?.value;
   if (!encryptedPending) {
@@ -88,12 +73,15 @@ export async function GET() {
 
   if (Date.now() > pending.expiresAt) {
     return NextResponse.json(
-      { error: "OAuth session expired — please reconnect" },
+      { error: "OAuth session expired - please reconnect" },
       { status: 400 },
     );
   }
 
-  // 3. Decrypt access token — plaintext lives only in this local scope
+  if (pending.userId !== user.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let accessToken: string;
   try {
     accessToken = decryptTokenWithEnvKey(pending.accessTokenEncrypted);
@@ -107,7 +95,6 @@ export async function GET() {
   const locations: LocationItem[] = [];
 
   try {
-    // 4. Fetch Google accounts
     const accRes = await fetch(
       `${GOOGLE_MY_BUSINESS_ACCOUNT_MGMT_API}/accounts`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
@@ -121,20 +108,20 @@ export async function GET() {
     }
 
     const accData = (await accRes.json()) as { accounts?: GoogleAccount[] };
-    const accounts = accData.accounts ?? [];
 
-    // 5. Fetch locations for each account
-    for (const account of accounts) {
+    for (const account of accData.accounts ?? []) {
       const accountIdStr = account.name.split("/")[1] ?? account.name;
       const accountNameStr = account.accountName ?? accountIdStr;
-
       const locParams = new URLSearchParams({ readMask: READ_MASK });
+
       const locRes = await fetch(
         `${BUSINESS_INFO_API}/${account.name}/locations?${locParams.toString()}`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
 
-      if (!locRes.ok) continue;
+      if (!locRes.ok) {
+        continue;
+      }
 
       const locData = (await locRes.json()) as {
         locations?: GoogleLocation[];
@@ -165,7 +152,6 @@ export async function GET() {
     );
   }
 
-  // Tokens are never included in the response
   return NextResponse.json({ locations });
 }
 
@@ -173,14 +159,17 @@ function extractAddress(
   addr: Record<string, unknown> | null,
 ): string | null {
   if (!addr) return null;
+
   const parts: string[] = [];
   if (Array.isArray(addr.addressLines)) {
     parts.push(...(addr.addressLines as string[]));
   }
   if (typeof addr.locality === "string") parts.push(addr.locality);
-  if (typeof addr.administrativeArea === "string")
+  if (typeof addr.administrativeArea === "string") {
     parts.push(addr.administrativeArea);
+  }
   if (typeof addr.postalCode === "string") parts.push(addr.postalCode);
   if (typeof addr.regionCode === "string") parts.push(addr.regionCode);
+
   return parts.length > 0 ? parts.join(", ") : null;
 }

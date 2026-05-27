@@ -21,6 +21,8 @@ import { timingSafeEqual } from "crypto";
 import { INTERNAL_SECRET_HEADER } from "@/lib/constants/external";
 import { recalculateAllStats } from "@/lib/ratings/calculator";
 
+export const dynamic = "force-dynamic";
+
 function isAuthorised(request: Request): boolean {
   const secret = process.env.INTERNAL_API_SECRET;
   const provided = request.headers.get(INTERNAL_SECRET_HEADER);

@@ -18,6 +18,7 @@ import {
 } from "@/lib/email-notifications";
 import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
 import type { DayOfWeek } from "@/generated/prisma/enums";
+import { validateBotProtection } from "@/lib/bot-protection";
 
 // ─── Schemas ────────────────────────────────────────────────────
 
@@ -145,6 +146,11 @@ export async function createAppointmentRequest(
   _prev: BookingActionState,
   formData: FormData
 ): Promise<BookingActionState> {
+  const botProtectionError = await validateBotProtection(formData);
+  if (botProtectionError) {
+    return { success: false, message: botProtectionError };
+  }
+
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, message: "Randevu talep etmek için giriş yapmalısınız." };
@@ -159,110 +165,119 @@ export async function createAppointmentRequest(
       const key = issue.path[0];
       if (typeof key === "string") fieldErrors[key] = issue.message;
     }
-    return { success: false, errors: fieldErrors };
+    return {
+      success: false,
+      errors: fieldErrors,
+      message: "Lütfen form bilgilerini kontrol edip tekrar deneyin.",
+    };
   }
 
   const { businessId, serviceId, date, time, customerNote } = result.data;
 
-  // Verify business exists and is bookable
-  const business = await db.business.findUnique({
-    where: { id: businessId },
-    select: { status: true },
-  });
-  if (
-    !business ||
-    business.status === "SUSPENDED" ||
-    business.status === "REJECTED"
-  ) {
-    return { success: false, message: "Bu işletme şu anda randevu almıyor." };
-  }
-
-  // Verify service exists and is active
-  const service = await db.businessService.findFirst({
-    where: { id: serviceId, businessId, isActive: true },
-    select: { id: true, durationMinutes: true },
-  });
-  if (!service) {
-    return { success: false, message: "Bu hizmet artık sunulmuyor." };
-  }
-
-  // Verify date is valid
-  const now = nowInBusinessTimezone();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  if (date < todayStr) {
-    return { success: false, message: "Geçmiş bir tarih seçemezsiniz." };
-  }
-
-  const maxDate = new Date(now);
-  maxDate.setDate(maxDate.getDate() + MAX_ADVANCE_DAYS);
-  const requestedDate = new Date(date + "T00:00:00");
-  if (requestedDate > maxDate) {
-    return { success: false, message: `En fazla ${MAX_ADVANCE_DAYS} gün öncesinden randevu alabilirsiniz.` };
-  }
-
-  // Verify slot is still available
-  const availableSlots = await getAvailableSlots(businessId, serviceId, date);
-  if (!availableSlots.includes(time)) {
-    return { success: false, message: "Bu saat artık dolu. Lütfen başka bir saat seçin." };
-  }
-
-  // Check if customer already has a PENDING/CONFIRMED appointment at same business/date/time
-  const duplicate = await db.appointment.findFirst({
-    where: {
-      customerId: user.id,
-      businessId,
-      requestedDate: new Date(date),
-      requestedTime: time,
-      status: { in: BLOCKING_STATUSES },
-    },
-  });
-  if (duplicate) {
-    return { success: false, message: "Bu saatte zaten bir randevu talebiniz var." };
-  }
-
-  // Create appointment
-  const appointment = await db.appointment.create({
-    data: {
-      businessId,
-      customerId: user.id,
-      serviceId,
-      requestedDate: new Date(date),
-      requestedTime: time,
-      status: "PENDING",
-      customerNote: customerNote || null,
-    },
-  });
-
-  // Email to business owner — independent of customer email
-  after(async () => {
-    try {
-      await sendNewRequestEmailToBusiness(appointment.id);
-    } catch (err) {
-      console.error("[email] createAppointmentRequest → business:", err);
+  try {
+    // Verify business exists and is bookable
+    const business = await db.business.findUnique({
+      where: { id: businessId },
+      select: { status: true },
+    });
+    if (
+      !business ||
+      business.status === "SUSPENDED" ||
+      business.status === "REJECTED"
+    ) {
+      return { success: false, message: "Bu işletme şu anda randevu almıyor." };
     }
-  });
 
-  // Email to customer — independent of business owner email
-  after(async () => {
-    try {
-      await sendRequestReceivedEmailToCustomer(appointment.id);
-    } catch (err) {
-      console.error("[email] createAppointmentRequest → customer:", err);
+    // Verify service exists and is active
+    const service = await db.businessService.findFirst({
+      where: { id: serviceId, businessId, isActive: true },
+      select: { id: true, durationMinutes: true },
+    });
+    if (!service) {
+      return { success: false, message: "Bu hizmet artık sunulmuyor." };
     }
-  });
 
-  // WhatsApp confirmation to customer — errors absorbed internally, never breaks booking
-  after(async () => {
-    try {
-      await sendBookingConfirmationWhatsApp(appointment.id);
-    } catch (err) {
-      console.error("[whatsapp] createAppointmentRequest → unexpected:", err);
+    // Verify date is valid
+    const now = nowInBusinessTimezone();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    if (date < todayStr) {
+      return { success: false, message: "Geçmiş bir tarih seçemezsiniz." };
     }
-  });
 
-  revalidatePath("/account/appointments");
-  revalidatePath("/business/appointments");
-  revalidatePath("/business/dashboard");
+    const maxDate = new Date(now);
+    maxDate.setDate(maxDate.getDate() + MAX_ADVANCE_DAYS);
+    const requestedDate = new Date(date + "T00:00:00");
+    if (requestedDate > maxDate) {
+      return { success: false, message: `En fazla ${MAX_ADVANCE_DAYS} gün öncesinden randevu alabilirsiniz.` };
+    }
 
-  return { success: true, message: "Randevu talebiniz alındı!" };
+    // Verify slot is still available
+    const availableSlots = await getAvailableSlots(businessId, serviceId, date);
+    if (!availableSlots.includes(time)) {
+      return { success: false, message: "Bu saat artık dolu. Lütfen başka bir saat seçin." };
+    }
+
+    // Check if customer already has a PENDING/CONFIRMED appointment at same business/date/time
+    const duplicate = await db.appointment.findFirst({
+      where: {
+        customerId: user.id,
+        businessId,
+        requestedDate: new Date(date),
+        requestedTime: time,
+        status: { in: BLOCKING_STATUSES },
+      },
+    });
+    if (duplicate) {
+      return { success: false, message: "Bu saatte zaten bir randevu talebiniz var." };
+    }
+
+    // Create appointment
+    const appointment = await db.appointment.create({
+      data: {
+        businessId,
+        customerId: user.id,
+        serviceId,
+        requestedDate: new Date(date),
+        requestedTime: time,
+        status: "PENDING",
+        customerNote: customerNote || null,
+      },
+    });
+
+    // Email to business owner — independent of customer email
+    after(async () => {
+      try {
+        await sendNewRequestEmailToBusiness(appointment.id);
+      } catch (err) {
+        console.error("[email] createAppointmentRequest → business:", err);
+      }
+    });
+
+    // Email to customer — independent of business owner email
+    after(async () => {
+      try {
+        await sendRequestReceivedEmailToCustomer(appointment.id);
+      } catch (err) {
+        console.error("[email] createAppointmentRequest → customer:", err);
+      }
+    });
+
+    // WhatsApp confirmation to customer — errors absorbed internally, never breaks booking
+    after(async () => {
+      try {
+        await sendBookingConfirmationWhatsApp(appointment.id);
+      } catch (err) {
+        console.error("[whatsapp] createAppointmentRequest → unexpected:", err);
+      }
+    });
+
+    revalidatePath("/account/appointments");
+    revalidatePath("/business/appointments");
+    revalidatePath("/business/dashboard");
+
+    return { success: true, message: "Randevu talebiniz alındı!" };
+  } catch (err) {
+    console.error("[createAppointmentRequest]", err);
+    return { success: false, message: "İşlem tamamlanamadı. Lütfen daha sonra tekrar deneyin." };
+  }
 }

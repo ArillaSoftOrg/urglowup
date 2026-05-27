@@ -1,9 +1,10 @@
-import { chromium } from "@playwright/test";
-import path from "path";
 import fs from "fs";
+import path from "path";
+import { chromium } from "@playwright/test";
 
 const BASE = "http://localhost:3000";
 const SHOTS = path.join(process.cwd(), "test-screenshots");
+
 fs.mkdirSync(SHOTS, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
@@ -14,19 +15,18 @@ const snap = async (page, name) => {
   return file;
 };
 
-// ── Helper: get navbar link texts ────────────────────────────────────────────
 const navLinks = async (page) =>
-  page.$$eval("header nav a", (els) =>
-    els.map((e) => ({ text: e.textContent.trim(), href: e.getAttribute("href") }))
+  page.$$eval("header nav a", (elements) =>
+    elements.map((element) => ({
+      text: element.textContent.trim(),
+      href: element.getAttribute("href"),
+    })),
   );
 
 const hasText = async (page, text) =>
   page.getByText(text, { exact: false }).isVisible().catch(() => false);
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TEST 1 — Logged-out homepage
-// ═══════════════════════════════════════════════════════════════════════════
-console.log("\n── TEST 1: Logged-out homepage ──────────────────────────────────");
+console.log("\n--- TEST 1: Logged-out homepage ---");
 {
   const page = await browser.newPage();
   await page.goto(BASE, { waitUntil: "networkidle" });
@@ -35,72 +35,55 @@ console.log("\n── TEST 1: Logged-out homepage ──────────
   console.log("  Navbar links:", JSON.stringify(links));
 
   const businessCTA = await hasText(page, "Güzellik uzmanı mısınız?");
-  const signInBtn   = await hasText(page, "Giriş Yap");
+  const signInBtn = await hasText(page, "Giriş Yap");
   const registerBtn = await hasText(page, "Kayıt Ol");
 
-  console.log("  HomeBusinessCTA visible:", businessCTA, businessCTA ? "✓" : "✗ FAIL");
-  console.log("  Sign-in button visible:", signInBtn, signInBtn ? "✓" : "✗ FAIL");
-  console.log("  Register button visible:", registerBtn, registerBtn ? "✓" : "✗ FAIL");
+  console.log("  HomeBusinessCTA visible:", businessCTA, businessCTA ? "OK" : "FAIL");
+  console.log("  Sign-in button visible:", signInBtn, signInBtn ? "OK" : "FAIL");
+  console.log("  Register button visible:", registerBtn, registerBtn ? "OK" : "FAIL");
 
-  const hasExplore   = links.some((l) => l.href === "/explore");
-  const hasBusiness  = links.some((l) => l.href === "/for-business");
-  const noAccount    = !links.some((l) => l.href === "/account");
-  const noDashboard  = !links.some((l) => l.href === "/business/dashboard");
-  console.log("  /explore in nav:", hasExplore ? "✓" : "✗ FAIL");
-  console.log("  /for-business in nav:", hasBusiness ? "✓" : "✗ FAIL");
-  console.log("  /account NOT in nav:", noAccount ? "✓" : "✗ FAIL");
-  console.log("  /business/dashboard NOT in nav:", noDashboard ? "✓" : "✗ FAIL");
+  const hasExplore = links.some((link) => link.href === "/explore");
+  const hasBusiness = links.some((link) => link.href === "/for-business");
+  const noAccount = !links.some((link) => link.href === "/account");
+  const noDashboard = !links.some((link) => link.href === "/business/dashboard");
 
-  const f = await snap(page, "1-logged-out-homepage");
-  console.log("  Screenshot:", f);
+  console.log("  /explore in nav:", hasExplore ? "OK" : "FAIL");
+  console.log("  /for-business in nav:", hasBusiness ? "OK" : "FAIL");
+  console.log("  /account NOT in nav:", noAccount ? "OK" : "FAIL");
+  console.log(
+    "  /business/dashboard NOT in nav:",
+    noDashboard ? "OK" : "FAIL",
+  );
+
+  const file = await snap(page, "1-logged-out-homepage");
+  console.log("  Screenshot:", file);
   await page.close();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TEST 2 — Business-owner signed in
-// Reads Clerk session from .env.local BUSINESS_TEST_EMAIL / BUSINESS_TEST_PASSWORD
-// Falls back to env vars passed on the command line.
-// ═══════════════════════════════════════════════════════════════════════════
-const email    = process.env.BUSINESS_TEST_EMAIL;
+const email = process.env.BUSINESS_TEST_EMAIL;
 const password = process.env.BUSINESS_TEST_PASSWORD;
 
 if (!email || !password) {
   console.log(
-    "\n── TEST 2: Skipped (no credentials) ─────────────────────────────────\n" +
-    "  Rerun with:  BUSINESS_TEST_EMAIL=... BUSINESS_TEST_PASSWORD=... node test-navbar.mjs"
+    "\n--- TEST 2: Skipped (no credentials) ---\n" +
+      "  Rerun with: BUSINESS_TEST_EMAIL=... BUSINESS_TEST_PASSWORD=... node test-navbar.mjs",
   );
 } else {
-  console.log(`\n── TEST 2: Signing in as ${email} ──────────────────────────────────`);
+  console.log(`\n--- TEST 2: Signing in as ${email} ---`);
 
   const page = await browser.newPage();
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
+  await snap(page, "2a-login-page");
 
-  // Open Clerk modal
-  await page.getByRole("button", { name: /Giriş Yap/i }).click();
-  await page.waitForTimeout(2000);
-  await snap(page, "2a-clerk-modal");
+  await page.getByLabel("E-posta").fill(email);
+  await page.getByLabel("Şifre").fill(password);
+  await page.getByRole("button", { name: /Giriş yap/i }).click();
 
-  // Fill email
-  const emailInput = page.locator('input[name="identifier"], input[type="email"]').first();
-  await emailInput.fill(email);
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(1500);
-
-  // Fill password (if on password step)
-  try {
-    const pwInput = page.locator('input[type="password"]').first();
-    if (await pwInput.isVisible({ timeout: 3000 })) {
-      await pwInput.fill(password);
-      await page.keyboard.press("Enter");
-      await page.waitForTimeout(3000);
-    }
-  } catch { /* single-step flow */ }
-
+  await page.waitForTimeout(3000);
   await snap(page, "2b-after-login-attempt");
 
-  // Wait for redirect back to homepage
-  await page.waitForURL(BASE + "**", { timeout: 10000 }).catch(() => {});
-  await page.waitForTimeout(2000);
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.waitForTimeout(1000);
 
   const url = page.url();
   console.log("  Current URL:", url);
@@ -108,18 +91,23 @@ if (!email || !password) {
   const links = await navLinks(page);
   console.log("  Navbar links:", JSON.stringify(links));
 
-  const hasDashboardLink = links.some((l) => l.href === "/business/dashboard");
-  const noBusinessCTA    = !(await hasText(page, "Güzellik uzmanı mısınız?"));
-  const noSignInBtn      = !(await hasText(page, "Giriş Yap"));
+  const hasDashboardLink = links.some(
+    (link) => link.href === "/business/dashboard",
+  );
+  const noBusinessCTA = !(await hasText(page, "Güzellik uzmanı mısınız?"));
+  const noSignInBtn = !(await hasText(page, "Giriş Yap"));
 
-  console.log("  /business/dashboard in nav:", hasDashboardLink ? "✓" : "✗ FAIL");
-  console.log("  HomeBusinessCTA hidden:", noBusinessCTA ? "✓" : "✗ FAIL");
-  console.log("  Sign-in button gone:", noSignInBtn ? "✓" : "✗ FAIL");
+  console.log(
+    "  /business/dashboard in nav:",
+    hasDashboardLink ? "OK" : "FAIL",
+  );
+  console.log("  HomeBusinessCTA hidden:", noBusinessCTA ? "OK" : "FAIL");
+  console.log("  Sign-in button gone:", noSignInBtn ? "OK" : "FAIL");
 
-  const f = await snap(page, "2c-business-owner-homepage");
-  console.log("  Screenshot:", f);
+  const file = await snap(page, "2c-business-owner-homepage");
+  console.log("  Screenshot:", file);
   await page.close();
 }
 
 await browser.close();
-console.log("\n✓ Done. Screenshots at:", SHOTS);
+console.log("\nDone. Screenshots at:", SHOTS);

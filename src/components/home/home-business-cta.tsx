@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export async function HomeBusinessCTA() {
-  const { userId } = await auth();
-  if (userId) return null;
+  const user = await getCurrentUser();
+  if (user) return null;
 
   return (
     <section className="bg-foreground px-4 py-14 md:py-20">

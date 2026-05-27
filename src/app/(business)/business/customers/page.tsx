@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { CustomerList, type CustomerSummary } from "@/components/business/customer-list";
 
-export const metadata = { title: "Customers" };
+export const metadata = { title: "Müşteriler" };
 
 export default async function CustomersPage() {
   const { businessId } = await requireBusiness();
@@ -51,8 +51,8 @@ export default async function CustomersPage() {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Customers"
-        description="People who have booked appointments with your business."
+        title="Müşteriler"
+        description="İşletmenizden randevu almış kişiler."
       />
       <CustomerList customers={customers} />
     </div>

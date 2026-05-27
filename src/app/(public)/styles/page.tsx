@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { ChevronRight } from "lucide-react";
 import { getAllStyleTags } from "@/lib/queries/style-tags";
 import { db } from "@/lib/db";
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
 };
 
 export default async function StylesPage() {
+  await connection();
+
   const [tags, categories] = await Promise.all([
     getAllStyleTags(),
     db.businessCategory.findMany({

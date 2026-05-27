@@ -30,6 +30,8 @@ import {
 } from "@/lib/external/connection-service";
 import { syncConnection } from "@/lib/external/google/sync-worker";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Validates the request is from an authorised caller.
  *

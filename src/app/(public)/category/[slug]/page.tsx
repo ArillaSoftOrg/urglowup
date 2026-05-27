@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import {
   getMarketplaceBusinesses,
   getMarketplaceCategoryBySlug,
-  getMarketplaceCategories,
   getMarketplaceCities,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
@@ -25,8 +25,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const categories = await getMarketplaceCategories();
-  return categories.map((c) => ({ slug: c.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -55,6 +54,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
+  await connection();
+
   const { slug } = await params;
   const rawParams = await searchParams;
   const filters = parseMarketplaceFilters(rawParams);

@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Sparkles } from "lucide-react";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { LocaleSwitcher } from "./locale-switcher";
 import {
   Sheet,
@@ -35,7 +34,7 @@ export function NavbarMobileMenu({
   isLoggedIn = false,
 }: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + "/");
@@ -89,16 +88,20 @@ export function NavbarMobileMenu({
 
         {!isLoggedIn && (
           <div className="border-t p-3 space-y-1.5">
-            <SignUpButton>
-              <Button variant="brand" size="sm" className="w-full">
-                {signUpLabel}
-              </Button>
-            </SignUpButton>
-            <SignInButton>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
-                {signInLabel}
-              </Button>
-            </SignInButton>
+            <Link
+              href="/register"
+              onClick={() => setOpen(false)}
+              className={cn(buttonVariants({ variant: "brand", size: "sm" }), "w-full")}
+            >
+              {signUpLabel}
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-full justify-start text-muted-foreground")}
+            >
+              {signInLabel}
+            </Link>
           </div>
         )}
       </SheetContent>

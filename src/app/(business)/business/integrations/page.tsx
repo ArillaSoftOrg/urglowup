@@ -1,33 +1,40 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 import { requireBusiness } from "@/lib/auth";
-import { getConnection } from "@/lib/external/connection-service";
-import { getReviewCacheStats } from "@/lib/external/review-cache-service";
 import {
   CONNECTION_STATUS_LABELS,
-  SYNC_STATUS_LABELS,
   MANUAL_SYNC_COOLDOWN_MS,
+  SYNC_STATUS_LABELS,
 } from "@/lib/constants/external";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { getConnection } from "@/lib/external/connection-service";
+import { getReviewCacheStats } from "@/lib/external/review-cache-service";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
-import { SyncNowButton } from "./sync-now-button";
+import { Badge } from "@/components/ui/badge";
 import type { BadgeVariant } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SyncNowButton } from "./sync-now-button";
 
-export const metadata = { title: "Integrations" };
+export const metadata = { title: "Entegrasyonlar" };
 
 function formatRelativeTime(date: Date): string {
   const diffMs = Date.now() - date.getTime();
   const diffMins = Math.floor(diffMs / 60_000);
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+
+  if (diffMins < 60) {
+    return `${diffMins} dakika önce`;
+  }
+
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  if (diffHours < 24) {
+    return `${diffHours} saat önce`;
+  }
+
   const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+  return `${diffDays} gün önce`;
 }
 
 function formatDateTime(date: Date): string {
-  return date.toLocaleString("en-US", {
+  return date.toLocaleString("tr-TR", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -52,10 +59,10 @@ const SYNC_STATUS_VARIANTS: Record<string, BadgeVariant> = {
 export default async function IntegrationsPage() {
   const { businessId } = await requireBusiness();
 
-  const googleConfigured = !!(
+  const googleConfigured = Boolean(
     process.env.GOOGLE_CLIENT_ID &&
-    process.env.GOOGLE_CLIENT_SECRET &&
-    process.env.GOOGLE_REDIRECT_URI
+      process.env.GOOGLE_CLIENT_SECRET &&
+      process.env.GOOGLE_REDIRECT_URI,
   );
 
   const connection = await getConnection(businessId, "GOOGLE_BUSINESS_PROFILE");
@@ -74,19 +81,18 @@ export default async function IntegrationsPage() {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Integrations"
-        description="Connect external services to display additional content on your profile."
+        title="Entegrasyonlar"
+        description="Profilinizde ek içerik görüntülemek için harici hizmetleri bağlayın."
       />
 
-      {/* Google Business Profile card */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
               <CardTitle>Google Business Profile</CardTitle>
               <CardDescription>
-                Display your Google reviews and photos on your UrGlowUp profile.
-                Google ratings are shown separately and never merged with your UrGlowUp rating.
+                Google yorumlarınızı ve fotoğraflarınızı UrGlowUp profilinizde görüntüleyin.
+                Google puanları ayrı gösterilir, UrGlowUp puanınızla birleştirilmez.
               </CardDescription>
             </div>
             {connection && (
@@ -103,37 +109,42 @@ export default async function IntegrationsPage() {
               {googleConfigured ? (
                 <>
                   <p className="text-sm text-muted-foreground">
-                    Google Business Profile is not connected yet.
+                    Google Business Profile henüz bağlanmadı.
                   </p>
-                  <a
-                    href="/api/integrations/google/start"
-                    className={buttonVariants()}
-                  >
-                    Connect Google Business Profile
+                  <a href="/api/integrations/google/start" className={buttonVariants()}>
+                    {"Google Business Profile'ı Bağla"}
                   </a>
                 </>
               ) : (
                 <div className="rounded-xl border border-warning/30 bg-warning/15 p-3 text-sm text-warning-foreground">
-                  Google integration is not configured yet. Contact support to enable this feature.
+                  Google entegrasyonu henüz yapılandırılmadı. Bu özelliği etkinleştirmek için
+                  destek ekibiyle iletişime geçin.
                 </div>
               )}
             </div>
           ) : (
             <>
-              {/* Connection details */}
               <div className="grid grid-cols-1 gap-3 rounded-xl bg-surface-cream p-4 text-sm sm:grid-cols-2">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Account</p>
-                  <p className="mt-0.5 font-medium">{connection.providerAccountName ?? connection.providerAccountId}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Hesap
+                  </p>
+                  <p className="mt-0.5 font-medium">
+                    {connection.providerAccountName ?? connection.providerAccountId}
+                  </p>
                 </div>
                 {connection.providerLocationName && (
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Location</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Konum
+                    </p>
                     <p className="mt-0.5 font-medium">{connection.providerLocationName}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sync Status</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Senkronizasyon Durumu
+                  </p>
                   <div className="mt-1">
                     <Badge variant={SYNC_STATUS_VARIANTS[connection.syncStatus] ?? "neutral"}>
                       {SYNC_STATUS_LABELS[connection.syncStatus] ?? connection.syncStatus}
@@ -141,63 +152,66 @@ export default async function IntegrationsPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Last Synced</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Son Senkronizasyon
+                  </p>
                   <p className="mt-0.5">
                     {connection.lastSyncAt
-                      ? `${formatRelativeTime(connection.lastSyncAt)}`
-                      : "Never"}
+                      ? formatRelativeTime(connection.lastSyncAt)
+                      : "Hiç"}
                   </p>
                 </div>
                 {connection.nextSyncAt && (
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next Sync</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Sonraki Senkronizasyon
+                    </p>
                     <p className="mt-0.5">{formatDateTime(connection.nextSyncAt)}</p>
                   </div>
                 )}
                 {reviewStats && (
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Cached Reviews</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Önbelleğe Alınan Yorumlar
+                    </p>
                     <p className="mt-0.5">
-                      {reviewStats.visibleCount} visible
+                      {reviewStats.visibleCount} görünür
                       {reviewStats.totalCached !== reviewStats.visibleCount
-                        ? ` (${reviewStats.totalCached} total)`
+                        ? ` (${reviewStats.totalCached} toplam)`
                         : ""}
                       {reviewStats.averageRating !== null
-                        ? ` · ${reviewStats.averageRating.toFixed(1)} avg`
+                        ? ` · ${reviewStats.averageRating.toFixed(1)} ort.`
                         : ""}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Error display */}
               {connection.syncStatus === "ERROR" && connection.lastError && (
                 <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
-                  <p className="font-medium">Sync error</p>
+                  <p className="font-medium">Senkronizasyon hatası</p>
                   <p className="mt-1">{connection.lastError}</p>
                 </div>
               )}
 
-              {/* EXPIRED status — reconnect prompt */}
               {connection.status === "EXPIRED" && (
                 <div className="space-y-2 rounded-xl border border-warning/30 bg-warning/15 p-3 text-sm text-warning-foreground">
-                  <p className="font-medium">Reconnection required</p>
+                  <p className="font-medium">Yeniden Bağlantı Gerekiyor</p>
                   <p>
-                    Your Google access token has expired. Please reconnect your Google Business
-                    Profile account to continue syncing.
+                    Google erişim tokenınızın süresi doldu. Senkronizasyona devam etmek için
+                    Google Business Profile hesabınızı yeniden bağlayın.
                   </p>
                   {googleConfigured && (
                     <a
                       href="/api/integrations/google/start"
                       className={buttonVariants({ variant: "outline", size: "sm" })}
                     >
-                      Reconnect Google Business Profile
+                      {"Google Business Profile'ı Yeniden Bağla"}
                     </a>
                   )}
                 </div>
               )}
 
-              {/* Manual sync button */}
               {connection.status === "ACTIVE" && (
                 <div className="flex flex-wrap items-center gap-3">
                   <SyncNowButton
@@ -207,7 +221,7 @@ export default async function IntegrationsPage() {
                   />
                   {isInCooldown && cooldownEndsAt && (
                     <p className="text-sm text-muted-foreground">
-                      Next sync available at {formatDateTime(cooldownEndsAt)}
+                      Sonraki senkronizasyon: {formatDateTime(cooldownEndsAt)}
                     </p>
                   )}
                 </div>

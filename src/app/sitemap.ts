@@ -6,9 +6,9 @@ import {
   getMarketplaceDistricts,
 } from "@/lib/queries/marketplace";
 import { getAllStyleTags } from "@/lib/queries/style-tags";
-import { INTL_LOCALES } from "@/lib/i18n-config";
+import { PRODUCTION_LOCALES } from "@/lib/i18n-config";
 
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? "https://urglowup.vercel.app";
@@ -19,7 +19,7 @@ function forAllLocales(
 ): MetadataRoute.Sitemap {
   return [
     { url: `${BASE_URL}${trPath}`, ...opts },
-    ...INTL_LOCALES.map((l) => ({
+    ...PRODUCTION_LOCALES.map((l) => ({
       url: `${BASE_URL}/${l}${trPath}`,
       ...opts,
       priority: Math.round(((opts.priority ?? 0.5) * 0.9) * 100) / 100,

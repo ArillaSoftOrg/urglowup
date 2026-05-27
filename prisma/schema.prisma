@@ -157,12 +157,19 @@ enum HolidaySuggestionState {
   DISMISSED
 }
 
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
 // ─── Models ──────────────────────────────────────────────────────
 
 model User {
   id             String   @id @default(cuid())
-  clerkId        String   @unique
+  name           String   @default("")
   email          String   @unique
+  emailVerified  Boolean  @default(false)
   firstName      String?
   lastName       String?
   phone          String?
@@ -173,6 +180,7 @@ model User {
   updatedAt      DateTime @updatedAt
 
   business            Business?
+  accounts            Account[]
   appointments        Appointment[]
   reviews             Review[]
   favorites           Favorite[]
@@ -183,6 +191,60 @@ model User {
   preferences         UserPreferences?
   consentAuditLogs    ConsentAuditLog[]
   notificationLogs    NotificationLog[]
+  sessions            Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
+  @@index([identifier])
+}
+
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
 }
 
 model Business {
@@ -629,6 +691,9 @@ model UserPreferences {
 
   // Locale — null means fall back to NEXT_LOCALE cookie / Accept-Language
   locale String?
+
+  // Theme — SYSTEM defers to prefers-color-scheme
+  theme  Theme  @default(SYSTEM)
 
   // Consent timestamps — null means not yet consented; kept on revocation for audit
   personalizationConsentAt DateTime?

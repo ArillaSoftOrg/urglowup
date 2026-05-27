@@ -3,7 +3,7 @@ import { getBusinessReviews, getBusinessReviewStats } from "@/lib/queries/review
 import { BusinessReviewList } from "@/components/business/review-list";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 
-export const metadata = { title: "Reviews" };
+export const metadata = { title: "Yorumlar" };
 
 export default async function ReviewsPage() {
   const { businessId } = await requireBusiness();
@@ -16,8 +16,8 @@ export default async function ReviewsPage() {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="Reviews"
-        description="See what your customers are saying."
+        title="Yorumlar"
+        description="Müşterilerinizin yorumlarını görüntüleyin."
       />
       <BusinessReviewList reviews={reviews} stats={stats} />
     </div>

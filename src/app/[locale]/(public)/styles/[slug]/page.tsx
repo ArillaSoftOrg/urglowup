@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ChevronRight, CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +13,6 @@ import { db } from "@/lib/db";
 import { StyleTagGuidePostGrid } from "@/components/explore/style-tag-guide-post-grid";
 import { StyleTagCard } from "@/components/explore/style-tag-card";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
-import { INTL_LOCALES } from "@/lib/i18n-config";
 import { getAppUrl } from "@/lib/get-app-url";
 
 export const revalidate = 3600;
@@ -23,13 +23,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const tags = await db.styleTag.findMany({
-    where: { isActive: true, posts: { some: { post: { status: "ACTIVE" } } } },
-    select: { slug: true },
-  });
-  return [...INTL_LOCALES].flatMap((locale) =>
-    tags.map((t) => ({ locale, slug: t.slug }))
-  );
+  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -61,6 +55,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function LocaleStyleGuidePage({ params }: PageProps) {
+  await connection();
+
   const { locale, slug } = await params;
   const p = (path: string) => `/${locale}${path}`;
 

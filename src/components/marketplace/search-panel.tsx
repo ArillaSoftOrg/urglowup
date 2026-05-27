@@ -30,8 +30,8 @@ interface SearchPanelProps {
 
 export function SearchPanel({ categories, cities }: SearchPanelProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams() ?? new URLSearchParams();
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const currentQ         = searchParams.get("q") ?? "";

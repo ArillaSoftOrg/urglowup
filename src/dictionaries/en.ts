@@ -1,3 +1,4 @@
+// LOCALE STATUS: production
 import type { Dictionary } from './tr'
 
 const en: Dictionary = {
@@ -42,6 +43,7 @@ const en: Dictionary = {
     de: 'Deutsch',
     ru: 'Русский',
     es: 'Español',
+    bg: 'Bulgarian',
   },
 }
 

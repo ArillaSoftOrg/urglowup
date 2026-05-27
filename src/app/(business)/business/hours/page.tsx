@@ -11,7 +11,7 @@ import {
   type HolidayWithState,
 } from "@/components/business/holiday-suggestions";
 
-export const metadata = { title: "Working Hours" };
+export const metadata = { title: "Çalışma Saatleri" };
 
 const DAY_ORDER = [
   "MONDAY",

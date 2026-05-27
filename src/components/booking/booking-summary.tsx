@@ -19,6 +19,7 @@ import {
 import { createAppointmentRequest } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingActionState } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingBusiness } from "@/lib/queries/appointments";
+import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 
 type Service = BookingBusiness["services"][number];
 
@@ -170,6 +171,7 @@ export function BookingSummary({
       </div>
 
       <form action={formAction} className="space-y-4">
+        <BotProtectionFields />
         <input type="hidden" name="businessId" value={business.id} />
         <input type="hidden" name="serviceId" value={service.id} />
         <input type="hidden" name="date" value={dateStr} />
@@ -197,6 +199,12 @@ export function BookingSummary({
             )}
           </div>
         </div>
+
+        {(fieldError("serviceId") || fieldError("date") || fieldError("time") || fieldError("businessId")) && (
+          <p className="text-xs text-destructive">
+            {fieldError("serviceId") ?? fieldError("date") ?? fieldError("time") ?? fieldError("businessId")}
+          </p>
+        )}
 
         {state.message && !state.success && (
           <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
