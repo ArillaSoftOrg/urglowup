@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import {
   getMarketplaceBusinesses,
   getMarketplaceCategories,
@@ -13,16 +12,9 @@ import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ChevronRight, MapPin } from "lucide-react";
 import { buildAlternates } from "@/lib/i18n-metadata";
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
 interface PageProps {
   params: Promise<{ city: string; district: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-export async function generateStaticParams() {
-  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -47,8 +39,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function DistrictPage({ params, searchParams }: PageProps) {
-  await connection();
-
   const { city: rawCity, district: rawDistrict } = await params;
   const city = decodeURIComponent(rawCity);
   const district = decodeURIComponent(rawDistrict);

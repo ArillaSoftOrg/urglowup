@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import {
   getMarketplaceBusinesses,
   getMarketplaceCategories,
@@ -14,16 +13,9 @@ import { ChevronRight, MapPin } from "lucide-react";
 import { db } from "@/lib/db";
 import { buildAlternates } from "@/lib/i18n-metadata";
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
 interface PageProps {
   params: Promise<{ city: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-export async function generateStaticParams() {
-  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -44,8 +36,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CityPage({ params, searchParams }: PageProps) {
-  await connection();
-
   const { city: rawCity } = await params;
   const city = decodeURIComponent(rawCity);
   const rawParams = await searchParams;

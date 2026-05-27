@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import {
   getMarketplaceBusinesses,
@@ -16,16 +15,9 @@ import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ChevronRight } from "lucide-react";
 import { buildAlternates } from "@/lib/i18n-metadata";
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-export async function generateStaticParams() {
-  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -54,8 +46,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
-  await connection();
-
   const { slug } = await params;
   const rawParams = await searchParams;
   const filters = parseMarketplaceFilters(rawParams);

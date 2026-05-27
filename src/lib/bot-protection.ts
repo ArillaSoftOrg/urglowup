@@ -1,5 +1,6 @@
 const MIN_FORM_FILL_MS = 1500;
-const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const TURNSTILE_VERIFY_URL =
+  "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 type TurnstileVerifyResponse = {
   success: boolean;
@@ -30,11 +31,12 @@ async function verifyTurnstile(formData: FormData): Promise<string | null> {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const token = String(formData.get("cf-turnstile-response") ?? "").trim();
 
-  if (!secret || !siteKey) {
-    if (process.env.NODE_ENV === "production") {
-      return "Bot koruması yapılandırılmamış.";
-    }
+  if (!secret && !siteKey) {
     return null;
+  }
+
+  if (!secret || !siteKey) {
+    return "Bot koruması eksik yapılandırılmış. Lütfen sayfayı yenileyip tekrar deneyin.";
   }
 
   if (!token) {
@@ -69,9 +71,13 @@ async function verifyTurnstile(formData: FormData): Promise<string | null> {
   }
 }
 
-export async function validateBotProtection(formData: FormData): Promise<string | null> {
+export async function validateBotProtection(
+  formData: FormData,
+): Promise<string | null> {
   const passiveError = validatePassiveBotSignals(formData);
-  if (passiveError) return passiveError;
+  if (passiveError) {
+    return passiveError;
+  }
 
   return verifyTurnstile(formData);
 }

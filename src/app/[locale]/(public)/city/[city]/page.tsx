@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import {
   getMarketplaceBusinesses,
   getMarketplaceCategories,
@@ -16,16 +15,9 @@ import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { getDictionary } from "@/lib/get-dictionary";
 import type { Locale } from "@/lib/i18n-config";
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
 interface PageProps {
   params: Promise<{ locale: string; city: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-export async function generateStaticParams() {
-  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -48,8 +40,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function LocaleCityPage({ params, searchParams }: PageProps) {
-  await connection();
-
   const { locale, city: rawCity } = await params;
   const dict = await getDictionary(locale as Locale);
   const city = decodeURIComponent(rawCity);

@@ -90,7 +90,10 @@ export async function signInAction(
   }
 
   const requestHeaders = await headers();
-  const rateLimit = await enforceLoginRateLimit(requestHeaders, parsed.data.email);
+  const rateLimit = await enforceLoginRateLimit(
+    requestHeaders,
+    parsed.data.email,
+  );
   if (!rateLimit.ok) {
     return errorState(rateLimit.message);
   }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ChevronRight, CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,15 +14,8 @@ import { StyleTagCard } from "@/components/explore/style-tag-card";
 import { buildAlternates } from "@/lib/i18n-metadata";
 import { getAppUrl } from "@/lib/get-app-url";
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
 interface PageProps {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  return [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -52,8 +44,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function StyleGuidePage({ params }: PageProps) {
-  await connection();
-
   const { slug } = await params;
 
   const tag = await getStyleTagBySlug(slug);

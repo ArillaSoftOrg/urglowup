@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import { ChevronRight } from "lucide-react";
 import { getAllStyleTags } from "@/lib/queries/style-tags";
 import { db } from "@/lib/db";
 import { StyleTagCard } from "@/components/explore/style-tag-card";
 import { buildAlternates } from "@/lib/i18n-metadata";
-
-export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Güzellik & Bakım Stil Rehberi | UrGlowUp",
@@ -17,8 +14,6 @@ export const metadata: Metadata = {
 };
 
 export default async function StylesPage() {
-  await connection();
-
   const [tags, categories] = await Promise.all([
     getAllStyleTags(),
     db.businessCategory.findMany({
