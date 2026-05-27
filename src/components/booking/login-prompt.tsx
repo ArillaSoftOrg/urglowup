@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { LogIn } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -7,8 +9,6 @@ import {
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LogIn } from "lucide-react";
-import Link from "next/link";
 
 export function LoginPrompt({ redirectUrl }: { redirectUrl: string }) {
   const loginHref = `/login?redirect_url=${encodeURIComponent(redirectUrl)}`;
@@ -22,8 +22,7 @@ export function LoginPrompt({ redirectUrl }: { redirectUrl: string }) {
         </div>
         <CardTitle className="text-lg">Devam etmek için giriş yapın</CardTitle>
         <CardDescription className="max-w-xs">
-          Seçimleriniz kaybolmayacak. Giriş yaptığınızda kaldığınız yerden
-          devam edersiniz.
+          Seçimleriniz kaybolmayacak. Giriş yaptığınızda kaldığınız yerden devam edersiniz.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-2">
@@ -31,7 +30,7 @@ export function LoginPrompt({ redirectUrl }: { redirectUrl: string }) {
           href={loginHref}
           className={cn(
             buttonVariants({ variant: "brand", size: "lg" }),
-            "w-full max-w-xs gap-1.5"
+            "w-full max-w-xs gap-1.5",
           )}
         >
           <LogIn className="size-4" />

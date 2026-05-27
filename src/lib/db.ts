@@ -1,4 +1,5 @@
 import { statSync } from "fs";
+import path from "path";
 import { fileURLToPath } from "url";
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -11,7 +12,13 @@ const globalForPrisma = globalThis as unknown as {
 
 function getGeneratedMtime(): number {
   try {
-    const p = fileURLToPath(new URL("../generated/prisma/client.ts", import.meta.url));
+    const p = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "..",
+      "generated",
+      "prisma",
+      "client.ts",
+    );
     return statSync(p).mtimeMs;
   } catch {
     return 0;
