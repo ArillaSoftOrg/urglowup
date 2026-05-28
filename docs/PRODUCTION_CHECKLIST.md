@@ -31,6 +31,8 @@
 | `GOOGLE_REDIRECT_URI` | Optional | Must match your Google OAuth app |
 | `GOOGLE_BUSINESS_PROFILE_SCOPES` | Optional | Usually `https://www.googleapis.com/auth/business.manage` |
 | `OAUTH_TOKEN_ENCRYPTION_KEY` | Recommended | 64-char hex key for encrypted external tokens |
+| `GOOGLE_AUTH_CLIENT_ID` | Optional | Google Sign-In for end-user auth (separate OAuth app from Business Profile) |
+| `GOOGLE_AUTH_CLIENT_SECRET` | Optional | Google Sign-In for end-user auth |
 
 ### Better Auth
 
@@ -43,6 +45,28 @@
 - [ ] Login flow works
 - [ ] Forgot-password flow sends reset email
 - [ ] Email verification flow sends verification email
+
+### Google Sign-In (optional)
+
+> Only required if `GOOGLE_AUTH_CLIENT_ID` + `GOOGLE_AUTH_CLIENT_SECRET` are set.
+
+- [ ] Create a separate OAuth 2.0 client in Google Cloud Console (do **not** reuse the Business Profile client)
+- [ ] Add authorized redirect URI: `{BETTER_AUTH_URL}/api/auth/callback/google`
+- [ ] Add authorized JavaScript origin: `{BETTER_AUTH_URL}`
+- [ ] Set `GOOGLE_AUTH_CLIENT_ID` and `GOOGLE_AUTH_CLIENT_SECRET` in production environment
+- [ ] "Google ile devam et" button appears on login and register pages
+- [ ] Clicking the button redirects to Google consent and returns a logged-in session
+- [ ] Existing email/password accounts are not merged automatically (Better Auth creates a new Account row)
+
+### Personalization & Consent
+
+- [ ] `npx prisma migrate deploy` applied — confirms `UserPreferences`, `ConsentAuditLog` tables exist
+- [ ] Privacy policy (`/privacy-policy`) is accessible and up to date; replace `[OPERATOR: ...]` placeholders with real company details before launch
+- [ ] Account settings page (`/account/settings`) shows "Gizlilik ve Onay" section with personalization toggle
+- [ ] Granting consent writes `personalizationConsentAt` + a `ConsentAuditLog` GRANTED row
+- [ ] Revoking consent writes `personalizationRevokedAt`, clears affinity fields, + a REVOKED row
+- [ ] İlham feed at `/explore?tab=ilham` shows personalized order for users with active consent
+- [ ] Personalization nudge banner visible to logged-in users who have not yet consented; dismissible
 
 ### Resend Email Setup
 

@@ -88,6 +88,17 @@ export function RegisterForm({
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Hesap oluşturuluyor..." : "Hesap oluştur"}
       </Button>
+      <p className="text-xs text-center text-muted-foreground">
+        Hesap oluşturarak{" "}
+        <a href="/kullanim-kosullari" className="underline underline-offset-4 hover:text-foreground">
+          Kullanım Koşulları
+        </a>
+        &#39;nı ve{" "}
+        <a href="/kvkk" className="underline underline-offset-4 hover:text-foreground">
+          KVKK Aydınlatma Metni
+        </a>
+        &#39;ni okuduğunuzu kabul etmiş olursunuz.
+      </p>
     </form>
     </div>
   );

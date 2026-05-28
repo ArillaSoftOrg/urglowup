@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/layout/cookie-settings-button";
 
 const footerColumns = [
   {
@@ -22,13 +23,14 @@ const footerColumns = [
       { label: "Kayit Ol", href: "/register" },
     ],
   },
-  {
-    heading: "Legal",
-    links: [
-      { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Cookie Policy", href: "/cookie-policy" },
-    ],
-  },
+] as const;
+
+const legalLinks = [
+  { label: "Gizlilik Politikası", href: "/privacy-policy" },
+  { label: "Çerez Politikası", href: "/cookie-policy" },
+  { label: "KVKK Aydınlatma", href: "/kvkk" },
+  { label: "Kullanım Koşulları", href: "/kullanim-kosullari" },
+  { label: "KVKK Başvuru", href: "/kvkk-basvuru" },
 ] as const;
 
 export function Footer() {
@@ -67,6 +69,27 @@ export function Footer() {
               </ul>
             </div>
           ))}
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-foreground">
+              Yasal
+            </p>
+            <ul className="mt-4 space-y-2.5">
+              {legalLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <CookieSettingsButton label="Çerez Ayarları" />
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div className="mt-10 border-t border-border/40 pt-6">

@@ -37,11 +37,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
-    ...forAllLocales("",              { changeFrequency: "daily",   priority: 1.0 }),
-    ...forAllLocales("/explore",      { changeFrequency: "daily",   priority: 0.9 }),
-    ...forAllLocales("/styles",       { changeFrequency: "weekly",  priority: 0.6 }),
-    ...forAllLocales("/for-business", { changeFrequency: "monthly", priority: 0.6 }),
-    ...forAllLocales("/map",          { changeFrequency: "weekly",  priority: 0.4 }),
+    ...forAllLocales("",                      { changeFrequency: "daily",   priority: 1.0 }),
+    ...forAllLocales("/explore",              { changeFrequency: "daily",   priority: 0.9 }),
+    ...forAllLocales("/styles",               { changeFrequency: "weekly",  priority: 0.6 }),
+    ...forAllLocales("/for-business",         { changeFrequency: "monthly", priority: 0.6 }),
+    ...forAllLocales("/map",                  { changeFrequency: "weekly",  priority: 0.4 }),
+    ...forAllLocales("/privacy-policy",       { changeFrequency: "monthly", priority: 0.3 }),
+    ...forAllLocales("/cookie-policy",        { changeFrequency: "monthly", priority: 0.3 }),
+    ...forAllLocales("/kvkk",                 { changeFrequency: "monthly", priority: 0.3 }),
+    ...forAllLocales("/kullanim-kosullari",   { changeFrequency: "monthly", priority: 0.3 }),
+    ...forAllLocales("/kvkk-basvuru",         { changeFrequency: "monthly", priority: 0.3 }),
   ];
 
   const businessPages: MetadataRoute.Sitemap = businesses.flatMap((b) =>

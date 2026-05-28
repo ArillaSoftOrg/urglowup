@@ -9,6 +9,7 @@ import {
 } from "@/lib/queries/marketplace";
 import { getExplorePosts } from "@/lib/queries/posts";
 import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
 import { SearchPanel } from "@/components/marketplace/search-panel";
@@ -18,6 +19,7 @@ import { PostFeed } from "@/components/explore/post-feed";
 import { getDictionary } from "@/lib/get-dictionary";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import type { Locale } from "@/lib/i18n-config";
+import { z } from "zod/v4";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -80,15 +82,49 @@ export default async function LocaleExplorePage({ params, searchParams }: PagePr
   );
 }
 
+const affinitySchema = z.array(z.string());
+
 async function InspirationTab({
   categories,
 }: {
   categories: Array<{ id: string; name: string; slug: string }>;
 }) {
   const user = await getCurrentUser().catch(() => null);
+
+  let preferredCategoryIds: string[] | undefined;
+
+  if (user) {
+    const prefs = await db.userPreferences.findUnique({
+      where: { userId: user.id },
+      select: {
+        personalizationConsentAt: true,
+        personalizationRevokedAt: true,
+        preferredCategoryIds: true,
+      },
+    });
+
+    const consentActive =
+      !!prefs?.personalizationConsentAt &&
+      (!prefs.personalizationRevokedAt ||
+        prefs.personalizationConsentAt > prefs.personalizationRevokedAt);
+
+    if (consentActive && prefs?.preferredCategoryIds) {
+      const parsed = affinitySchema.safeParse(prefs.preferredCategoryIds);
+      if (parsed.success && parsed.data.length > 0) {
+        preferredCategoryIds = parsed.data;
+      }
+    }
+  }
+
+  // Show nudge to logged-in users who have never consented (or revoked).
+  const showPersonalizationNudge =
+    !!user &&
+    !preferredCategoryIds;
+
   const { posts, nextCursor } = await getExplorePosts({
     take: 20,
     userId: user?.id,
+    preferredCategoryIds,
   });
 
   return (
@@ -97,6 +133,7 @@ async function InspirationTab({
       initialNextCursor={nextCursor}
       categories={categories}
       isLoggedIn={!!user}
+      showPersonalizationNudge={showPersonalizationNudge}
     />
   );
 }

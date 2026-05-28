@@ -73,7 +73,14 @@ export function ConsentPreferencesForm({ prefs }: ConsentPreferencesFormProps) {
         onToggle={() => toggle(ConsentCategory.MARKETING, marketingActive)}
       />
       <p className="text-xs text-muted-foreground">
-        Bu seçimler KVKK ve GDPR kapsamında güvenli şekilde saklanır. İstediğiniz zaman geri alabilirsiniz.
+        Bu seçimler KVKK ve GDPR kapsamında güvenli şekilde saklanır. İstediğiniz zaman geri alabilirsiniz.{" "}
+        <a href="/kvkk" className="underline underline-offset-4 hover:text-foreground">
+          KVKK Aydınlatma Metni
+        </a>{" "}
+        ·{" "}
+        <a href="/privacy-policy" className="underline underline-offset-4 hover:text-foreground">
+          Gizlilik Politikası
+        </a>
       </p>
     </div>
   );

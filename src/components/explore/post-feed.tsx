@@ -1,9 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useOptimistic, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { LayoutGrid } from "lucide-react";
 import { PostCard } from "./post-card";
 import { PostFeedCategoryFilter } from "./post-feed-category-filter";
+import { PostMediaViewer } from "./post-media-viewer";
+import { PersonalizationNudge } from "./personalization-nudge";
 import type { ExplorePost } from "@/lib/queries/posts";
 
 type StyleTagData = {
@@ -19,13 +22,20 @@ interface PostFeedProps {
   initialNextCursor: string | null;
   categories: Array<{ id: string; name: string; slug: string }>;
   isLoggedIn: boolean;
+  showPersonalizationNudge?: boolean;
 }
+
+type ViewerState = {
+  post: ExplorePost;
+  mediaIndex: number;
+} | null;
 
 export function PostFeed({
   initialPosts,
   initialNextCursor,
   categories,
   isLoggedIn,
+  showPersonalizationNudge = false,
 }: PostFeedProps) {
   const [posts, setPosts] = useState<ExplorePost[]>(initialPosts);
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
@@ -33,6 +43,7 @@ export function PostFeed({
   const [selectedStyleTagId, setSelectedStyleTagId] = useState<string | undefined>(undefined);
   const [styleTags, setStyleTags] = useState<StyleTagData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [viewerState, setViewerState] = useState<ViewerState>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Fetch style tags once on mount
@@ -118,7 +129,7 @@ export function PostFeed({
       ([entry]) => {
         if (entry.isIntersecting) loadMore();
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -135,8 +146,8 @@ export function PostFeed({
       // Update the posts array so the persisted state is correct after next render
       setPosts((prev) =>
         prev.map((p) =>
-          p.id === postId ? { ...p, savedByCurrentUser: nextSaved } : p
-        )
+          p.id === postId ? { ...p, savedByCurrentUser: nextSaved } : p,
+        ),
       );
     } catch {
       // Revert on error
@@ -159,64 +170,89 @@ export function PostFeed({
   }
 
   return (
-    <div className="space-y-4">
-      <PostFeedCategoryFilter
-        categories={categories}
-        selectedCategoryId={selectedCategoryId}
-        onSelect={handleCategorySelect}
-        styleTags={styleTags}
-        selectedStyleTagId={selectedStyleTagId}
-        onStyleTagSelect={handleStyleTagSelect}
-      />
+    <>
+      <div className="space-y-4">
+        {showPersonalizationNudge && <PersonalizationNudge />}
+        <PostFeedCategoryFilter
+          categories={categories}
+          selectedCategoryId={selectedCategoryId}
+          onSelect={handleCategorySelect}
+          styleTags={styleTags}
+          selectedStyleTagId={selectedStyleTagId}
+          onStyleTagSelect={handleStyleTagSelect}
+        />
 
-      <div className="mx-auto max-w-[480px]">
-        {loading && posts.length === 0 ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="animate-pulse border-b border-border/60 py-4">
-              <div className="flex items-center gap-2.5 px-4 pb-2">
-                <div className="size-9 shrink-0 rounded-full bg-muted" />
-                <div className="space-y-1.5">
-                  <div className="h-3 w-28 rounded bg-muted" />
-                  <div className="h-2 w-20 rounded bg-muted" />
+        <div className="mx-auto max-w-[480px]">
+          {loading && posts.length === 0 ? (
+            /* ── Loading skeleton (two-column) ── */
+            Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse border-b border-border/60 py-3"
+              >
+                <div className="flex gap-2.5 px-4">
+                  {/* Avatar placeholder */}
+                  <div className="size-10 shrink-0 rounded-full bg-muted" />
+                  {/* Content placeholder */}
+                  <div className="flex-1 space-y-2 pt-0.5">
+                    <div className="flex gap-2">
+                      <div className="h-3 w-28 rounded bg-muted" />
+                      <div className="h-3 w-16 rounded bg-muted" />
+                    </div>
+                    <div className="h-3 w-full rounded bg-muted" />
+                    <div className="h-52 rounded-xl bg-muted" />
+                    <div className="flex gap-3 pt-1">
+                      <div className="size-7 rounded-full bg-muted" />
+                      <div className="size-7 rounded-full bg-muted" />
+                      <div className="size-7 rounded-full bg-muted" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="mb-3 px-4 h-3 rounded bg-muted" />
-              <div className="mx-4 h-56 rounded-xl bg-muted" />
-              <div className="flex gap-1 px-4 pt-3">
-                <div className="h-7 w-16 rounded-lg bg-muted" />
-                <div className="h-7 w-24 rounded-lg bg-muted" />
-                <div className="h-7 w-16 rounded-lg bg-muted" />
-              </div>
-            </div>
-          ))
-        ) : (
-          posts.map((post) => {
-            const saved =
-              post.id in optimisticSaves
-                ? optimisticSaves[post.id]
-                : post.savedByCurrentUser;
-            return (
-              <PostCard
-                key={post.id}
-                post={post}
-                isLoggedIn={isLoggedIn}
-                savedByCurrentUser={saved}
-                onSaveToggle={handleSaveToggle}
-              />
-            );
-          })
+            ))
+          ) : (
+            posts.map((post) => {
+              const saved =
+                post.id in optimisticSaves
+                  ? optimisticSaves[post.id]
+                  : post.savedByCurrentUser;
+              return (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  isLoggedIn={isLoggedIn}
+                  savedByCurrentUser={saved}
+                  onSaveToggle={handleSaveToggle}
+                  onMediaClick={(mediaIndex) =>
+                    setViewerState({ post, mediaIndex })
+                  }
+                />
+              );
+            })
+          )}
+        </div>
+
+        {nextCursor && (
+          <div ref={sentinelRef} className="h-8 w-full" aria-hidden />
+        )}
+
+        {loading && posts.length > 0 && (
+          <div className="flex justify-center py-4">
+            <div className="size-5 animate-spin rounded-full border-2 border-border border-t-foreground" />
+          </div>
         )}
       </div>
 
-      {nextCursor && (
-        <div ref={sentinelRef} className="h-8 w-full" aria-hidden />
-      )}
-
-      {loading && posts.length > 0 && (
-        <div className="flex justify-center py-4">
-          <div className="size-5 animate-spin rounded-full border-2 border-border border-t-foreground" />
-        </div>
-      )}
-    </div>
+      {/* ── Full-screen media viewer ── */}
+      {viewerState &&
+        createPortal(
+          <PostMediaViewer
+            media={viewerState.post.media}
+            initialIndex={viewerState.mediaIndex}
+            onClose={() => setViewerState(null)}
+          />,
+          document.body,
+        )}
+    </>
   );
 }

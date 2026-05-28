@@ -56,7 +56,10 @@
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\src\\\\app\\\\\\(auth\\)\" -Recurse | ForEach-Object { $_.FullName })",
       "Bash(Find C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\e2e *)",
       "PowerShell(Get-ChildItem *)",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\" -Depth 1 | Where-Object { $_.Name -eq \"middleware.ts\" } | ForEach-Object { $_.FullName })"
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\" -Depth 1 | Where-Object { $_.Name -eq \"middleware.ts\" } | ForEach-Object { $_.FullName })",
+      "Bash(cookie)",
+      "Bash(terms)",
+      "Bash(legal\")"
     ]
   }
 }

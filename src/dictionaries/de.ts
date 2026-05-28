@@ -45,6 +45,28 @@ const de: Dictionary = {
     es: 'Español',
     bg: 'Bulgarisch',
   },
+  cookieConsent: {
+    bannerTitle: 'Cookie-Nutzung',
+    bannerDescription: 'Wir verwenden Cookies, um die Website sicher zu halten, deine Sprachpräferenz zu speichern und dein Erlebnis zu verbessern. Weitere Informationen findest du in unserer',
+    acceptAll: 'Alle akzeptieren',
+    rejectNonEssential: 'Nur notwendige',
+    managePreferences: 'Einstellungen verwalten',
+    savePreferences: 'Einstellungen speichern',
+    necessaryTitle: 'Notwendig',
+    necessaryDesc: 'Für Anmeldung, Sicherheit und grundlegende Funktionen erforderlich. Kann nicht deaktiviert werden.',
+    preferenceTitle: 'Präferenzen',
+    preferenceDesc: 'Speichert deine Sprach- und Design-Einstellungen. Erforderlich für nutzerseitig angeforderte Funktionen.',
+    analyticsTitle: 'Analyse',
+    analyticsDesc: 'Ermöglicht eine anonyme Analyse des Navigationsverhaltens zur Verbesserung der Plattform.',
+    marketingTitle: 'Marketing',
+    marketingDesc: 'Erforderlich, um Kampagnen und Werbemitteilungen zu erhalten.',
+    alwaysActive: 'Immer aktiv',
+    enabled: 'Aktiv',
+    disabled: 'Deaktiviert',
+    policyUpdatedTitle: 'Unsere Datenschutzrichtlinie wurde aktualisiert',
+    policyUpdatedDesc: 'Wir haben Änderungen an unserer Cookie- und Datenschutzrichtlinie vorgenommen. Bitte überprüfe deine Einstellungen, um fortzufahren.',
+    cookieSettings: 'Cookie-Einstellungen',
+  },
 }
 
 export default de

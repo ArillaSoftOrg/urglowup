@@ -1,18 +1,38 @@
-﻿"use server";
+"use server";
 
+import { createHash } from "crypto";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getUserPreferences } from "@/lib/preferences";
 import { ConsentAction, ConsentCategory, Theme } from "@/generated/prisma/enums";
+import { CONSENT_VERSION } from "@/lib/consent-version";
+import { parseConsentCookie } from "@/lib/cookies";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export type PreferencesFormState = {
   success: boolean;
   message?: string;
 };
 
-// ── Notification Preferences ──────────────────────────────────────
+// ── Internal helpers ──────────────────────────────────────────────────────────
+
+/** Produce a SHA-256 hex digest of the request IP (no raw IP stored). */
+async function getIpHash(): Promise<string | null> {
+  try {
+    const h = await headers();
+    const ip =
+      h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      h.get("x-real-ip") ??
+      null;
+    if (!ip) return null;
+    return createHash("sha256").update(ip).digest("hex");
+  } catch {
+    return null;
+  }
+}
+
+// ── Notification Preferences ──────────────────────────────────────────────────
 
 export async function updateNotificationPreferences(
   _prevState: PreferencesFormState,
@@ -52,10 +72,10 @@ export async function updateNotificationPreferences(
   });
 
   revalidatePath("/account/settings");
-  return { success: true, message: "Bildirim tercihleri g\u00fcncellendi." };
+  return { success: true, message: "Bildirim tercihleri güncellendi." };
 }
 
-// ── Consent Preferences ───────────────────────────────────────────
+// ── Consent Preferences ───────────────────────────────────────────────────────
 
 export async function grantConsent(
   category: ConsentCategory
@@ -64,7 +84,6 @@ export async function grantConsent(
   if (!user) return { success: false, message: "Not authenticated" };
 
   const now = new Date();
-  const CONSENT_VERSION = "2026-05";
 
   const updateData: Record<string, unknown> = { consentVersion: CONSENT_VERSION };
   if (category === ConsentCategory.PERSONALIZATION) {
@@ -84,12 +103,17 @@ export async function grantConsent(
     update: updateData,
   });
 
+  const [ipHash, h] = await Promise.all([getIpHash(), headers()]);
+  const userAgent = h.get("user-agent")?.slice(0, 512) ?? null;
+
   await db.consentAuditLog.create({
     data: {
       userId: user.id,
       category,
       action: ConsentAction.GRANTED,
       version: CONSENT_VERSION,
+      ipHash,
+      userAgent,
     },
   });
 
@@ -104,7 +128,6 @@ export async function revokeConsent(
   if (!user) return { success: false, message: "Not authenticated" };
 
   const now = new Date();
-  const CONSENT_VERSION = "2026-05";
 
   const updateData: Record<string, unknown> = {};
   if (category === ConsentCategory.PERSONALIZATION) {
@@ -127,12 +150,17 @@ export async function revokeConsent(
     update: updateData,
   });
 
+  const [ipHash, h] = await Promise.all([getIpHash(), headers()]);
+  const userAgent = h.get("user-agent")?.slice(0, 512) ?? null;
+
   await db.consentAuditLog.create({
     data: {
       userId: user.id,
       category,
       action: ConsentAction.REVOKED,
       version: CONSENT_VERSION,
+      ipHash,
+      userAgent,
     },
   });
 
@@ -140,7 +168,85 @@ export async function revokeConsent(
   return { success: true };
 }
 
-// ── Single notification preference toggle ─────────────────────────
+/**
+ * Sync browser-cookie consent → DB for the current authenticated user.
+ * No-ops if:
+ *  - User is unauthenticated
+ *  - `consentVersion` is already set in DB (user has made a DB-level consent choice)
+ *  - The cookie value is absent or unrecognisable
+ *
+ * Called from the account layout on every authenticated visit; the early-return
+ * on `consentVersion` check ensures it only performs DB writes once.
+ */
+export async function syncBrowserConsentIfNeeded(
+  consentCookieValue: string,
+): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  const prefs = await getUserPreferences(user.id);
+
+  // Already synced from an explicit DB consent action — don't override
+  if (prefs.consentVersion !== null) return;
+
+  const parsed = parseConsentCookie(consentCookieValue);
+  if (!parsed) return;
+
+  const now = new Date();
+  const updateData: Record<string, unknown> = { consentVersion: CONSENT_VERSION };
+
+  if (parsed.analytics) {
+    updateData.analyticsConsentAt = now;
+    updateData.analyticsRevokedAt = null;
+  }
+  if (parsed.marketing) {
+    updateData.marketingConsentAt = now;
+    updateData.marketingRevokedAt = null;
+  }
+
+  await db.userPreferences.update({
+    where: { userId: user.id },
+    data: updateData,
+  });
+
+  // Write audit log entries for every synced category
+  const [ipHash, h] = await Promise.all([getIpHash(), headers()]);
+  const userAgent = h.get("user-agent")?.slice(0, 512) ?? null;
+
+  const categoriesToLog: ConsentCategory[] = [];
+  if (parsed.analytics) categoriesToLog.push(ConsentCategory.ANALYTICS);
+  if (parsed.marketing) categoriesToLog.push(ConsentCategory.MARKETING);
+
+  for (const category of categoriesToLog) {
+    await db.consentAuditLog.create({
+      data: {
+        userId: user.id,
+        category,
+        action: ConsentAction.GRANTED,
+        version: CONSENT_VERSION,
+        ipHash,
+        userAgent,
+      },
+    });
+  }
+}
+
+/**
+ * Record that the current authenticated user has acknowledged the latest
+ * CONSENT_VERSION without changing any existing consent choices.
+ * Called from the cookie banner when `requiresReConsent` is true.
+ */
+export async function acknowledgeConsentVersion(): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user) return;
+  await db.userPreferences.upsert({
+    where: { userId: user.id },
+    create: { userId: user.id, consentVersion: CONSENT_VERSION },
+    update: { consentVersion: CONSENT_VERSION },
+  });
+}
+
+// ── Single notification preference toggle ─────────────────────────────────────
 
 type NotificationField =
   | "emailTransactional"
@@ -175,7 +281,7 @@ export async function updateSingleNotificationPreference(
   return { success: true };
 }
 
-// ── Get preferences (for server components) ───────────────────────
+// ── Get preferences (for server components) ───────────────────────────────────
 
 export async function getMyPreferences() {
   const user = await getCurrentUser();
@@ -183,7 +289,7 @@ export async function getMyPreferences() {
   return getUserPreferences(user.id);
 }
 
-// ── Theme Preference ──────────────────────────────────────────────
+// ── Theme Preference ──────────────────────────────────────────────────────────
 
 const VALID_THEMES = new Set<string>(["LIGHT", "DARK", "SYSTEM"]);
 

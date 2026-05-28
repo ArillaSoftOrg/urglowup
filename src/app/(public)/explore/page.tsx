@@ -106,6 +106,11 @@ async function InspirationTab({
     }
   }
 
+  // Show nudge to logged-in users who have never consented (or revoked).
+  const showPersonalizationNudge =
+    !!user &&
+    !preferredCategoryIds;
+
   const { posts, nextCursor } = await getExplorePosts({
     take: 20,
     userId: user?.id,
@@ -118,6 +123,7 @@ async function InspirationTab({
       initialNextCursor={nextCursor}
       categories={categories}
       isLoggedIn={!!user}
+      showPersonalizationNudge={showPersonalizationNudge}
     />
   );
 }
