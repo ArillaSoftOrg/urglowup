@@ -1,6 +1,11 @@
 import { Resend } from "resend";
 import type { ReactElement } from "react";
 import { env } from "./env";
+import {
+  diagnoseResendError,
+  logEmailEvent,
+  type EmailFailureType,
+} from "./email-diagnostics";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
@@ -15,6 +20,7 @@ export interface SendEmailOptions {
   react: ReactElement;
   replyTo?: string;
   tags?: EmailTag[];
+  template?: string;
 }
 
 export async function sendEmail({
@@ -23,23 +29,77 @@ export async function sendEmail({
   react,
   replyTo,
   tags,
-}: SendEmailOptions): Promise<void> {
-  const response = await resend.emails.send({
-    from: env.EMAIL_FROM,
+  template,
+}: SendEmailOptions): Promise<{
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  errorType?: EmailFailureType;
+}> {
+  logEmailEvent({
+    type: "send_attempt",
     to,
     subject,
-    react,
-    replyTo: replyTo ?? env.EMAIL_REPLY_TO,
-    tags,
+    template,
   });
 
-  if (response.error) {
-    console.error("[email] Failed to send email", {
+  try {
+    const response = await resend.emails.send({
+      from: env.EMAIL_FROM,
       to,
       subject,
-      error: response.error,
+      react,
+      replyTo: replyTo ?? env.EMAIL_REPLY_TO,
+      tags,
     });
 
-    throw new Error(`Failed to send email: ${subject}`);
+    if (response.error) {
+      const diagnosis = diagnoseResendError(response.error);
+
+      logEmailEvent({
+        type: "send_failure",
+        to,
+        subject,
+        template,
+        errorType: diagnosis.type,
+        errorMessage: diagnosis.message,
+      });
+
+      return {
+        success: false,
+        error: diagnosis.message,
+        errorType: diagnosis.type,
+      };
+    }
+
+    logEmailEvent({
+      type: "send_success",
+      to,
+      subject,
+      template,
+      resendMessageId: response.data?.id,
+    });
+
+    return {
+      success: true,
+      messageId: response.data?.id,
+    };
+  } catch (error) {
+    const diagnosis = diagnoseResendError(error);
+
+    logEmailEvent({
+      type: "send_failure",
+      to,
+      subject,
+      template,
+      errorType: diagnosis.type,
+      errorMessage: diagnosis.message,
+    });
+
+    return {
+      success: false,
+      error: diagnosis.message,
+      errorType: diagnosis.type,
+    };
   }
 }

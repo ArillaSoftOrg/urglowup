@@ -176,7 +176,7 @@ export async function signUpAction(
     success: true,
     tone: "success",
     message:
-      "Hesabınız oluşturuldu. Devam etmek için doğrulama e-postasını açın. E-posta birkaç dakika içinde gelmezse spam klasörünü kontrol edin.",
+      "Hesabınız oluşturuldu. Devam etmek için doğrulama e-postasını açın. E-posta birkaç dakika içinde gelmezse spam klasörünü kontrol edin. Hala almadıysanız 'Doğrulama E-postasını Tekrar Gönder'i kullanabilirsiniz.",
   };
 }
 
@@ -324,7 +324,7 @@ export async function resendVerificationAction(
     success: true,
     tone: "success",
     message:
-      "Eğer bu e-posta adresi doğrulanmamış bir hesaba aitse, yeni doğrulama bağlantısı gönderildi.",
+      "Doğrulama bağlantısı gönderme isteği alındı. Lütfen gelen kutunuzu ve spam klasörünü kontrol edin.",
   };
 }
 
@@ -545,7 +545,12 @@ async function resendVerificationEmail(
     });
 
     return true;
-  } catch {
+  } catch (error) {
+    // Log the error for diagnostics without exposing details to the user.
+    console.error("[auth:resend-verification-failed]", {
+      email: email.split("@")[1] ? `${email.substring(0, 2)}***@${email.split("@")[1]}` : "[redacted]",
+      error: String(error),
+    });
     return false;
   }
 }

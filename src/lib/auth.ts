@@ -104,7 +104,7 @@ export const auth = betterAuth({
     autoSignIn: false,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
-      await sendEmail({
+      const result = await sendEmail({
         to: user.email,
         subject: "UrGlowUp sifre sifirlama baglantin",
         react: React.createElement(AuthPasswordReset, { resetUrl: url }),
@@ -112,14 +112,26 @@ export const auth = betterAuth({
           { name: "flow", value: "auth" },
           { name: "template", value: "password-reset" },
         ],
+        template: "password-reset",
       });
+
+      if (!result.success) {
+        console.error("[auth:password-reset-email-failed]", {
+          userId: user.id,
+          email: user.email,
+          errorType: result.errorType,
+          errorMessage: result.error,
+        });
+        // Don't throw — let the reset token be created anyway.
+        // Better to have a reset token than to fail the entire request.
+      }
     },
   },
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
+      const result = await sendEmail({
         to: user.email,
         subject: "UrGlowUp hesabini dogrula",
         react: React.createElement(AuthEmailVerification, {
@@ -129,7 +141,19 @@ export const auth = betterAuth({
           { name: "flow", value: "auth" },
           { name: "template", value: "email-verification" },
         ],
+        template: "email-verification",
       });
+
+      if (!result.success) {
+        console.error("[auth:verification-email-failed]", {
+          userId: user.id,
+          email: user.email,
+          errorType: result.errorType,
+          errorMessage: result.error,
+        });
+        // Don't throw — let the account be created anyway.
+        // The user can use "resend verification email" later.
+      }
     },
   },
   advanced: {

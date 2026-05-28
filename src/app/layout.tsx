@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { headers, cookies } from "next/headers";
+import { bootstrapEmailConfig } from "@/lib/email-bootstrap";
 import "./globals.css";
+
+// Validate email config on startup
+bootstrapEmailConfig();
 
 export const metadata: Metadata = {
   metadataBase: new URL(
