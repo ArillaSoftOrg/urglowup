@@ -22,7 +22,15 @@ export function BotProtectionFields() {
         />
       </div>
       {siteKey && (
-        <div className="space-y-2">
+        <div className="space-y-3 rounded-md border border-border/70 bg-muted/30 p-3">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              Güvenlik doğrulaması
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Devam etmeden önce robot olmadığını doğrula.
+            </p>
+          </div>
           <Script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
             strategy="afterInteractive"
@@ -30,7 +38,7 @@ export function BotProtectionFields() {
           <div
             className="cf-turnstile"
             data-sitekey={siteKey}
-            data-theme="light"
+            data-theme="auto"
             data-size="normal"
           />
         </div>

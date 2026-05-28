@@ -4,6 +4,7 @@ import {
   buildAuthRedirectQuery,
   normalizeAuthRedirect,
 } from "@/lib/auth-redirect";
+import { env } from "@/lib/env";
 
 export const metadata = { title: "Giriş Yap" };
 
@@ -14,6 +15,9 @@ interface PageProps {
 export default async function LoginPage({ searchParams }: PageProps) {
   const { redirect_url, reset } = await searchParams;
   const redirectTo = normalizeAuthRedirect(redirect_url);
+  const googleEnabled = Boolean(
+    env.GOOGLE_AUTH_CLIENT_ID && env.GOOGLE_AUTH_CLIENT_SECRET,
+  );
 
   return (
     <AuthCard
@@ -23,7 +27,11 @@ export default async function LoginPage({ searchParams }: PageProps) {
       footerHref={`/register${buildAuthRedirectQuery(redirectTo)}`}
       footerLabel="Kayıt ol"
     >
-      <LoginForm redirectTo={redirectTo} resetSuccess={reset === "success"} />
+      <LoginForm
+        redirectTo={redirectTo}
+        resetSuccess={reset === "success"}
+        googleEnabled={googleEnabled}
+      />
     </AuthCard>
   );
 }

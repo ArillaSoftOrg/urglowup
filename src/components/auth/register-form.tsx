@@ -3,17 +3,36 @@
 import { useActionState } from "react";
 import { signUpAction } from "@/app/(auth)/actions";
 import { AuthFormFeedback } from "@/components/auth/auth-form-feedback";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
+export function RegisterForm({
+  redirectTo,
+  googleEnabled = false,
+}: {
+  redirectTo?: string;
+  googleEnabled?: boolean;
+}) {
   const [state, formAction, pending] = useActionState(signUpAction, {
     success: false,
   });
 
   return (
-    <form action={formAction} className="space-y-4">
+    <div className="space-y-4">
+      {googleEnabled ? (
+        <>
+          <GoogleSignInButton redirectTo={redirectTo} />
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-xs text-muted-foreground">veya e-posta ile</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+        </>
+      ) : null}
+
+      <form action={formAction} className="space-y-4">
       {redirectTo ? (
         <input type="hidden" name="redirectTo" value={redirectTo} />
       ) : null}
@@ -70,5 +89,6 @@ export function RegisterForm({ redirectTo }: { redirectTo?: string }) {
         {pending ? "Hesap oluşturuluyor..." : "Hesap oluştur"}
       </Button>
     </form>
+    </div>
   );
 }

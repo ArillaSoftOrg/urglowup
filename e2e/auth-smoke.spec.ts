@@ -101,3 +101,29 @@ test("verify-email footer link navigates back to login", async ({ page }) => {
   await page.getByRole("link", { name: "Giriş ekranına dön" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
+
+test("login page shows Google sign-in button when configured", async ({
+  page,
+}) => {
+  test.skip(
+    !process.env.GOOGLE_AUTH_CLIENT_ID,
+    "Google Sign-In not configured — set GOOGLE_AUTH_CLIENT_ID to run this test",
+  );
+  await page.goto("/login");
+  await expect(
+    page.getByRole("button", { name: /Google ile devam et/ }),
+  ).toBeVisible();
+});
+
+test("register page shows Google sign-in button when configured", async ({
+  page,
+}) => {
+  test.skip(
+    !process.env.GOOGLE_AUTH_CLIENT_ID,
+    "Google Sign-In not configured — set GOOGLE_AUTH_CLIENT_ID to run this test",
+  );
+  await page.goto("/register");
+  await expect(
+    page.getByRole("button", { name: /Google ile devam et/ }),
+  ).toBeVisible();
+});

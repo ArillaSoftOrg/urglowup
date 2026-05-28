@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signInAction } from "@/app/(auth)/actions";
 import { AuthFormFeedback } from "@/components/auth/auth-form-feedback";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +14,11 @@ import { buildAuthRedirectQuery } from "@/lib/auth-redirect";
 export function LoginForm({
   redirectTo,
   resetSuccess = false,
+  googleEnabled = false,
 }: {
   redirectTo?: string;
   resetSuccess?: boolean;
+  googleEnabled?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(signInAction, {
     success: false,
@@ -23,7 +26,19 @@ export function LoginForm({
   const redirectQuery = buildAuthRedirectQuery(redirectTo);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <div className="space-y-4">
+      {googleEnabled ? (
+        <>
+          <GoogleSignInButton redirectTo={redirectTo} />
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-xs text-muted-foreground">veya e-posta ile</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+        </>
+      ) : null}
+
+      <form action={formAction} className="space-y-4">
       {redirectTo ? (
         <input type="hidden" name="redirectTo" value={redirectTo} />
       ) : null}
@@ -83,5 +98,6 @@ export function LoginForm({
         {pending ? "Giriş yapılıyor..." : "Giriş yap"}
       </Button>
     </form>
+    </div>
   );
 }

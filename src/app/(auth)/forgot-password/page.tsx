@@ -18,7 +18,7 @@ export default async function ForgotPasswordPage({ searchParams }: PageProps) {
   return (
     <AuthCard
       title="Şifreni sıfırla"
-      description="E-posta adresini gir. Hesabın kayıtlıysa sana güvenli bir şifre sıfırlama bağlantısı gönderelim."
+      description="E-posta adresini gir. Şifre sıfırlama talebini güvenli şekilde işleyelim."
       footerText="Şifreni hatırladın mı?"
       footerHref={`/login${buildAuthRedirectQuery(redirectTo)}`}
       footerLabel="Giriş yap"

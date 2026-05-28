@@ -43,6 +43,9 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().optional(),
   GOOGLE_BUSINESS_PROFILE_SCOPES: z.string().optional(),
+  // Google Sign-In (user authentication — separate from Business Profile above)
+  GOOGLE_AUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_AUTH_CLIENT_SECRET: z.string().optional(),
   // 64 hex chars = 32 bytes for AES-256-GCM OAuth token encryption
   OAUTH_TOKEN_ENCRYPTION_KEY: z
     .string()

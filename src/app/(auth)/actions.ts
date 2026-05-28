@@ -233,7 +233,7 @@ export async function forgotPasswordAction(
     success: true,
     tone: "success",
     message:
-      "Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama bağlantısı gönderildi.",
+      "Talebini aldık. Bu adresle eşleşen bir hesap varsa şifre sıfırlama bağlantısını gönderdik.",
   };
 }
 
@@ -326,6 +326,39 @@ export async function resendVerificationAction(
     message:
       "Eğer bu e-posta adresi doğrulanmamış bir hesaba aitse, yeni doğrulama bağlantısı gönderildi.",
   };
+}
+
+export async function signInWithGoogleAction(
+  _prevState: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const redirectTo = normalizeAuthRedirect(
+    formData.get("redirectTo")?.toString(),
+  );
+
+  let oauthUrl: string | undefined;
+  try {
+    const result = await auth.api.signInSocial({
+      body: {
+        provider: "google",
+        callbackURL: redirectTo,
+        errorCallbackURL: "/login",
+        disableRedirect: true,
+      },
+      headers: await headers(),
+    });
+    oauthUrl = result.url;
+  } catch {
+    return errorState(
+      "Google ile giriş şu anda başlatılamıyor. Lütfen e-posta ile giriş yapın.",
+    );
+  }
+
+  if (oauthUrl) {
+    redirect(oauthUrl);
+  }
+
+  return errorState("Google OAuth başlatılamadı. Lütfen tekrar deneyin.");
 }
 
 export async function signOutAction() {

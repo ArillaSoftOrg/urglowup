@@ -18,8 +18,6 @@ interface PostCardProps {
   onSaveToggle: (postId: string, currentlySaved: boolean) => void;
 }
 
-const MAX_MEDIA_HEIGHT = 560;
-
 export function PostCard({
   post,
   isLoggedIn,
@@ -30,6 +28,15 @@ export function PostCard({
   const [muted, setMuted] = useState(true);
   const [videoCanPlay, setVideoCanPlay] = useState(false);
   const [nearViewport, setNearViewport] = useState(false);
+
+  // Responsive media height cap — mobile-first, Twitter/X-like density.
+  // Lazy initializer runs once on the client; server-side returns 320 (mobile default).
+  const [maxMediaH] = useState<number>(() => {
+    if (typeof window === "undefined") return 320;
+    if (window.innerWidth >= 1024) return 480;
+    if (window.innerWidth >= 640) return 400;
+    return 320;
+  });
 
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -46,11 +53,11 @@ export function PostCard({
   const mediaContainerStyle: React.CSSProperties = ar
     ? {
         aspectRatio: `${mw} / ${mh}`,
-        width: `min(100%, ${(MAX_MEDIA_HEIGHT * ar).toFixed(2)}px)`,
+        width: `min(100%, ${(maxMediaH * ar).toFixed(2)}px)`,
       }
     : {
         width: "100%",
-        maxHeight: `${MAX_MEDIA_HEIGHT}px`,
+        maxHeight: `${maxMediaH}px`,
       };
 
   useEffect(() => {
@@ -170,13 +177,13 @@ export function PostCard({
       {/* ── Media ── */}
       {post.media.length > 0 && (
         <div
-          className="mb-3 px-4"
+          className="mb-2 px-4"
           onTouchStart={hasMultiple ? handleTouchStart : undefined}
           onTouchEnd={hasMultiple ? handleTouchEnd : undefined}
         >
           <div
             className={cn(
-              "relative overflow-hidden rounded-xl",
+              "relative mx-auto overflow-hidden rounded-xl",
               isVideo && "bg-black cursor-pointer",
             )}
             style={mediaContainerStyle}

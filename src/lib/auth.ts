@@ -26,6 +26,18 @@ function resolveTrustedOrigins() {
   );
 }
 
+function buildSocialProviders() {
+  if (!env.GOOGLE_AUTH_CLIENT_ID || !env.GOOGLE_AUTH_CLIENT_SECRET) {
+    return undefined;
+  }
+  return {
+    google: {
+      clientId: env.GOOGLE_AUTH_CLIENT_ID,
+      clientSecret: env.GOOGLE_AUTH_CLIENT_SECRET,
+    },
+  };
+}
+
 export const auth = betterAuth({
   appName: "UrGlowUp",
   baseURL: env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_APP_URL,
@@ -128,6 +140,7 @@ export const auth = betterAuth({
       ipv6Subnet: 64,
     },
   },
+  socialProviders: buildSocialProviders(),
   plugins: [nextCookies()],
 });
 
