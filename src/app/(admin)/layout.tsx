@@ -4,9 +4,11 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 
 const adminNav = [
   { title: "Dashboard", href: "/admin" },
+  { title: "Moderation", href: "/admin/moderation" },
   { title: "Businesses", href: "/admin/businesses" },
   { title: "Users", href: "/admin/users" },
   { title: "Appointments", href: "/admin/appointments" },
+  { title: "Campaigns", href: "/admin/campaigns" },
   { title: "Media", href: "/admin/media" },
   { title: "Reviews", href: "/admin/reviews" },
   { title: "Categories", href: "/admin/categories" },

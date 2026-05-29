@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Loader2, MessageSquare, MoreHorizontal, Star } from "lucide-react";
 import Link from "next/link";
+import { ReasonGate } from "./reason-gate";
 import {
   adminApproveReview,
   adminHideReview,
@@ -57,6 +58,7 @@ function StarRating({ rating }: { rating: number }) {
 
 function ReviewRow({ review }: { review: AdminReview }) {
   const [isPending, startTransition] = useTransition();
+  const [actionInProgress, setActionInProgress] = useState<"hide" | "remove" | null>(null);
 
   function handleApprove() {
     startTransition(async () => {
@@ -64,15 +66,23 @@ function ReviewRow({ review }: { review: AdminReview }) {
     });
   }
 
-  function handleHide() {
-    startTransition(async () => {
-      await adminHideReview(review.id);
+  async function handleHide(reason: string) {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        await adminHideReview(review.id, reason);
+        setActionInProgress(null);
+        resolve();
+      });
     });
   }
 
-  function handleRemove() {
-    startTransition(async () => {
-      await adminRemoveReview(review.id);
+  async function handleRemove(reason: string) {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        await adminRemoveReview(review.id, reason);
+        setActionInProgress(null);
+        resolve();
+      });
     });
   }
 
@@ -85,6 +95,31 @@ function ReviewRow({ review }: { review: AdminReview }) {
   const customerName = [review.customer.firstName, review.customer.lastName]
     .filter(Boolean)
     .join(" ");
+
+  if (actionInProgress) {
+    return (
+      <div className="border-b p-3 last:border-0">
+        <div className="mb-3 flex items-start justify-between">
+          <div>
+            <p className="font-medium text-slate-900">{review.business.name}</p>
+            <p className="text-xs text-slate-600">{customerName || "Customer"}</p>
+          </div>
+          <button
+            onClick={() => setActionInProgress(null)}
+            className="text-xs text-slate-500 hover:text-slate-700"
+          >
+            Cancel
+          </button>
+        </div>
+        <ReasonGate
+          onConfirm={actionInProgress === "hide" ? handleHide : handleRemove}
+          onCancel={() => setActionInProgress(null)}
+          actionLabel={actionInProgress === "hide" ? "Hide" : "Remove"}
+          isPending={isPending}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-start gap-3 border-b p-3 last:border-0">
@@ -140,12 +175,12 @@ function ReviewRow({ review }: { review: AdminReview }) {
               <DropdownMenuItem onClick={handleApprove}>
                 Approve
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleHide}>
+              <DropdownMenuItem onClick={() => setActionInProgress("hide")}>
                 Hide
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={handleRemove}
+                onClick={() => setActionInProgress("remove")}
                 className="text-destructive focus:text-destructive"
               >
                 Remove
@@ -154,12 +189,12 @@ function ReviewRow({ review }: { review: AdminReview }) {
           )}
           {review.status === "APPROVED" && (
             <>
-              <DropdownMenuItem onClick={handleHide}>
+              <DropdownMenuItem onClick={() => setActionInProgress("hide")}>
                 Hide
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={handleRemove}
+                onClick={() => setActionInProgress("remove")}
                 className="text-destructive focus:text-destructive"
               >
                 Remove
@@ -173,7 +208,7 @@ function ReviewRow({ review }: { review: AdminReview }) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={handleRemove}
+                onClick={() => setActionInProgress("remove")}
                 className="text-destructive focus:text-destructive"
               >
                 Remove

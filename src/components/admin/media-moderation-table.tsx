@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ImageIcon, Loader2, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import { ReasonGate } from "./reason-gate";
 import { hideMedia, removeMedia, restoreMedia } from "@/app/(admin)/admin/actions";
 import { MEDIA_TYPE_LABELS } from "@/lib/constants/media";
 import type { AdminMedia } from "@/lib/queries/admin";
@@ -35,16 +36,25 @@ function formatDate(date: Date): string {
 
 function MediaRow({ item }: { item: AdminMedia }) {
   const [isPending, startTransition] = useTransition();
+  const [actionInProgress, setActionInProgress] = useState<"hide" | "remove" | null>(null);
 
-  function handleHide() {
-    startTransition(async () => {
-      await hideMedia(item.id);
+  async function handleHide(reason: string) {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        await hideMedia(item.id, reason);
+        setActionInProgress(null);
+        resolve();
+      });
     });
   }
 
-  function handleRemove() {
-    startTransition(async () => {
-      await removeMedia(item.id);
+  async function handleRemove(reason: string) {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        await removeMedia(item.id, reason);
+        setActionInProgress(null);
+        resolve();
+      });
     });
   }
 
@@ -59,6 +69,31 @@ function MediaRow({ item }: { item: AdminMedia }) {
     (item.url.includes(".mp4") ||
       item.url.includes(".mov") ||
       item.url.includes(".webm"));
+
+  if (actionInProgress) {
+    return (
+      <div className="border-b p-3 last:border-0">
+        <div className="mb-3 flex items-start justify-between">
+          <div>
+            <p className="font-medium text-slate-900">{item.business.name}</p>
+            {item.title && <p className="text-xs text-slate-600">{item.title}</p>}
+          </div>
+          <button
+            onClick={() => setActionInProgress(null)}
+            className="text-xs text-slate-500 hover:text-slate-700"
+          >
+            Cancel
+          </button>
+        </div>
+        <ReasonGate
+          onConfirm={actionInProgress === "hide" ? handleHide : handleRemove}
+          onCancel={() => setActionInProgress(null)}
+          actionLabel={actionInProgress === "hide" ? "Hide" : "Remove"}
+          isPending={isPending}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-3 border-b p-3 last:border-0">
@@ -119,12 +154,12 @@ function MediaRow({ item }: { item: AdminMedia }) {
         <DropdownMenuContent align="end">
           {item.status === "ACTIVE" && (
             <>
-              <DropdownMenuItem onClick={handleHide}>
+              <DropdownMenuItem onClick={() => setActionInProgress("hide")}>
                 Hide
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={handleRemove}
+                onClick={() => setActionInProgress("remove")}
                 className="text-destructive focus:text-destructive"
               >
                 Remove
@@ -138,7 +173,7 @@ function MediaRow({ item }: { item: AdminMedia }) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={handleRemove}
+                onClick={() => setActionInProgress("remove")}
                 className="text-destructive focus:text-destructive"
               >
                 Remove

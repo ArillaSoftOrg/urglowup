@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -20,11 +22,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Users,
+  Loader2,
+  Search,
+  ChevronDown,
+  Eye,
+  Calendar,
+  Mail,
+} from "lucide-react";
 import Link from "next/link";
 import { changeUserRole } from "@/app/(admin)/admin/actions";
 import type { AdminUser } from "@/lib/queries/admin";
 import type { UserRole } from "@/generated/prisma/enums";
+import type { LifecycleSegment } from "@/lib/admin/user-lifecycle";
+import { LIFECYCLE_COLORS, LIFECYCLE_LABELS } from "@/lib/admin/user-lifecycle";
+import { SuspensionStatusBadge } from "./suspension-status-badge";
 
 const ROLE_COLORS: Record<string, string> = {
   CUSTOMER: "bg-gray-100 text-gray-800",
@@ -32,13 +52,14 @@ const ROLE_COLORS: Record<string, string> = {
   ADMIN: "bg-purple-100 text-purple-800",
 };
 
-const ROLE_LABELS: Record<string, string> = {
+const ROLE_LABELS_MAP: Record<string, string> = {
   CUSTOMER: "Customer",
   BUSINESS_OWNER: "Business Owner",
   ADMIN: "Admin",
 };
 
-function formatDate(date: Date): string {
+function formatDate(date: Date | null | undefined): string {
+  if (!date) return "—";
   return new Date(date).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -46,13 +67,33 @@ function formatDate(date: Date): string {
   });
 }
 
-function UserRow({ user }: { user: AdminUser }) {
+function formatDaysAgo(date: Date | null | undefined): string {
+  if (!date) return "—";
+  const now = new Date();
+  const diffMs = now.getTime() - new Date(date).getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}m ago`;
+  return `${Math.floor(days / 365)}y ago`;
+}
+
+interface UserRowProps {
+  user: AdminUser;
+}
+
+function UserRow({ user }: UserRowProps) {
+  const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(user.role);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  const emailUnverified = !user.emailVerified;
+  const marketingOptIn = user.preferences?.emailMarketing ?? false;
 
   function handleChangeRole() {
     if (selectedRole === user.role) return;
@@ -63,43 +104,90 @@ function UserRow({ user }: { user: AdminUser }) {
         setError(result.message ?? "Failed to change role.");
       } else {
         setDialogOpen(false);
+        router.refresh();
       }
     });
   }
 
   return (
-    <div className="flex items-center justify-between border-b p-3 last:border-0">
+    <div className="flex items-center justify-between border-b p-3 last:border-0 hover:bg-gray-50">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium">{name || user.email}</span>
           <Badge className={`text-xs ${ROLE_COLORS[user.role]}`}>
-            {ROLE_LABELS[user.role]}
+            {ROLE_LABELS_MAP[user.role]}
           </Badge>
+          {emailUnverified && (
+            <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+              Unverified
+            </Badge>
+          )}
+          <Badge
+            className={`text-xs ${
+              LIFECYCLE_COLORS[
+                user.lifecycle as keyof typeof LIFECYCLE_COLORS
+              ]
+            }`}
+          >
+            {LIFECYCLE_LABELS[user.lifecycle as LifecycleSegment]}
+          </Badge>
+          <SuspensionStatusBadge
+            suspendedAt={user.suspendedAt}
+            suspendedUntil={user.suspendedUntil}
+            suspensionReason={user.suspensionReason}
+            size="sm"
+          />
         </div>
-        <p className="text-xs text-muted-foreground">
-          {user.email} &middot; {formatDate(user.createdAt)}
-          {user.business && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {user.email}
+          {user.lastLoginAt && (
             <>
               {" "}
-              &middot;{" "}
-              <Link
-                href={`/admin/businesses/${user.business.id}`}
-                className="text-primary hover:underline"
-              >
-                {user.business.name}
-              </Link>
+              &middot; Last login: {formatDaysAgo(user.lastLoginAt)}
+            </>
+          )}
+          {user.appointmentCount > 0 && (
+            <>
+              {" "}
+              &middot; {user.appointmentCount} booking{user.appointmentCount !== 1 ? "s" : ""}
+            </>
+          )}
+          {marketingOptIn && (
+            <>
+              {" "}
+              &middot; <span className="text-green-600">📧 Marketing</span>
             </>
           )}
         </p>
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setDialogOpen(true)}
-      >
-        Change Role
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <Button variant="ghost" size="sm">
+            <ChevronDown className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => window.location.href = `/admin/users/${user.id}`}>
+            <Eye className="size-4 mr-2" />
+            View Details
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => window.location.href = `/admin/appointments?customerId=${user.id}`}>
+            <Calendar className="size-4 mr-2" />
+            View Appointments
+          </DropdownMenuItem>
+          {emailUnverified && (
+            <DropdownMenuItem>
+              <Mail className="size-4 mr-2" />
+              Resend Verification (coming soon)
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setDialogOpen(true)}>
+            Change Role
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
@@ -107,7 +195,7 @@ function UserRow({ user }: { user: AdminUser }) {
             <DialogTitle>Change User Role</DialogTitle>
             <DialogDescription>
               Change role for {name || user.email}. Current role:{" "}
-              {ROLE_LABELS[user.role]}.
+              {ROLE_LABELS_MAP[user.role]}.
             </DialogDescription>
           </DialogHeader>
 
@@ -155,32 +243,171 @@ function UserRow({ user }: { user: AdminUser }) {
   );
 }
 
-export function UserTable({ users }: { users: AdminUser[] }) {
-  const customers = users.filter((u) => u.role === "CUSTOMER");
-  const owners = users.filter((u) => u.role === "BUSINESS_OWNER");
-  const admins = users.filter((u) => u.role === "ADMIN");
+export interface UserTableProps {
+  users: AdminUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
+type SortField = "name" | "createdAt" | "lastLogin" | "bookings" | "role";
+type SortOrder = "asc" | "desc";
+
+export function UserTable({
+  users,
+  total,
+  page,
+  pageSize,
+  pageCount,
+}: UserTableProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") ?? ""
+  );
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [lifecycle, setLifecycle] = useState<LifecycleSegment | "all">(
+    (searchParams.get("lifecycle") as LifecycleSegment) ?? "all"
+  );
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set("search", term);
+    } else {
+      params.delete("search");
+    }
+    params.set("page", "1");
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleLifecycleFilter = (seg: LifecycleSegment | "all") => {
+    setLifecycle(seg);
+    const params = new URLSearchParams(searchParams);
+    if (seg !== "all") {
+      params.set("lifecycle", seg);
+    } else {
+      params.delete("lifecycle");
+    }
+    params.set("page", "1");
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(newPage));
+    router.push(`?${params.toString()}`);
+  };
+
+  const lifecycleGroups = useMemo(() => {
+    const groups: Record<string, AdminUser[]> = {};
+    const allLifecycles = [
+      "UNVERIFIED",
+      "NEW",
+      "ONBOARDING",
+      "NEVER_BOOKED",
+      "FIRST_BOOKER",
+      "ACTIVE",
+      "RETURNING",
+      "INACTIVE",
+      "CHURNED",
+      "OWNER_ACTIVE",
+      "OWNER_DORMANT",
+    ];
+
+    for (const lc of allLifecycles) {
+      groups[lc] = users.filter((u) => u.lifecycle === lc);
+    }
+
+    return groups;
+  }, [users]);
+
+  const filteredUsers = useMemo(() => {
+    let result = [...users];
+
+    if (sortField === "name") {
+      result.sort((a, b) => {
+        const aName = [a.firstName, a.lastName].filter(Boolean).join(" ");
+        const bName = [b.firstName, b.lastName].filter(Boolean).join(" ");
+        return sortOrder === "asc"
+          ? aName.localeCompare(bName)
+          : bName.localeCompare(aName);
+      });
+    } else if (sortField === "createdAt") {
+      result.sort((a, b) => {
+        const cmp = b.createdAt.getTime() - a.createdAt.getTime();
+        return sortOrder === "asc" ? -cmp : cmp;
+      });
+    } else if (sortField === "lastLogin") {
+      result.sort((a, b) => {
+        const aTime = a.lastLoginAt?.getTime() ?? 0;
+        const bTime = b.lastLoginAt?.getTime() ?? 0;
+        return sortOrder === "asc" ? aTime - bTime : bTime - aTime;
+      });
+    } else if (sortField === "bookings") {
+      result.sort((a, b) => {
+        const cmp = b.appointmentCount - a.appointmentCount;
+        return sortOrder === "asc" ? -cmp : cmp;
+      });
+    }
+
+    return result;
+  }, [users, sortField, sortOrder]);
+
+  const lifecycles = Object.keys(lifecycleGroups) as LifecycleSegment[];
 
   return (
-    <Tabs defaultValue="all">
-      <TabsList>
-        <TabsTrigger value="all">All ({users.length})</TabsTrigger>
-        <TabsTrigger value="customers">
-          Customers ({customers.length})
-        </TabsTrigger>
-        <TabsTrigger value="owners">Owners ({owners.length})</TabsTrigger>
-        <TabsTrigger value="admins">Admins ({admins.length})</TabsTrigger>
-      </TabsList>
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Search users by name or email..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={sortField} onValueChange={(v) => handleSort(v as SortField)}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="createdAt">Date Created</SelectItem>
+            <SelectItem value="name">Name</SelectItem>
+            <SelectItem value="lastLogin">Last Login</SelectItem>
+            <SelectItem value="bookings">Bookings</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {[
-        { value: "all", items: users },
-        { value: "customers", items: customers },
-        { value: "owners", items: owners },
-        { value: "admins", items: admins },
-      ].map(({ value, items }) => (
-        <TabsContent key={value} value={value} className="mt-4">
+      <Tabs value={lifecycle} onValueChange={(v) => handleLifecycleFilter(v as any)}>
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="all">All ({total})</TabsTrigger>
+          {lifecycles.map((lc) => (
+            <TabsTrigger key={lc} value={lc}>
+              {LIFECYCLE_LABELS[lc]} ({lifecycleGroups[lc].length})
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value={lifecycle} className="mt-4">
           <Card>
             <CardContent className="p-0">
-              {items.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <div className="flex flex-col items-center py-8 text-center">
                   <Users className="size-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
@@ -188,12 +415,53 @@ export function UserTable({ users }: { users: AdminUser[] }) {
                   </p>
                 </div>
               ) : (
-                items.map((u) => <UserRow key={u.id} user={u} />)
+                <>
+                  {filteredUsers.map((u) => (
+                    <UserRow key={u.id} user={u} />
+                  ))}
+                </>
               )}
             </CardContent>
           </Card>
+
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between mt-4 text-sm">
+              <p className="text-muted-foreground">
+                Showing {(page - 1) * pageSize + 1}–
+                {Math.min(page * pageSize, total)} of {total}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                {[...Array(pageCount)].map((_, i) => (
+                  <Button
+                    key={i + 1}
+                    variant={page === i + 1 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(i + 1)}
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === pageCount}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </TabsContent>
-      ))}
-    </Tabs>
+      </Tabs>
+    </div>
   );
 }

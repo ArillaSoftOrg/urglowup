@@ -4,12 +4,25 @@ import { requireRole } from "@/lib/auth";
 import { UserRole } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { ADMIN_DASHBOARD_CACHE_TAG } from "@/lib/queries/admin";
+import { after } from "next/server";
 import {
   ADMIN_STATUS_TRANSITIONS,
   MARKETPLACE_VISIBILITY_FOR_STATUS,
 } from "@/lib/constants/business";
-import type { BusinessStatus, PostStatus } from "@/generated/prisma/enums";
+import { STATUS_TRANSITIONS } from "@/lib/constants/booking";
+import {
+  sendConfirmedEmailToCustomer,
+  sendRejectedEmailToCustomer,
+  sendCancelledByBusinessEmailToCustomer,
+  sendReviewRequestEmailToCustomer,
+  sendReviewModeratedEmail,
+  sendPostModeratedEmail,
+  sendMediaModeratedEmail,
+} from "@/lib/email-notifications";
+import type { BusinessStatus, PostStatus, AppointmentStatus } from "@/generated/prisma/enums";
+import { isSuspended } from "@/lib/admin/user-suspension";
 
 export type AdminActionState = {
   success: boolean;
@@ -36,6 +49,13 @@ async function logAdminAction(
 
 function revalidateAdmin() {
   revalidatePath("/admin", "layout");
+  revalidateTag(ADMIN_DASHBOARD_CACHE_TAG, "max");
+}
+
+function revalidateAppointmentPaths() {
+  revalidatePath("/admin/appointments");
+  revalidatePath("/business/appointments");
+  revalidatePath("/account/appointments");
 }
 
 async function getBusinessSlug(
@@ -85,6 +105,162 @@ async function revalidateMarketplacePathsForBusiness(
       revalidatePath(`/city/${encodedCity}/${encodedDistrict}`);
     }
   }
+}
+
+// ─── Appointment Actions ───────────────────────────────────────
+
+const appointmentStatusOverrideSchema = z.object({
+  appointmentId: z.string().min(1),
+  newStatus: z.enum([
+    "PENDING",
+    "CONFIRMED",
+    "REJECTED",
+    "CANCELLED_BY_CUSTOMER",
+    "CANCELLED_BY_BUSINESS",
+    "COMPLETED",
+    "NO_SHOW",
+  ]),
+  adminReason: z.string().min(1, "Reason is required").max(500),
+});
+
+export async function adminOverrideAppointmentStatus(
+  appointmentId: string,
+  newStatus: AppointmentStatus,
+  adminReason: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = appointmentStatusOverrideSchema.safeParse({
+    appointmentId,
+    newStatus,
+    adminReason,
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const appointment = await db.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { status: true, businessId: true, customerId: true },
+  });
+
+  if (!appointment) {
+    return { success: false, message: "Appointment not found." };
+  }
+
+  const allowed = STATUS_TRANSITIONS[appointment.status];
+  if (!allowed.includes(newStatus)) {
+    return {
+      success: false,
+      message: `Cannot change status from ${appointment.status} to ${newStatus}.`,
+    };
+  }
+
+  await db.appointment.update({
+    where: { id: appointmentId },
+    data: { status: newStatus },
+  });
+
+  // Fire notifications based on the new status
+  after(async () => {
+    try {
+      if (newStatus === "CONFIRMED") {
+        await sendConfirmedEmailToCustomer(appointmentId);
+      } else if (newStatus === "REJECTED") {
+        await sendRejectedEmailToCustomer(appointmentId);
+      } else if (newStatus === "CANCELLED_BY_BUSINESS") {
+        await sendCancelledByBusinessEmailToCustomer(appointmentId);
+      } else if (newStatus === "COMPLETED") {
+        await sendReviewRequestEmailToCustomer(appointmentId);
+      }
+    } catch (err) {
+      console.error("[email] adminOverrideAppointmentStatus:", err);
+    }
+  });
+
+  await logAdminAction(
+    admin.id,
+    "appointment.override_status",
+    "Appointment",
+    appointmentId,
+    `${appointment.status} → ${newStatus}, reason: ${adminReason}`
+  );
+
+  revalidateAppointmentPaths();
+  return {
+    success: true,
+    message: `Appointment status changed to ${newStatus}.`,
+  };
+}
+
+export async function adminBulkCancelAppointments(
+  appointmentIds: string[],
+  adminReason: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  if (!appointmentIds || appointmentIds.length === 0) {
+    return { success: false, message: "No appointments selected." };
+  }
+
+  if (!adminReason || adminReason.trim().length === 0) {
+    return { success: false, message: "Reason is required." };
+  }
+
+  if (adminReason.length > 500) {
+    return { success: false, message: "Reason must be 500 characters or less." };
+  }
+
+  const appointments = await db.appointment.findMany({
+    where: {
+      id: { in: appointmentIds },
+      status: { in: ["PENDING", "CONFIRMED"] },
+    },
+    select: { id: true, status: true, customerId: true },
+  });
+
+  if (appointments.length === 0) {
+    return {
+      success: false,
+      message: "No cancelable appointments found. Only PENDING and CONFIRMED appointments can be cancelled.",
+    };
+  }
+
+  // Update all appointments in a transaction
+  await db.$transaction(
+    appointments.map((appt) =>
+      db.appointment.update({
+        where: { id: appt.id },
+        data: { status: "CANCELLED_BY_BUSINESS" },
+      })
+    )
+  );
+
+  // Fire notifications for all cancelled appointments
+  after(async () => {
+    try {
+      for (const appt of appointments) {
+        await sendCancelledByBusinessEmailToCustomer(appt.id);
+      }
+    } catch (err) {
+      console.error("[email] adminBulkCancelAppointments:", err);
+    }
+  });
+
+  await logAdminAction(
+    admin.id,
+    "appointment.bulk_cancel",
+    "Appointment",
+    appointmentIds[0],
+    `Cancelled ${appointments.length} appointments, reason: ${adminReason}`
+  );
+
+  revalidateAppointmentPaths();
+  return {
+    success: true,
+    message: `${appointments.length} appointment${appointments.length !== 1 ? "s" : ""} cancelled.`,
+  };
 }
 
 // ─── Business Actions ──────────────────────────────────────────
@@ -204,6 +380,126 @@ export async function toggleMarketplaceVisibility(
   };
 }
 
+const addNoteSchema = z.object({
+  businessId: z.string().min(1),
+  note: z.string().min(1, "Note cannot be empty").max(2000),
+});
+
+export async function adminAddNote(
+  businessId: string,
+  note: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = addNoteSchema.safeParse({ businessId, note });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const business = await db.business.findUnique({
+    where: { id: businessId },
+    select: { id: true },
+  });
+
+  if (!business) {
+    return { success: false, message: "Business not found." };
+  }
+
+  await logAdminAction(
+    admin.id,
+    "business.admin_note",
+    "Business",
+    businessId,
+    note
+  );
+
+  revalidateAdmin();
+  return { success: true, message: "Note added successfully." };
+}
+
+const addContentNoteSchema = z.object({
+  targetType: z.string().min(1),
+  targetId: z.string().min(1),
+  note: z.string().min(1, "Note cannot be empty").max(2000),
+});
+
+export async function adminAddContentNote(
+  targetType: string,
+  targetId: string,
+  note: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = addContentNoteSchema.safeParse({ targetType, targetId, note });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  await logAdminAction(
+    admin.id,
+    `${targetType.toLowerCase()}.admin_note`,
+    targetType,
+    targetId,
+    note
+  );
+
+  revalidateAdmin();
+  return { success: true, message: "Note added successfully." };
+}
+
+const bulkApproveReviewsSchema = z.object({
+  businessId: z.string().min(1),
+});
+
+export async function bulkApproveReviews(
+  businessId: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = bulkApproveReviewsSchema.safeParse({ businessId });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const business = await db.business.findUnique({
+    where: { id: businessId },
+    select: { id: true },
+  });
+
+  if (!business) {
+    return { success: false, message: "Business not found." };
+  }
+
+  const pendingReviews = await db.review.findMany({
+    where: { businessId, status: "PENDING" },
+    select: { id: true },
+  });
+
+  if (pendingReviews.length === 0) {
+    return { success: true, message: "No pending reviews to approve." };
+  }
+
+  await db.review.updateMany({
+    where: { businessId, status: "PENDING" },
+    data: { status: "APPROVED" },
+  });
+
+  await logAdminAction(
+    admin.id,
+    "business.bulk_approve_reviews",
+    "Business",
+    businessId,
+    `Approved ${pendingReviews.length} review(s)`
+  );
+
+  revalidateAdmin();
+  revalidatePath(`/admin/businesses/${businessId}`);
+  return {
+    success: true,
+    message: `Approved ${pendingReviews.length} review(s).`,
+  };
+}
+
 // ─── User Actions ──────────────────────────────────────────────
 
 const changeRoleSchema = z.object({
@@ -295,7 +591,225 @@ export async function changeUserRole(
   return { success: true, message: `Role updated to ${newRole}.` };
 }
 
+const suspendUserSchema = z.object({
+  userId: z.string().min(1),
+  reason: z.string().min(1, "Reason is required").max(500),
+  durationDays: z.number().int().min(1).optional(),
+});
+
+export async function adminSuspendUser(
+  userId: string,
+  reason: string,
+  durationDays?: number
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = suspendUserSchema.safeParse({ userId, reason, durationDays });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  if (userId === admin.id) {
+    return { success: false, message: "Cannot suspend yourself." };
+  }
+
+  const targetUser = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, suspendedAt: true },
+  });
+
+  if (!targetUser) {
+    return { success: false, message: "User not found." };
+  }
+
+  if (targetUser.suspendedAt) {
+    return { success: false, message: "User is already suspended." };
+  }
+
+  const now = new Date();
+  const suspendedUntil = durationDays
+    ? new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000)
+    : null;
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      suspendedAt: now,
+      suspendedUntil,
+      suspensionReason: reason,
+    },
+  });
+
+  await logAdminAction(
+    admin.id,
+    "user.suspend",
+    "User",
+    userId,
+    `Suspended${durationDays ? ` for ${durationDays} days` : " indefinitely"}, reason: ${reason}`
+  );
+
+  revalidateAdmin();
+  return {
+    success: true,
+    message: `User suspended${durationDays ? ` for ${durationDays} days` : " indefinitely"}.`,
+  };
+}
+
+export async function adminUnsuspendUser(userId: string): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const targetUser = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, suspendedAt: true },
+  });
+
+  if (!targetUser) {
+    return { success: false, message: "User not found." };
+  }
+
+  if (!targetUser.suspendedAt) {
+    return { success: false, message: "User is not suspended." };
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      suspendedAt: null,
+      suspendedUntil: null,
+      suspensionReason: null,
+    },
+  });
+
+  await logAdminAction(
+    admin.id,
+    "user.unsuspend",
+    "User",
+    userId,
+    "Suspension lifted"
+  );
+
+  revalidateAdmin();
+  return { success: true, message: "User unsuspended." };
+}
+
+export async function resendVerificationEmail(
+  userId: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, emailVerified: true },
+  });
+
+  if (!user) {
+    return { success: false, message: "User not found." };
+  }
+
+  if (user.emailVerified) {
+    return { success: false, message: "User email is already verified." };
+  }
+
+  // Create a verification token
+  const verificationToken = Math.random().toString(36).substring(2, 15);
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  try {
+    await db.verification.create({
+      data: {
+        identifier: user.email,
+        value: verificationToken,
+        expiresAt,
+      },
+    });
+
+    // Send email non-blockingly via after()
+    after(async () => {
+      try {
+        const { sendVerificationEmail } = await import("@/lib/email-notifications");
+        await sendVerificationEmail(user.email, verificationToken);
+      } catch (err) {
+        console.error("[email] resendVerificationEmail:", err);
+      }
+    });
+
+    await logAdminAction(
+      admin.id,
+      "user.resend_verification_email",
+      "User",
+      userId,
+      user.email
+    );
+
+    revalidateAdmin();
+    revalidatePath(`/admin/users/${userId}`);
+    return {
+      success: true,
+      message: "Verification email sent.",
+    };
+  } catch (err) {
+    console.error("Failed to resend verification email:", err);
+    return { success: false, message: "Failed to send email." };
+  }
+}
+
+export async function adminResetConsentVersion(
+  userId: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, preferences: true },
+  });
+
+  if (!user) {
+    return { success: false, message: "User not found." };
+  }
+
+  if (!user.preferences) {
+    // Create preferences record if doesn't exist
+    await db.userPreferences.create({
+      data: {
+        userId,
+        consentVersion: null,
+      },
+    });
+  } else {
+    // Reset version to null to trigger re-consent banner
+    await db.userPreferences.update({
+      where: { userId },
+      data: { consentVersion: null },
+    });
+  }
+
+  await logAdminAction(
+    admin.id,
+    "user.reset_consent_version",
+    "User",
+    userId,
+    "Consent version reset to null"
+  );
+
+  revalidateAdmin();
+  revalidatePath(`/admin/users/${userId}`);
+  return {
+    success: true,
+    message: "Consent version reset. User will see re-consent banner on next visit.",
+  };
+}
+
 // ─── Media Actions (Soft Moderation) ───────────────────────────
+
+const hideMediaSchema = z.object({
+  mediaId: z.string().min(1),
+  reason: z.string().min(1, "Reason is required for hiding media").max(500),
+});
+
+const removeMediaSchema = z.object({
+  mediaId: z.string().min(1),
+  reason: z.string().min(1, "Reason is required for removing media").max(500),
+});
 
 async function clearCoverLogoIfNeeded(
   mediaId: string,
@@ -316,9 +830,15 @@ async function clearCoverLogoIfNeeded(
 }
 
 export async function hideMedia(
-  mediaId: string
+  mediaId: string,
+  reason: string
 ): Promise<AdminActionState> {
   const admin = await requireRole(UserRole.ADMIN);
+
+  const result = hideMediaSchema.safeParse({ mediaId, reason });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
 
   const media = await db.businessMedia.findUnique({
     where: { id: mediaId },
@@ -336,25 +856,37 @@ export async function hideMedia(
 
   await clearCoverLogoIfNeeded(mediaId, media.businessId, media.type);
 
+  const details = `${media.status} → HIDDEN, reason: ${reason}`;
+
   await logAdminAction(
     admin.id,
     "media.hide",
     "BusinessMedia",
     mediaId,
-    `${media.status} → HIDDEN`
+    details
   );
 
   const slug = await getBusinessSlug(media.businessId);
   revalidateAdmin();
   if (slug) revalidatePath(`/b/${slug}`);
 
+  after(async () => {
+    await sendMediaModeratedEmail(mediaId, "hidden", reason);
+  });
+
   return { success: true, message: "Media hidden." };
 }
 
 export async function removeMedia(
-  mediaId: string
+  mediaId: string,
+  reason: string
 ): Promise<AdminActionState> {
   const admin = await requireRole(UserRole.ADMIN);
+
+  const result = removeMediaSchema.safeParse({ mediaId, reason });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
 
   const media = await db.businessMedia.findUnique({
     where: { id: mediaId },
@@ -372,17 +904,23 @@ export async function removeMedia(
 
   await clearCoverLogoIfNeeded(mediaId, media.businessId, media.type);
 
+  const details = `${media.status} → REMOVED, reason: ${reason}`;
+
   await logAdminAction(
     admin.id,
     "media.remove",
     "BusinessMedia",
     mediaId,
-    `${media.status} → REMOVED`
+    details
   );
 
   const slug = await getBusinessSlug(media.businessId);
   revalidateAdmin();
   if (slug) revalidatePath(`/b/${slug}`);
+
+  after(async () => {
+    await sendMediaModeratedEmail(mediaId, "removed", reason);
+  });
 
   return { success: true, message: "Media removed." };
 }
@@ -423,6 +961,16 @@ export async function restoreMedia(
 
 // ─── Review Actions ────────────────────────────────────────────
 
+const adminHideReviewSchema = z.object({
+  reviewId: z.string().min(1),
+  reason: z.string().min(1, "Reason is required for hiding a review").max(500),
+});
+
+const adminRemoveReviewSchema = z.object({
+  reviewId: z.string().min(1),
+  reason: z.string().min(1, "Reason is required for removing a review").max(500),
+});
+
 export async function adminApproveReview(
   reviewId: string
 ): Promise<AdminActionState> {
@@ -458,9 +1006,15 @@ export async function adminApproveReview(
 }
 
 export async function adminHideReview(
-  reviewId: string
+  reviewId: string,
+  reason: string
 ): Promise<AdminActionState> {
   const admin = await requireRole(UserRole.ADMIN);
+
+  const result = adminHideReviewSchema.safeParse({ reviewId, reason });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
 
   const review = await db.review.findUnique({
     where: { id: reviewId },
@@ -476,25 +1030,37 @@ export async function adminHideReview(
     data: { status: "HIDDEN" },
   });
 
+  const details = `${review.status} → HIDDEN, reason: ${reason}`;
+
   await logAdminAction(
     admin.id,
     "review.hide",
     "Review",
     reviewId,
-    `${review.status} → HIDDEN`
+    details
   );
 
   const slug = await getBusinessSlug(review.businessId);
   revalidateAdmin();
   if (slug) revalidatePath(`/b/${slug}`);
 
+  after(async () => {
+    await sendReviewModeratedEmail(reviewId, "hidden", reason);
+  });
+
   return { success: true, message: "Review hidden." };
 }
 
 export async function adminRemoveReview(
-  reviewId: string
+  reviewId: string,
+  reason: string
 ): Promise<AdminActionState> {
   const admin = await requireRole(UserRole.ADMIN);
+
+  const result = adminRemoveReviewSchema.safeParse({ reviewId, reason });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
 
   const review = await db.review.findUnique({
     where: { id: reviewId },
@@ -510,17 +1076,23 @@ export async function adminRemoveReview(
     data: { status: "REMOVED" },
   });
 
+  const details = `${review.status} → REMOVED, reason: ${reason}`;
+
   await logAdminAction(
     admin.id,
     "review.remove",
     "Review",
     reviewId,
-    `${review.status} → REMOVED`
+    details
   );
 
   const slug = await getBusinessSlug(review.businessId);
   revalidateAdmin();
   if (slug) revalidatePath(`/b/${slug}`);
+
+  after(async () => {
+    await sendReviewModeratedEmail(reviewId, "removed", reason);
+  });
 
   return { success: true, message: "Review removed." };
 }
@@ -880,11 +1452,31 @@ export async function deleteStyleTag(styleTagId: string): Promise<AdminActionSta
 
 // ─── Post Moderation ────────────────────────────────────────────
 
+const adminSetPostStatusSchema = z.object({
+  postId: z.string().min(1),
+  status: z.enum(["APPROVED", "DRAFT", "HIDDEN", "REMOVED"] as const),
+  reason: z.string().max(500).optional(),
+}).refine(
+  (data) => {
+    if (data.status === "HIDDEN" || data.status === "REMOVED") {
+      return data.reason && data.reason.trim().length > 0;
+    }
+    return true;
+  },
+  { message: "Reason is required for hiding or removing posts", path: ["reason"] }
+);
+
 export async function adminSetPostStatus(
   postId: string,
-  status: PostStatus
+  status: PostStatus,
+  reason?: string
 ): Promise<AdminActionState> {
   const admin = await requireRole(UserRole.ADMIN);
+
+  const result = adminSetPostStatusSchema.safeParse({ postId, status, reason });
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
 
   const post = await db.post.findUnique({
     where: { id: postId },
@@ -897,16 +1489,560 @@ export async function adminSetPostStatus(
 
   await db.post.update({ where: { id: postId }, data: { status } });
 
+  const details = reason
+    ? `${post.status} → ${status}, reason: ${reason}`
+    : `${post.status} → ${status}`;
+
   await logAdminAction(
     admin.id,
     "post.set_status",
     "Post",
     postId,
-    `${post.status} → ${status}`
+    details
   );
 
   revalidatePath("/admin/posts");
   revalidatePath("/explore");
 
+  if (status === "HIDDEN") {
+    after(async () => {
+      await sendPostModeratedEmail(postId, "hidden", reason);
+    });
+  } else if (status === "REMOVED") {
+    after(async () => {
+      await sendPostModeratedEmail(postId, "removed", reason);
+    });
+  }
+
   return { success: true, message: `Post status set to ${status}.` };
+}
+
+// ─── Campaigns ────────────────────────────────────────────────
+
+export interface MarketingAudienceFilters {
+  roles?: string[];
+  businessStatuses?: string[];
+  cities?: string[];
+  categoryIds?: string[];
+  locales?: string[];
+  activeWithinDays?: number;
+}
+
+const campaignFormSchema = z.object({
+  name: z.string().min(1).max(255),
+  channel: z.enum(["EMAIL", "WHATSAPP"]),
+  subject: z.string().max(255).optional(),
+  contentJson: z.any().optional(),
+  templateName: z.string().optional(),
+  templateParams: z.record(z.string(), z.any()).optional(),
+  audienceFilters: z.record(z.string(), z.any()).optional(),
+});
+
+export async function createCampaign(
+  formData: unknown
+): Promise<AdminActionState & { campaignId?: string }> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const validationResult = campaignFormSchema.safeParse(formData);
+  if (!validationResult.success) {
+    return { success: false, message: "Invalid form data." };
+  }
+
+  const data = validationResult.data;
+
+  try {
+    const campaign = await db.campaign.create({
+      data: {
+        name: data.name,
+        channel: data.channel as any,
+        status: "DRAFT",
+        subject: data.subject || null,
+        contentJson: data.contentJson ? data.contentJson : undefined,
+        templateName: data.templateName || null,
+        templateParams: data.templateParams ? data.templateParams : undefined,
+        audienceFilters: (data.audienceFilters || {}) as any,
+        createdById: admin.id,
+      },
+    });
+
+    await logAdminAction(
+      admin.id,
+      "campaign.create",
+      "Campaign",
+      campaign.id,
+      `${data.channel} campaign: ${data.name}`
+    );
+
+    revalidatePath("/admin/campaigns");
+
+    return {
+      success: true,
+      message: "Campaign created.",
+      campaignId: campaign.id,
+    };
+  } catch (err) {
+    console.error("Failed to create campaign:", err);
+    return { success: false, message: "Failed to create campaign." };
+  }
+}
+
+export async function updateCampaign(
+  campaignId: string,
+  formData: unknown
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const validationResult = campaignFormSchema.safeParse(formData);
+  if (!validationResult.success) {
+    return { success: false, message: "Invalid form data." };
+  }
+
+  const data = validationResult.data;
+
+  try {
+    const campaign = await db.campaign.findUnique({
+      where: { id: campaignId },
+      select: { status: true },
+    });
+
+    if (!campaign) {
+      return { success: false, message: "Campaign not found." };
+    }
+
+    if (campaign.status !== "DRAFT") {
+      return {
+        success: false,
+        message: "Can only edit campaigns in DRAFT status.",
+      };
+    }
+
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: {
+        name: data.name,
+        subject: data.subject || null,
+        contentJson: data.contentJson ? data.contentJson : undefined,
+        templateName: data.templateName || null,
+        templateParams: data.templateParams ? data.templateParams : undefined,
+        audienceFilters: (data.audienceFilters || {}) as any,
+      },
+    });
+
+    await logAdminAction(
+      admin.id,
+      "campaign.update",
+      "Campaign",
+      campaignId,
+      `Updated: ${data.name}`
+    );
+
+    revalidatePath(`/admin/campaigns/${campaignId}`);
+    revalidatePath("/admin/campaigns");
+
+    return { success: true, message: "Campaign updated." };
+  } catch (err) {
+    console.error("Failed to update campaign:", err);
+    return { success: false, message: "Failed to update campaign." };
+  }
+}
+
+export async function snapshotCampaignAudience(
+  campaignId: string,
+  audienceFilters: MarketingAudienceFilters
+): Promise<AdminActionState & { recipientCount?: number }> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  try {
+    const campaign = await db.campaign.findUnique({
+      where: { id: campaignId },
+      select: { status: true, channel: true },
+    });
+
+    if (!campaign) {
+      return { success: false, message: "Campaign not found." };
+    }
+
+    if (campaign.status !== "DRAFT") {
+      return {
+        success: false,
+        message: "Can only snapshot audience for DRAFT campaigns.",
+      };
+    }
+
+    // Build audience query based on channel
+    const where: any = {
+      AND: [
+        {
+          preferences: {
+            marketingConsentAt: { not: null },
+            marketingRevokedAt: null,
+          },
+        },
+      ],
+    };
+
+    if (campaign.channel === "EMAIL") {
+      where.AND.push({
+        emailVerified: true,
+        email: { not: null },
+      });
+      where.AND.push({
+        preferences: {
+          emailMarketing: true,
+        },
+      });
+    } else if (campaign.channel === "WHATSAPP") {
+      where.AND.push({
+        OR: [
+          { phone: { not: null } },
+          { business: { whatsapp: { not: null } } },
+        ],
+      });
+      where.AND.push({
+        preferences: {
+          whatsappMarketing: true,
+        },
+      });
+    }
+
+    // Apply filters
+    if (audienceFilters.roles && audienceFilters.roles.length > 0) {
+      where.role = { in: audienceFilters.roles };
+    }
+    if (audienceFilters.locales && audienceFilters.locales.length > 0) {
+      where.preferences = {
+        ...where.preferences,
+        locale: { in: audienceFilters.locales },
+      };
+    }
+
+    // Get eligible users
+    const eligibleUsers = await db.user.findMany({
+      where,
+      select: { id: true, email: true, phone: true },
+    });
+
+    // Delete existing recipients for this campaign (in case re-snapshotting)
+    await db.campaignRecipient.deleteMany({
+      where: { campaignId },
+    });
+
+    // Create campaign recipient records
+    const recipients = eligibleUsers.map((user) => ({
+      campaignId,
+      userId: user.id,
+      recipientEmail: campaign.channel === "EMAIL" ? user.email : null,
+      recipientPhone: campaign.channel === "WHATSAPP" ? user.phone : null,
+      status: "PENDING" as const,
+    }));
+
+    await db.campaignRecipient.createMany({
+      data: recipients,
+    });
+
+    // Update campaign with snapshot count and status
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: {
+        recipientCount: recipients.length,
+        status: "READY",
+        audienceFilters: audienceFilters as any,
+      },
+    });
+
+    await logAdminAction(
+      admin.id,
+      "campaign.snapshot_audience",
+      "Campaign",
+      campaignId,
+      `Snapshotted ${recipients.length} recipients`
+    );
+
+    revalidatePath(`/admin/campaigns/${campaignId}`);
+
+    return {
+      success: true,
+      message: `Campaign ready with ${recipients.length} recipients.`,
+      recipientCount: recipients.length,
+    };
+  } catch (err) {
+    console.error("Failed to snapshot campaign audience:", err);
+    return {
+      success: false,
+      message: "Failed to snapshot audience.",
+    };
+  }
+}
+
+export async function getEmailMarketingAudienceCount(
+  filters: MarketingAudienceFilters
+): Promise<{ count: number; success: boolean }> {
+  await requireRole(UserRole.ADMIN);
+
+  try {
+    const where: any = {
+      AND: [
+        {
+          preferences: {
+            marketingConsentAt: { not: null },
+            marketingRevokedAt: null,
+            emailMarketing: true,
+          },
+        },
+        {
+          emailVerified: true,
+          email: { not: null },
+        },
+      ],
+    };
+
+    if (filters.roles && filters.roles.length > 0) {
+      where.role = { in: filters.roles };
+    }
+
+    const count = await db.user.count({ where });
+    return { count, success: true };
+  } catch {
+    return { count: 0, success: false };
+  }
+}
+
+export async function sendMarketingWhatsAppCampaign(
+  campaignId: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  try {
+    const campaign = await db.campaign.findUnique({
+      where: { id: campaignId },
+    });
+
+    if (!campaign) {
+      return { success: false, message: "Campaign not found." };
+    }
+
+    // Phase 4: WhatsApp campaigns require Meta template pre-approval
+    // This is a placeholder implementation for now
+    return {
+      success: false,
+      message: "WhatsApp campaign sending is not yet available. Phase 4 requires Meta-approved templates to be set up first.",
+    };
+  } catch (err) {
+    console.error("Failed to send WhatsApp campaign:", err);
+    return { success: false, message: "Failed to process WhatsApp campaign." };
+  }
+}
+
+export async function sendMarketingEmailCampaign(
+  campaignId: string
+): Promise<AdminActionState & { sentCount?: number; failedCount?: number }> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  try {
+    const campaign = await db.campaign.findUnique({
+      where: { id: campaignId },
+      include: {
+        recipients: {
+          where: { status: "PENDING" },
+          select: {
+            id: true,
+            userId: true,
+            recipientEmail: true,
+            user: {
+              select: {
+                firstName: true,
+                preferences: {
+                  select: {
+                    marketingConsentAt: true,
+                    marketingRevokedAt: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!campaign) {
+      return { success: false, message: "Campaign not found." };
+    }
+
+    if (campaign.status !== "READY") {
+      return {
+        success: false,
+        message: "Campaign must be in READY status to send.",
+      };
+    }
+
+    if (campaign.channel !== "EMAIL") {
+      return {
+        success: false,
+        message: "This function is for email campaigns only.",
+      };
+    }
+
+    // Check for dry-run mode
+    const isDryRun = process.env.CAMPAIGN_DRY_RUN === "true";
+
+    const recipients = campaign.recipients;
+
+    if (recipients.length === 0) {
+      return { success: false, message: "No pending recipients." };
+    }
+
+    // Check audience size cap for Phase 1
+    if (recipients.length > 2000) {
+      return {
+        success: false,
+        message: "Phase 1 limited to 2,000 recipients. Please use Phase 2 queue infrastructure.",
+      };
+    }
+
+    // Update campaign status to SENDING
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: { status: "SENDING" },
+    });
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const errors: Record<string, number> = {};
+
+    // Send in batches (respecting Resend rate limits)
+    const batchSize = 50;
+    const { sendEmail } = await import("@/lib/email");
+    const { MarketingEmail } = await import("@/emails/marketing-base");
+    const React = await import("react");
+    const { ensureUnsubscribeToken } = await import("@/lib/unsubscribe");
+
+    for (let i = 0; i < recipients.length; i += batchSize) {
+      const batch = recipients.slice(i, i + batchSize);
+
+      // Process batch concurrently
+      const results = await Promise.all(
+        batch.map(async (recipient) => {
+          // Double-check consent at send time
+          if (
+            !recipient.user.preferences?.marketingConsentAt ||
+            recipient.user.preferences?.marketingRevokedAt
+          ) {
+            return { success: false, error: "Consent revoked" };
+          }
+
+          try {
+            // Generate unsubscribe token
+            const unsubscribeToken = await ensureUnsubscribeToken(
+              recipient.userId
+            );
+            const unsubscribeUrl = new URL(
+              `/api/unsubscribe/${unsubscribeToken}`,
+              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+            ).toString();
+
+            if (isDryRun) {
+              console.log(
+                `[CAMPAIGN_DRY_RUN] Would send email to ${recipient.recipientEmail}`
+              );
+              return { success: true, messageId: `dry-run-${Date.now()}` };
+            }
+
+            // Send email
+            const result = await sendEmail({
+              to: recipient.recipientEmail!,
+              subject: campaign.subject!,
+              react: React.createElement(MarketingEmail, {
+                preview: campaign.subject || "UrGlowUp Marketing",
+                subject: campaign.subject!,
+                unsubscribeUrl,
+                children: React.createElement("div", {
+                  dangerouslySetInnerHTML: {
+                    __html:
+                      (typeof campaign.contentJson === 'object' && !Array.isArray(campaign.contentJson) && (campaign.contentJson as any)?.body) as string ||
+                      "<p>No content</p>",
+                  },
+                }),
+              }),
+              tags: [
+                { name: "flow", value: "marketing" },
+                { name: "campaign", value: campaignId },
+              ],
+              template: "marketing",
+            });
+
+            return result;
+          } catch (err) {
+            console.error(`Failed to send to ${recipient.recipientEmail}:`, err);
+            return { success: false, error: String(err) };
+          }
+        })
+      );
+
+      // Update recipient statuses
+      for (let j = 0; j < batch.length; j++) {
+        const result = results[j];
+        const recipient = batch[j];
+
+        if (result.success) {
+          await db.campaignRecipient.update({
+            where: { id: recipient.id },
+            data: {
+              status: "SENT",
+              providerMessageId: result.messageId,
+              sentAt: new Date(),
+            },
+          });
+          sentCount++;
+        } else {
+          const errorMsg = result.error || "Unknown error";
+          errors[errorMsg] = (errors[errorMsg] || 0) + 1;
+          await db.campaignRecipient.update({
+            where: { id: recipient.id },
+            data: {
+              status: "FAILED",
+              errorMessage: errorMsg,
+            },
+          });
+          failedCount++;
+        }
+      }
+
+      // Rate limit: 200ms between batches
+      if (i + batchSize < recipients.length) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+    }
+
+    // Update campaign with final status
+    const finalStatus = failedCount > 0 ? "PARTIAL_FAILURE" : "SENT";
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: {
+        status: finalStatus,
+        sentAt: new Date(),
+        completedAt: new Date(),
+      },
+    });
+
+    await logAdminAction(
+      admin.id,
+      "campaign.send",
+      "Campaign",
+      campaignId,
+      `Sent to ${sentCount} recipients, ${failedCount} failed`
+    );
+
+    revalidatePath(`/admin/campaigns/${campaignId}`);
+    revalidatePath("/admin/campaigns");
+
+    return {
+      success: true,
+      message: `Campaign sent to ${sentCount} recipients${failedCount > 0 ? ` (${failedCount} failed)` : ""}.`,
+      sentCount,
+      failedCount,
+    };
+  } catch (err) {
+    console.error("Failed to send campaign:", err);
+    return { success: false, message: "Failed to send campaign." };
+  }
 }

@@ -6,6 +6,7 @@ import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { generateTimeSlots } from "@/lib/slots";
+import { isSuspended } from "@/lib/admin/user-suspension";
 import {
   MIN_ADVANCE_HOURS,
   MAX_ADVANCE_DAYS,
@@ -154,6 +155,10 @@ export async function createAppointmentRequest(
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, message: "Randevu talep etmek için giriş yapmalısınız." };
+  }
+
+  if (isSuspended(user)) {
+    return { success: false, message: "Hesabınız askıya alınmıştır. Destek ile iletişime geçin." };
   }
 
   const raw = Object.fromEntries(formData.entries());

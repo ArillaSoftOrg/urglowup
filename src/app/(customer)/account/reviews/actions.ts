@@ -6,6 +6,8 @@ import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { EDITABLE_STATUSES, MAX_COMMENT_LENGTH } from "@/lib/constants/reviews";
 import { getGlobalAverage, recalculateBusinessStats } from "@/lib/ratings/calculator";
+import { env } from "@/lib/env";
+import { isSuspended } from "@/lib/admin/user-suspension";
 
 export type ReviewActionState = {
   success: boolean;
@@ -59,6 +61,10 @@ export async function submitReview(
     return { success: false, message: "Not authenticated." };
   }
 
+  if (isSuspended(user)) {
+    return { success: false, message: "Your account is suspended. Please contact support." };
+  }
+
   const result = submitSchema.safeParse({
     appointmentId: formData.get("appointmentId"),
     rating: formData.get("rating"),
@@ -104,6 +110,9 @@ export async function submitReview(
   // Appointment-linked reviews get full trust weight; unlinked get reduced weight
   const trustWeight = appointmentId ? 1.0 : 0.75;
 
+  // Feature flag: REVIEW_MODERATION_MODE controls whether reviews are auto-approved or pending
+  const reviewStatus = env.REVIEW_MODERATION_MODE === "pending" ? "PENDING" : "APPROVED";
+
   await db.review.create({
     data: {
       businessId: appointment.businessId,
@@ -113,7 +122,7 @@ export async function submitReview(
       trustWeight,
       comment: comment || null,
       source: "URGLOWUP",
-      status: "APPROVED", // Auto-approve for MVP; Phase 9 may change to PENDING
+      status: reviewStatus,
     },
   });
 

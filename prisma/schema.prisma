@@ -97,6 +97,7 @@ enum MediaStatus {
 }
 
 enum NotificationChannel {
+  EMAIL
   WHATSAPP
 }
 
@@ -141,6 +142,16 @@ enum ConsentAction {
   REVOKED
 }
 
+enum CampaignStatus {
+  DRAFT
+  READY
+  SENDING
+  SENT
+  PARTIAL_FAILURE
+  FAILED
+  ARCHIVED
+}
+
 enum DayOfWeek {
   MONDAY
   TUESDAY
@@ -178,6 +189,9 @@ model User {
   role           UserRole @default(CUSTOMER)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  suspendedAt    DateTime?
+  suspendedUntil DateTime?
+  suspensionReason String?
 
   business            Business?
   accounts            Account[]
@@ -191,6 +205,9 @@ model User {
   preferences         UserPreferences?
   consentAuditLogs    ConsentAuditLog[]
   notificationLogs    NotificationLog[]
+  campaignRecipients  CampaignRecipient[]          @relation("CampaignRecipients")
+  unsubscribeToken    UnsubscribeToken?            @relation("UnsubscribeTokens")
+  createdCampaigns    Campaign[]
   sessions            Session[]
 }
 
@@ -734,6 +751,61 @@ model ConsentAuditLog {
 
   @@index([userId, category])
   @@index([createdAt])
+}
+
+// ─── Campaign & Marketing ────────────────────────────────────────────────────
+
+model Campaign {
+  id               String         @id @default(cuid())
+  name             String
+  channel          NotificationChannel
+  status           CampaignStatus @default(DRAFT)
+  audienceFilters  Json           // snapshot of segmentation params
+  recipientCount   Int?           // set at snapshot time
+  subject          String?        // email only
+  templateName     String?        // whatsapp only
+  templateParams   Json?          // whatsapp parameter values
+  contentJson      Json?          // email body / React template config
+  createdById      String
+  createdBy        User           @relation(fields: [createdById], references: [id])
+  sentAt           DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  recipients CampaignRecipient[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([createdById])
+}
+
+model CampaignRecipient {
+  id                String   @id @default(cuid())
+  campaignId        String
+  campaign          Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User     @relation(name: "CampaignRecipients", fields: [userId], references: [id], onDelete: Cascade)
+  recipientEmail    String?
+  recipientPhone    String?
+  status            NotificationStatus // PENDING|SENT|FAILED|SKIPPED
+  providerMessageId String?
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  sentAt            DateTime?
+
+  @@unique([campaignId, userId])
+  @@index([campaignId, status])
+  @@index([userId])
+}
+
+model UnsubscribeToken {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(name: "UnsubscribeTokens", fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
 }
 
 // ─── External Source Cache (Google Business Profile) ─────────────────────────

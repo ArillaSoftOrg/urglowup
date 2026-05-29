@@ -6,6 +6,7 @@ import type { PostContentType, PostStatus } from "@/generated/prisma/enums";
 import { requireBusiness } from "@/lib/auth";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
 import { db } from "@/lib/db";
+import { isSuspended } from "@/lib/admin/user-suspension";
 
 export type PostActionState = {
   success: boolean;
@@ -42,7 +43,16 @@ const createPostSchema = z
 export async function createPost(
   data: z.infer<typeof createPostSchema>,
 ): Promise<PostActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId, user } = await requireBusiness();
+
+  const owner = await db.user.findUnique({
+    where: { id: user.id },
+    select: { suspendedAt: true, suspendedUntil: true },
+  });
+
+  if (owner && isSuspended(owner as any)) {
+    return { success: false, message: "Hesabınız askıya alınmıştır. Destek ile iletişime geçin." };
+  }
 
   const result = createPostSchema.safeParse(data);
   if (!result.success) {

@@ -309,3 +309,149 @@ export async function sendReviewRequestEmailToCustomer(
     }),
   });
 }
+
+// ─── Moderation Notifications ─────────────────────────────────────
+
+/**
+ * Sent to business owner when a review is hidden or removed by admin.
+ */
+export async function sendReviewModeratedEmail(
+  reviewId: string,
+  action: "hidden" | "removed",
+  reason?: string
+): Promise<void> {
+  const review = await db.review.findUnique({
+    where: { id: reviewId },
+    include: {
+      business: {
+        select: {
+          name: true,
+          owner: { select: { email: true, firstName: true, lastName: true } },
+        },
+      },
+    },
+  });
+
+  if (!review) {
+    console.log(`[email] sendReviewModeratedEmail: review ${reviewId} not found`);
+    return;
+  }
+
+  const { ContentModeratedEmail } = await import("@/emails/content-moderated");
+
+  await sendEmail({
+    to: review.business.owner.email,
+    subject: `A review from your ${review.business.name} profile has been ${
+      action === "hidden" ? "hidden" : "removed"
+    }`,
+    react: React.createElement(ContentModeratedEmail, {
+      businessName: review.business.name,
+      contentType: "review",
+      action,
+      reason,
+    }),
+  });
+}
+
+/**
+ * Sent to business owner when a post is hidden or removed by admin.
+ */
+export async function sendPostModeratedEmail(
+  postId: string,
+  action: "hidden" | "removed",
+  reason?: string
+): Promise<void> {
+  const post = await db.post.findUnique({
+    where: { id: postId },
+    include: {
+      business: {
+        select: {
+          name: true,
+          owner: { select: { email: true, firstName: true, lastName: true } },
+        },
+      },
+    },
+  });
+
+  if (!post) {
+    console.log(`[email] sendPostModeratedEmail: post ${postId} not found`);
+    return;
+  }
+
+  const { ContentModeratedEmail } = await import("@/emails/content-moderated");
+
+  await sendEmail({
+    to: post.business.owner.email,
+    subject: `A post from your ${post.business.name} profile has been ${
+      action === "hidden" ? "hidden" : "removed"
+    }`,
+    react: React.createElement(ContentModeratedEmail, {
+      businessName: post.business.name,
+      contentType: "post",
+      action,
+      reason,
+    }),
+  });
+}
+
+/**
+ * Sent to business owner when media is hidden or removed by admin.
+ */
+export async function sendMediaModeratedEmail(
+  mediaId: string,
+  action: "hidden" | "removed",
+  reason?: string
+): Promise<void> {
+  const media = await db.businessMedia.findUnique({
+    where: { id: mediaId },
+    include: {
+      business: {
+        select: {
+          name: true,
+          owner: { select: { email: true, firstName: true, lastName: true } },
+        },
+      },
+    },
+  });
+
+  if (!media) {
+    console.log(`[email] sendMediaModeratedEmail: media ${mediaId} not found`);
+    return;
+  }
+
+  const { ContentModeratedEmail } = await import("@/emails/content-moderated");
+
+  await sendEmail({
+    to: media.business.owner.email,
+    subject: `A media item from your ${media.business.name} profile has been ${
+      action === "hidden" ? "hidden" : "removed"
+    }`,
+    react: React.createElement(ContentModeratedEmail, {
+      businessName: media.business.name,
+      contentType: "media",
+      action,
+      reason,
+    }),
+  });
+}
+
+/**
+ * Sent to a user to verify their email address during signup or admin resend.
+ */
+export async function sendVerificationEmail(
+  email: string,
+  verificationToken: string
+): Promise<void> {
+  const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://urglowup.com";
+  const verificationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(verificationToken)}&email=${encodeURIComponent(email)}`;
+
+  const { AuthEmailVerification } = await import("@/emails/auth-email-verification");
+
+  await sendEmail({
+    to: email,
+    subject: "Verify your UrGlowUp email address",
+    react: React.createElement(AuthEmailVerification, {
+      verificationUrl,
+    }),
+  });
+}

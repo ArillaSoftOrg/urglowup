@@ -38,6 +38,8 @@ const envSchema = z.object({
   EMAIL_REPLY_TO: z.string().min(1).optional(),
   // Optional — existing
   ADMIN_EMAILS: z.string().optional(),
+  // Feature flags
+  REVIEW_MODERATION_MODE: z.enum(["approved", "pending"]).optional().default("approved"),
   // Google Business Profile OAuth (Phase 15+)
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

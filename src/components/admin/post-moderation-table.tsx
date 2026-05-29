@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Eye, EyeOff, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { ReasonGate } from "./reason-gate";
 import { adminSetPostStatus } from "@/app/(admin)/admin/actions";
 import type { AdminPost } from "@/lib/queries/admin";
 
@@ -44,11 +45,51 @@ function formatDate(date: Date): string {
 
 function PostRow({ post }: { post: AdminPost }) {
   const [isPending, startTransition] = useTransition();
+  const [actionInProgress, setActionInProgress] = useState<"HIDDEN" | "REMOVED" | null>(null);
 
-  function setStatus(status: "ACTIVE" | "HIDDEN" | "REMOVED") {
+  function setStatus(status: "ACTIVE") {
     startTransition(async () => {
       await adminSetPostStatus(post.id, status);
     });
+  }
+
+  async function setStatusWithReason(status: "HIDDEN" | "REMOVED", reason: string) {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        await adminSetPostStatus(post.id, status, reason);
+        setActionInProgress(null);
+        resolve();
+      });
+    });
+  }
+
+  if (actionInProgress) {
+    return (
+      <tr className="border-b bg-slate-50">
+        <td colSpan={7} className="px-4 py-3">
+          <div className="max-w-[500px]">
+            <div className="mb-3 flex items-start justify-between">
+              <div>
+                <p className="font-medium text-slate-900">{post.business.name}</p>
+                {post.description && <p className="text-xs text-slate-600">{post.description}</p>}
+              </div>
+              <button
+                onClick={() => setActionInProgress(null)}
+                className="text-xs text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+            <ReasonGate
+              onConfirm={(reason) => setStatusWithReason(actionInProgress, reason)}
+              onCancel={() => setActionInProgress(null)}
+              actionLabel={actionInProgress === "HIDDEN" ? "Hide" : "Remove"}
+              isPending={isPending}
+            />
+          </div>
+        </td>
+      </tr>
+    );
   }
 
   return (
@@ -101,7 +142,7 @@ function PostRow({ post }: { post: AdminPost }) {
               </DropdownMenuItem>
             )}
             {post.status !== "HIDDEN" && (
-              <DropdownMenuItem onClick={() => setStatus("HIDDEN")}>
+              <DropdownMenuItem onClick={() => setActionInProgress("HIDDEN")}>
                 <EyeOff className="mr-2 size-4" />
                 Gizle (HIDDEN)
               </DropdownMenuItem>
@@ -109,7 +150,7 @@ function PostRow({ post }: { post: AdminPost }) {
             <DropdownMenuSeparator />
             {post.status !== "REMOVED" && (
               <DropdownMenuItem
-                onClick={() => setStatus("REMOVED")}
+                onClick={() => setActionInProgress("REMOVED")}
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="mr-2 size-4" />

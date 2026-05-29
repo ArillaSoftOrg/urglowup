@@ -59,7 +59,16 @@
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\" -Depth 1 | Where-Object { $_.Name -eq \"middleware.ts\" } | ForEach-Object { $_.FullName })",
       "Bash(cookie)",
       "Bash(terms)",
-      "Bash(legal\")"
+      "Bash(legal\")",
+      "Bash(Get-Content *)",
+      "Bash(curl -s http://localhost:3000/admin/businesses -H \"Cookie: \")",
+      "Bash(curl -s http://localhost:3000/admin/users -H \"Cookie: test=1\"4)",
+      "Bash(curl -s http://localhost:3000/admin)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs -r kill -9)",
+      "Bash(Test-Path *)",
+      "Bash(pkill -9 node)"
     ]
   }
 }
