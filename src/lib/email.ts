@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { render } from "@react-email/components";
 import type { ReactElement } from "react";
 import { env } from "./env";
 import {
@@ -44,11 +45,13 @@ export async function sendEmail({
   });
 
   try {
+    const html = await render(react);
+
     const response = await resend.emails.send({
       from: env.EMAIL_FROM,
       to,
       subject,
-      react,
+      html,
       replyTo: replyTo ?? env.EMAIL_REPLY_TO,
       tags,
     });
