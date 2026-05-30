@@ -35,8 +35,7 @@ export function validateEmailConfig(): EmailDiagnostic {
   if (!env.EMAIL_FROM || env.EMAIL_FROM.length === 0) {
     errors.push("EMAIL_FROM is not configured. Email delivery will fail.");
   } else {
-    const emailFromMatch = env.EMAIL_FROM.match(/<(.+?)>|^(.+?)$/);
-    const emailAddress = emailFromMatch?.[1] || emailFromMatch?.[2];
+    const emailAddress = extractEmailAddress(env.EMAIL_FROM);
 
     if (!emailAddress) {
       errors.push(
@@ -77,6 +76,17 @@ export function validateEmailConfig(): EmailDiagnostic {
 function isValidEmailAddress(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+function extractEmailAddress(value: string): string | undefined {
+  const trimmed = value.trim();
+
+  if (trimmed.includes("<") || trimmed.includes(">")) {
+    const displayNameMatch = trimmed.match(/^[^<>]*<\s*([^<>]+?)\s*>$/);
+    return displayNameMatch?.[1]?.trim();
+  }
+
+  return trimmed;
 }
 
 /**
