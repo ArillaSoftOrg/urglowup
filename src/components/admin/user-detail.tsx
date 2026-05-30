@@ -32,8 +32,17 @@ import {
 } from "@/lib/admin/user-lifecycle";
 import { UserConsentDetail } from "./user-consent-detail";
 import { SuspensionStatusBadge } from "./suspension-status-badge";
-import { adminSuspendUser, adminUnsuspendUser } from "@/app/(admin)/admin/actions";
+import {
+  adminSuspendUser,
+  adminUnsuspendUser,
+  changeUserRole,
+  resendVerificationEmail,
+  adminResetConsentVersion,
+  adminAddContentNote,
+} from "@/app/(admin)/admin/actions";
 import { getSuspensionStatus } from "@/lib/admin/user-suspension";
+import { useRouter } from "next/navigation";
+import type { UserRole } from "@/generated/prisma/enums";
 
 const ROLE_COLORS: Record<string, string> = {
   CUSTOMER: "bg-gray-100 text-gray-800",
@@ -247,6 +256,15 @@ export function UserDetailView({ data }: UserDetailViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Admin Actions Panel */}
+      <AdminActionsPanel
+        userId={user.id}
+        userEmail={user.email}
+        userName={name}
+        userRole={user.role}
+        emailVerified={user.emailVerified}
+      />
 
       {/* Suspension Card */}
       <SuspensionPanel userId={user.id} suspendedAt={user.suspendedAt} suspendedUntil={user.suspendedUntil} suspensionReason={user.suspensionReason} />
@@ -596,6 +614,218 @@ function SuspensionPanel({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AdminActionsPanel({
+  userId,
+  userEmail,
+  userName,
+  userRole,
+  emailVerified,
+}: {
+  userId: string;
+  userEmail: string;
+  userName: string;
+  userRole: string;
+  emailVerified: boolean;
+}) {
+  const router = useRouter();
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(userRole as UserRole);
+  const [roleError, setRoleError] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [isResendPending, setIsResendPending] = useState(false);
+  const [isResetConsentPending, setIsResetConsentPending] = useState(false);
+  const [isAddNotePending, setIsAddNotePending] = useState(false);
+
+  const handleChangeRole = () => {
+    if (selectedRole === userRole) return;
+    setRoleError(null);
+    startTransition(async () => {
+      const result = await changeUserRole(userId, selectedRole);
+      if (!result.success) {
+        setRoleError(result.message ?? "Failed to change role");
+      } else {
+        setRoleDialogOpen(false);
+        setSelectedRole(selectedRole);
+        router.refresh();
+      }
+    });
+  };
+
+  const handleResendVerification = () => {
+    setIsResendPending(true);
+    startTransition(async () => {
+      try {
+        const result = await resendVerificationEmail(userId);
+        if (!result.success) {
+          setNoteError(result.message ?? "Failed to resend verification email");
+        } else {
+          router.refresh();
+        }
+      } finally {
+        setIsResendPending(false);
+      }
+    });
+  };
+
+  const handleResetConsent = () => {
+    if (!confirm("Are you sure you want to reset this user's consent status? They will need to re-consent to notifications.")) {
+      return;
+    }
+    setIsResetConsentPending(true);
+    startTransition(async () => {
+      try {
+        const result = await adminResetConsentVersion(userId);
+        if (!result.success) {
+          setNoteError(result.message ?? "Failed to reset consent");
+        } else {
+          router.refresh();
+        }
+      } finally {
+        setIsResetConsentPending(false);
+      }
+    });
+  };
+
+  const handleAddNote = () => {
+    if (!note.trim()) {
+      setNoteError("Note cannot be empty");
+      return;
+    }
+    setNoteError(null);
+    setIsAddNotePending(true);
+    startTransition(async () => {
+      try {
+        const result = await adminAddContentNote("User", userId, note);
+        if (!result.success) {
+          setNoteError(result.message ?? "Failed to add note");
+        } else {
+          setNote("");
+          router.refresh();
+        }
+      } finally {
+        setIsAddNotePending(false);
+      }
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Admin Actions</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Change Role */}
+        <div>
+          <p className="text-sm font-medium mb-2">Change Role</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setRoleDialogOpen(true)}
+            disabled={isPending}
+          >
+            Current: {userRole}
+          </Button>
+
+          <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change User Role</DialogTitle>
+                <DialogDescription>
+                  Change role for {userName || userEmail}. Current role: {userRole}
+                </DialogDescription>
+              </DialogHeader>
+
+              <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as UserRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CUSTOMER">Customer</SelectItem>
+                  <SelectItem value="BUSINESS_OWNER">Business Owner</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {roleError && <p className="text-sm text-red-600">{roleError}</p>}
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setRoleDialogOpen(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleChangeRole} disabled={isPending || selectedRole === userRole}>
+                  {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Resend Verification Email */}
+        {!emailVerified && (
+          <div>
+            <p className="text-sm font-medium mb-2">Verification</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResendVerification}
+              disabled={isResendPending || isPending}
+            >
+              {isResendPending && <Loader2 className="size-4 mr-2 animate-spin" />}
+              Resend Verification Email
+            </Button>
+          </div>
+        )}
+
+        {/* Reset Consent */}
+        <div>
+          <p className="text-sm font-medium mb-2">Consent Management</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetConsent}
+            disabled={isResetConsentPending || isPending}
+          >
+            {isResetConsentPending && <Loader2 className="size-4 mr-2 animate-spin" />}
+            Reset Consent Version
+          </Button>
+        </div>
+
+        {/* Add Admin Note */}
+        <div>
+          <p className="text-sm font-medium mb-2">Add Admin Note</p>
+          <div className="space-y-2">
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value.slice(0, 500))}
+              placeholder="Add a note about this user..."
+              rows={3}
+              disabled={isAddNotePending || isPending}
+            />
+            <p className="text-xs text-muted-foreground">{note.length}/500</p>
+            <Button
+              size="sm"
+              onClick={handleAddNote}
+              disabled={isAddNotePending || isPending || !note.trim()}
+            >
+              {isAddNotePending && <Loader2 className="size-4 mr-2 animate-spin" />}
+              Add Note
+            </Button>
+          </div>
+        </div>
+
+        {noteError && <p className="text-sm text-red-600">{noteError}</p>}
       </CardContent>
     </Card>
   );

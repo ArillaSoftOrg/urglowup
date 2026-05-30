@@ -37,7 +37,7 @@ function getWhatsAppConfig(): WhatsAppConfig {
     templateName:
       process.env.WHATSAPP_TEMPLATE_BOOKING_CONFIRMED ?? "booking_confirmed",
     templateLanguage: process.env.WHATSAPP_TEMPLATE_LANGUAGE ?? "tr",
-    isDryRun: process.env.WHATSAPP_DRY_RUN === "true",
+    isDryRun: process.env.WHATSAPP_DRY_RUN !== "false",
   };
 }
 
@@ -109,6 +109,72 @@ export async function sendWhatsAppTemplateMessage(
       to: maskPhoneForLogging(params.to),
     };
     console.log("[whatsapp] DRY RUN payload:", JSON.stringify(logBody, null, 2));
+    return `dry-run-${Date.now()}`;
+  }
+
+  const url = `https://graph.facebook.com/${config.apiVersion}/${config.phoneNumberId}/messages`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.accessToken}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const message = await safeReadErrorMessage(res);
+    throw new WhatsAppApiError(res.status, message);
+  }
+
+  const data = (await res.json()) as { messages: Array<{ id: string }> };
+  return data.messages[0].id;
+}
+
+/**
+ * Sends a WhatsApp marketing template message with dynamic parameters.
+ * Phase 4: Supports any Meta-approved marketing template.
+ */
+export async function sendWhatsAppMarketingTemplate(params: {
+  to: string; // E.164 with leading "+"
+  templateName: string; // Meta-approved template name
+  templateLanguage: string; // Language code (e.g., "en", "tr")
+  parameters?: Record<string, string | undefined>;
+}): Promise<string> {
+  const config = getWhatsAppConfig();
+
+  // Build parameter array for Meta API
+  const parameterArray = params.parameters
+    ? Object.values(params.parameters).filter((v) => v !== undefined)
+    : [];
+
+  const body = {
+    messaging_product: "whatsapp",
+    to: params.to.replace(/^\+/, ""), // Meta accepts digits-only international format
+    type: "template",
+    template: {
+      name: params.templateName,
+      language: {
+        code: params.templateLanguage,
+      },
+      ...(parameterArray.length > 0 && {
+        body: {
+          parameters: parameterArray.map((value) => ({ type: "text", text: value })),
+        },
+      }),
+    },
+  };
+
+  if (config.isDryRun) {
+    const logBody = {
+      ...body,
+      to: maskPhoneForLogging(params.to),
+    };
+    console.log(
+      "[whatsapp-marketing] DRY RUN payload:",
+      JSON.stringify(logBody, null, 2)
+    );
     return `dry-run-${Date.now()}`;
   }
 

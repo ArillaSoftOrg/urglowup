@@ -39,12 +39,13 @@ import {
   Mail,
 } from "lucide-react";
 import Link from "next/link";
-import { changeUserRole } from "@/app/(admin)/admin/actions";
+import { changeUserRole, adminSuspendUser, adminUnsuspendUser, resendVerificationEmail } from "@/app/(admin)/admin/actions";
 import type { AdminUser } from "@/lib/queries/admin";
 import type { UserRole } from "@/generated/prisma/enums";
 import type { LifecycleSegment } from "@/lib/admin/user-lifecycle";
 import { LIFECYCLE_COLORS, LIFECYCLE_LABELS } from "@/lib/admin/user-lifecycle";
 import { SuspensionStatusBadge } from "./suspension-status-badge";
+import { Textarea } from "@/components/ui/textarea";
 
 const ROLE_COLORS: Record<string, string> = {
   CUSTOMER: "bg-gray-100 text-gray-800",
@@ -87,9 +88,13 @@ interface UserRowProps {
 function UserRow({ user }: UserRowProps) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(user.role);
+  const [suspendReason, setSuspendReason] = useState("");
+  const [suspendDuration, setSuspendDuration] = useState("7");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [suspendError, setSuspendError] = useState<string | null>(null);
 
   const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
   const emailUnverified = !user.emailVerified;
@@ -104,6 +109,50 @@ function UserRow({ user }: UserRowProps) {
         setError(result.message ?? "Failed to change role.");
       } else {
         setDialogOpen(false);
+        router.refresh();
+      }
+    });
+  }
+
+  function handleSuspendUser() {
+    setSuspendError(null);
+    if (!suspendReason.trim()) {
+      setSuspendError("Reason is required");
+      return;
+    }
+    startTransition(async () => {
+      const result = await adminSuspendUser(
+        user.id,
+        suspendReason,
+        suspendDuration === "indefinite" ? undefined : parseInt(suspendDuration)
+      );
+      if (!result.success) {
+        setSuspendError(result.message ?? "Failed to suspend user");
+      } else {
+        setSuspendDialogOpen(false);
+        setSuspendReason("");
+        setSuspendDuration("7");
+        router.refresh();
+      }
+    });
+  }
+
+  function handleUnsuspendUser() {
+    setSuspendError(null);
+    startTransition(async () => {
+      const result = await adminUnsuspendUser(user.id);
+      if (!result.success) {
+        setSuspendError(result.message ?? "Failed to unsuspend user");
+      } else {
+        router.refresh();
+      }
+    });
+  }
+
+  function handleResendVerification() {
+    startTransition(async () => {
+      const result = await resendVerificationEmail(user.id);
+      if (result.success) {
         router.refresh();
       }
     });
@@ -177,15 +226,25 @@ function UserRow({ user }: UserRowProps) {
             View Appointments
           </DropdownMenuItem>
           {emailUnverified && (
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleResendVerification}>
               <Mail className="size-4 mr-2" />
-              Resend Verification (coming soon)
+              Resend Verification Email
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setDialogOpen(true)}>
             Change Role
           </DropdownMenuItem>
+          {!user.suspendedAt && (
+            <DropdownMenuItem onClick={() => setSuspendDialogOpen(true)}>
+              Suspend User
+            </DropdownMenuItem>
+          )}
+          {user.suspendedAt && (
+            <DropdownMenuItem onClick={handleUnsuspendUser}>
+              Lift Suspension
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -235,6 +294,68 @@ function UserRow({ user }: UserRowProps) {
               ) : (
                 "Save"
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suspend User</DialogTitle>
+            <DialogDescription>
+              Temporarily suspend {name || user.email}. They will not be able to book, post, or interact with the platform.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Reason (required)</label>
+              <Textarea
+                value={suspendReason}
+                onChange={(e) => setSuspendReason(e.target.value.slice(0, 500))}
+                placeholder="Why is this user being suspended?"
+                className="mt-1"
+                rows={3}
+                disabled={isPending}
+              />
+              <p className="text-xs text-muted-foreground mt-1">{suspendReason.length}/500</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Duration</label>
+              <Select value={suspendDuration} onValueChange={(value) => value && setSuspendDuration(value)} disabled={isPending}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 day</SelectItem>
+                  <SelectItem value="3">3 days</SelectItem>
+                  <SelectItem value="7">7 days</SelectItem>
+                  <SelectItem value="30">30 days</SelectItem>
+                  <SelectItem value="indefinite">Indefinite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {suspendError && <p className="text-sm text-destructive">{suspendError}</p>}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSuspendDialogOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleSuspendUser}
+              disabled={isPending}
+            >
+              {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
+              Suspend
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -316,6 +437,7 @@ export function UserTable({
     const groups: Record<string, AdminUser[]> = {};
     const allLifecycles = [
       "UNVERIFIED",
+      "SUSPENDED",
       "NEW",
       "ONBOARDING",
       "NEVER_BOOKED",

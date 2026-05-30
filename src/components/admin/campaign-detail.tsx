@@ -6,6 +6,7 @@ import {
   sendMarketingWhatsAppCampaign,
 } from "@/app/(admin)/admin/actions";
 import type { AdminCampaignDetail } from "@/lib/queries/admin";
+import { WhatsAppCampaignStatus } from "./whatsapp-campaign-status";
 
 export function CampaignDetailComponent({
   campaign,
@@ -105,7 +106,10 @@ export function CampaignDetailComponent({
         </div>
 
         {campaign.status === "READY" && (
-          <div className="mt-6 pt-6 border-t">
+          <div className="mt-6 pt-6 border-t space-y-4">
+            {campaign.channel === "WHATSAPP" && (
+              <WhatsAppCampaignStatus templateName={campaign.templateName || undefined} />
+            )}
             <button
               onClick={handleSendCampaign}
               disabled={isSending}

@@ -149,7 +149,7 @@ export async function adminOverrideAppointmentStatus(
     return { success: false, message: "Appointment not found." };
   }
 
-  const allowed = STATUS_TRANSITIONS[appointment.status];
+  const allowed = STATUS_TRANSITIONS[appointment.status as AppointmentStatus];
   if (!allowed.includes(newStatus)) {
     return {
       success: false,
@@ -624,6 +624,24 @@ export async function adminSuspendUser(
 
   if (targetUser.suspendedAt) {
     return { success: false, message: "User is already suspended." };
+  }
+
+  const targetUserFull = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true },
+  });
+
+  if (targetUserFull?.role === "ADMIN") {
+    const activeAdminCount = await db.user.count({
+      where: {
+        role: "ADMIN",
+        OR: [{ suspendedAt: null }, { suspendedUntil: { lt: new Date() } }],
+      },
+    });
+
+    if (activeAdminCount <= 1) {
+      return { success: false, message: "Cannot suspend the last active admin user." };
+    }
   }
 
   const now = new Date();
@@ -1809,23 +1827,249 @@ export async function getEmailMarketingAudienceCount(
 
 export async function sendMarketingWhatsAppCampaign(
   campaignId: string
-): Promise<AdminActionState> {
+): Promise<AdminActionState & { sentCount?: number; failedCount?: number }> {
   const admin = await requireRole(UserRole.ADMIN);
 
   try {
+    const {
+      getApprovedWhatsAppMarketingTemplates,
+      isApprovedMarketingTemplate,
+      getWhatsAppMarketingStatus,
+    } = await import("@/lib/whatsapp-marketing-config");
+
     const campaign = await db.campaign.findUnique({
       where: { id: campaignId },
+      include: {
+        recipients: {
+          where: { status: "PENDING" },
+          select: {
+            id: true,
+            userId: true,
+            recipientPhone: true,
+            user: {
+              select: {
+                phone: true,
+                preferences: {
+                  select: {
+                    marketingConsentAt: true,
+                    marketingRevokedAt: true,
+                    whatsappMarketing: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!campaign) {
       return { success: false, message: "Campaign not found." };
     }
 
-    // Phase 4: WhatsApp campaigns require Meta template pre-approval
-    // This is a placeholder implementation for now
+    if (campaign.status !== "READY") {
+      return {
+        success: false,
+        message: "Campaign must be in READY status to send.",
+      };
+    }
+
+    if (campaign.channel !== "WHATSAPP") {
+      return {
+        success: false,
+        message: "This function is for WhatsApp campaigns only.",
+      };
+    }
+
+    // Check template approval status
+    const approvedTemplates = getApprovedWhatsAppMarketingTemplates();
+    if (approvedTemplates.length === 0) {
+      return {
+        success: false,
+        message:
+          "No WhatsApp marketing templates approved. Phase 4 requires Meta template pre-approval. Contact admin to configure WHATSAPP_MARKETING_TEMPLATES.",
+      };
+    }
+
+    const templateName = campaign.templateName;
+    if (!templateName || !isApprovedMarketingTemplate(templateName)) {
+      return {
+        success: false,
+        message: `Template "${templateName}" is not approved for marketing. Approved templates: ${approvedTemplates.map((t) => t.name).join(", ")}`,
+      };
+    }
+
+    // Validate template language matches approved configuration
+    const approvedTemplate = approvedTemplates.find((t) => t.name === templateName);
+    const campaignLanguage = (campaign.templateParams as any)?.language || "en";
+    if (approvedTemplate && approvedTemplate.language !== campaignLanguage) {
+      return {
+        success: false,
+        message: `Template "${templateName}" language mismatch. Configured: ${approvedTemplate.language}, Campaign: ${campaignLanguage}. Update campaign language or use a different template.`,
+      };
+    }
+
+    // Check dry-run mode
+    const isDryRun = process.env.WHATSAPP_DRY_RUN !== "false";
+    const status = getWhatsAppMarketingStatus();
+
+    const recipients = campaign.recipients;
+
+    if (recipients.length === 0) {
+      return { success: false, message: "No pending recipients." };
+    }
+
+    // Check audience size cap for Phase 1
+    if (recipients.length > 2000) {
+      return {
+        success: false,
+        message: "Phase 1 limited to 2,000 recipients. Please use Phase 2 queue infrastructure.",
+      };
+    }
+
+    // Update campaign status to SENDING
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: { status: "SENDING" },
+    });
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const errors: Record<string, number> = {};
+
+    // Send in batches (respecting WhatsApp rate limits)
+    const batchSize = 50;
+    const batchDelayMs = 500;
+
+    const { sendWhatsAppMarketingTemplate } = await import(
+      "@/lib/external/whatsapp/client"
+    );
+    const { normalizeTurkishPhone } = await import(
+      "@/lib/external/whatsapp/phone"
+    );
+
+    for (let i = 0; i < recipients.length; i += batchSize) {
+      const batch = recipients.slice(i, i + batchSize);
+
+      // Process batch concurrently
+      const results = await Promise.all(
+        batch.map(async (recipient) => {
+          // Re-validate consent at send time
+          if (
+            !recipient.user.preferences?.marketingConsentAt ||
+            recipient.user.preferences?.marketingRevokedAt ||
+            !recipient.user.preferences?.whatsappMarketing
+          ) {
+            return { success: false, error: "Consent revoked or not opted in" };
+          }
+
+          // Validate phone number
+          const phone = recipient.recipientPhone || recipient.user.phone;
+          if (!phone) {
+            return { success: false, error: "No phone number" };
+          }
+
+          const normalizedPhone = normalizeTurkishPhone(phone);
+          if (!normalizedPhone) {
+            return { success: false, error: "Invalid phone number format" };
+          }
+
+          try {
+            if (isDryRun) {
+              console.log(
+                `[WHATSAPP_DRY_RUN] Would send WhatsApp template "${templateName}" to ${normalizedPhone}`
+              );
+              return { success: true, messageId: `dry-run-${Date.now()}` };
+            }
+
+            // Send WhatsApp marketing template message
+            const messageId = await sendWhatsAppMarketingTemplate({
+              to: normalizedPhone,
+              templateName,
+              templateLanguage:
+                (campaign.templateParams as any)?.language || "en",
+              parameters: (campaign.templateParams || {}) as Record<
+                string,
+                string | undefined
+              >,
+            });
+
+            return { success: true, messageId };
+          } catch (err) {
+            console.error(
+              `Failed to send to ${normalizedPhone}:`,
+              err
+            );
+            return { success: false, error: String(err) };
+          }
+        })
+      );
+
+      // Update recipient statuses and track errors
+      for (let j = 0; j < batch.length; j++) {
+        const result = results[j];
+        const recipient = batch[j];
+
+        if (result.success) {
+          await db.campaignRecipient.update({
+            where: { id: recipient.id },
+            data: {
+              status: "SENT",
+              providerMessageId: result.messageId,
+              sentAt: new Date(),
+            },
+          });
+          sentCount++;
+        } else {
+          const errorMsg = result.error || "Unknown error";
+          await db.campaignRecipient.update({
+            where: { id: recipient.id },
+            data: {
+              status: "FAILED",
+              errorMessage: errorMsg,
+            },
+          });
+          failedCount++;
+          errors[errorMsg] = (errors[errorMsg] || 0) + 1;
+        }
+      }
+
+      // Rate limiting between batches
+      if (i + batchSize < recipients.length) {
+        await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
+      }
+    }
+
+    // Update campaign status based on results
+    const finalStatus =
+      failedCount === 0 ? "SENT" : failedCount > 0 ? "PARTIAL_FAILURE" : "SENT";
+
+    await db.campaign.update({
+      where: { id: campaignId },
+      data: {
+        status: finalStatus,
+        sentAt: new Date(),
+        completedAt: new Date(),
+      },
+    });
+
+    await logAdminAction(
+      admin.id,
+      "campaign.send_whatsapp",
+      "Campaign",
+      campaignId,
+      `Sent to ${sentCount} recipients, ${failedCount} failed. ${isDryRun ? "[DRY_RUN]" : ""}`
+    );
+
+    const summary = isDryRun
+      ? `[DRY-RUN MODE] Would send to ${sentCount + failedCount} recipients. Template: ${templateName}`
+      : `Sent to ${sentCount} recipients. ${failedCount > 0 ? `${failedCount} failed.` : ""}`;
+
     return {
-      success: false,
-      message: "WhatsApp campaign sending is not yet available. Phase 4 requires Meta-approved templates to be set up first.",
+      success: failedCount === 0,
+      message: summary,
+      sentCount,
+      failedCount,
     };
   } catch (err) {
     console.error("Failed to send WhatsApp campaign:", err);
@@ -1882,8 +2126,8 @@ export async function sendMarketingEmailCampaign(
       };
     }
 
-    // Check for dry-run mode
-    const isDryRun = process.env.CAMPAIGN_DRY_RUN === "true";
+    // Check for dry-run mode (defaults to true/safe when unset)
+    const isDryRun = process.env.CAMPAIGN_DRY_RUN !== "false";
 
     const recipients = campaign.recipients;
 
