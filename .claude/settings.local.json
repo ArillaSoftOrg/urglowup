@@ -68,7 +68,19 @@
       "Bash(awk '{print $2}')",
       "Bash(xargs -r kill -9)",
       "Bash(Test-Path *)",
-      "Bash(pkill -9 node)"
+      "Bash(pkill -9 node)",
+      "PowerShell(Stop-Process *)",
+      "Bash(bash /tmp/test-suspension.sh)",
+      "Bash(pkill -f \"node.*dev\")",
+      "PowerShell(Get-Process *)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s http://localhost:3000/admin/users -H \"Cookie: session=test\")",
+      "Bash(curl -s http://localhost:3000/admin/users)",
+      "Bash(curl -I http://localhost:3000/)",
+      "Bash(curl -s -w \"\\\\n%{http_code}\" http://localhost:3000/admin/users)",
+      "Bash(curl -s -X POST http://localhost:3000/admin/users)",
+      "Bash(curl -s http://localhost:3000/admin/users/test)",
+      "Bash(curl -s -H \"Accept: text/html\" http://localhost:3000/admin/users)"
     ]
   }
 }

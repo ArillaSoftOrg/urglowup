@@ -442,7 +442,7 @@ export async function sendVerificationEmail(
   email: string,
   verificationToken: string
 ): Promise<void> {
-  const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://urglowup.com";
+  const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://urglowup.vercel.app";
   const verificationUrl = `${baseUrl}/auth/verify-email?token=${encodeURIComponent(verificationToken)}&email=${encodeURIComponent(email)}`;
 
   const { AuthEmailVerification } = await import("@/emails/auth-email-verification");
