@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { requireAdminMfa } from "@/lib/auth";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { privateRobots } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  robots: privateRobots,
+};
 
 const adminNav = [
   { title: "Dashboard", href: "/admin" },

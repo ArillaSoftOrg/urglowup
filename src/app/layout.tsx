@@ -1,28 +1,59 @@
 import type { Metadata } from "next";
 import { headers, cookies } from "next/headers";
 import { bootstrapEmailConfig } from "@/lib/email-bootstrap";
+import {
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_URL,
+  absoluteUrl,
+} from "@/lib/seo";
 import "./globals.css";
 
 // Validate email config on startup
 bootstrapEmailConfig();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://urglowup.vercel.app",
-  ),
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
-    default: "UrGlowUp",
-    template: "%s | UrGlowUp",
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Discover beauty and personal care businesses, view real work, and request appointments with confidence.",
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "beauty",
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
-    siteName: "UrGlowUp",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    siteName: SITE_NAME,
     type: "website",
     locale: "tr_TR",
   },
   twitter: {
     card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 
@@ -39,6 +70,27 @@ export default async function RootLayout({
   const isDark =
     themeCookie === "DARK" ? true : themeCookie === "LIGHT" ? false : null;
 
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: absoluteUrl("/"),
+    logo: absoluteUrl("/favicon.ico"),
+    sameAs: [],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: absoluteUrl("/"),
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${absoluteUrl("/explore")}?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html
       lang={locale}
@@ -50,6 +102,18 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=document.cookie.match(/(?:^|; )ugl_theme=([^;]*)/);var theme=t?decodeURIComponent(t[1]):'SYSTEM';if(theme==='DARK'||(theme==='SYSTEM'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd),
           }}
         />
       </head>

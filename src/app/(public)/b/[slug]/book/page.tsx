@@ -20,7 +20,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "İşletme Bulunamadı" };
   }
 
-  return { title: `Randevu Talebi — ${business.name}` };
+  return {
+    title: `Randevu Talebi — ${business.name}`,
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
 }
 
 export default async function BookPage({ params, searchParams }: PageProps) {

@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { db } from "@/lib/db";
+import { privateRobots } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  robots: privateRobots,
+};
 
 export default async function BusinessOnboardingLayout({
   children,

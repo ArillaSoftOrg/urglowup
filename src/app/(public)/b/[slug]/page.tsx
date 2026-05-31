@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getBusinessBySlug } from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
 import { buildAlternates } from "@/lib/i18n-metadata";
+import { absoluteUrl } from "@/lib/seo";
 import { CoverSection } from "@/components/business-profile/cover-section";
 import { ProfileHeader } from "@/components/business-profile/profile-header";
 import { QuickInfoBar } from "@/components/business-profile/quick-info-bar";
@@ -16,6 +17,15 @@ import { MobileBookingBar } from "@/components/business-profile/mobile-booking-b
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
+const schemaDayOfWeek: Record<string, string> = {
+  MONDAY: "Monday",
+  TUESDAY: "Tuesday",
+  WEDNESDAY: "Wednesday",
+  THURSDAY: "Thursday",
+  FRIDAY: "Friday",
+  SATURDAY: "Saturday",
+  SUNDAY: "Sunday",
+};
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -59,9 +69,99 @@ export default async function BusinessProfilePage({ params }: PageProps) {
 
   const reviewSummary = await getBusinessReviewSummary(business.id);
   const isOpen = isBusinessOpen(business.hours);
+  const businessUrl = absoluteUrl(`/b/${business.slug}`);
+  const addressText = [business.address, business.district, business.city]
+    .filter(Boolean)
+    .join(", ");
+  const pricedServices = business.services
+    .map((service) => Number(service.price))
+    .filter((price) => Number.isFinite(price) && price > 0);
+  const minPrice = pricedServices.length ? Math.min(...pricedServices) : null;
+  const maxPrice = pricedServices.length ? Math.max(...pricedServices) : null;
+  const priceRange =
+    minPrice === null
+      ? undefined
+      : minPrice === maxPrice
+        ? `₺${minPrice}`
+        : `₺${minPrice}-₺${maxPrice}`;
+
+  const localBusinessJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: business.name,
+    description:
+      business.description ??
+      `${business.name} profilini, hizmetlerini ve değerlendirmelerini UrGlowUp'ta inceleyin.`,
+    url: businessUrl,
+    image: business.coverImageUrl ?? business.logoUrl ?? undefined,
+    logo: business.logoUrl ?? undefined,
+    telephone: business.phone ?? undefined,
+    priceRange,
+    address: addressText
+      ? {
+          "@type": "PostalAddress",
+          streetAddress: business.address ?? undefined,
+          addressLocality: business.district ?? business.city ?? undefined,
+          addressRegion: business.city ?? undefined,
+          addressCountry: "TR",
+        }
+      : undefined,
+    areaServed: business.city
+      ? {
+          "@type": "City",
+          name: business.city,
+        }
+      : undefined,
+    sameAs: business.instagramUrl ? [business.instagramUrl] : undefined,
+    openingHoursSpecification: business.hours
+      .filter((hour) => hour.isOpen && hour.openTime && hour.closeTime)
+      .map((hour) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: schemaDayOfWeek[hour.dayOfWeek],
+        opens: hour.openTime,
+        closes: hour.closeTime,
+      })),
+    aggregateRating:
+      reviewSummary.averageRating != null && reviewSummary.totalCount > 0
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: Number(reviewSummary.averageRating.toFixed(1)),
+            reviewCount: reviewSummary.totalCount,
+            bestRating: 10,
+            worstRating: 0,
+          }
+        : undefined,
+    hasOfferCatalog:
+      business.services.length > 0
+        ? {
+            "@type": "OfferCatalog",
+            name: `${business.name} hizmetleri`,
+            itemListElement: business.services.map((service) => ({
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: service.name,
+                description: service.description ?? undefined,
+              },
+              price:
+                service.price != null && Number.isFinite(Number(service.price))
+                  ? Number(service.price)
+                  : undefined,
+              priceCurrency: service.price ? "TRY" : undefined,
+              url: absoluteUrl(`/b/${business.slug}/book?service=${service.id}`),
+            })),
+          }
+        : undefined,
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessJsonLd),
+        }}
+      />
       <CoverSection business={business} />
 
       <div className="container mx-auto px-4 py-6">
