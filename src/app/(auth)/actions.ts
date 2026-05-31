@@ -15,6 +15,7 @@ import {
   enforceVerificationEmailRateLimit,
 } from "@/lib/auth-rate-limit";
 import { validateBotProtection } from "@/lib/bot-protection";
+import { db } from "@/lib/db";
 
 type AuthMessageTone = "success" | "error" | "info";
 
@@ -209,6 +210,17 @@ export async function forgotPasswordAction(
   );
   if (!rateLimit.ok) {
     return errorState(rateLimit.message);
+  }
+
+  const existingUser = await db.user.findUnique({
+    where: { email: parsed.data.email },
+    select: { id: true },
+  });
+
+  if (!existingUser) {
+    return errorState(
+      "Hesap bulunamadı. Kullanıcı adını, e-postanı veya cep telefonu numaranı kontrol et ve tekrar dene.",
+    );
   }
 
   try {
