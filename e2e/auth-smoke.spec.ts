@@ -96,9 +96,9 @@ test("login page shows password-reset success message when ?reset=success", asyn
 test("verify-email footer link navigates back to login", async ({ page }) => {
   await page.goto("/verify-email");
   await expect(
-    page.getByRole("link", { name: "Giriş ekranına dön" }),
+    page.getByRole("link", { name: "Giriş yap" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Giriş ekranına dön" }).click();
+  await page.getByRole("link", { name: "Giriş yap" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
 
