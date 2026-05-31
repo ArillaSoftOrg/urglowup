@@ -17,6 +17,7 @@ type RateLimitResult = {
 const LOGIN_IP_WINDOW_MS = 10 * 60 * 1000;
 const LOGIN_EMAIL_WINDOW_MS = 10 * 60 * 1000;
 const FORGOT_PASSWORD_WINDOW_MS = 60 * 60 * 1000;
+const RESET_PASSWORD_WINDOW_MS = 60 * 60 * 1000;
 const VERIFICATION_WINDOW_MS = 60 * 60 * 1000;
 
 const AUTH_RATE_LIMIT_MESSAGE =
@@ -56,6 +57,24 @@ export async function enforceForgotPasswordRateLimit(
       key: buildScopedKey("forgot-password", "email", hashIdentifier(email)),
       limit: 3,
       windowMs: FORGOT_PASSWORD_WINDOW_MS,
+    },
+  ]);
+}
+
+export async function enforceResetPasswordRateLimit(
+  requestHeaders: HeaderReader,
+  token: string,
+) {
+  return runRateLimitChecks([
+    {
+      key: buildScopedKey("reset-password", "ip", getClientIp(requestHeaders)),
+      limit: 10,
+      windowMs: RESET_PASSWORD_WINDOW_MS,
+    },
+    {
+      key: buildScopedKey("reset-password", "token", hashIdentifier(token)),
+      limit: 5,
+      windowMs: RESET_PASSWORD_WINDOW_MS,
     },
   ]);
 }

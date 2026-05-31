@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { logMfaEvent } from "@/app/(admin-mfa)/admin/mfa/actions";
+import { PasswordInput } from "@/components/shared/password-input";
 
 type Step = "password" | "qr" | "verify";
 
@@ -114,9 +115,8 @@ export function MfaSetupFlow() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               value={state.password}
               onChange={(e) =>
                 setState((prev) => ({ ...prev, password: e.target.value }))

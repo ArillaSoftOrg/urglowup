@@ -24,8 +24,8 @@ export function ForgotPasswordForm({ redirectTo }: { redirectTo?: string }) {
       <AuthFormFeedback message={state.message} tone={state.tone} />
       {state.success ? (
         <p className="text-sm leading-relaxed text-muted-foreground">
-          E-posta gelmezse adresi doğru yazdığından emin ol. Henüz hesabın
-          yoksa{" "}
+          E-posta birkaç dakika içinde gelmezse spam klasörünü kontrol et.
+          Henüz hesabın yoksa{" "}
           <Link
             href={`/register${buildAuthRedirectQuery(redirectTo)}`}
             className="font-medium text-foreground underline-offset-4 hover:underline"

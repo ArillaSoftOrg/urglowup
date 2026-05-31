@@ -12,6 +12,7 @@ import {
 import {
   enforceForgotPasswordRateLimit,
   enforceLoginRateLimit,
+  enforceResetPasswordRateLimit,
   enforceVerificationEmailRateLimit,
 } from "@/lib/auth-rate-limit";
 import { validateBotProtection } from "@/lib/bot-protection";
@@ -264,7 +265,7 @@ export async function forgotPasswordAction(
     success: true,
     tone: "success",
     message:
-      "Talebini aldık. Bu adresle eşleşen bir hesap varsa şifre sıfırlama bağlantısını gönderdik.",
+      "Şifre sıfırlama bağlantısını gönderdik. Gelen kutunu ve spam klasörünü kontrol et.",
   };
 }
 
@@ -287,13 +288,27 @@ export async function resetPasswordAction(
     };
   }
 
+  const botError = await validateBotProtection(formData);
+  if (botError) {
+    return errorState(botError);
+  }
+
+  const requestHeaders = await headers();
+  const rateLimit = await enforceResetPasswordRateLimit(
+    requestHeaders,
+    parsed.data.token,
+  );
+  if (!rateLimit.ok) {
+    return errorState(rateLimit.message);
+  }
+
   try {
     await auth.api.resetPassword({
       body: {
         token: parsed.data.token,
         newPassword: parsed.data.newPassword,
       },
-      headers: await headers(),
+      headers: requestHeaders,
     });
   } catch (error) {
     return mapAuthError(error, "resetPassword");
