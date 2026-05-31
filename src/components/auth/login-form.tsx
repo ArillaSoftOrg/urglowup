@@ -99,17 +99,6 @@ export function LoginForm({
         ) : null}
       </div>
 
-      <div className="rounded-md border border-border/70 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-        Doğrulama e-postasını bulamıyorsanız{" "}
-        <Link
-          href={`/verify-email${redirectQuery}`}
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          yeniden gönderin
-        </Link>
-        .
-      </div>
-
       <BotProtectionFields />
 
       <Button type="submit" className="w-full" disabled={pending}>

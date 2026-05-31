@@ -177,7 +177,7 @@ export async function signUpAction(
   const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
 
   try {
-    await auth.api.signUpEmail({
+    const result = await auth.api.signUpEmail({
       body: {
         name: parsed.data.name,
         email: parsed.data.email,
@@ -188,16 +188,16 @@ export async function signUpAction(
       },
       headers: requestHeaders,
     });
+
+    await db.user.update({
+      where: { id: result.user.id },
+      data: { emailVerified: true },
+    });
   } catch (error) {
     return mapAuthError(error, "signUp");
   }
 
-  return {
-    success: true,
-    tone: "success",
-    message:
-      "Hesabınız oluşturuldu. Devam etmek için doğrulama e-postasını açın. E-posta birkaç dakika içinde gelmezse spam klasörünü kontrol edin. Hala almadıysanız 'Doğrulama E-postasını Tekrar Gönder'i kullanabilirsiniz.",
-  };
+  redirect(redirectTo);
 }
 
 export async function forgotPasswordAction(
