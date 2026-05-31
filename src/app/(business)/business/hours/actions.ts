@@ -30,6 +30,11 @@ export type HoursActionState = {
 // ─── Helpers ────────────────────────────────────────────────────
 
 export async function ensureDefaultHours(businessId: string) {
+  const { businessId: authenticatedBusinessId } = await requireBusiness();
+  if (businessId !== authenticatedBusinessId) {
+    throw new Error("Unauthorized: business ID mismatch");
+  }
+
   const count = await db.businessHour.count({ where: { businessId } });
   if (count > 0) return;
 

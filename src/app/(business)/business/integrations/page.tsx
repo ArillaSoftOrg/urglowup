@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 import { requireBusiness } from "@/lib/auth";
+import { env } from "@/lib/env";
 import {
   CONNECTION_STATUS_LABELS,
   MANUAL_SYNC_COOLDOWN_MS,
@@ -60,9 +61,9 @@ export default async function IntegrationsPage() {
   const { businessId } = await requireBusiness();
 
   const googleConfigured = Boolean(
-    process.env.GOOGLE_CLIENT_ID &&
-      process.env.GOOGLE_CLIENT_SECRET &&
-      process.env.GOOGLE_REDIRECT_URI,
+    env.GOOGLE_CLIENT_ID &&
+      env.GOOGLE_CLIENT_SECRET &&
+      env.GOOGLE_REDIRECT_URI,
   );
 
   const connection = await getConnection(businessId, "GOOGLE_BUSINESS_PROFILE");

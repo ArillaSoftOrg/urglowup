@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { requireRole } from "@/lib/auth";
 import { UserRole } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
@@ -729,7 +730,7 @@ export async function resendVerificationEmail(
   }
 
   // Create a verification token
-  const verificationToken = Math.random().toString(36).substring(2, 15);
+  const verificationToken = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
   try {

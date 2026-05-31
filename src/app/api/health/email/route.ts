@@ -1,5 +1,6 @@
 import { validateEmailConfig } from "@/lib/email-diagnostics";
 import type { NextRequest } from "next/server";
+import { timingSafeEqual } from "crypto";
 
 /**
  * Email health check endpoint.
@@ -14,19 +15,35 @@ import type { NextRequest } from "next/server";
  *   "timestamp": "2026-05-28T..."
  * }
  *
- * This endpoint is public (no auth required) but returns only non-sensitive info.
+ * Authentication: requires x-internal-secret header if INTERNAL_API_SECRET is configured.
  */
 export async function GET(request: NextRequest) {
-  // Optional: Require a simple secret for security.
-  // Remove this check if you want completely public diagnostics.
-  const secret = request.nextUrl.searchParams.get("secret");
+  // Optional: Require a secret for security via x-internal-secret header.
   const expectedSecret = process.env.INTERNAL_API_SECRET;
+  if (expectedSecret) {
+    const provided = request.headers.get("x-internal-secret");
+    if (!provided) {
+      return Response.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-  if (expectedSecret && secret !== expectedSecret) {
-    return Response.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    try {
+      const a = Buffer.from(expectedSecret, "utf8");
+      const b = Buffer.from(provided, "utf8");
+      if (a.length !== b.length || !timingSafeEqual(a, b)) {
+        return Response.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+    } catch {
+      return Response.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
   }
 
   const diagnostic = validateEmailConfig();

@@ -153,6 +153,11 @@ export async function signUpAction(
     };
   }
 
+  const botError = await validateBotProtection(formData);
+  if (botError) {
+    return errorState(botError);
+  }
+
   const { firstName, lastName } = splitName(parsed.data.name);
   const requestHeaders = await headers();
   const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
