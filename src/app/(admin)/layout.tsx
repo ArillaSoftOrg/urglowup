@@ -1,5 +1,4 @@
-import { requireRole } from "@/lib/auth";
-import { UserRole } from "@/generated/prisma/enums";
+import { requireAdminMfa } from "@/lib/auth";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 
 const adminNav = [
@@ -22,7 +21,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireRole(UserRole.ADMIN);
+  await requireAdminMfa();
 
   return (
     <div className="min-h-screen flex">

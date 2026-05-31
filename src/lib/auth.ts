@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins/two-factor";
 import { UserRole } from "@/generated/prisma/enums";
 import { AuthEmailVerification } from "@/emails/auth-email-verification";
 import { AuthPasswordReset } from "@/emails/auth-password-reset";
@@ -165,7 +166,17 @@ export const auth = betterAuth({
     },
   },
   socialProviders: buildSocialProviders(),
-  plugins: [nextCookies()],
+  plugins: [
+    nextCookies(),
+    twoFactor({
+      issuer: env.TOTP_ISSUER,
+      skipVerificationOnEnable: false,
+      twoFactorCookieMaxAge: 600,
+      backupCodeOptions: {
+        amount: 10,
+      },
+    }),
+  ],
 });
 
 export async function getSession() {
@@ -223,4 +234,14 @@ export async function requireBusiness() {
   }
 
   return { user, businessId: business.id };
+}
+
+export async function requireAdminMfa() {
+  const user = await requireRole(UserRole.ADMIN);
+
+  if (!user.twoFactorEnabled) {
+    redirect("/admin/mfa/setup");
+  }
+
+  return user;
 }

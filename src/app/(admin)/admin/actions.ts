@@ -2291,3 +2291,77 @@ export async function sendMarketingEmailCampaign(
     return { success: false, message: "Failed to send campaign." };
   }
 }
+
+// ─── MFA Management ────────────────────────────────────────────
+
+export async function adminResetUserMfa(userId: string): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  if (userId === admin.id) {
+    return {
+      success: false,
+      message: "Cannot reset your own MFA. Use backup codes on the challenge page.",
+    };
+  }
+
+  const targetUser = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, twoFactorEnabled: true, email: true },
+  });
+
+  if (!targetUser) {
+    return { success: false, message: "User not found." };
+  }
+
+  if (targetUser.role !== UserRole.ADMIN) {
+    return { success: false, message: "MFA reset only applies to admin users." };
+  }
+
+  if (!targetUser.twoFactorEnabled) {
+    return { success: false, message: "User does not have MFA enabled." };
+  }
+
+  // Check if this is the last admin with MFA enrolled
+  const mfaAdminCount = await db.user.count({
+    where: { role: UserRole.ADMIN, twoFactorEnabled: true },
+  });
+
+  if (mfaAdminCount <= 1) {
+    return {
+      success: false,
+      message:
+        "Cannot reset the only admin with MFA enabled. Enroll another admin first, or use recovery codes on the challenge page.",
+    };
+  }
+
+  // Reset MFA
+  try {
+    await db.$transaction([
+      db.user.update({
+        where: { id: userId },
+        data: { twoFactorEnabled: false },
+      }),
+      db.twoFactor.deleteMany({
+        where: { userId },
+      }),
+    ]);
+
+    await logAdminAction(
+      admin.id,
+      "user.reset_mfa",
+      "User",
+      userId,
+      `MFA reset by admin ${admin.email}`
+    );
+
+    revalidatePath(`/admin/users/${userId}`);
+
+    return {
+      success: true,
+      message: "MFA reset. User must re-enroll on next admin login.",
+    };
+  } catch (err) {
+    console.error("Failed to reset user MFA:", err);
+    return { success: false, message: "Failed to reset MFA." };
+  }
+}

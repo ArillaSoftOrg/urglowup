@@ -193,6 +193,8 @@ model User {
   suspendedUntil DateTime?
   suspensionReason String?
 
+  twoFactorEnabled    Boolean          @default(false)
+
   business            Business?
   accounts            Account[]
   appointments        Appointment[]
@@ -209,6 +211,7 @@ model User {
   unsubscribeToken    UnsubscribeToken?            @relation("UnsubscribeTokens")
   createdCampaigns    Campaign[]
   sessions            Session[]
+  twoFactor           TwoFactor?
 }
 
 model Session {
@@ -255,6 +258,15 @@ model Verification {
 
   @@unique([identifier, value])
   @@index([identifier])
+}
+
+model TwoFactor {
+  id          String  @id @default(cuid())
+  secret      String
+  backupCodes String
+  verified    Boolean @default(true)
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RateLimit {

@@ -100,9 +100,10 @@ export async function signInAction(
   }
 
   const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
+  let twoFactorChallengeUrl: string | null = null;
 
   try {
-    await auth.api.signInEmail({
+    const result = await auth.api.signInEmail({
       body: {
         email: parsed.data.email,
         password: parsed.data.password,
@@ -110,6 +111,15 @@ export async function signInAction(
       },
       headers: requestHeaders,
     });
+
+    if (
+      result &&
+      typeof result === "object" &&
+      "twoFactorRedirect" in result &&
+      result.twoFactorRedirect === true
+    ) {
+      twoFactorChallengeUrl = `/admin/mfa/challenge?next=${encodeURIComponent(redirectTo)}`;
+    }
   } catch (error) {
     if (isAuthErrorCode(error, "EMAIL_NOT_VERIFIED")) {
       const resent = await resendVerificationEmail(
@@ -128,6 +138,10 @@ export async function signInAction(
     }
 
     return mapAuthError(error, "signIn");
+  }
+
+  if (twoFactorChallengeUrl) {
+    redirect(twoFactorChallengeUrl);
   }
 
   redirect(redirectTo);

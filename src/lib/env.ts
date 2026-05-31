@@ -38,6 +38,7 @@ const envSchema = z.object({
   EMAIL_REPLY_TO: z.string().min(1).optional(),
   // Optional — existing
   ADMIN_EMAILS: z.string().optional(),
+  TOTP_ISSUER: z.string().min(1).default("UrGlowUp"),
   // Feature flags
   REVIEW_MODERATION_MODE: z.enum(["approved", "pending"]).optional().default("approved"),
   // Google Business Profile OAuth (Phase 15+)

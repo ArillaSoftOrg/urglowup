@@ -39,6 +39,7 @@ import {
   resendVerificationEmail,
   adminResetConsentVersion,
   adminAddContentNote,
+  adminResetUserMfa,
 } from "@/app/(admin)/admin/actions";
 import { getSuspensionStatus } from "@/lib/admin/user-suspension";
 import { useRouter } from "next/navigation";
@@ -116,9 +117,10 @@ function computeProfileCompletion(
 
 interface UserDetailViewProps {
   data: AdminUserDetail;
+  currentAdminId: string;
 }
 
-export function UserDetailView({ data }: UserDetailViewProps) {
+export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
   if (!data) return null;
 
   const detailData = data as any;
@@ -264,6 +266,8 @@ export function UserDetailView({ data }: UserDetailViewProps) {
         userName={name}
         userRole={user.role}
         emailVerified={user.emailVerified}
+        mfaEnabled={user.twoFactorEnabled ?? false}
+        currentAdminId={currentAdminId}
       />
 
       {/* Suspension Card */}
@@ -625,12 +629,16 @@ function AdminActionsPanel({
   userName,
   userRole,
   emailVerified,
+  mfaEnabled,
+  currentAdminId,
 }: {
   userId: string;
   userEmail: string;
   userName: string;
   userRole: string;
   emailVerified: boolean;
+  mfaEnabled: boolean;
+  currentAdminId: string;
 }) {
   const router = useRouter();
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -642,6 +650,7 @@ function AdminActionsPanel({
   const [isResendPending, setIsResendPending] = useState(false);
   const [isResetConsentPending, setIsResetConsentPending] = useState(false);
   const [isAddNotePending, setIsAddNotePending] = useState(false);
+  const [isMfaResetPending, setIsMfaResetPending] = useState(false);
 
   const handleChangeRole = () => {
     if (selectedRole === userRole) return;
@@ -711,6 +720,25 @@ function AdminActionsPanel({
         }
       } finally {
         setIsAddNotePending(false);
+      }
+    });
+  };
+
+  const handleResetMfa = () => {
+    if (!confirm("Are you sure you want to reset this admin's MFA? They will need to re-enroll on next login.")) {
+      return;
+    }
+    setIsMfaResetPending(true);
+    startTransition(async () => {
+      try {
+        const result = await adminResetUserMfa(userId);
+        if (!result.success) {
+          setNoteError(result.message ?? "Failed to reset MFA");
+        } else {
+          router.refresh();
+        }
+      } finally {
+        setIsMfaResetPending(false);
       }
     });
   };
@@ -785,6 +813,31 @@ function AdminActionsPanel({
               {isResendPending && <Loader2 className="size-4 mr-2 animate-spin" />}
               Resend Verification Email
             </Button>
+          </div>
+        )}
+
+        {/* MFA Status (Admin only) */}
+        {userRole === "ADMIN" && (
+          <div>
+            <p className="text-sm font-medium mb-2">MFA Status</p>
+            {mfaEnabled ? (
+              <div className="flex items-center gap-3">
+                <Badge className="bg-green-100 text-green-800">MFA Enabled</Badge>
+                {userId !== currentAdminId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetMfa}
+                    disabled={isMfaResetPending || isPending}
+                  >
+                    {isMfaResetPending && <Loader2 className="size-4 mr-2 animate-spin" />}
+                    Reset MFA
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Badge className="bg-yellow-100 text-yellow-800">MFA Not Enrolled</Badge>
+            )}
           </div>
         )}
 

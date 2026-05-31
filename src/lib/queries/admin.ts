@@ -812,6 +812,11 @@ export async function getAdminUserDetail(userId: string) {
           },
         },
         preferences: true,
+        twoFactor: {
+          select: {
+            id: true,
+          },
+        },
         sessions: {
           orderBy: { updatedAt: "desc" },
           take: 5,

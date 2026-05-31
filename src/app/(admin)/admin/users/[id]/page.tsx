@@ -1,5 +1,6 @@
 import { getAdminUserDetail } from "@/lib/queries/admin";
 import { UserDetailView } from "@/components/admin/user-detail";
+import { getCurrentUser } from "@/lib/auth";
 import { notFound } from "next/navigation";
 
 export const metadata = { title: "Admin - User Details" };
@@ -12,9 +13,12 @@ export default async function AdminUserDetailPage({
   params,
 }: AdminUserDetailPageProps) {
   const { id } = await params;
-  const data = await getAdminUserDetail(id);
+  const [data, currentAdmin] = await Promise.all([
+    getAdminUserDetail(id),
+    getCurrentUser(),
+  ]);
 
-  if (!data) {
+  if (!data || !currentAdmin) {
     notFound();
   }
 
@@ -27,7 +31,7 @@ export default async function AdminUserDetailPage({
         </p>
       </div>
 
-      <UserDetailView data={data} />
+      <UserDetailView data={data} currentAdminId={currentAdmin.id} />
     </div>
   );
 }
