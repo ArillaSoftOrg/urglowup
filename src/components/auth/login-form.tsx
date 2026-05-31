@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useActionState, useState } from "react";
 import { signInAction } from "@/app/(auth)/actions";
 import { AuthFormFeedback } from "@/components/auth/auth-form-feedback";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
@@ -23,6 +24,7 @@ export function LoginForm({
   const [state, formAction, pending] = useActionState(signInAction, {
     success: false,
   });
+  const [showPassword, setShowPassword] = useState(false);
   const redirectQuery = buildAuthRedirectQuery(redirectTo);
 
   return (
@@ -70,12 +72,28 @@ export function LoginForm({
             Şifremi unuttum
           </Link>
         </div>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            className="pr-11"
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? "Sifreyi gizle" : "Sifreyi goster"}
+            aria-pressed={showPassword}
+            className="absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => setShowPassword((value) => !value)}
+          >
+            {showPassword ? (
+              <EyeOff className="size-4" aria-hidden="true" />
+            ) : (
+              <Eye className="size-4" aria-hidden="true" />
+            )}
+          </button>
+        </div>
         {state.errors?.password ? (
           <p className="text-sm text-destructive">{state.errors.password}</p>
         ) : null}
