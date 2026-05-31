@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { signUpAction } from "@/app/(auth)/actions";
 import { AuthFormFeedback } from "@/components/auth/auth-form-feedback";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +85,8 @@ export function RegisterForm({
           ) : null}
         </div>
       </div>
+
+      <BotProtectionFields />
 
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Hesap oluşturuluyor..." : "Hesap oluştur"}
