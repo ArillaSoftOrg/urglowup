@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { getAdminDashboardMetrics, getRecentAdminActions } from "@/lib/queries/admin";
 import { PageHeader } from "@/components/ui/page-header";
 import { KpiGrid } from "@/components/admin/dashboard/kpi-grid";
@@ -16,6 +17,9 @@ import {
 export const metadata = { title: "Admin Dashboard" };
 
 export default async function AdminDashboardPage() {
+  // Admin metrics depend on live database state and should never run at build time.
+  await connection();
+
   const [metrics, recentActions] = await Promise.all([
     getAdminDashboardMetrics(),
     getRecentAdminActions(10),
