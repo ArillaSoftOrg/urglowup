@@ -19,13 +19,13 @@ import {
 import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
-  title: "For Business",
+  title: "İşletmeler İçin",
   description:
-    "List your beauty or personal care business on UrGlowUp and get discovered by new customers.",
+    "Güzellik ve kişisel bakım işletmeni UrGlowUp'ta yayınla; portfolyonu, hizmetlerini ve yorumlarını göstererek yeni müşterilerden randevu talepleri al.",
   openGraph: {
-    title: "For Business | UrGlowUp",
+    title: "İşletmeler İçin | UrGlowUp",
     description:
-      "List your beauty or personal care business on UrGlowUp and get discovered by new customers.",
+      "Güzellik ve kişisel bakım işletmeni UrGlowUp'ta yayınla; portfolyonu, hizmetlerini ve yorumlarını göstererek yeni müşterilerden randevu talepleri al.",
     url: "/for-business",
     locale: "tr_TR",
   },

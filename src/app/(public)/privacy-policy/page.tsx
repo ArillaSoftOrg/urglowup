@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Gizlilik Politikası",
+  description:
+    "UrGlowUp gizlilik politikası; kişisel verilerin nasıl işlendiğini, saklandığını, paylaşıldığını ve kullanıcı haklarını açıklar.",
+  alternates: {
+    canonical: "/privacy-policy",
+  },
 };
 
 export default function PrivacyPolicyPage() {

@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "KVKK Aydınlatma Metni",
+  description:
+    "UrGlowUp KVKK aydınlatma metni; kişisel verilerin işlenme amaçlarını, hukuki sebeplerini, aktarım süreçlerini ve KVKK haklarını açıklar.",
+  alternates: {
+    canonical: "/kvkk",
+  },
 };
 
 export default function KvkkPage() {

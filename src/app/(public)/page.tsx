@@ -15,13 +15,13 @@ import { HomeHeroCTAs } from "@/components/home/home-hero-ctas";
 import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
-  title: { absolute: "UrGlowUp" },
+  title: { absolute: "UrGlowUp | Güzellik salonlarını keşfet ve randevu al" },
   description:
-    "Discover beauty and personal care businesses, view real work, and request appointments with confidence.",
+    "Yakınındaki güzellik salonlarını, kuaförleri, tırnak ve cilt bakımı uzmanlarını keşfet; gerçek işleri ve yorumları inceleyip güvenle randevu al.",
   openGraph: {
-    title: "UrGlowUp",
+    title: "UrGlowUp | Güzellik salonlarını keşfet ve randevu al",
     description:
-      "Discover beauty and personal care businesses, view real work, and request appointments with confidence.",
+      "Yakınındaki güzellik salonlarını, kuaförleri, tırnak ve cilt bakımı uzmanlarını keşfet; gerçek işleri ve yorumları inceleyip güvenle randevu al.",
     url: "/",
     locale: "tr_TR",
   },

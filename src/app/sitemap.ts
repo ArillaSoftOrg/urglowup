@@ -27,6 +27,13 @@ function forAllLocales(
   ];
 }
 
+function rootOnly(
+  path: string,
+  opts: Omit<MetadataRoute.Sitemap[number], "url">
+): MetadataRoute.Sitemap {
+  return [{ url: `${BASE_URL}${path}`, ...opts }];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [businesses, categories, cities, districts, styleTags] = await Promise.all([
     getAllMarketplaceBusinessSlugs(),
@@ -42,11 +49,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...forAllLocales("/styles",               { changeFrequency: "weekly",  priority: 0.6 }),
     ...forAllLocales("/for-business",         { changeFrequency: "monthly", priority: 0.6 }),
     ...forAllLocales("/map",                  { changeFrequency: "weekly",  priority: 0.4 }),
-    ...forAllLocales("/privacy-policy",       { changeFrequency: "monthly", priority: 0.3 }),
-    ...forAllLocales("/cookie-policy",        { changeFrequency: "monthly", priority: 0.3 }),
-    ...forAllLocales("/kvkk",                 { changeFrequency: "monthly", priority: 0.3 }),
-    ...forAllLocales("/kullanim-kosullari",   { changeFrequency: "monthly", priority: 0.3 }),
-    ...forAllLocales("/kvkk-basvuru",         { changeFrequency: "monthly", priority: 0.3 }),
+    ...forAllLocales("/puanlama-sistemi",     { changeFrequency: "monthly", priority: 0.5 }),
+    ...rootOnly("/privacy-policy",            { changeFrequency: "monthly", priority: 0.3 }),
+    ...rootOnly("/cookie-policy",             { changeFrequency: "monthly", priority: 0.3 }),
+    ...rootOnly("/kvkk",                      { changeFrequency: "monthly", priority: 0.3 }),
+    ...rootOnly("/kullanim-kosullari",        { changeFrequency: "monthly", priority: 0.3 }),
+    ...rootOnly("/kvkk-basvuru",              { changeFrequency: "monthly", priority: 0.3 }),
   ];
 
   const businessPages: MetadataRoute.Sitemap = businesses.flatMap((b) =>

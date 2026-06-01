@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "KVKK Başvuru",
+  description:
+    "UrGlowUp KVKK başvuru sayfası; kişisel veri haklarınızı kullanmak için başvuru yöntemlerini, gerekli bilgileri ve yanıt sürecini açıklar.",
+  alternates: {
+    canonical: "/kvkk-basvuru",
+  },
 };
 
 export default function KvkkBasvuruPage() {

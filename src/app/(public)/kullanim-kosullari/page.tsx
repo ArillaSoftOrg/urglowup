@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Kullanım Koşulları",
+  description:
+    "UrGlowUp kullanım koşulları; platform kullanımı, randevu kuralları, işletme yükümlülükleri ve kullanıcı sorumluluklarını açıklar.",
+  alternates: {
+    canonical: "/kullanim-kosullari",
+  },
 };
 
 export default function KullanimKosullariPage() {

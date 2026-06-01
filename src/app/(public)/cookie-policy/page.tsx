@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { COOKIE_REGISTRY } from "@/lib/cookie-inventory";
 import type { CookieCategory } from "@/lib/cookie-inventory";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Çerez Politikası",
+  description:
+    "UrGlowUp çerez politikası; zorunlu, tercih, analitik ve pazarlama çerezlerinin amaçlarını ve kullanıcı seçimlerini açıklar.",
+  alternates: {
+    canonical: "/cookie-policy",
+  },
 };
 
 // Turkish labels for categories on this page
@@ -201,4 +207,3 @@ function CategoryBadge({ category }: { category: CookieCategory }) {
     </span>
   );
 }
-
