@@ -68,7 +68,6 @@ export function CampaignDetailComponent({
   const sentCount = campaign.recipients.filter((r) => r.status === "SENT").length;
   const failedCount = campaign.recipients.filter((r) => r.status === "FAILED").length;
   const pendingCount = campaign.recipients.filter((r) => r.status === "PENDING").length;
-  const skippedCount = campaign.recipients.filter((r) => r.status === "SKIPPED").length;
 
   const totalRecipients = campaign.recipientCount || campaign.recipients.length;
   const deliveryRate =

@@ -1,18 +1,42 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
-const CONSENT_CATEGORY_LABELS: Record<string, string> = {
+const CONSENT_CATEGORY_LABELS = {
   PERSONALIZATION: "Personalization",
   ANALYTICS: "Analytics",
   MARKETING: "Marketing",
+} as const;
+
+type ConsentCategoryKey = keyof typeof CONSENT_CATEGORY_LABELS;
+type ConsentDate = Date | string | null | undefined;
+
+type ConsentPreferences = {
+  consentVersion?: string | null;
+  personalizationConsentAt?: ConsentDate;
+  personalizationRevokedAt?: ConsentDate;
+  analyticsConsentAt?: ConsentDate;
+  analyticsRevokedAt?: ConsentDate;
+  marketingConsentAt?: ConsentDate;
+  marketingRevokedAt?: ConsentDate;
+  emailTransactional?: boolean | null;
+  whatsappTransactional?: boolean | null;
+  emailMarketing?: boolean | null;
+  whatsappMarketing?: boolean | null;
+} | null;
+
+type ConsentLog = {
+  id: string;
+  category: string;
+  action: string;
+  ipHash: string | null;
+  createdAt: Date | string;
 };
 
 const CONSENT_VERSION = "2026-05";
 
-function formatDateTime(date: Date | null | undefined): string {
+function formatDateTime(date: ConsentDate): string {
   if (!date) return "—";
   return new Date(date).toLocaleString("en-US", {
     month: "short",
@@ -27,8 +51,8 @@ function ConsentStatus({
   grantedAt,
   revokedAt,
 }: {
-  grantedAt: any;
-  revokedAt: any;
+  grantedAt: ConsentDate;
+  revokedAt: ConsentDate;
 }) {
   if (revokedAt) {
     return (
@@ -50,8 +74,8 @@ function ConsentStatus({
 }
 
 interface UserConsentDetailProps {
-  preferences: any;
-  consentLogs: any[];
+  preferences: ConsentPreferences;
+  consentLogs: ConsentLog[];
 }
 
 export function UserConsentDetail({
@@ -61,15 +85,16 @@ export function UserConsentDetail({
   const versionMismatch =
     preferences?.consentVersion && preferences.consentVersion !== CONSENT_VERSION;
 
-  const categorizedLogs: Record<string, any[]> = {
+  const categorizedLogs: Record<ConsentCategoryKey, ConsentLog[]> = {
     PERSONALIZATION: [],
     ANALYTICS: [],
     MARKETING: [],
   };
 
   for (const log of consentLogs) {
-    if (categorizedLogs[log.category]) {
-      categorizedLogs[log.category].push(log);
+    if (log.category in categorizedLogs) {
+      const category = log.category as ConsentCategoryKey;
+      categorizedLogs[category].push(log);
     }
   }
 
@@ -83,7 +108,7 @@ export function UserConsentDetail({
           <div className="border border-yellow-200 bg-yellow-50 p-3 rounded flex gap-2 items-start">
             <AlertTriangle className="size-4 text-yellow-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-yellow-800">
-              User's consent version ({preferences?.consentVersion}) does not
+              User&apos;s consent version ({preferences?.consentVersion}) does not
               match current policy ({CONSENT_VERSION}). Will trigger re-consent
               on next visit.
             </div>
@@ -94,7 +119,7 @@ export function UserConsentDetail({
         <div className="space-y-4">
           <h3 className="font-medium">Consent Timeline</h3>
           <div className="space-y-4">
-            {["PERSONALIZATION", "ANALYTICS", "MARKETING"].map((category) => (
+            {(["PERSONALIZATION", "ANALYTICS", "MARKETING"] as const).map((category) => (
               <div key={category} className="p-3 bg-muted rounded space-y-2">
                 <div className="flex justify-between items-start">
                   <p className="font-medium text-sm">
@@ -118,10 +143,10 @@ export function UserConsentDetail({
                   />
                 </div>
 
-                {categorizedLogs[category as keyof typeof categorizedLogs]
+                {categorizedLogs[category]
                   .length > 0 ? (
                   <div className="text-xs space-y-1 mt-2">
-                    {categorizedLogs[category as keyof typeof categorizedLogs]
+                    {[...categorizedLogs[category]]
                       .reverse()
                       .map((log) => (
                         <div key={log.id} className="flex justify-between text-muted-foreground">

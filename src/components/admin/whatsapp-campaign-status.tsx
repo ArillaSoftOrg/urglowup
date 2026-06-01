@@ -5,7 +5,6 @@ import {
   getWhatsAppMarketingStatus,
 } from "@/lib/whatsapp-marketing-config";
 import { AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
 
 interface WhatsAppCampaignStatusProps {
   templateName?: string;
@@ -16,24 +15,8 @@ export function WhatsAppCampaignStatus({
   templateName,
   showTemplateSelector,
 }: WhatsAppCampaignStatusProps) {
-  const [mounted, setMounted] = useState(false);
-  const [templates, setTemplates] = useState<Array<{ name: string; language: string; description?: string }>>([]);
-  const [status, setStatus] = useState<{
-    ready: boolean;
-    message: string;
-  }>({ ready: false, message: "Loading..." });
-
-  useEffect(() => {
-    setMounted(true);
-    const templates = getApprovedWhatsAppMarketingTemplates();
-    const status = getWhatsAppMarketingStatus();
-    setTemplates(templates);
-    setStatus(status);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
+  const templates = getApprovedWhatsAppMarketingTemplates();
+  const status = getWhatsAppMarketingStatus();
 
   const isTemplateValid = templateName && templates.some((t) => t.name === templateName);
 
@@ -78,7 +61,7 @@ export function WhatsAppCampaignStatus({
             <div className="flex gap-2 text-xs text-red-600 mb-2">
               <AlertCircle className="size-4 flex-shrink-0" />
               <span>
-                Template "{templateName}" is not approved. Select from the list.
+                Template &quot;{templateName}&quot; is not approved. Select from the list.
               </span>
             </div>
           )}

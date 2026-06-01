@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Gizlilik Politikası",
 };
@@ -265,9 +267,9 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p className="text-sm text-muted-foreground">
             Haklarınızı kullanmak için{" "}
-            <a href="/kvkk-basvuru" className="underline underline-offset-4 hover:text-foreground">
+            <Link href="/kvkk-basvuru" className="underline underline-offset-4 hover:text-foreground">
               KVKK Başvuru sayfamızı
-            </a>{" "}
+            </Link>{" "}
             ziyaret edin.
           </p>
         </section>
@@ -276,9 +278,9 @@ export default function PrivacyPolicyPage() {
           <h2>7. Çerezler</h2>
           <p className="text-sm text-muted-foreground">
             Sitemizde kullanılan çerezlerin tam listesi ve yönetim seçenekleri için{" "}
-            <a href="/cookie-policy" className="underline underline-offset-4 hover:text-foreground">
+            <Link href="/cookie-policy" className="underline underline-offset-4 hover:text-foreground">
               Çerez Politikamızı
-            </a>{" "}
+            </Link>{" "}
             inceleyebilirsiniz.
           </p>
         </section>

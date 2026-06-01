@@ -3,7 +3,6 @@
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BusinessStatus } from "@/generated/prisma/enums";
-import { BUSINESS_STATUS_LABELS } from "@/lib/constants/business";
 
 export type BusinessStatusPoint = {
   status: BusinessStatus;
@@ -58,7 +57,7 @@ export function BusinessStatusChart({ data }: BusinessStatusChartProps) {
                   <Cell key={entry.status} fill={STATUS_COLORS[entry.status]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: any) => value} />
+              <Tooltip />
               <Legend
                 verticalAlign="bottom"
                 height={36}

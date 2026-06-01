@@ -1,18 +1,8 @@
 import Link from "next/link";
 import { format } from "date-fns";
-import {
-  CheckCircle2,
-  XCircle,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  Users,
-  Folder,
-  Tag,
-} from "lucide-react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import type { AdminAction } from "@/lib/queries/admin";
 
 interface AdminActivityFeedProps {
@@ -21,7 +11,7 @@ interface AdminActivityFeedProps {
 
 const ACTION_TYPE_CONFIG: Record<
   string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "ghost" | "success" | "warning" | "info" | "neutral" | "pink" | "purple" | "link" }
+  { label: string; variant: BadgeVariant }
 > = {
   "business.activate_private": { label: "Approved", variant: "success" },
   "business.activate_marketplace": { label: "Published", variant: "success" },
@@ -104,7 +94,7 @@ export function AdminActivityFeed({ actions }: AdminActivityFeedProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium">{action.admin?.firstName}</span>
-                    <Badge variant={config.variant as any}>
+                    <Badge variant={config.variant}>
                       {config.label}
                     </Badge>
                   </div>

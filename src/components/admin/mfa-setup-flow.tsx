@@ -56,7 +56,7 @@ export function MfaSetupFlow() {
         backupCodes: enableResult.data?.backupCodes || [],
         loading: false,
       }));
-    } catch (err) {
+    } catch {
       setState((prev) => ({
         ...prev,
         error: "An error occurred. Please try again.",
@@ -93,7 +93,7 @@ export function MfaSetupFlow() {
         console.error("Failed to log MFA enrollment:", logError);
       }
       router.push("/admin");
-    } catch (err) {
+    } catch {
       setState((prev) => ({
         ...prev,
         error: "An error occurred. Please try again.",
@@ -161,7 +161,7 @@ export function MfaSetupFlow() {
 
           <div className="w-full">
             <p className="text-xs text-muted-foreground mb-2">
-              Can't scan? Enter this code manually:
+              Can&apos;t scan? Enter this code manually:
             </p>
             <code className="text-xs bg-muted p-2 rounded w-full block break-all text-center">
               {state.totpURI}

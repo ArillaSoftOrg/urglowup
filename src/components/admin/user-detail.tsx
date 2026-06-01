@@ -5,7 +5,6 @@ import type { AdminUserDetail } from "@/lib/queries/admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -23,11 +22,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Link from "next/link";
-import { Mail, Calendar, Heart, CheckCircle2, UserCog, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import {
   LIFECYCLE_COLORS,
   LIFECYCLE_LABELS,
-  type LifecycleSegment,
   computeUserLifecycle,
 } from "@/lib/admin/user-lifecycle";
 import { UserConsentDetail } from "./user-consent-detail";
@@ -100,35 +98,16 @@ function formatDaysAgo(date: Date | null | undefined): string {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-function computeProfileCompletion(
-  user: any
-): { score: number; missing: string[] } {
-  const missing: string[] = [];
-  if (!user.emailVerified) missing.push("Email");
-  if (!user.firstName) missing.push("First Name");
-  if (!user.lastName) missing.push("Last Name");
-  if (!user.phone) missing.push("Phone");
-  if (!user.serviceAddress) missing.push("Address");
-  if (!user.avatarUrl) missing.push("Avatar");
-
-  const score = Math.round(((6 - missing.length) / 6) * 100);
-  return { score, missing };
-}
-
 interface UserDetailViewProps {
   data: AdminUserDetail;
   currentAdminId: string;
 }
 
 export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
-  if (!data) return null;
+  if (!data?.user) return null;
 
-  const detailData = data as any;
-  if (!detailData.user) return null;
-
-  const user = detailData.user;
+  const user = data.user;
   const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
-  const profileCompletion = computeProfileCompletion(user);
   const appointmentData =
     data.appointments.length > 0
       ? {
@@ -476,7 +455,7 @@ function SuspensionPanel({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const status = getSuspensionStatus({ suspendedAt, suspendedUntil, suspensionReason } as any);
+  const status = getSuspensionStatus({ suspendedAt, suspendedUntil, suspensionReason });
 
   const handleSuspend = () => {
     setError(null);
@@ -582,7 +561,12 @@ function SuspensionPanel({
 
               <div>
                 <label className="text-sm font-medium">Duration</label>
-                <Select value={duration} onValueChange={(value: any) => setDuration(value)}>
+                <Select
+                  value={duration}
+                  onValueChange={(value) => {
+                    if (value) setDuration(value);
+                  }}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>

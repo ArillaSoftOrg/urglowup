@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "KVKK Aydınlatma Metni",
 };
@@ -208,12 +210,12 @@ export default function KvkkPage() {
           </ol>
           <p className="text-sm text-muted-foreground">
             Başvurunuzu{" "}
-            <a
+            <Link
               href="/kvkk-basvuru"
               className="underline underline-offset-4 hover:text-foreground"
             >
               KVKK Başvuru sayfamızdan
-            </a>{" "}
+            </Link>{" "}
             iletebilirsiniz.
           </p>
         </section>

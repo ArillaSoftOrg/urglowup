@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Third-party skill scripts — not part of the app
     ".agents/**",
+    "smoke-test.js",
+    "test-suspension-e2e.js",
   ]),
 ]);
 

@@ -2,7 +2,6 @@ import { getAdminAppointments } from "@/lib/queries/admin";
 import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants/booking";
 import { AppointmentTableClient } from "./appointment-table-client";
 import type { AdminAppointmentFilter } from "@/lib/queries/admin";
-import type { AppointmentStatus } from "@/generated/prisma/enums";
 
 function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;

@@ -38,7 +38,6 @@ import {
   Calendar,
   Mail,
 } from "lucide-react";
-import Link from "next/link";
 import { changeUserRole, adminSuspendUser, adminUnsuspendUser, resendVerificationEmail } from "@/app/(admin)/admin/actions";
 import type { AdminUser } from "@/lib/queries/admin";
 import type { UserRole } from "@/generated/prisma/enums";
@@ -58,15 +57,6 @@ const ROLE_LABELS_MAP: Record<string, string> = {
   BUSINESS_OWNER: "Business Owner",
   ADMIN: "Admin",
 };
-
-function formatDate(date: Date | null | undefined): string {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 function formatDaysAgo(date: Date | null | undefined): string {
   if (!date) return "—";
@@ -458,7 +448,7 @@ export function UserTable({
   }, [users]);
 
   const filteredUsers = useMemo(() => {
-    let result = [...users];
+    const result = [...users];
 
     if (sortField === "name") {
       result.sort((a, b) => {
@@ -516,7 +506,10 @@ export function UserTable({
         </Select>
       </div>
 
-      <Tabs value={lifecycle} onValueChange={(v) => handleLifecycleFilter(v as any)}>
+      <Tabs
+        value={lifecycle}
+        onValueChange={(v) => handleLifecycleFilter(v as LifecycleSegment | "all")}
+      >
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="all">All ({total})</TabsTrigger>
           {lifecycles.map((lc) => (

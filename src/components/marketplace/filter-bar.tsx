@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -169,7 +169,11 @@ export function FilterBar({
 }: FilterBarProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
-  const searchParams = useSearchParams() ?? new URLSearchParams();
+  const rawSearchParams = useSearchParams();
+  const searchParams = useMemo(
+    () => rawSearchParams ?? new URLSearchParams(),
+    [rawSearchParams]
+  );
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   // Derive current values from URL (source of truth)

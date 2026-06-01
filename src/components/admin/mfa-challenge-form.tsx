@@ -55,7 +55,7 @@ export function MfaChallengeForm({ redirectTo }: { redirectTo: string }) {
         console.error("Failed to log MFA challenge:", logError);
       }
       router.push(redirectTo);
-    } catch (err) {
+    } catch {
       setState((prev) => ({
         ...prev,
         error: "An error occurred. Please try again.",
@@ -92,7 +92,7 @@ export function MfaChallengeForm({ redirectTo }: { redirectTo: string }) {
         console.error("Failed to log MFA backup-code challenge:", logError);
       }
       router.push(redirectTo);
-    } catch (err) {
+    } catch {
       setState((prev) => ({
         ...prev,
         error: "An error occurred. Please try again.",

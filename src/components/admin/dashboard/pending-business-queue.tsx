@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
 import type { AdminDashboardMetrics } from "@/lib/queries/admin";
 import { PendingBusinessRow } from "./_pending-business-row";
 

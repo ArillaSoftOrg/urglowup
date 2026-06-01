@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import { ShieldCheck, BarChart2, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { grantConsent, revokeConsent } from "@/app/(customer)/account/preferences/actions";
@@ -74,13 +75,13 @@ export function ConsentPreferencesForm({ prefs }: ConsentPreferencesFormProps) {
       />
       <p className="text-xs text-muted-foreground">
         Bu seçimler KVKK ve GDPR kapsamında güvenli şekilde saklanır. İstediğiniz zaman geri alabilirsiniz.{" "}
-        <a href="/kvkk" className="underline underline-offset-4 hover:text-foreground">
+        <Link href="/kvkk" className="underline underline-offset-4 hover:text-foreground">
           KVKK Aydınlatma Metni
-        </a>{" "}
+        </Link>{" "}
         ·{" "}
-        <a href="/privacy-policy" className="underline underline-offset-4 hover:text-foreground">
+        <Link href="/privacy-policy" className="underline underline-offset-4 hover:text-foreground">
           Gizlilik Politikası
-        </a>
+        </Link>
       </p>
     </div>
   );

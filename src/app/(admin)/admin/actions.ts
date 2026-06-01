@@ -23,7 +23,7 @@ import {
   sendMediaModeratedEmail,
 } from "@/lib/email-notifications";
 import type { BusinessStatus, PostStatus, AppointmentStatus } from "@/generated/prisma/enums";
-import { isSuspended } from "@/lib/admin/user-suspension";
+import type { Prisma } from "@/generated/prisma/client";
 
 export type AdminActionState = {
   success: boolean;
@@ -1551,11 +1551,42 @@ const campaignFormSchema = z.object({
   name: z.string().min(1).max(255),
   channel: z.enum(["EMAIL", "WHATSAPP"]),
   subject: z.string().max(255).optional(),
-  contentJson: z.any().optional(),
+  contentJson: z.unknown().optional(),
   templateName: z.string().optional(),
-  templateParams: z.record(z.string(), z.any()).optional(),
-  audienceFilters: z.record(z.string(), z.any()).optional(),
+  templateParams: z.record(z.string(), z.unknown()).optional(),
+  audienceFilters: z.record(z.string(), z.unknown()).optional(),
 });
+
+function toInputJson(value: unknown): Prisma.InputJsonValue | undefined {
+  return value == null ? undefined : (value as Prisma.InputJsonValue);
+}
+
+function toRequiredInputJson(value: unknown): Prisma.InputJsonValue {
+  return (value ?? {}) as Prisma.InputJsonValue;
+}
+
+function getTemplateParams(value: unknown): Record<string, string | undefined> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, string | undefined>;
+}
+
+function getCampaignEmailBody(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "<p>No content</p>";
+  }
+  const body = (value as { body?: unknown }).body;
+  return typeof body === "string" && body.trim() ? body : "<p>No content</p>";
+}
+
+function toUserRoleFilters(roles?: string[]): UserRole[] {
+  if (!roles?.length) return [];
+  const validRoles = new Set<UserRole>(Object.values(UserRole));
+  return roles.filter((role): role is UserRole =>
+    validRoles.has(role as UserRole)
+  );
+}
 
 export async function createCampaign(
   formData: unknown
@@ -1573,13 +1604,13 @@ export async function createCampaign(
     const campaign = await db.campaign.create({
       data: {
         name: data.name,
-        channel: data.channel as any,
+        channel: data.channel,
         status: "DRAFT",
         subject: data.subject || null,
-        contentJson: data.contentJson ? data.contentJson : undefined,
+        contentJson: toInputJson(data.contentJson),
         templateName: data.templateName || null,
-        templateParams: data.templateParams ? data.templateParams : undefined,
-        audienceFilters: (data.audienceFilters || {}) as any,
+        templateParams: toInputJson(data.templateParams),
+        audienceFilters: toRequiredInputJson(data.audienceFilters),
         createdById: admin.id,
       },
     });
@@ -1640,10 +1671,10 @@ export async function updateCampaign(
       data: {
         name: data.name,
         subject: data.subject || null,
-        contentJson: data.contentJson ? data.contentJson : undefined,
+        contentJson: toInputJson(data.contentJson),
         templateName: data.templateName || null,
-        templateParams: data.templateParams ? data.templateParams : undefined,
-        audienceFilters: (data.audienceFilters || {}) as any,
+        templateParams: toInputJson(data.templateParams),
+        audienceFilters: toRequiredInputJson(data.audienceFilters),
       },
     });
 
@@ -1689,35 +1720,33 @@ export async function snapshotCampaignAudience(
     }
 
     // Build audience query based on channel
-    const where: any = {
-      AND: [
-        {
-          preferences: {
-            marketingConsentAt: { not: null },
-            marketingRevokedAt: null,
-          },
+    const andFilters: Prisma.UserWhereInput[] = [
+      {
+        preferences: {
+          marketingConsentAt: { not: null },
+          marketingRevokedAt: null,
         },
-      ],
-    };
+      },
+    ];
+    const where: Prisma.UserWhereInput = { AND: andFilters };
 
     if (campaign.channel === "EMAIL") {
-      where.AND.push({
+      andFilters.push({
         emailVerified: true,
-        email: { not: null },
       });
-      where.AND.push({
+      andFilters.push({
         preferences: {
           emailMarketing: true,
         },
       });
     } else if (campaign.channel === "WHATSAPP") {
-      where.AND.push({
+      andFilters.push({
         OR: [
           { phone: { not: null } },
           { business: { whatsapp: { not: null } } },
         ],
       });
-      where.AND.push({
+      andFilters.push({
         preferences: {
           whatsappMarketing: true,
         },
@@ -1725,14 +1754,16 @@ export async function snapshotCampaignAudience(
     }
 
     // Apply filters
-    if (audienceFilters.roles && audienceFilters.roles.length > 0) {
-      where.role = { in: audienceFilters.roles };
+    const roleFilters = toUserRoleFilters(audienceFilters.roles);
+    if (roleFilters.length > 0) {
+      where.role = { in: roleFilters };
     }
     if (audienceFilters.locales && audienceFilters.locales.length > 0) {
-      where.preferences = {
-        ...where.preferences,
-        locale: { in: audienceFilters.locales },
-      };
+      andFilters.push({
+        preferences: {
+          locale: { in: audienceFilters.locales },
+        },
+      });
     }
 
     // Get eligible users
@@ -1765,7 +1796,7 @@ export async function snapshotCampaignAudience(
       data: {
         recipientCount: recipients.length,
         status: "READY",
-        audienceFilters: audienceFilters as any,
+        audienceFilters: toRequiredInputJson(audienceFilters),
       },
     });
 
@@ -1799,7 +1830,7 @@ export async function getEmailMarketingAudienceCount(
   await requireRole(UserRole.ADMIN);
 
   try {
-    const where: any = {
+    const where: Prisma.UserWhereInput = {
       AND: [
         {
           preferences: {
@@ -1810,13 +1841,13 @@ export async function getEmailMarketingAudienceCount(
         },
         {
           emailVerified: true,
-          email: { not: null },
         },
       ],
     };
 
-    if (filters.roles && filters.roles.length > 0) {
-      where.role = { in: filters.roles };
+    const roleFilters = toUserRoleFilters(filters.roles);
+    if (roleFilters.length > 0) {
+      where.role = { in: roleFilters };
     }
 
     const count = await db.user.count({ where });
@@ -1835,7 +1866,6 @@ export async function sendMarketingWhatsAppCampaign(
     const {
       getApprovedWhatsAppMarketingTemplates,
       isApprovedMarketingTemplate,
-      getWhatsAppMarketingStatus,
     } = await import("@/lib/whatsapp-marketing-config");
 
     const campaign = await db.campaign.findUnique({
@@ -1902,7 +1932,8 @@ export async function sendMarketingWhatsAppCampaign(
 
     // Validate template language matches approved configuration
     const approvedTemplate = approvedTemplates.find((t) => t.name === templateName);
-    const campaignLanguage = (campaign.templateParams as any)?.language || "en";
+    const templateParams = getTemplateParams(campaign.templateParams);
+    const campaignLanguage = templateParams.language || "en";
     if (approvedTemplate && approvedTemplate.language !== campaignLanguage) {
       return {
         success: false,
@@ -1912,8 +1943,6 @@ export async function sendMarketingWhatsAppCampaign(
 
     // Check dry-run mode
     const isDryRun = process.env.WHATSAPP_DRY_RUN !== "false";
-    const status = getWhatsAppMarketingStatus();
-
     const recipients = campaign.recipients;
 
     if (recipients.length === 0) {
@@ -1987,12 +2016,8 @@ export async function sendMarketingWhatsAppCampaign(
             const messageId = await sendWhatsAppMarketingTemplate({
               to: normalizedPhone,
               templateName,
-              templateLanguage:
-                (campaign.templateParams as any)?.language || "en",
-              parameters: (campaign.templateParams || {}) as Record<
-                string,
-                string | undefined
-              >,
+              templateLanguage: campaignLanguage,
+              parameters: templateParams,
             });
 
             return { success: true, messageId };
@@ -2192,22 +2217,25 @@ export async function sendMarketingEmailCampaign(
               return { success: true, messageId: `dry-run-${Date.now()}` };
             }
 
+            const content = React.createElement("div", {
+              dangerouslySetInnerHTML: {
+                __html: getCampaignEmailBody(campaign.contentJson),
+              },
+            });
+
             // Send email
             const result = await sendEmail({
               to: recipient.recipientEmail!,
               subject: campaign.subject!,
-              react: React.createElement(MarketingEmail, {
-                preview: campaign.subject || "UrGlowUp Marketing",
-                subject: campaign.subject!,
-                unsubscribeUrl,
-                children: React.createElement("div", {
-                  dangerouslySetInnerHTML: {
-                    __html:
-                      (typeof campaign.contentJson === 'object' && !Array.isArray(campaign.contentJson) && (campaign.contentJson as any)?.body) as string ||
-                      "<p>No content</p>",
-                  },
-                }),
-              }),
+              react: React.createElement(
+                MarketingEmail,
+                {
+                  preview: campaign.subject || "UrGlowUp Marketing",
+                  subject: campaign.subject!,
+                  unsubscribeUrl,
+                },
+                content
+              ),
               tags: [
                 { name: "flow", value: "marketing" },
                 { name: "campaign", value: campaignId },

@@ -1,6 +1,14 @@
 import type { User } from "@/generated/prisma/client";
 
-export function isSuspended(user: User | null): boolean {
+type SuspensionFields = {
+  suspendedAt?: User["suspendedAt"];
+  suspendedUntil?: User["suspendedUntil"];
+};
+type SuspensionStatusFields = SuspensionFields & {
+  suspensionReason?: User["suspensionReason"];
+};
+
+export function isSuspended(user: SuspensionFields | null): boolean {
   if (!user) return false;
   if (!user.suspendedAt) return false;
 
@@ -14,7 +22,7 @@ export function isSuspended(user: User | null): boolean {
 }
 
 export function getSuspensionStatus(
-  user: User | null
+  user: SuspensionStatusFields | null
 ): { isSuspended: boolean; expiresAt: Date | null; reason: string | null } {
   if (!user || !user.suspendedAt) {
     return { isSuspended: false, expiresAt: null, reason: null };
@@ -25,8 +33,8 @@ export function getSuspensionStatus(
 
   return {
     isSuspended: isSuspendedNow,
-    expiresAt: user.suspendedUntil,
-    reason: user.suspensionReason,
+    expiresAt: user.suspendedUntil ?? null,
+    reason: user.suspensionReason ?? null,
   };
 }
 

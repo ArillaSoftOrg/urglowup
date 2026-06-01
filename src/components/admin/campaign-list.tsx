@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getCampaigns } from "@/lib/queries/admin";
-import type { AdminCampaign } from "@/lib/queries/admin";
 import { CampaignStatus } from "@/generated/prisma/enums";
 
 const statusColors: Record<CampaignStatus, { bg: string; text: string }> = {

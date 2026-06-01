@@ -50,7 +50,7 @@ export async function createPost(
     select: { suspendedAt: true, suspendedUntil: true },
   });
 
-  if (owner && isSuspended(owner as any)) {
+  if (owner && isSuspended(owner)) {
     return { success: false, message: "Hesabınız askıya alınmıştır. Destek ile iletişime geçin." };
   }
 

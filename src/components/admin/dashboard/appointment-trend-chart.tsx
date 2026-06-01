@@ -62,9 +62,10 @@ export function AppointmentTrendChart({ data }: AppointmentTrendChartProps) {
             />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip
-              formatter={(value: any) => value as any}
-              labelFormatter={(label: any) =>
-                format(parse(label, "yyyy-MM-dd", new Date()), "MMM d")
+              labelFormatter={(label) =>
+                typeof label === "string"
+                  ? format(parse(label, "yyyy-MM-dd", new Date()), "MMM d")
+                  : ""
               }
               contentStyle={{
                 backgroundColor: "rgba(0, 0, 0, 0.8)",

@@ -27,6 +27,8 @@ interface QueueFilters {
   offset?: number;
 }
 
+type BusinessSignalInput = Parameters<typeof computeBusinessSignals>[0];
+
 // Helper: compute risk scores for multiple businesses at once
 async function getBusinessRiskScoreMap(
   businessIds: string[]
@@ -46,7 +48,7 @@ async function getBusinessRiskScoreMap(
 
   const riskScoreMap = new Map<string, number>();
   for (const business of businesses) {
-    const signals = computeBusinessSignals(business as any);
+    const signals = computeBusinessSignals(business as BusinessSignalInput);
     riskScoreMap.set(business.id, signals.riskScore);
   }
 

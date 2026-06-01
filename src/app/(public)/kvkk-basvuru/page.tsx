@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "KVKK Başvuru",
 };
@@ -118,12 +120,12 @@ export default function KvkkBasvuruPage() {
           <p className="text-sm font-medium">Hesap ayarlarınızdan hızlı işlem</p>
           <p className="text-sm text-muted-foreground">
             Giriş yapmış kullanıcılar,{" "}
-            <a
+            <Link
               href="/account/settings"
               className="underline underline-offset-4 hover:text-foreground"
             >
               Hesap Ayarları
-            </a>{" "}
+            </Link>{" "}
             sayfasından kişiselleştirme, analitik ve pazarlama rızalarını anında geri
             alabilir; bu işlem için başvuru sürecini beklemek gerekmez.
           </p>

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { unstable_cache } from "next/cache";
-import type { AppointmentStatus, BusinessStatus, MediaStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
+import type { Prisma } from "@/generated/prisma/client";
+import type { AppointmentStatus, BusinessStatus, CampaignStatus, MediaStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
 
 // ─── Dashboard ─────────────────────────────────────────────────
 
@@ -580,7 +581,7 @@ export async function getAdminUsers(filter?: AdminUsersFilter) {
   const page = filter?.page ?? 1;
   const skip = (page - 1) * pageSize;
 
-  const where: Record<string, any> = {};
+  const where: Prisma.UserWhereInput = {};
 
   if (filter?.roleFilter) {
     where.role = filter.roleFilter;
@@ -662,6 +663,7 @@ export async function getAdminUsers(filter?: AdminUsersFilter) {
       completedAppointmentCount: appointmentData.completed,
       lastAppointmentDate: appointmentData.lastDate,
       suspendedAt: user.suspendedAt,
+      suspendedUntil: user.suspendedUntil,
       businessStatus: user.business?.status ?? null,
       businessLastActivityAt: undefined, // Will fetch separately if needed
     };
@@ -898,7 +900,7 @@ export async function getAdminAppointments(filter?: AdminAppointmentFilter) {
   const page = filter?.page ?? 1;
   const skip = (page - 1) * pageSize;
 
-  const where: Record<string, any> = {};
+  const where: Prisma.AppointmentWhereInput = {};
 
   if (filter?.statuses && filter.statuses.length > 0) {
     where.status = { in: filter.statuses };
@@ -1223,23 +1225,21 @@ export interface MarketingAudienceFilters {
 }
 
 export async function getEmailMarketingAudience(filters?: MarketingAudienceFilters) {
-  const where: Record<string, any> = {
-    AND: [
-      // Marketing consent must be active
-      {
-        preferences: {
-          marketingConsentAt: { not: null },
-          marketingRevokedAt: null,
-          emailMarketing: true,
-        },
+  const andFilters: Prisma.UserWhereInput[] = [
+    // Marketing consent must be active
+    {
+      preferences: {
+        marketingConsentAt: { not: null },
+        marketingRevokedAt: null,
+        emailMarketing: true,
       },
-      // Email must be verified
-      {
-        emailVerified: true,
-        email: { not: null },
-      },
-    ],
-  };
+    },
+    // Email must be verified
+    {
+      emailVerified: true,
+    },
+  ];
+  const where: Prisma.UserWhereInput = { AND: andFilters };
 
   // Role filter
   if (filters?.roles && filters.roles.length > 0) {
@@ -1248,10 +1248,7 @@ export async function getEmailMarketingAudience(filters?: MarketingAudienceFilte
 
   // Locale filter
   if (filters?.locales && filters.locales.length > 0) {
-    where.preferences = {
-      ...where.preferences,
-      locale: { in: filters.locales },
-    };
+    andFilters.push({ preferences: { locale: { in: filters.locales } } });
   }
 
   // Active within N days
@@ -1320,31 +1317,30 @@ export type EmailMarketingAudienceMember = Awaited<
 >[number];
 
 export async function getWhatsAppMarketingAudience(filters?: MarketingAudienceFilters) {
-  const where: Record<string, any> = {
-    AND: [
-      // Marketing consent must be active
-      {
-        preferences: {
-          marketingConsentAt: { not: null },
-          marketingRevokedAt: null,
-          whatsappMarketing: true,
+  const andFilters: Prisma.UserWhereInput[] = [
+    // Marketing consent must be active
+    {
+      preferences: {
+        marketingConsentAt: { not: null },
+        marketingRevokedAt: null,
+        whatsappMarketing: true,
+      },
+    },
+    // Phone must be present and valid
+    {
+      OR: [
+        {
+          phone: { not: null },
         },
-      },
-      // Phone must be present and valid
-      {
-        OR: [
-          {
-            phone: { not: null },
+        {
+          business: {
+            whatsapp: { not: null },
           },
-          {
-            business: {
-              whatsapp: { not: null },
-            },
-          },
-        ],
-      },
-    ],
-  };
+        },
+      ],
+    },
+  ];
+  const where: Prisma.UserWhereInput = { AND: andFilters };
 
   // Role filter
   if (filters?.roles && filters.roles.length > 0) {
@@ -1353,10 +1349,7 @@ export async function getWhatsAppMarketingAudience(filters?: MarketingAudienceFi
 
   // Locale filter
   if (filters?.locales && filters.locales.length > 0) {
-    where.preferences = {
-      ...where.preferences,
-      locale: { in: filters.locales },
-    };
+    andFilters.push({ preferences: { locale: { in: filters.locales } } });
   }
 
   // Active within N days
@@ -1431,7 +1424,9 @@ export type WhatsAppMarketingAudienceMember = Awaited<
 >[number];
 
 export async function getCampaigns(filters?: { status?: string; limit?: number }) {
-  const where: any = filters?.status ? { status: filters.status as any } : {};
+  const where: Prisma.CampaignWhereInput = filters?.status
+    ? { status: filters.status as CampaignStatus }
+    : {};
   return db.campaign.findMany({
     where,
     include: {

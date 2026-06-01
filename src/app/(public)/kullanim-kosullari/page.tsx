@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Kullanım Koşulları",
 };
@@ -87,12 +89,12 @@ export default function KullanimKosullariPage() {
             <li>
               Yüklediğiniz medya dosyaları üçüncü taraf platform altyapısında saklanır;
               ayrıntılar için{" "}
-              <a
+              <Link
                 href="/privacy-policy"
                 className="underline underline-offset-4 hover:text-foreground"
               >
                 Gizlilik Politikamızı
-              </a>{" "}
+              </Link>{" "}
               inceleyin.
             </li>
           </ul>

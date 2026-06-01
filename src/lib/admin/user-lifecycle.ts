@@ -62,6 +62,7 @@ export interface AdminUserLifecycleData {
   completedAppointmentCount: number;
   lastAppointmentDate: Date | null;
   suspendedAt?: Date | null;
+  suspendedUntil?: Date | null;
   businessStatus?: string | null;
   businessLastActivityAt?: Date | null;
 }
@@ -79,7 +80,7 @@ export function computeUserLifecycle(
   }
 
   // SUSPENDED is second priority
-  if (user.suspendedAt && isSuspended(user as any)) {
+  if (user.suspendedAt && isSuspended(user)) {
     return "SUSPENDED";
   }
 

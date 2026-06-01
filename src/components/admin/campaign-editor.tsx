@@ -9,13 +9,28 @@ import {
   getEmailMarketingAudienceCount,
 } from "@/app/(admin)/admin/actions";
 
+type CampaignContent = { body?: string } | null;
+type CampaignActionResult = {
+  success: boolean;
+  message?: string;
+  campaignId?: string;
+};
+
+function toCampaignContent(value: unknown): CampaignContent {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const body = (value as { body?: unknown }).body;
+  return typeof body === "string" ? { body } : null;
+}
+
 interface CampaignEditorProps {
   campaignId?: string;
   initialData?: {
     name: string;
     channel: "EMAIL" | "WHATSAPP";
     subject?: string;
-    contentJson?: any;
+    contentJson?: unknown;
     templateName?: string;
   };
 }
@@ -26,7 +41,7 @@ export function CampaignEditor({ campaignId, initialData }: CampaignEditorProps)
     name: initialData?.name || "",
     channel: (initialData?.channel || "EMAIL") as "EMAIL" | "WHATSAPP",
     subject: initialData?.subject || "",
-    contentJson: initialData?.contentJson || null,
+    contentJson: toCampaignContent(initialData?.contentJson),
     templateName: initialData?.templateName || "",
   });
 
@@ -54,7 +69,7 @@ export function CampaignEditor({ campaignId, initialData }: CampaignEditorProps)
     setError("");
 
     try {
-      const result: any = campaignId
+      const result: CampaignActionResult = campaignId
         ? await updateCampaign(campaignId, formData)
         : await createCampaign(formData);
 
@@ -67,7 +82,7 @@ export function CampaignEditor({ campaignId, initialData }: CampaignEditorProps)
       } else {
         setError(result.message || "Failed to save campaign");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while saving");
     } finally {
       setLoading(false);
@@ -92,7 +107,7 @@ export function CampaignEditor({ campaignId, initialData }: CampaignEditorProps)
       } else {
         setError(result.message || "Failed to prepare audience");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred");
     } finally {
       setLoading(false);

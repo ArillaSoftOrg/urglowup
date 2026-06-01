@@ -3,7 +3,7 @@ import { db } from "./db";
 
 export async function ensureUnsubscribeToken(userId: string): Promise<string> {
   // Check if token already exists
-  let token = await db.unsubscribeToken.findUnique({
+  const token = await db.unsubscribeToken.findUnique({
     where: { userId },
     select: { token: true, usedAt: true },
   });

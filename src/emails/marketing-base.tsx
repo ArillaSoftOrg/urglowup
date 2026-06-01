@@ -14,7 +14,7 @@ export interface MarketingEmailProps {
   preview: string;
   subject: string;
   unsubscribeUrl: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export function MarketingEmail({

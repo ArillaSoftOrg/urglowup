@@ -1,5 +1,4 @@
 import { getAdminPendingQueue } from "@/lib/queries/admin";
-import { BUSINESS_TIMEZONE } from "@/lib/constants/booking";
 import { PendingQueueRow } from "./pending-queue-row";
 
 export async function PendingQueue() {

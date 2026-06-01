@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { signUpAction } from "@/app/(auth)/actions";
 import { AuthFormFeedback } from "@/components/auth/auth-form-feedback";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
@@ -94,13 +95,13 @@ export function RegisterForm({
       </Button>
       <p className="text-xs text-center text-muted-foreground">
         Hesap oluşturarak{" "}
-        <a href="/kullanim-kosullari" className="underline underline-offset-4 hover:text-foreground">
+        <Link href="/kullanim-kosullari" className="underline underline-offset-4 hover:text-foreground">
           Kullanım Koşulları
-        </a>
+        </Link>
         &#39;nı ve{" "}
-        <a href="/kvkk" className="underline underline-offset-4 hover:text-foreground">
+        <Link href="/kvkk" className="underline underline-offset-4 hover:text-foreground">
           KVKK Aydınlatma Metni
-        </a>
+        </Link>
         &#39;ni okuduğunuzu kabul etmiş olursunuz.
       </p>
     </form>

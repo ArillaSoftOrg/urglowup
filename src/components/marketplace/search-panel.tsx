@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,11 @@ interface SearchPanelProps {
 export function SearchPanel({ categories, cities }: SearchPanelProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
-  const searchParams = useSearchParams() ?? new URLSearchParams();
+  const rawSearchParams = useSearchParams();
+  const searchParams = useMemo(
+    () => rawSearchParams ?? new URLSearchParams(),
+    [rawSearchParams]
+  );
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const currentQ         = searchParams.get("q") ?? "";
