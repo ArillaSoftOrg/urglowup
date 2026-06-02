@@ -10,6 +10,7 @@ type Locale = (typeof SUPPORTED_LOCALES)[number];
 const DEFAULT_LOCALE: Locale = "tr";
 const INTL_LOCALES = ["en", "de", "ru", "es"] as const;
 const COOKIE_NAME = "NEXT_LOCALE";
+const AUTH_COOKIE_PREFIX = "urglowup";
 
 function getLocaleFromRequest(request: NextRequest): Locale {
   const cookieLocale = request.cookies.get(COOKIE_NAME)?.value;
@@ -55,7 +56,9 @@ export function proxy(request: NextRequest) {
       (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
     )
   ) {
-    const sessionCookie = getSessionCookie(request);
+    const sessionCookie = getSessionCookie(request, {
+      cookiePrefix: AUTH_COOKIE_PREFIX,
+    });
     if (!sessionCookie) {
       const loginUrl = new URL("/login", request.url);
       const redirectTarget = `${pathname}${request.nextUrl.search}`;
