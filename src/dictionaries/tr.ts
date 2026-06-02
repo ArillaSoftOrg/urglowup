@@ -8,6 +8,7 @@ const tr = {
     adminPanel: 'Admin Paneli',
     signIn: 'Giriş Yap',
     signUp: 'Kayıt Ol',
+    listBusiness: 'İşletmenizi listeleyin',
     openMenu: 'Menüyü aç',
   },
   home: {

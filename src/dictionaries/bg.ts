@@ -10,6 +10,7 @@ const bg: Dictionary = {
     adminPanel: 'Админ Панел',
     signIn: 'Вход',
     signUp: 'Регистрация',
+    listBusiness: 'Добави бизнеса си',
     openMenu: 'Отвори менюто',
   },
   home: {

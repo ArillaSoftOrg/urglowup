@@ -24,29 +24,35 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
   const p = (path: string) =>
     locale === "tr" ? path : `/${locale}${path}`;
 
-  const navLink = user
+  const businessHref = p("/for-business");
+  const accountHref = user
     ? user.role === UserRole.BUSINESS_OWNER
       ? { label: dict.nav.businessPanel, href: "/business/dashboard" }
       : user.role === UserRole.ADMIN
         ? { label: dict.nav.adminPanel, href: "/admin" }
         : { label: dict.nav.account, href: "/account" }
-    : { label: dict.nav.forBusiness, href: p("/for-business") };
+    : null;
+
+  const menuPrimaryLink = accountHref ?? {
+    label: dict.nav.forBusiness,
+    href: businessHref,
+  };
 
   return (
     <header
       data-navbar
-      className="sticky top-0 z-50 w-full border-b border-transparent bg-background
+      className="sticky top-0 z-50 w-full border-b border-transparent bg-background/95
         transition-[background-color,border-color,box-shadow] duration-200
         data-[scrolled=true]:border-border
-        data-[scrolled=true]:bg-background/75
+        data-[scrolled=true]:bg-background/80
         data-[scrolled=true]:backdrop-blur-md
         data-[scrolled=true]:shadow-[var(--shadow-sm)]"
     >
       <NavbarScrollEffect />
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+      <div className="container mx-auto flex h-[4.5rem] items-center justify-between gap-4 px-4 md:px-6">
         <Link
           href={p("/")}
-          className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity"
+          className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-80"
         >
           <span className="flex size-7 items-center justify-center rounded-lg bg-brand-pink/20">
             <Sparkles className="size-4 text-brand-pink-foreground" />
@@ -57,39 +63,59 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
         <NavLinks
           links={[
             { label: dict.nav.explore, href: p("/explore") },
-            navLink,
+            { label: dict.nav.forBusiness, href: businessHref },
           ]}
         />
 
-        <div className="flex items-center gap-1.5">
-          <div className="hidden md:block">
+        <div className="flex items-center gap-2">
+          <div className="hidden lg:block">
             <LocaleSwitcher isLoggedIn={!!user} />
           </div>
           {user ? (
-            <Link href="/account" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-              Hesabım
+            <Link
+              href={accountHref?.href ?? "/account"}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-[0_1px_0_oklch(0.145_0_0/0.04)] md:inline-flex"
+              )}
+            >
+              {accountHref?.label ?? dict.nav.account}
             </Link>
           ) : (
             <>
-              <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "hidden md:inline-flex")}>
+              <Link
+                href="/login"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "lg" }),
+                  "hidden rounded-full px-4 font-semibold md:inline-flex"
+                )}
+              >
                 {dict.nav.signIn}
               </Link>
-              <Link href="/register" className={buttonVariants({ variant: "brand", size: "sm" })}>
-                {dict.nav.signUp}
+              <Link
+                href={businessHref}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-[0_1px_0_oklch(0.145_0_0/0.04)] sm:inline-flex"
+                )}
+              >
+                {dict.nav.listBusiness}
               </Link>
             </>
           )}
-          <div className="md:hidden">
-            <NavbarMobileMenu
-              navLink={navLink}
-              exploreHref={p("/explore")}
-              exploreLabel={dict.nav.explore}
-              openMenuLabel={dict.nav.openMenu}
-              signInLabel={dict.nav.signIn}
-              signUpLabel={dict.nav.signUp}
-              isLoggedIn={!!user}
-            />
-          </div>
+          <NavbarMobileMenu
+            navLink={menuPrimaryLink}
+            businessHref={businessHref}
+            businessLabel={dict.nav.forBusiness}
+            listBusinessLabel={dict.nav.listBusiness}
+            exploreHref={p("/explore")}
+            exploreLabel={dict.nav.explore}
+            openMenuLabel={dict.nav.openMenu}
+            signInLabel={dict.nav.signIn}
+            signUpLabel={dict.nav.signUp}
+            accountLabel={dict.nav.account}
+            isLoggedIn={!!user}
+          />
         </div>
       </div>
     </header>

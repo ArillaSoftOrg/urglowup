@@ -10,6 +10,7 @@ const es: Dictionary = {
     adminPanel: 'Panel de administración',
     signIn: 'Iniciar sesión',
     signUp: 'Registrarse',
+    listBusiness: 'Publica tu negocio',
     openMenu: 'Abrir menú',
   },
   home: {

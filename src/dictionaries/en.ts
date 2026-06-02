@@ -10,6 +10,7 @@ const en: Dictionary = {
     adminPanel: 'Admin Panel',
     signIn: 'Sign In',
     signUp: 'Sign Up',
+    listBusiness: 'List your business',
     openMenu: 'Open menu',
   },
   home: {

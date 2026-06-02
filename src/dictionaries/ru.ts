@@ -10,6 +10,7 @@ const ru: Dictionary = {
     adminPanel: 'Панель администратора',
     signIn: 'Войти',
     signUp: 'Зарегистрироваться',
+    listBusiness: 'Добавить бизнес',
     openMenu: 'Открыть меню',
   },
   home: {
