@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 import {
   getMarketplaceBusinesses,
   getMarketplaceCategories,
+  getMarketplaceCities,
 } from "@/lib/queries/marketplace";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
@@ -12,6 +12,7 @@ import { HomeTrustBar } from "@/components/home/home-trust-bar";
 import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeBusinessCTA } from "@/components/home/home-business-cta";
+import { HomeSearchPanel } from "@/components/home/home-search-panel";
 import { getDictionary } from "@/lib/get-dictionary";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import type { Locale } from "@/lib/i18n-config";
@@ -20,16 +21,126 @@ interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
+const homeSearchCopy: Record<
+  Locale,
+  {
+    title: string;
+    description: string;
+    searchPlaceholder: string;
+    regionPlaceholder: string;
+    categoryPlaceholder: string;
+    submit: string;
+    popularSearches: string;
+    popularServicesTitle: string;
+    hair: string;
+    nails: string;
+    skinCare: string;
+    tattoo: string;
+  }
+> = {
+  tr: {
+    title: "Yakınındaki güzellik uzmanlarını keşfet",
+    description:
+      "Sana uygun hizmeti, konumu ve uzmanı seç. Gerçek işleri gör, doğrulanmış yorumlarla güvenle randevu al.",
+    searchPlaceholder: "Uzman, hizmet veya işletme ara",
+    regionPlaceholder: "Bölge veya ilçe seç",
+    categoryPlaceholder: "Kategori seç",
+    submit: "Ara",
+    popularSearches: "Popüler aramalar:",
+    popularServicesTitle: "Popüler hizmetler",
+    hair: "Kuaför",
+    nails: "Tırnak",
+    skinCare: "Cilt bakımı",
+    tattoo: "Dövme & Piercing",
+  },
+  en: {
+    title: "Discover beauty professionals near you",
+    description:
+      "Choose the right service, location, and professional. See real work, read verified reviews, and book with confidence.",
+    searchPlaceholder: "Search professional, service, or business",
+    regionPlaceholder: "Choose area or district",
+    categoryPlaceholder: "Choose category",
+    submit: "Search",
+    popularSearches: "Popular searches:",
+    popularServicesTitle: "Popular services",
+    hair: "Hair salon",
+    nails: "Nails",
+    skinCare: "Skin care",
+    tattoo: "Tattoo & Piercing",
+  },
+  de: {
+    title: "Entdecke Beauty-Profis in deiner Nähe",
+    description:
+      "Wähle Service, Ort und Profi. Sieh echte Arbeiten, lies verifizierte Bewertungen und buche mit Vertrauen.",
+    searchPlaceholder: "Profi, Service oder Unternehmen suchen",
+    regionPlaceholder: "Region oder Bezirk wählen",
+    categoryPlaceholder: "Kategorie wählen",
+    submit: "Suchen",
+    popularSearches: "Beliebte Suchen:",
+    popularServicesTitle: "Beliebte Services",
+    hair: "Friseur",
+    nails: "Nägel",
+    skinCare: "Hautpflege",
+    tattoo: "Tattoo & Piercing",
+  },
+  ru: {
+    title: "Найдите бьюти-специалистов рядом",
+    description:
+      "Выберите услугу, район и специалиста. Смотрите реальные работы, читайте проверенные отзывы и бронируйте уверенно.",
+    searchPlaceholder: "Специалист, услуга или бизнес",
+    regionPlaceholder: "Выберите район",
+    categoryPlaceholder: "Выберите категорию",
+    submit: "Поиск",
+    popularSearches: "Популярные запросы:",
+    popularServicesTitle: "Популярные услуги",
+    hair: "Парикмахер",
+    nails: "Ногти",
+    skinCare: "Уход за кожей",
+    tattoo: "Тату & Пирсинг",
+  },
+  es: {
+    title: "Descubre profesionales de belleza cerca de ti",
+    description:
+      "Elige el servicio, la zona y el profesional. Mira trabajos reales, lee reseñas verificadas y reserva con confianza.",
+    searchPlaceholder: "Buscar profesional, servicio o negocio",
+    regionPlaceholder: "Elegir zona o distrito",
+    categoryPlaceholder: "Elegir categoría",
+    submit: "Buscar",
+    popularSearches: "Búsquedas populares:",
+    popularServicesTitle: "Servicios populares",
+    hair: "Peluquería",
+    nails: "Uñas",
+    skinCare: "Cuidado facial",
+    tattoo: "Tatuaje & Piercing",
+  },
+  bg: {
+    title: "Открий бюти специалисти близо до теб",
+    description:
+      "Избери услуга, район и специалист. Виж реални работи, прочети проверени отзиви и резервирай уверено.",
+    searchPlaceholder: "Търси специалист, услуга или бизнес",
+    regionPlaceholder: "Избери район",
+    categoryPlaceholder: "Избери категория",
+    submit: "Търси",
+    popularSearches: "Популярни търсения:",
+    popularServicesTitle: "Популярни услуги",
+    hair: "Фризьор",
+    nails: "Маникюр",
+    skinCare: "Грижа за кожа",
+    tattoo: "Татуировки & Пиърсинг",
+  },
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const dict = await getDictionary(locale as Locale);
+  const copy = homeSearchCopy[locale as Locale] ?? homeSearchCopy.tr;
   const alternates = buildAlternates("/", locale);
+
   return {
     title: { absolute: "UrGlowUp" },
-    description: dict.home.heroDescription,
+    description: copy.description,
     openGraph: {
       title: "UrGlowUp",
-      description: dict.home.heroDescription,
+      description: copy.description,
       url: `/${locale}`,
       locale: getOgLocale(locale),
     },
@@ -39,12 +150,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function LocaleHomePage({ params }: PageProps) {
   const { locale } = await params;
-  const dict = await getDictionary(locale as Locale);
+  const currentLocale = locale as Locale;
+  const dict = await getDictionary(currentLocale);
+  const copy = homeSearchCopy[currentLocale] ?? homeSearchCopy.tr;
   const p = (path: string) => `/${locale}${path}`;
 
-  const [categories, businesses] = await Promise.all([
+  const [categories, businesses, cities] = await Promise.all([
     getMarketplaceCategories(),
     getMarketplaceBusinesses(),
+    getMarketplaceCities(),
   ]);
 
   const activeCategories = categories.filter((c) => c.businessCount > 0);
@@ -52,37 +166,56 @@ export default async function LocaleHomePage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col">
-      {/* Hero */}
-      <section className="bg-background px-4 py-14 md:py-24">
-        <div className="mx-auto max-w-2xl text-center">
+      <section className="bg-background px-4 py-12 md:py-20">
+        <div className="mx-auto max-w-6xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             {dict.home.badge}
           </p>
-          <h1 className="mt-3 text-4xl font-bold leading-[1.08] tracking-[-0.02em] md:text-6xl">
-            {dict.home.heroTitle}{" "}
-            <span className="text-brand-pink-foreground">{dict.home.heroBrand}</span>
+          <h1 className="mx-auto mt-3 max-w-4xl text-4xl font-bold leading-[1.04] tracking-[-0.025em] md:text-6xl">
+            {copy.title}
           </h1>
-          <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
-            {dict.home.heroDescription}
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+            {copy.description}
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href={p("/explore")} className={cn(buttonVariants({ size: "lg" }))}>
-              {dict.home.ctaExplore}
+          <HomeSearchPanel
+            categories={activeCategories.map((category) => ({
+              name: category.name,
+              slug: category.slug,
+            }))}
+            cities={cities}
+            exploreHref={p("/explore")}
+            labels={{
+              searchPlaceholder: copy.searchPlaceholder,
+              regionPlaceholder: copy.regionPlaceholder,
+              categoryPlaceholder: copy.categoryPlaceholder,
+              submit: copy.submit,
+            }}
+          />
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">
+              {copy.popularSearches}
+            </span>
+            <Link href={`${p("/explore")}?category=hair-salon`} className="hover:text-foreground">
+              {copy.hair}
             </Link>
-            <Link
-              href={p("/for-business")}
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-            >
-              {dict.home.ctaForBusiness}
+            <span>·</span>
+            <Link href={`${p("/explore")}?category=nail-salon`} className="hover:text-foreground">
+              {copy.nails}
+            </Link>
+            <span>·</span>
+            <Link href={`${p("/explore")}?category=skin-care`} className="hover:text-foreground">
+              {copy.skinCare}
+            </Link>
+            <span>·</span>
+            <Link href={`${p("/explore")}?category=tattoo-piercing`} className="hover:text-foreground">
+              {copy.tattoo}
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Stats / Trust bar */}
       <HomeTrustBar />
 
-      {/* Category browse */}
       {activeCategories.length > 0 && (
         <section className="bg-surface-pink px-4 py-12 md:py-20">
           <div className="mx-auto max-w-7xl">
@@ -92,7 +225,7 @@ export default async function LocaleHomePage({ params }: PageProps) {
                   {dict.home.categoriesLabel}
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold tracking-[-0.015em] md:text-3xl">
-                  {dict.home.categoriesTitle}
+                  {copy.popularServicesTitle}
                 </h2>
               </div>
               <Link
@@ -106,21 +239,24 @@ export default async function LocaleHomePage({ params }: PageProps) {
               className={cn(
                 "grid gap-3 md:gap-4",
                 activeCategories.length === 1
-                  ? "grid-cols-1 max-w-[10rem]"
+                  ? "max-w-[10rem] grid-cols-1"
                   : activeCategories.length === 2
-                    ? "grid-cols-2 max-w-xs"
+                    ? "max-w-xs grid-cols-2"
                     : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
               )}
             >
               {activeCategories.slice(0, 10).map((category) => (
-                <CategoryCard key={category.id} category={category} locale={locale as Locale} />
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  locale={currentLocale}
+                />
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Featured businesses */}
       {featuredBusinesses.length > 0 && (
         <section className="bg-background px-4 py-12 md:py-20">
           <div className="mx-auto max-w-7xl">
@@ -144,19 +280,14 @@ export default async function LocaleHomePage({ params }: PageProps) {
               </Link>
             </div>
             <div className={cn(featuredBusinesses.length === 1 && "max-w-sm")}>
-              <BusinessGrid businesses={featuredBusinesses} locale={locale as Locale} />
+              <BusinessGrid businesses={featuredBusinesses} locale={currentLocale} />
             </div>
           </div>
         </section>
       )}
 
-      {/* How it works */}
       <HomeHowItWorks />
-
-      {/* Verified appointment callout */}
       <HomeVerifiedCallout />
-
-      {/* Business owner CTA */}
       <HomeBusinessCTA />
     </div>
   );
