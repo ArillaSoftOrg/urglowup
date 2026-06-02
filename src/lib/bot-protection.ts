@@ -7,7 +7,14 @@ type TurnstileVerifyResponse = {
   "error-codes"?: string[];
 };
 
-function validatePassiveBotSignals(formData: FormData): string | null {
+type BotProtectionOptions = {
+  minimumFillMs?: number;
+};
+
+function validatePassiveBotSignals(
+  formData: FormData,
+  minimumFillMs: number,
+): string | null {
   const honeypot = String(formData.get("website") ?? "").trim();
   if (honeypot) {
     return "Otomatik gönderimler engellendi.";
@@ -19,7 +26,7 @@ function validatePassiveBotSignals(formData: FormData): string | null {
     return "Form güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin.";
   }
 
-  if (Date.now() - startedAt < MIN_FORM_FILL_MS) {
+  if (minimumFillMs > 0 && Date.now() - startedAt < minimumFillMs) {
     return "Lütfen formu gözden geçirip birkaç saniye sonra tekrar deneyin.";
   }
 
@@ -73,8 +80,12 @@ async function verifyTurnstile(formData: FormData): Promise<string | null> {
 
 export async function validateBotProtection(
   formData: FormData,
+  options: BotProtectionOptions = {},
 ): Promise<string | null> {
-  const passiveError = validatePassiveBotSignals(formData);
+  const passiveError = validatePassiveBotSignals(
+    formData,
+    options.minimumFillMs ?? MIN_FORM_FILL_MS,
+  );
   if (passiveError) {
     return passiveError;
   }

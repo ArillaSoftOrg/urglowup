@@ -86,7 +86,9 @@ export async function signInAction(
     };
   }
 
-  const botError = await validateBotProtection(formData);
+  const botError = await validateBotProtection(formData, {
+    minimumFillMs: 0,
+  });
   if (botError) {
     return errorState(botError);
   }
