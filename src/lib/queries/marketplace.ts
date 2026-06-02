@@ -1,4 +1,8 @@
 import { db } from "@/lib/db";
+import {
+  optimizeBusinessCoverUrl,
+  optimizeBusinessLogoUrl,
+} from "@/lib/optimized-media";
 
 // ─── Shared filter ─────────────────────────────────────────────
 
@@ -162,6 +166,20 @@ export async function getMarketplaceBusinesses(
           category: { select: { name: true, slug: true } },
         },
       },
+      media: {
+        where: {
+          status: "ACTIVE",
+          type: { in: ["COVER", "LOGO"] },
+        },
+        select: {
+          type: true,
+          publicId: true,
+          cropX: true,
+          cropY: true,
+          cropWidth: true,
+          cropHeight: true,
+        },
+      },
       ratingStats: {
         select: { bayesianScore: true, rawReviewCount: true },
       },
@@ -171,9 +189,14 @@ export async function getMarketplaceBusinesses(
   });
 
   const mapped = raw.map((b) => {
-    const { ratingStats, ...rest } = b;
+    const { ratingStats, media, ...rest } = b;
+    const coverMedia = media.find((item) => item.type === "COVER");
+    const logoMedia = media.find((item) => item.type === "LOGO");
+
     return {
       ...rest,
+      coverImageUrl: optimizeBusinessCoverUrl(coverMedia, b.coverImageUrl),
+      logoUrl: optimizeBusinessLogoUrl(logoMedia, b.logoUrl),
       reviewCount: ratingStats?.rawReviewCount ?? 0,
       reviewAvg: ratingStats?.bayesianScore ?? null,
     };

@@ -1,5 +1,10 @@
 import { db } from "@/lib/db";
 import type { PostContentType, PostMediaType } from "@/generated/prisma/enums";
+import {
+  optimizeBusinessLogoUrl,
+  optimizePostImageUrl,
+  optimizePostViewerImageUrl,
+} from "@/lib/optimized-media";
 
 export type ExplorePost = {
   id: string;
@@ -14,7 +19,9 @@ export type ExplorePost = {
   };
   media: Array<{
     url: string;
+    viewerUrl: string;
     type: PostMediaType;
+    publicId: string;
     sortOrder: number;
     width: number | null;
     height: number | null;
@@ -34,12 +41,33 @@ const POST_SELECT = {
   contentType: true,
   createdAt: true,
   business: {
-    select: { id: true, name: true, slug: true, logoUrl: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      logoUrl: true,
+      media: {
+        where: {
+          status: "ACTIVE" as const,
+          type: "LOGO" as const,
+        },
+        select: {
+          type: true,
+          publicId: true,
+          cropX: true,
+          cropY: true,
+          cropWidth: true,
+          cropHeight: true,
+        },
+        take: 1,
+      },
+    },
   },
   media: {
     orderBy: { sortOrder: "asc" as const },
     select: {
       url: true,
+      publicId: true,
       type: true,
       sortOrder: true,
       width: true,
@@ -58,13 +86,24 @@ const POST_SELECT = {
 type RawPost = Awaited<ReturnType<typeof db.post.findMany<{ select: typeof POST_SELECT }>>>[number];
 
 function mapPost(row: RawPost, savedPostIds: Set<string>): ExplorePost {
+  const logoMedia = row.business.media[0];
+
   return {
     id: row.id,
     description: row.description,
     contentType: row.contentType,
     createdAt: row.createdAt,
-    business: row.business,
-    media: row.media,
+    business: {
+      id: row.business.id,
+      name: row.business.name,
+      slug: row.business.slug,
+      logoUrl: optimizeBusinessLogoUrl(logoMedia, row.business.logoUrl, 80),
+    },
+    media: row.media.map((item) => ({
+      ...item,
+      url: optimizePostImageUrl(item, item.url),
+      viewerUrl: optimizePostViewerImageUrl(item, item.url),
+    })),
     relatedService: row.relatedService,
     category: row.category,
     styleTags: row.styleTags.map((pt) => pt.styleTag),

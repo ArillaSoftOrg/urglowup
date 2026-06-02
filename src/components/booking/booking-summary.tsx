@@ -115,6 +115,7 @@ export function BookingSummary({
                   alt={business.name}
                   width={48}
                   height={48}
+                  sizes="48px"
                   className="size-12 shrink-0 rounded-xl object-cover"
                 />
               ) : (

@@ -31,6 +31,8 @@ function buildGalleryItems(media: BusinessWithDetails["media"]) {
         url: fullUrl,
         thumbnailUrl,
         title: m.title,
+        width: m.originalWidth,
+        height: m.originalHeight,
         isVideo,
       };
     });

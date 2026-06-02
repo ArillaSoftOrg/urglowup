@@ -16,7 +16,15 @@ import {
 } from "@/lib/constants/media";
 import type { MediaType } from "@/generated/prisma/enums";
 
-const CropDialog = dynamic(() => import("./crop-dialog"), { ssr: false });
+const CropDialogWithLoading = dynamic(() => import("./crop-dialog"), {
+  ssr: false,
+  loading: () => (
+    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+      <Loader2 className="size-3 animate-spin" />
+      Kirpma araci yukleniyor...
+    </div>
+  ),
+});
 
 const CROP_ASPECTS: Partial<Record<MediaType, number>> = {
   COVER: 16 / 9,
@@ -238,7 +246,7 @@ export function MediaUploadButton({
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
 
       {cropPending && (
-        <CropDialog
+        <CropDialogWithLoading
           open={true}
           onOpenChange={(v) => { if (!v) handleCropSkip(); }}
           imageUrl={cropPending.imageUrl}

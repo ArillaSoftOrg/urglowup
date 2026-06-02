@@ -4,13 +4,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getMarketplaceBusinesses,
+  getMarketplaceCategories,
   getMarketplaceCategoryBySlug,
   getMarketplaceCities,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
 import { getCategoryLabel } from "@/lib/category-labels";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
-import { FilterBar } from "@/components/marketplace/filter-bar";
+import { SearchPanel } from "@/components/marketplace/search-panel";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ChevronRight } from "lucide-react";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
@@ -56,7 +57,7 @@ export default async function LocaleCategoryPage({ params, searchParams }: PageP
   const rawParams = await searchParams;
   const filters = parseMarketplaceFilters(rawParams);
 
-  const [category, businesses, cities] = await Promise.all([
+  const [category, businesses, cities, categories] = await Promise.all([
     getMarketplaceCategoryBySlug(slug),
     getMarketplaceBusinesses({
       categorySlug: slug,
@@ -67,6 +68,7 @@ export default async function LocaleCategoryPage({ params, searchParams }: PageP
       hasHours:     filters.hasHours || undefined,
     }),
     getMarketplaceCities(),
+    getMarketplaceCategories(),
   ]);
 
   if (!category) notFound();
@@ -104,9 +106,28 @@ export default async function LocaleCategoryPage({ params, searchParams }: PageP
         </p>
       </div>
 
-      <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
-        <FilterBar cities={cities} showCity />
-      </Suspense>
+      <div className="overflow-hidden rounded-3xl border border-border/60 bg-surface-cream">
+        <div className="px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
+          <div className="mb-3 sm:mb-4">
+            <h2 className="text-lg font-semibold tracking-[-0.02em] sm:text-xl md:text-2xl">
+              {dict.explore.searchTitle}
+            </h2>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm">
+              {dict.explore.searchDescription}
+            </p>
+          </div>
+          <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
+            <SearchPanel
+              categories={categories
+                .filter((c) => c.businessCount > 0)
+                .map((c) => ({ name: c.name, slug: c.slug }))}
+              cities={cities}
+              categoryPathPrefix={p("/category")}
+              allCategoriesHref={p("/explore")}
+            />
+          </Suspense>
+        </div>
+      </div>
 
       {businesses.length === 0 && hasAnyFilter ? (
         <EmptyFilterState clearHref={p(`/category/${slug}`)} />

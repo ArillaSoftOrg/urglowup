@@ -42,7 +42,15 @@ import {
 } from "@/lib/constants/media";
 import type { BusinessMediaItem } from "@/lib/queries/media";
 
-const CropDialog = dynamic(() => import("./crop-dialog"), { ssr: false });
+const CropDialog = dynamic(() => import("./crop-dialog"), {
+  ssr: false,
+  loading: () => (
+    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+      <Loader2 className="size-3 animate-spin" />
+      Kirpma araci yukleniyor...
+    </div>
+  ),
+});
 
 const CROP_ASPECTS: Partial<Record<string, number>> = {
   COVER: 16 / 9,
@@ -73,6 +81,7 @@ function CoverLogoSection({
                 src={cover.url}
                 alt="Cover"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
               />
             </div>
@@ -178,6 +187,7 @@ function MediaItemCard({
             src={media.url}
             alt={media.title ?? "Media"}
             fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover"
           />
         )}

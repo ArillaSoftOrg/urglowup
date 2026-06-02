@@ -41,7 +41,7 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
             alt={`${business.name} cover`}
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 800px, 1200px"
+            sizes="100vw"
             priority
           />
         ) : (
@@ -60,6 +60,7 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
                 src={logoUrl}
                 alt={`${business.name} logo`}
                 fill
+                sizes="(max-width: 640px) 112px, 128px"
                 className="object-cover"
               />
             </div>

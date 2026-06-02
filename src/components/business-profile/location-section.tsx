@@ -7,7 +7,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MapPin, Navigation } from "lucide-react";
-import { BusinessMap } from "./business-map";
+import { LazyBusinessMap } from "./lazy-business-map";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
@@ -43,7 +43,7 @@ export function LocationSection({
         </div>
 
         {hasCoords && mapsApiKey ? (
-          <BusinessMap
+          <LazyBusinessMap
             lat={business.latitude as number}
             lng={business.longitude as number}
             name={business.name}

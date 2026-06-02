@@ -210,7 +210,7 @@ export function PostMediaViewer({
           <video
             key={activeIndex}
             ref={videoRef}
-            src={currentMedia.url}
+            src={currentMedia.viewerUrl}
             className="max-h-full max-w-full"
             playsInline
             autoPlay
@@ -230,7 +230,7 @@ export function PostMediaViewer({
             }}
           >
             <Image
-              src={currentMedia.url}
+              src={currentMedia.viewerUrl}
               alt="Gönderi görseli"
               fill
               className="object-contain"
@@ -242,7 +242,7 @@ export function PostMediaViewer({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={activeIndex}
-            src={currentMedia.url}
+            src={currentMedia.viewerUrl}
             alt="Gönderi görseli"
             className="max-h-full max-w-full object-contain"
           />

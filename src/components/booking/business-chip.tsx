@@ -15,6 +15,7 @@ export function BusinessChip({ business }: { business: BookingBusiness }) {
             src={business.logoUrl}
             alt={business.name}
             fill
+            sizes="(max-width: 640px) 40px, 48px"
             className="object-cover"
           />
         </div>

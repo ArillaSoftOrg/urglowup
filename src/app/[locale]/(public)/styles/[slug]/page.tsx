@@ -13,6 +13,7 @@ import { StyleTagGuidePostGrid } from "@/components/explore/style-tag-guide-post
 import { StyleTagCard } from "@/components/explore/style-tag-card";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { getAppUrl } from "@/lib/get-app-url";
+import { optimizePostImageUrl } from "@/lib/optimized-media";
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -85,7 +86,7 @@ export default async function LocaleStyleGuidePage({ params }: PageProps) {
                     media: {
                       take: 1,
                       orderBy: { sortOrder: "asc" },
-                      select: { url: true },
+                      select: { url: true, publicId: true, type: true },
                     },
                   },
                 },
@@ -206,7 +207,11 @@ export default async function LocaleStyleGuidePage({ params }: PageProps) {
                 name={t.name}
                 slug={t.slug}
                 postCount={t._count.posts}
-                coverUrl={t.posts[0]?.post.media[0]?.url ?? null}
+                coverUrl={
+                  t.posts[0]?.post.media[0]
+                    ? optimizePostImageUrl(t.posts[0].post.media[0], t.posts[0].post.media[0].url, 720)
+                    : null
+                }
                 locale={locale}
               />
             ))}

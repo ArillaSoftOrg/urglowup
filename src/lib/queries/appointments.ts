@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
+import { optimizeBusinessLogoUrl } from "@/lib/optimized-media";
 
 export async function getCustomerAppointments(userId: string) {
   return db.appointment.findMany({
@@ -58,7 +59,7 @@ export type BusinessAppointment = Awaited<
 >[number];
 
 export async function getBusinessForBooking(slug: string) {
-  return db.business.findUnique({
+  const business = await db.business.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -66,6 +67,21 @@ export async function getBusinessForBooking(slug: string) {
       slug: true,
       status: true,
       logoUrl: true,
+      media: {
+        where: {
+          status: "ACTIVE",
+          type: "LOGO",
+        },
+        select: {
+          type: true,
+          publicId: true,
+          cropX: true,
+          cropY: true,
+          cropWidth: true,
+          cropHeight: true,
+        },
+        take: 1,
+      },
       services: {
         where: { isActive: true },
         orderBy: { sortOrder: "asc" },
@@ -85,6 +101,17 @@ export async function getBusinessForBooking(slug: string) {
       },
     },
   });
+
+  if (!business) {
+    return null;
+  }
+
+  const logoMedia = business.media[0];
+
+  return {
+    ...business,
+    logoUrl: optimizeBusinessLogoUrl(logoMedia, business.logoUrl),
+  };
 }
 
 export type BookingBusiness = NonNullable<

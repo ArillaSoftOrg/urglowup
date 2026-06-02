@@ -26,9 +26,16 @@ import { getCategoryLabel } from "@/lib/category-labels";
 interface SearchPanelProps {
   categories?: Array<{ name: string; slug: string }>;
   cities?: Array<{ city: string }>;
+  categoryPathPrefix?: string;
+  allCategoriesHref?: string;
 }
 
-export function SearchPanel({ categories, cities }: SearchPanelProps) {
+export function SearchPanel({
+  categories,
+  cities,
+  categoryPathPrefix,
+  allCategoriesHref,
+}: SearchPanelProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const rawSearchParams = useSearchParams();
@@ -69,6 +76,26 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
 
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") handleSearchSubmit();
+  }
+
+  function handleCategoryChange(value: string | null) {
+    if (!categoryPathPrefix) {
+      navigate({ category: value === "_all" || !value ? undefined : value });
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("category");
+    const qs = params.toString();
+
+    if (value === "_all" || !value) {
+      router.replace(qs && allCategoriesHref ? `${allCategoriesHref}?${qs}` : allCategoriesHref ?? pathname, {
+        scroll: false,
+      });
+      return;
+    }
+
+    router.replace(`${categoryPathPrefix}/${value}${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   type Chip = { key: string; label: string };
@@ -179,8 +206,8 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
         )}
         {categories && categories.length > 0 && (
           <Select
-            value={currentCategory || ""}
-            onValueChange={(v) => navigate({ category: v === "_all" || !v ? undefined : v })}
+            value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory || ""}
+            onValueChange={handleCategoryChange}
           >
             <SelectTrigger className="h-9 w-[180px]">
               <SelectValue placeholder="Kategori seç" />
@@ -229,8 +256,8 @@ export function SearchPanel({ categories, cities }: SearchPanelProps) {
             {categories && categories.length > 0 && (
               <div className="md:hidden">
                 <Select
-                  value={currentCategory || ""}
-                  onValueChange={(v) => navigate({ category: v === "_all" || !v ? undefined : v })}
+                  value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory || ""}
+                  onValueChange={handleCategoryChange}
                 >
                   <SelectTrigger className="h-9 w-full">
                     <SelectValue placeholder="Kategori seç" />

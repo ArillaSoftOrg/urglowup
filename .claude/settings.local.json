@@ -81,7 +81,15 @@
       "Bash(curl -s -X POST http://localhost:3000/admin/users)",
       "Bash(curl -s http://localhost:3000/admin/users/test)",
       "Bash(curl -s -H \"Accept: text/html\" http://localhost:3000/admin/users)",
-      "Bash(awk '/requestPasswordReset = createAuthEndpoint/,/const [a-zA-Z]+ = createAuthEndpoint/ {print}' node_modules/better-auth/dist/api/routes/password.mjs)"
+      "Bash(awk '/requestPasswordReset = createAuthEndpoint/,/const [a-zA-Z]+ = createAuthEndpoint/ {print}' node_modules/better-auth/dist/api/routes/password.mjs)",
+      "PowerShell(ls \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\node_modules\\\\next\\\\dist\\\\docs\\\\\" 2>$null; if \\(-not $?\\) { \"PATH_NOT_FOUND\" })",
+      "PowerShell(ls \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\node_modules\\\\better-auth\\\\dist\\\\plugins\\\\two-factor\\\\\" 2>$null; if \\(-not $?\\) { \"PATH_NOT_FOUND\" })",
+      "Bash(curl -i http://localhost:3000/)",
+      "Bash(curl -i http://localhost:3000__TRACKED_VAR__)",
+      "Bash(curl -s \"http://localhost:3000/b/test-business\")",
+      "Bash(dir \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\node_modules\\\\better-auth\\\\dist\\\\plugins\\\\two-factor\")",
+      "Bash(timeout 120 bash -c 'while [ ! -f \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\.next\\\\build-manifest.json\" ]; do sleep 2; done')",
+      "Bash(npm audit *)"
     ]
   }
 }

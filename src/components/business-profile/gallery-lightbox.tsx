@@ -1,15 +1,26 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+
+const GalleryLightboxOverlay = dynamic(
+  () =>
+    import("./gallery-lightbox-overlay").then(
+      (mod) => mod.GalleryLightboxOverlay,
+    ),
+  {
+    loading: () => <div className="fixed inset-0 z-50 bg-black/90" />,
+  },
+);
 
 interface GalleryItem {
   id: string;
   url: string;
   thumbnailUrl: string;
   title: string | null;
+  width: number | null;
+  height: number | null;
   isVideo: boolean;
 }
 
@@ -82,6 +93,7 @@ export function GalleryLightbox({ items }: { items: GalleryItem[] }) {
                 src={item.thumbnailUrl}
                 alt={item.title ?? "Portfolio"}
                 fill
+                sizes="(max-width: 640px) 50vw, 33vw"
                 className="object-cover transition-transform group-hover:scale-105"
               />
             )}
@@ -96,83 +108,16 @@ export function GalleryLightbox({ items }: { items: GalleryItem[] }) {
 
       {/* Lightbox overlay */}
       {current && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-          onClick={close}
-        >
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4 text-white hover:bg-white/20"
-            onClick={close}
-          >
-            <X className="size-6" />
-          </Button>
-
-          {/* Navigation */}
-          {items.length > 1 && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prev();
-                }}
-              >
-                <ChevronLeft className="size-8" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  next();
-                }}
-              >
-                <ChevronRight className="size-8" />
-              </Button>
-            </>
-          )}
-
-          {/* Content */}
-          <div
-            className="max-h-[90vh] max-w-[90vw]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {current.isVideo ? (
-              <video
-                key={current.id}
-                src={current.url}
-                className="max-h-[85vh] max-w-[90vw] rounded-lg"
-                controls
-                autoPlay
-                playsInline
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={current.id}
-                src={current.url}
-                alt={current.title ?? "Portfolio"}
-                className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
-              />
-            )}
-            {current.title && (
-              <p className="mt-2 text-center text-sm text-white/80">
-                {current.title}
-              </p>
-            )}
-          </div>
-
-          {/* Counter */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/60">
-            {openIndex! + 1} / {items.length}
-          </div>
-        </div>
+        <GalleryLightboxOverlay
+          current={current}
+          currentIndex={openIndex ?? 0}
+          total={items.length}
+          onClose={close}
+          onPrev={prev}
+          onNext={next}
+          hasPrev={items.length > 1}
+          hasNext={items.length > 1}
+        />
       )}
     </>
   );

@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import { getExplorePosts } from "./posts";
 import type { ExplorePost } from "./posts";
+import {
+  optimizeBusinessLogoUrl,
+  optimizePostImageUrl,
+} from "@/lib/optimized-media";
 
 export type StyleTagSummary = {
   id: string;
@@ -59,7 +63,7 @@ export async function getAllStyleTags(): Promise<StyleTagSummary[]> {
               media: {
                 take: 1,
                 orderBy: { sortOrder: "asc" },
-                select: { url: true },
+                select: { url: true, publicId: true, type: true },
               },
             },
           },
@@ -74,7 +78,9 @@ export async function getAllStyleTags(): Promise<StyleTagSummary[]> {
     slug: t.slug,
     categoryId: t.categoryId,
     postCount: t._count.posts,
-    coverUrl: t.posts[0]?.post.media[0]?.url ?? null,
+    coverUrl: t.posts[0]?.post.media[0]
+      ? optimizePostImageUrl(t.posts[0].post.media[0], t.posts[0].post.media[0].url, 720)
+      : null,
   }));
 }
 
@@ -101,7 +107,7 @@ export async function getStyleTagBySlug(slug: string): Promise<StyleTagDetail | 
               media: {
                 take: 1,
                 orderBy: { sortOrder: "asc" },
-                select: { url: true },
+                select: { url: true, publicId: true, type: true },
               },
             },
           },
@@ -122,7 +128,9 @@ export async function getStyleTagBySlug(slug: string): Promise<StyleTagDetail | 
     sortOrder: tag.sortOrder,
     category: tag.category,
     postCount: tag._count.posts,
-    coverUrl: tag.posts[0]?.post.media[0]?.url ?? null,
+    coverUrl: tag.posts[0]?.post.media[0]
+      ? optimizePostImageUrl(tag.posts[0].post.media[0], tag.posts[0].post.media[0].url, 720)
+      : null,
   };
 }
 
@@ -134,7 +142,28 @@ export async function getStyleTagBusinesses(styleTagId: string): Promise<StyleTa
     },
     select: {
       business: {
-        select: { id: true, name: true, slug: true, logoUrl: true, city: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          logoUrl: true,
+          city: true,
+          media: {
+            where: {
+              status: "ACTIVE",
+              type: "LOGO",
+            },
+            select: {
+              type: true,
+              publicId: true,
+              cropX: true,
+              cropY: true,
+              cropWidth: true,
+              cropHeight: true,
+            },
+            take: 1,
+          },
+        },
       },
     },
     distinct: ["businessId"],
@@ -142,7 +171,13 @@ export async function getStyleTagBusinesses(styleTagId: string): Promise<StyleTa
     orderBy: { createdAt: "desc" },
   });
 
-  return rows.map((r) => r.business);
+  return rows.map((r) => ({
+    id: r.business.id,
+    name: r.business.name,
+    slug: r.business.slug,
+    logoUrl: optimizeBusinessLogoUrl(r.business.media[0], r.business.logoUrl, 80),
+    city: r.business.city,
+  }));
 }
 
 export async function getStyleTagPosts(
