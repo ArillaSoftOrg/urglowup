@@ -93,6 +93,18 @@ test("login page shows password-reset success message when ?reset=success", asyn
   await expect(page.getByText("Şifreniz güncellendi")).toBeVisible();
 });
 
+test("login page shows an error for invalid credentials", async ({ page }) => {
+  await page.goto("/login");
+
+  await page.getByLabel("E-posta").fill("unknown-login@example.com");
+  await page.getByLabel(/^Şifre$/).fill("definitely-wrong-password");
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+
+  await expect(
+    page.getByText("E-posta adresi veya şifre hatalı."),
+  ).toBeVisible();
+});
+
 test("verify-email footer link navigates back to login", async ({ page }) => {
   await page.goto("/verify-email");
   await expect(

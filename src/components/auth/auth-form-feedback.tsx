@@ -19,7 +19,11 @@ export function AuthFormFeedback({
   }
 
   return (
-    <div className={`rounded-md px-4 py-3 text-sm ${toneClasses[tone]}`}>
+    <div
+      role={tone === "error" ? "alert" : "status"}
+      aria-live={tone === "error" ? "assertive" : "polite"}
+      className={`rounded-md px-4 py-3 text-sm ${toneClasses[tone]}`}
+    >
       {message}
     </div>
   );

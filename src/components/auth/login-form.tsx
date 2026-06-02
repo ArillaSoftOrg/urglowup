@@ -44,7 +44,7 @@ export function LoginForm({
         <input type="hidden" name="redirectTo" value={redirectTo} />
       ) : null}
 
-      {resetSuccess ? (
+      {resetSuccess && !state.message ? (
         <AuthFormFeedback
           tone="success"
           message="Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz."

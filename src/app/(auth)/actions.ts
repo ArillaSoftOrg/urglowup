@@ -123,6 +123,16 @@ export async function signInAction(
     ) {
       twoFactorChallengeUrl = `/admin/mfa/challenge?next=${encodeURIComponent(redirectTo)}`;
     }
+
+    if (!twoFactorChallengeUrl && !hasSuccessfulSignInResult(result)) {
+      console.error("[auth:sign-in-unexpected-response]", {
+        email: maskEmail(parsed.data.email),
+        resultKeys:
+          result && typeof result === "object" ? Object.keys(result) : [],
+      });
+
+      return mapAuthError(result, "signIn");
+    }
   } catch (error) {
     if (isAuthErrorCode(error, "EMAIL_NOT_VERIFIED")) {
       const resent = await resendVerificationEmail(
@@ -139,6 +149,11 @@ export async function signInAction(
           : "E-posta adresiniz henüz doğrulanmadı. Yakın zamanda doğrulama bağlantısı gönderildiği için şu an yeni e-posta gönderemedik. Gelen kutunuzu kontrol edin.",
       };
     }
+
+    console.error("[auth:sign-in-failed]", {
+      email: maskEmail(parsed.data.email),
+      ...getAuthErrorDetails(error),
+    });
 
     return mapAuthError(error, "signIn");
   }
@@ -448,6 +463,16 @@ function errorState(message: string): AuthFormState {
   };
 }
 
+function hasSuccessfulSignInResult(result: unknown) {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    "token" in result &&
+    typeof result.token === "string" &&
+    result.token.length > 0
+  );
+}
+
 function mapAuthError(
   error: unknown,
   context:
@@ -458,14 +483,27 @@ function mapAuthError(
     | "verification",
 ): AuthFormState {
   const details = getAuthErrorDetails(error);
+  const normalizedDetails = `${details.code ?? ""} ${details.message ?? ""}`
+    .toLowerCase()
+    .trim();
 
   if (
-    details.message?.toLowerCase().includes("too many requests") ||
+    normalizedDetails.includes("too many requests") ||
     details.code === "TOO_MANY_REQUESTS"
   ) {
     return errorState(
       "Çok fazla istek alındı. Lütfen birkaç dakika sonra tekrar deneyin.",
     );
+  }
+
+  if (
+    normalizedDetails.includes("invalid email or password") ||
+    normalizedDetails.includes("invalid password") ||
+    normalizedDetails.includes("credential account not found") ||
+    normalizedDetails.includes("password not found") ||
+    normalizedDetails.includes("user not found")
+  ) {
+    return errorState("E-posta adresi veya şifre hatalı.");
   }
 
   switch (details.code) {
@@ -537,6 +575,35 @@ function getAuthErrorDetails(error: unknown) {
   if (
     typeof error === "object" &&
     error !== null &&
+    "error" in error &&
+    typeof error.error === "object" &&
+    error.error !== null
+  ) {
+    const nested = error.error as { code?: string; message?: string };
+    return {
+      code: nested.code,
+      message: nested.message,
+    };
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
+    return {
+      code: error.code,
+      message:
+        "message" in error && typeof error.message === "string"
+          ? error.message
+          : undefined,
+    };
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
     "body" in error &&
     typeof error.body === "object" &&
     error.body !== null
@@ -570,6 +637,16 @@ function isAuthErrorCode(error: unknown, code: string) {
   return getAuthErrorDetails(error).code === code;
 }
 
+function maskEmail(email: string) {
+  const [local, domain] = email.split("@");
+
+  if (!local || !domain) {
+    return "[redacted]";
+  }
+
+  return `${local.slice(0, 2)}***@${domain}`;
+}
+
 async function resendVerificationEmail(
   email: string,
   redirectTo: string,
@@ -596,7 +673,7 @@ async function resendVerificationEmail(
   } catch (error) {
     // Log the error for diagnostics without exposing details to the user.
     console.error("[auth:resend-verification-failed]", {
-      email: email.split("@")[1] ? `${email.substring(0, 2)}***@${email.split("@")[1]}` : "[redacted]",
+      email: maskEmail(email),
       error: String(error),
     });
     return false;
