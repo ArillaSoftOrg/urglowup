@@ -2,9 +2,12 @@ import React from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
+import { hashPassword } from "better-auth/crypto";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { passwordSchema } from "@/lib/password-policy";
 import { UserRole } from "@/generated/prisma/enums";
 import { AuthEmailVerification } from "@/emails/auth-email-verification";
 import { AuthPasswordReset } from "@/emails/auth-password-reset";
@@ -104,6 +107,20 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     autoSignIn: true,
     revokeSessionsOnPasswordReset: true,
+    password: {
+      hash: async (plaintext: string) => {
+        const result = passwordSchema.safeParse(plaintext);
+        if (!result.success) {
+          throw new APIError("BAD_REQUEST", {
+            message:
+              result.error.issues[0]?.message ??
+              "Şifre politika gereksinimlerini karşılamıyor.",
+            code: "PASSWORD_TOO_WEAK",
+          });
+        }
+        return hashPassword(plaintext);
+      },
+    },
     sendResetPassword: async ({ user, url }) => {
       const result = await sendEmail({
         to: user.email,

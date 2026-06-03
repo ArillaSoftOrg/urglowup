@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { ChangePasswordForm } from "@/components/account/change-password-form";
 import { NotificationPreferencesForm } from "@/components/account/notification-preferences-form";
 import { ConsentPreferencesForm } from "@/components/account/consent-preferences-form";
 import { ThemeSelector } from "@/components/account/theme-selector";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { getUserPreferences } from "@/lib/preferences";
 import { signOutAction } from "@/app/(auth)/actions";
+import { db } from "@/lib/db";
 
 export const metadata = { title: "Ayarlar" };
 
@@ -33,6 +35,11 @@ export default async function SettingsPage() {
 
   const prefs = await getUserPreferences(user.id);
   const marketingConsentActive = isMarketingConsentActive(prefs);
+
+  const credentialAccount = await db.account.findFirst({
+    where: { userId: user.id, providerId: "credential" },
+    select: { id: true },
+  });
 
   return (
     <div className="space-y-6">
@@ -67,7 +74,20 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 2 — Appearance */}
+      {/* 2 — Change Password */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Şifre</CardTitle>
+          <CardDescription>
+            {credentialAccount ? "Şifrenizi değiştirin" : "Bu hesap Google ile giriş yapılarak oluşturuldu"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm hasPassword={!!credentialAccount} />
+        </CardContent>
+      </Card>
+
+      {/* 4 — Appearance */}
       <Card>
         <CardHeader>
           <CardTitle>Görünüm</CardTitle>
@@ -80,7 +100,7 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 3 — Language */}
+      {/* 5 — Language */}
       <Card>
         <CardHeader>
           <CardTitle>Dil</CardTitle>
@@ -98,7 +118,7 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 4 — Notifications */}
+      {/* 6 — Notifications */}
       <Card>
         <CardHeader>
           <CardTitle>Bildirimler</CardTitle>
@@ -114,7 +134,7 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 5 — Privacy & Consent */}
+      {/* 7 — Privacy & Consent */}
       <Card>
         <CardHeader>
           <CardTitle>Gizlilik ve Onay</CardTitle>

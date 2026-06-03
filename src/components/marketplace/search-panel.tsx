@@ -1,33 +1,85 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
 } from "@/components/ui/sheet";
-import { SlidersHorizontal, X } from "lucide-react";
-import Link from "next/link";
 import { getCategoryLabel } from "@/lib/category-labels";
+import { cn } from "@/lib/utils";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 interface SearchPanelProps {
   categories?: Array<{ name: string; slug: string }>;
   cities?: Array<{ city: string }>;
   categoryPathPrefix?: string;
   allCategoriesHref?: string;
+}
+
+function NativeSelect({
+  value,
+  placeholder,
+  options,
+  onChange,
+  className,
+}: {
+  value: string;
+  placeholder: string;
+  options: Array<{ label: string; value: string }>;
+  onChange: (value: string) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("relative", className)}>
+      <select
+        value={value || "_all"}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 pr-9 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <option value="_all">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+    </div>
+  );
+}
+
+function ToggleButton({
+  active,
+  className,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  className?: string;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        active
+          ? "bg-brand text-white hover:bg-brand/90"
+          : "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        className
+      )}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
 }
 
 export function SearchPanel({
@@ -45,18 +97,18 @@ export function SearchPanel({
   );
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
-  const currentQ         = searchParams.get("q") ?? "";
-  const currentCategory  = searchParams.get("category") ?? "";
-  const currentCity      = searchParams.get("city") ?? "";
-  const currentDistrict  = searchParams.get("district") ?? "";
+  const currentQ = searchParams.get("q") ?? "";
+  const currentCategory = searchParams.get("category") ?? "";
+  const currentCity = searchParams.get("city") ?? "";
+  const currentDistrict = searchParams.get("district") ?? "";
   const currentMinRating = searchParams.get("minRating") ?? "";
-  const currentHasMedia  = searchParams.get("hasMedia") === "true";
-  const currentHasHours  = searchParams.get("hasHours") === "true";
+  const currentHasMedia = searchParams.get("hasMedia") === "true";
+  const currentHasHours = searchParams.get("hasHours") === "true";
 
   const [inputValue, setInputValue] = useState(currentQ);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL→state sync for back/forward navigation
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
     setInputValue(searchParams.get("q") ?? "");
   }, [searchParams]);
 
@@ -74,11 +126,11 @@ export function SearchPanel({
     navigate({ q: inputValue.trim() || undefined });
   }
 
-  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") handleSearchSubmit();
+  function handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") handleSearchSubmit();
   }
 
-  function handleCategoryChange(value: string | null) {
+  function handleCategoryChange(value: string) {
     if (!categoryPathPrefix) {
       navigate({ category: value === "_all" || !value ? undefined : value });
       return;
@@ -89,9 +141,10 @@ export function SearchPanel({
     const qs = params.toString();
 
     if (value === "_all" || !value) {
-      router.replace(qs && allCategoriesHref ? `${allCategoriesHref}?${qs}` : allCategoriesHref ?? pathname, {
-        scroll: false,
-      });
+      router.replace(
+        qs && allCategoriesHref ? `${allCategoriesHref}?${qs}` : allCategoriesHref ?? pathname,
+        { scroll: false }
+      );
       return;
     }
 
@@ -100,22 +153,34 @@ export function SearchPanel({
 
   type Chip = { key: string; label: string };
   const chips: Chip[] = [
-    ...(currentQ         ? [{ key: "q",         label: `"${currentQ}"` }] : []),
-    ...(currentCategory  ? [{ key: "category",   label: (() => { const c = categories?.find((c) => c.slug === currentCategory); return c ? getCategoryLabel(c.slug, c.name) : currentCategory; })() }] : []),
-    ...(currentCity      ? [{ key: "city",        label: currentCity }] : []),
-    ...(currentDistrict  ? [{ key: "district",    label: currentDistrict }] : []),
-    ...(currentMinRating ? [{ key: "minRating",   label: `${currentMinRating}+ yıldız` }] : []),
-    ...(currentHasMedia  ? [{ key: "hasMedia",    label: "Portföyü olanlar" }] : []),
-    ...(currentHasHours  ? [{ key: "hasHours",    label: "Çalışma saati olanlar" }] : []),
+    ...(currentQ ? [{ key: "q", label: `"${currentQ}"` }] : []),
+    ...(currentCategory
+      ? [
+          {
+            key: "category",
+            label:
+              categories?.find((category) => category.slug === currentCategory)
+                ? getCategoryLabel(
+                    categories.find((category) => category.slug === currentCategory)!.slug,
+                    categories.find((category) => category.slug === currentCategory)!.name
+                  )
+                : currentCategory,
+          },
+        ]
+      : []),
+    ...(currentCity ? [{ key: "city", label: currentCity }] : []),
+    ...(currentDistrict ? [{ key: "district", label: currentDistrict }] : []),
+    ...(currentMinRating ? [{ key: "minRating", label: `${currentMinRating}+ yıldız` }] : []),
+    ...(currentHasMedia ? [{ key: "hasMedia", label: "Portföyü olanlar" }] : []),
+    ...(currentHasHours ? [{ key: "hasHours", label: "Çalışma saati olanlar" }] : []),
   ];
 
   const hasActiveFilters = chips.length > 0;
-  const advancedFilterCount = chips.filter((c) => c.key !== "q").length;
-
+  const advancedFilterCount = chips.filter((chip) => chip.key !== "q").length;
   function buildClearAllHref(): string {
     const params = new URLSearchParams(searchParams.toString());
-    ["q", "category", "city", "district", "minRating", "hasMedia", "hasHours"].forEach(
-      (k) => params.delete(k)
+    ["q", "category", "city", "district", "minRating", "hasMedia", "hasHours"].forEach((key) =>
+      params.delete(key)
     );
     const qs = params.toString();
     return qs ? `${pathname}?${qs}` : pathname;
@@ -123,39 +188,32 @@ export function SearchPanel({
 
   return (
     <div className="space-y-3">
-      {/* Mobile layout */}
       <div className="flex flex-col gap-2 md:hidden">
-        <Input
-          type="search"
-          placeholder="Uzman, hizmet veya işletme ara"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleSearchKeyDown}
-          className="h-9"
-        />
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            placeholder="Uzman, hizmet veya işletme ara"
+            value={inputValue}
+            onChange={(event) => setInputValue(event.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+        </div>
+
         {cities && cities.length > 0 && (
-          <Select
-            value={currentCity || ""}
-            onValueChange={(v) => navigate({ city: v === "_all" || !v ? undefined : v })}
-          >
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue placeholder="Bölge veya ilçe seç" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">Bölge veya ilçe seç</SelectItem>
-              {cities.map(({ city }) => (
-                <SelectItem key={city} value={city}>
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <NativeSelect
+            value={currentCity}
+            placeholder="Bölge veya ilçe seç"
+            options={cities.map(({ city }) => ({ label: city, value: city }))}
+            onChange={(value) => navigate({ city: value === "_all" ? undefined : value })}
+          />
         )}
+
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 flex-1 gap-1.5"
+          <button
+            type="button"
+            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             onClick={() => setFilterSheetOpen(true)}
           >
             <SlidersHorizontal className="size-4" />
@@ -165,67 +223,56 @@ export function SearchPanel({
                 {advancedFilterCount}
               </span>
             )}
-          </Button>
-          <Button
-            size="sm"
-            className="h-9 flex-1"
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-9 flex-1 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             onClick={handleSearchSubmit}
           >
             Ara
-          </Button>
+          </button>
         </div>
       </div>
 
-      {/* Desktop layout */}
       <div className="hidden items-center gap-2 md:flex">
-        <Input
-          type="search"
-          placeholder="Uzman, hizmet veya işletme ara"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleSearchKeyDown}
-          className="h-9 flex-1"
-        />
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            placeholder="Uzman, hizmet veya işletme ara"
+            value={inputValue}
+            onChange={(event) => setInputValue(event.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+        </div>
+
         {cities && cities.length > 0 && (
-          <Select
-            value={currentCity || ""}
-            onValueChange={(v) => navigate({ city: v === "_all" || !v ? undefined : v })}
-          >
-            <SelectTrigger className="h-9 w-[160px]">
-              <SelectValue placeholder="Bölge veya ilçe seç" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">Bölge veya ilçe seç</SelectItem>
-              {cities.map(({ city }) => (
-                <SelectItem key={city} value={city}>
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <NativeSelect
+            value={currentCity}
+            placeholder="Bölge veya ilçe seç"
+            options={cities.map(({ city }) => ({ label: city, value: city }))}
+            onChange={(value) => navigate({ city: value === "_all" ? undefined : value })}
+            className="w-[160px]"
+          />
         )}
+
         {categories && categories.length > 0 && (
-          <Select
-            value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory || ""}
-            onValueChange={handleCategoryChange}
-          >
-            <SelectTrigger className="h-9 w-[180px]">
-              <SelectValue placeholder="Kategori seç" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">Kategori seç</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c.slug} value={c.slug}>
-                  {getCategoryLabel(c.slug, c.name)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <NativeSelect
+            value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory}
+            placeholder="Kategori seç"
+            options={categories.map((category) => ({
+              label: getCategoryLabel(category.slug, category.name),
+              value: category.slug,
+            }))}
+            onChange={handleCategoryChange}
+            className="w-[180px]"
+          />
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 shrink-0 gap-1.5"
+
+        <button
+          type="button"
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           onClick={() => setFilterSheetOpen(true)}
         >
           <SlidersHorizontal className="size-4" />
@@ -235,95 +282,83 @@ export function SearchPanel({
               {advancedFilterCount}
             </span>
           )}
-        </Button>
-        <Button
-          size="sm"
-          className="h-9 shrink-0"
+        </button>
+
+        <button
+          type="button"
+          className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           onClick={handleSearchSubmit}
         >
           Ara
-        </Button>
+        </button>
       </div>
 
-      {/* Advanced filter sheet */}
       <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
         <SheetContent side="bottom" className="max-h-[80dvh]">
           <SheetHeader>
             <SheetTitle>Gelişmiş Filtreler</SheetTitle>
           </SheetHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-2">
-            {/* Category select on mobile only */}
             {categories && categories.length > 0 && (
               <div className="md:hidden">
-                <Select
-                  value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory || ""}
-                  onValueChange={handleCategoryChange}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="Kategori seç" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">Kategori seç</SelectItem>
-                    {categories.map((c) => (
-                      <SelectItem key={c.slug} value={c.slug}>
-                        {getCategoryLabel(c.slug, c.name)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <NativeSelect
+                  value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory}
+                  placeholder="Kategori seç"
+                  options={categories.map((category) => ({
+                    label: getCategoryLabel(category.slug, category.name),
+                    value: category.slug,
+                  }))}
+                  onChange={handleCategoryChange}
+                />
               </div>
             )}
-            {/* Advanced filters - all viewports */}
-            <Select
-              value={currentMinRating || ""}
-              onValueChange={(v) => navigate({ minRating: v === "_all" || !v ? undefined : v })}
-            >
-              <SelectTrigger className="h-9 w-full">
-                <SelectValue placeholder="Tüm puanlar" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">Tüm puanlar</SelectItem>
-                <SelectItem value="6">6+ puan</SelectItem>
-                <SelectItem value="8">8+ puan</SelectItem>
-                <SelectItem value="9">9+ puan</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant={currentHasMedia ? "brand" : "outline"}
-              size="sm"
-              className="h-9 w-full"
+
+            <NativeSelect
+              value={currentMinRating}
+              placeholder="Tüm puanlar"
+              options={[
+                { label: "6+ puan", value: "6" },
+                { label: "8+ puan", value: "8" },
+                { label: "9+ puan", value: "9" },
+              ]}
+              onChange={(value) => navigate({ minRating: value === "_all" ? undefined : value })}
+            />
+
+            <ToggleButton
+              active={currentHasMedia}
+              className="w-full"
               onClick={() => navigate({ hasMedia: currentHasMedia ? undefined : "true" })}
             >
               Portföyü olanlar
-            </Button>
-            <Button
-              variant={currentHasHours ? "brand" : "outline"}
-              size="sm"
-              className="h-9 w-full"
+            </ToggleButton>
+
+            <ToggleButton
+              active={currentHasHours}
+              className="w-full"
               onClick={() => navigate({ hasHours: currentHasHours ? undefined : "true" })}
             >
               Çalışma saati olanlar
-            </Button>
+            </ToggleButton>
           </div>
           <SheetFooter>
-            <Button className="w-full" onClick={() => setFilterSheetOpen(false)}>
+            <button
+              type="button"
+              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              onClick={() => setFilterSheetOpen(false)}
+            >
               Uygula
-            </Button>
+            </button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
 
-      {/* Active filter chips */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-1.5">
           {chips.map((chip) => (
-            <Badge
-              key={chip.key}
-              variant="pink"
-              className="flex items-center gap-1 pr-1"
-            >
+            <Badge key={chip.key} variant="pink" className="flex items-center gap-1 pr-1">
               {chip.label}
               <button
+                type="button"
                 onClick={() => navigate({ [chip.key]: undefined })}
                 className="ml-0.5 rounded-full hover:text-foreground focus-visible:outline-none focus-visible:ring-2"
                 aria-label={`${chip.label} filtresini kaldır`}

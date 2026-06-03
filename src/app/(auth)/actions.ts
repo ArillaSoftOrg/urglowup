@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { passwordSchema, PASSWORD_GUIDANCE_MESSAGE } from "@/lib/password-policy";
 import {
   buildVerificationCallbackURL,
   normalizeAuthRedirect,
@@ -37,8 +38,8 @@ const registerSchema = z
   .object({
     name: z.string().min(2, "Ad soyad en az 2 karakter olmalı."),
     email: z.email("Geçerli bir e-posta adresi girin."),
-    password: z.string().min(8, "Şifre en az 8 karakter olmalı."),
-    passwordConfirm: z.string().min(8, "Şifre tekrarını girin."),
+    password: passwordSchema,
+    passwordConfirm: z.string().min(1, "Şifre tekrarını girin."),
     redirectTo: z.string().optional(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
@@ -54,8 +55,8 @@ const forgotPasswordSchema = z.object({
 const resetPasswordSchema = z
   .object({
     token: z.string().min(1, "Bağlantı artık geçerli değil."),
-    newPassword: z.string().min(8, "Şifre en az 8 karakter olmalı."),
-    passwordConfirm: z.string().min(8, "Şifre tekrarını girin."),
+    newPassword: passwordSchema,
+    passwordConfirm: z.string().min(1, "Şifre tekrarını girin."),
     redirectTo: z.string().optional(),
   })
   .refine((data) => data.newPassword === data.passwordConfirm, {
@@ -178,11 +179,9 @@ export async function signUpAction(
   });
 
   if (!parsed.success) {
-    return {
-      success: false,
-      tone: "error",
-      errors: flattenErrors(parsed.error),
-    };
+    const errors = flattenErrors(parsed.error);
+    if (errors.password) errors.password = PASSWORD_GUIDANCE_MESSAGE;
+    return { success: false, tone: "error", errors };
   }
 
   const botError = await validateBotProtection(formData);
@@ -298,11 +297,9 @@ export async function resetPasswordAction(
   });
 
   if (!parsed.success) {
-    return {
-      success: false,
-      tone: "error",
-      errors: flattenErrors(parsed.error),
-    };
+    const errors = flattenErrors(parsed.error);
+    if (errors.newPassword) errors.newPassword = PASSWORD_GUIDANCE_MESSAGE;
+    return { success: false, tone: "error", errors };
   }
 
   const botError = await validateBotProtection(formData);
@@ -515,6 +512,8 @@ function mapAuthError(
       return errorState("Şifre en az 8 karakter olmalı.");
     case "PASSWORD_TOO_LONG":
       return errorState("Şifre çok uzun. Daha kısa bir şifre deneyin.");
+    case "PASSWORD_TOO_WEAK":
+      return errorState(PASSWORD_GUIDANCE_MESSAGE);
     case "INVALID_TOKEN":
     case "TOKEN_EXPIRED":
       return errorState(

@@ -4,15 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Heart,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Play,
   MessageSquare,
   Volume2,
   VolumeX,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ExplorePost } from "@/lib/queries/posts";
 
@@ -31,13 +31,13 @@ export function PostCard({
   onSaveToggle,
   onMediaClick,
 }: PostCardProps) {
+  const businessInitial = post.business.name.charAt(0).toUpperCase();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [inlineVideoEnabled, setInlineVideoEnabled] = useState(false);
   const [muted, setMuted] = useState(true);
   const [videoCanPlay, setVideoCanPlay] = useState(false);
-  const [nearViewport, setNearViewport] = useState(false);
 
-  // Responsive media height cap — mobile-first, Twitter/X-like density.
-  // Lazy initializer runs once on the client; server-side returns 320 (mobile default).
+  // Responsive media height cap; server render falls back to a mobile-friendly default.
   const [maxMediaH] = useState<number>(() => {
     if (typeof window === "undefined") return 320;
     if (window.innerWidth >= 1024) return 480;
@@ -68,58 +68,47 @@ export function PostCard({
       };
 
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setNearViewport(true);
-          obs.disconnect();
-        }
-      },
-      { rootMargin: "500px 0px" },
-    );
-    obs.observe(card);
-    return () => obs.disconnect();
-  }, []);
-
-  useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    const obs = new IntersectionObserver(
+
+    const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) video.play().catch(() => {});
         else video.pause();
       },
-      { threshold: 0.5 },
+      { threshold: 0.5 }
     );
-    obs.observe(video);
-    return () => obs.disconnect();
-  }, [activeIndex, nearViewport]);
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [activeIndex, inlineVideoEnabled]);
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.muted = muted;
   }, [muted]);
 
-  function handleSlideChange(i: number) {
-    if (i === activeIndex) return;
+  function handleSlideChange(index: number) {
+    if (index === activeIndex) return;
     videoRef.current?.pause();
-    setActiveIndex(i);
+    setActiveIndex(index);
+    setInlineVideoEnabled(false);
     setVideoCanPlay(false);
   }
 
-  const goNext = () => {
+  function goNext() {
     if (activeIndex < post.media.length - 1) handleSlideChange(activeIndex + 1);
-  };
-  const goPrev = () => {
-    if (activeIndex > 0) handleSlideChange(activeIndex - 1);
-  };
-
-  function handleTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX;
   }
-  function handleTouchEnd(e: React.TouchEvent) {
-    const delta = e.changedTouches[0].clientX - touchStartX.current;
+
+  function goPrev() {
+    if (activeIndex > 0) handleSlideChange(activeIndex - 1);
+  }
+
+  function handleTouchStart(event: React.TouchEvent) {
+    touchStartX.current = event.touches[0].clientX;
+  }
+
+  function handleTouchEnd(event: React.TouchEvent) {
+    const delta = event.changedTouches[0].clientX - touchStartX.current;
     if (delta < -40) goNext();
     else if (delta > 40) goPrev();
   }
@@ -129,6 +118,7 @@ export function PostCard({
       window.location.href = "/login";
       return;
     }
+
     onSaveToggle(post.id, savedByCurrentUser);
   }
 
@@ -138,26 +128,28 @@ export function PostCard({
       className="border-b border-border/60 transition-colors hover:bg-accent/20"
     >
       <div className="flex gap-2.5 px-4 py-3">
-        {/* ── Left column: avatar ── */}
         <div className="w-10 shrink-0 pt-0.5">
           <Link href={`/b/${post.business.slug}`} tabIndex={-1}>
-            <Avatar className="size-10">
-              {post.business.logoUrl && (
-                <AvatarImage
+            <div className="relative size-10 overflow-hidden rounded-full after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken dark:after:mix-blend-lighten">
+              {post.business.logoUrl ? (
+                <Image
                   src={post.business.logoUrl}
                   alt={post.business.name}
+                  width={40}
+                  height={40}
+                  className="size-full object-cover"
+                  sizes="40px"
                 />
+              ) : (
+                <div className="flex size-full items-center justify-center bg-muted text-xs text-muted-foreground">
+                  {businessInitial}
+                </div>
               )}
-              <AvatarFallback className="text-xs">
-                {post.business.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            </div>
           </Link>
         </div>
 
-        {/* ── Right column: all content ── */}
         <div className="min-w-0 flex-1">
-          {/* Header row */}
           <div className="mb-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
             <Link
               href={`/b/${post.business.slug}`}
@@ -177,14 +169,12 @@ export function PostCard({
             )}
           </div>
 
-          {/* Description */}
           {post.description && (
             <p className="mb-1.5 text-sm leading-relaxed text-foreground">
               {post.description}
             </p>
           )}
 
-          {/* Style Tags */}
           {post.styleTags.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1">
               {post.styleTags.map((tag) => (
@@ -199,7 +189,6 @@ export function PostCard({
             </div>
           )}
 
-          {/* Media */}
           {post.media.length > 0 && (
             <div
               className="mb-2"
@@ -209,23 +198,23 @@ export function PostCard({
               <div
                 role="button"
                 tabIndex={0}
-                aria-label="Görseli büyüt"
+                aria-label="Gorseli buyut"
                 className={cn(
-                  "relative mx-auto overflow-hidden rounded-xl cursor-pointer",
-                  isVideo && "bg-black",
+                  "relative mx-auto cursor-pointer overflow-hidden rounded-xl",
+                  isVideo && "bg-black"
                 )}
                 style={mediaContainerStyle}
                 onClick={() => onMediaClick(activeIndex)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
                     onMediaClick(activeIndex);
                   }
                 }}
               >
                 {isVideo ? (
                   <>
-                    {nearViewport && (
+                    {inlineVideoEnabled ? (
                       <video
                         key={activeIndex}
                         ref={videoRef}
@@ -239,31 +228,56 @@ export function PostCard({
                         onCanPlay={() => setVideoCanPlay(true)}
                         onWaiting={() => setVideoCanPlay(false)}
                       />
+                    ) : currentMedia.posterUrl ? (
+                      <Image
+                        src={currentMedia.posterUrl}
+                        alt={post.description ?? "Video onizlemesi"}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 480px) 100vw, 480px"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-black" />
                     )}
-                    {!videoCanPlay && (
+                    {inlineVideoEnabled && !videoCanPlay && (
                       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                         <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       </div>
                     )}
+                    {!inlineVideoEnabled && (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setInlineVideoEnabled(true);
+                        }}
+                        className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/30"
+                        aria-label="Videoyu oynat"
+                      >
+                        <span className="flex size-12 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+                          <Play className="ml-0.5 size-5 fill-current" />
+                        </span>
+                      </button>
+                    )}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMuted((m) => !m);
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setMuted((value) => !value);
                       }}
-                      className="absolute bottom-3 right-3 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm hover:bg-black/80"
-                      aria-label={muted ? "Sesi aç" : "Sesi kapat"}
-                    >
-                      {muted ? (
-                        <VolumeX className="size-4" />
-                      ) : (
-                        <Volume2 className="size-4" />
+                      className={cn(
+                        "absolute bottom-3 right-3 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-sm hover:bg-black/80",
+                        !inlineVideoEnabled && "hidden"
                       )}
+                      aria-label={muted ? "Sesi ac" : "Sesi kapat"}
+                    >
+                      {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
                     </button>
                   </>
                 ) : ar ? (
                   <Image
                     src={currentMedia.url}
-                    alt={post.description ?? "Gönderi görseli"}
+                    alt={post.description ?? "Gonderi gorseli"}
                     fill
                     className="object-cover"
                     sizes="(max-width: 480px) 100vw, 480px"
@@ -271,7 +285,7 @@ export function PostCard({
                 ) : (
                   <Image
                     src={currentMedia.url}
-                    alt={post.description ?? "Gönderi görseli"}
+                    alt={post.description ?? "Gonderi gorseli"}
                     width={600}
                     height={600}
                     className="block h-auto w-full object-contain"
@@ -279,31 +293,29 @@ export function PostCard({
                   />
                 )}
 
-                {/* Multi-media navigation */}
                 {hasMultiple && (
                   <>
-                    {/* Counter pill */}
                     <div className="pointer-events-none absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
                       {activeIndex + 1}/{post.media.length}
                     </div>
-                    {/* Left arrow — desktop only */}
                     {activeIndex > 0 && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
                           goPrev();
                         }}
                         className="absolute left-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70 sm:flex"
-                        aria-label="Önceki"
+                        aria-label="Onceki"
                       >
                         <ChevronLeft className="size-4" />
                       </button>
                     )}
-                    {/* Right arrow — desktop only */}
                     {activeIndex < post.media.length - 1 && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
                           goNext();
                         }}
                         className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center justify-center rounded-full bg-black/50 p-1 text-white backdrop-blur-sm hover:bg-black/70 sm:flex"
@@ -318,20 +330,20 @@ export function PostCard({
             </div>
           )}
 
-          {/* Actions */}
           <div className="-ml-1.5 flex items-center gap-4 pb-1 pt-0.5">
             <button
+              type="button"
               onClick={handleSave}
-              aria-label={savedByCurrentUser ? "Kaydı kaldır" : "Kaydet"}
+              aria-label={savedByCurrentUser ? "Kaydi kaldir" : "Kaydet"}
               className={cn(
                 "group flex items-center gap-1.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:text-rose-500",
-                savedByCurrentUser && "text-rose-500",
+                savedByCurrentUser && "text-rose-500"
               )}
             >
               <Heart
                 className={cn(
                   "size-4 transition-transform group-hover:scale-110",
-                  savedByCurrentUser && "fill-rose-500",
+                  savedByCurrentUser && "fill-rose-500"
                 )}
               />
             </button>
@@ -346,7 +358,7 @@ export function PostCard({
 
             <Link
               href={isLoggedIn ? "/account/messages" : "/login"}
-              title="Mesaj gönder"
+              title="Mesaj gonder"
               className="flex items-center gap-1.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground"
             >
               <MessageSquare className="size-4" />

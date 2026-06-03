@@ -3,6 +3,7 @@ import type { PostContentType, PostMediaType } from "@/generated/prisma/enums";
 import {
   optimizeBusinessLogoUrl,
   optimizePostImageUrl,
+  optimizePostVideoPosterUrl,
   optimizePostViewerImageUrl,
 } from "@/lib/optimized-media";
 
@@ -20,6 +21,7 @@ export type ExplorePost = {
   media: Array<{
     url: string;
     viewerUrl: string;
+    posterUrl: string | null;
     type: PostMediaType;
     publicId: string;
     sortOrder: number;
@@ -103,6 +105,7 @@ function mapPost(row: RawPost, savedPostIds: Set<string>): ExplorePost {
       ...item,
       url: optimizePostImageUrl(item, item.url),
       viewerUrl: optimizePostViewerImageUrl(item, item.url),
+      posterUrl: optimizePostVideoPosterUrl(item),
     })),
     relatedService: row.relatedService,
     category: row.category,

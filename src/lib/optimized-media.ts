@@ -1,4 +1,4 @@
-import { getOptimizedUrl } from "@/lib/cloudinary";
+import { getOptimizedUrl, getVideoPosterUrl } from "@/lib/cloudinary";
 
 type BusinessImageAsset = {
   type: string;
@@ -79,6 +79,21 @@ export function optimizePostViewerImageUrl(
   }
 
   return fallbackUrl;
+}
+
+export function optimizePostVideoPosterUrl(
+  asset: PostImageAsset | undefined,
+  width = 960,
+): string | null {
+  if (asset?.publicId && asset.type === "VIDEO") {
+    return getVideoPosterUrl(asset.publicId, {
+      width,
+      crop: "limit",
+      quality: "auto:good",
+    });
+  }
+
+  return null;
 }
 
 export function optimizeBusinessLogoUrl(

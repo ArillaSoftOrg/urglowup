@@ -1,28 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
-import { Search, SlidersHorizontal, X } from "lucide-react";
-import Link from "next/link";
 import { getCategoryLabel } from "@/lib/category-labels";
+import { cn } from "@/lib/utils";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 interface FilterBarProps {
   categories?: Array<{ name: string; slug: string }>;
@@ -31,6 +22,66 @@ interface FilterBarProps {
   showCategory?: boolean;
   showCity?: boolean;
   showDistrict?: boolean;
+}
+
+function NativeSelect({
+  value,
+  placeholder,
+  options,
+  onChange,
+  className,
+}: {
+  value: string;
+  placeholder: string;
+  options: Array<{ label: string; value: string }>;
+  onChange: (value: string) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("relative", className)}>
+      <select
+        value={value || "_all"}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 pr-9 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <option value="_all">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+    </div>
+  );
+}
+
+function ToggleButton({
+  active,
+  fullWidth = false,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  fullWidth?: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        fullWidth && "w-full",
+        active
+          ? "bg-brand text-white hover:bg-brand/90"
+          : "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+      )}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
 }
 
 function FilterControls({
@@ -67,94 +118,65 @@ function FilterControls({
   return (
     <>
       {showCategory && categories && categories.length > 0 && (
-        <Select
-          value={currentCategory || "_all"}
-          onValueChange={(v) => navigate({ category: v && v !== "_all" ? v : undefined })}
-        >
-          <SelectTrigger className={cn("h-9", fullWidth ? "w-full" : "w-[180px]")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="_all">Tüm kategoriler</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.slug} value={c.slug}>
-                {getCategoryLabel(c.slug, c.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <NativeSelect
+          value={currentCategory}
+          placeholder="Tüm kategoriler"
+          options={categories.map((category) => ({
+            label: getCategoryLabel(category.slug, category.name),
+            value: category.slug,
+          }))}
+          onChange={(value) => navigate({ category: value === "_all" ? undefined : value })}
+          className={fullWidth ? "w-full" : "w-[180px]"}
+        />
       )}
 
       {showCity && cities && cities.length > 0 && (
-        <Select
-          value={currentCity || "_all"}
-          onValueChange={(v) => navigate({ city: v && v !== "_all" ? v : undefined })}
-        >
-          <SelectTrigger className={cn("h-9", fullWidth ? "w-full" : "w-[160px]")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="_all">Tüm şehirler</SelectItem>
-            {cities.map(({ city }) => (
-              <SelectItem key={city} value={city}>
-                {city}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <NativeSelect
+          value={currentCity}
+          placeholder="Tüm şehirler"
+          options={cities.map(({ city }) => ({ label: city, value: city }))}
+          onChange={(value) => navigate({ city: value === "_all" ? undefined : value })}
+          className={fullWidth ? "w-full" : "w-[160px]"}
+        />
       )}
 
       {showDistrict && districts && districts.length > 0 && (
-        <Select
-          value={currentDistrict || "_all"}
-          onValueChange={(v) => navigate({ district: v && v !== "_all" ? v : undefined })}
-        >
-          <SelectTrigger className={cn("h-9", fullWidth ? "w-full" : "w-[160px]")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="_all">Tüm ilçeler</SelectItem>
-            {districts.map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <NativeSelect
+          value={currentDistrict}
+          placeholder="Tüm ilçeler"
+          options={districts.map((district) => ({ label: district, value: district }))}
+          onChange={(value) => navigate({ district: value === "_all" ? undefined : value })}
+          className={fullWidth ? "w-full" : "w-[160px]"}
+        />
       )}
 
-      <Select
-        value={currentMinRating || "_all"}
-        onValueChange={(v) => navigate({ minRating: v && v !== "_all" ? v : undefined })}
-      >
-        <SelectTrigger className={cn("h-9", fullWidth ? "w-full" : "w-[150px]")}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="_all">Tüm puanlar</SelectItem>
-          <SelectItem value="3">3+ yıldız</SelectItem>
-          <SelectItem value="4">4+ yıldız</SelectItem>
-          <SelectItem value="4.5">4.5+ yıldız</SelectItem>
-        </SelectContent>
-      </Select>
+      <NativeSelect
+        value={currentMinRating}
+        placeholder="Tüm puanlar"
+        options={[
+          { label: "3+ yıldız", value: "3" },
+          { label: "4+ yıldız", value: "4" },
+          { label: "4.5+ yıldız", value: "4.5" },
+        ]}
+        onChange={(value) => navigate({ minRating: value === "_all" ? undefined : value })}
+        className={fullWidth ? "w-full" : "w-[150px]"}
+      />
 
-      <Button
-        variant={currentHasMedia ? "brand" : "outline"}
-        size="sm"
-        className={cn("h-9", fullWidth && "w-full")}
+      <ToggleButton
+        active={currentHasMedia}
+        fullWidth={fullWidth}
         onClick={() => navigate({ hasMedia: currentHasMedia ? undefined : "true" })}
       >
         Portföyü olanlar
-      </Button>
+      </ToggleButton>
 
-      <Button
-        variant={currentHasHours ? "brand" : "outline"}
-        size="sm"
-        className={cn("h-9", fullWidth && "w-full")}
+      <ToggleButton
+        active={currentHasHours}
+        fullWidth={fullWidth}
         onClick={() => navigate({ hasHours: currentHasHours ? undefined : "true" })}
       >
         Çalışma saati olanlar
-      </Button>
+      </ToggleButton>
     </>
   );
 }
@@ -176,21 +198,18 @@ export function FilterBar({
   );
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
-  // Derive current values from URL (source of truth)
-  const currentQ         = searchParams.get("q") ?? "";
-  const currentCategory  = searchParams.get("category") ?? "";
-  const currentCity      = searchParams.get("city") ?? "";
-  const currentDistrict  = searchParams.get("district") ?? "";
+  const currentQ = searchParams.get("q") ?? "";
+  const currentCategory = searchParams.get("category") ?? "";
+  const currentCity = searchParams.get("city") ?? "";
+  const currentDistrict = searchParams.get("district") ?? "";
   const currentMinRating = searchParams.get("minRating") ?? "";
-  const currentHasMedia  = searchParams.get("hasMedia") === "true";
-  const currentHasHours  = searchParams.get("hasHours") === "true";
+  const currentHasMedia = searchParams.get("hasMedia") === "true";
+  const currentHasHours = searchParams.get("hasHours") === "true";
 
-  // Local state only for text input — navigates on Enter/click, not every keystroke
   const [inputValue, setInputValue] = useState(currentQ);
 
-  // Keep input in sync when URL changes externally (browser back/forward)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL→state sync for back/forward navigation
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
     setInputValue(searchParams.get("q") ?? "");
   }, [searchParams]);
 
@@ -208,33 +227,45 @@ export function FilterBar({
     navigate({ q: inputValue.trim() || undefined });
   }
 
-  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") handleSearchSubmit();
+  function handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") handleSearchSubmit();
   }
 
   function buildClearAllHref(): string {
     const params = new URLSearchParams(searchParams.toString());
-    ["q", "category", "city", "district", "minRating", "hasMedia", "hasHours"].forEach(
-      (k) => params.delete(k)
+    ["q", "category", "city", "district", "minRating", "hasMedia", "hasHours"].forEach((key) =>
+      params.delete(key)
     );
     const qs = params.toString();
     return qs ? `${pathname}?${qs}` : pathname;
   }
 
-  // Active filter chips
   type Chip = { key: string; label: string };
   const chips: Chip[] = [
-    ...(currentQ         ? [{ key: "q",         label: `"${currentQ}"` }] : []),
-    ...(currentCategory  ? [{ key: "category",   label: (() => { const c = categories?.find((c) => c.slug === currentCategory); return c ? getCategoryLabel(c.slug, c.name) : currentCategory; })() }] : []),
-    ...(currentCity      ? [{ key: "city",        label: currentCity }] : []),
-    ...(currentDistrict  ? [{ key: "district",    label: currentDistrict }] : []),
-    ...(currentMinRating ? [{ key: "minRating",   label: `${currentMinRating}+ yıldız` }] : []),
-    ...(currentHasMedia  ? [{ key: "hasMedia",    label: "Portföyü olanlar" }] : []),
-    ...(currentHasHours  ? [{ key: "hasHours",    label: "Çalışma saati olanlar" }] : []),
+    ...(currentQ ? [{ key: "q", label: `"${currentQ}"` }] : []),
+    ...(currentCategory
+      ? [
+          {
+            key: "category",
+            label:
+              categories?.find((category) => category.slug === currentCategory)
+                ? getCategoryLabel(
+                    categories.find((category) => category.slug === currentCategory)!.slug,
+                    categories.find((category) => category.slug === currentCategory)!.name
+                  )
+                : currentCategory,
+          },
+        ]
+      : []),
+    ...(currentCity ? [{ key: "city", label: currentCity }] : []),
+    ...(currentDistrict ? [{ key: "district", label: currentDistrict }] : []),
+    ...(currentMinRating ? [{ key: "minRating", label: `${currentMinRating}+ yıldız` }] : []),
+    ...(currentHasMedia ? [{ key: "hasMedia", label: "Portföyü olanlar" }] : []),
+    ...(currentHasHours ? [{ key: "hasHours", label: "Çalışma saati olanlar" }] : []),
   ];
 
   const hasActiveFilters = chips.length > 0;
-  const advancedFilterCount = chips.filter((c) => c.key !== "q").length;
+  const advancedFilterCount = chips.filter((chip) => chip.key !== "q").length;
 
   const filterControlsProps = {
     categories,
@@ -254,32 +285,31 @@ export function FilterBar({
 
   return (
     <div className="space-y-3">
-      {/* Mobile: search + "Filtreler" button */}
       <div className="flex items-center gap-2 md:hidden">
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <Input
-            type="search"
-            placeholder="Uzman ara..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            className="h-9"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 shrink-0"
+          <div className="relative min-w-0 flex-1">
+            <input
+              type="search"
+              placeholder="Uzman ara..."
+              value={inputValue}
+              onChange={(event) => setInputValue(event.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              className="h-9 w-full rounded-md border border-input bg-background pl-3 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input bg-background shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             onClick={handleSearchSubmit}
             aria-label="Ara"
           >
             <Search className="size-4" />
-          </Button>
+          </button>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 shrink-0 gap-1.5"
+        <button
+          type="button"
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           onClick={() => setFilterSheetOpen(true)}
         >
           <SlidersHorizontal className="size-4" />
@@ -289,36 +319,35 @@ export function FilterBar({
               {advancedFilterCount}
             </span>
           )}
-        </Button>
+        </button>
       </div>
 
-      {/* Desktop: 2-row filter layout */}
       <div className="hidden flex-col gap-3 md:flex">
         <div className="flex items-center gap-1.5">
-          <Input
-            type="search"
-            placeholder="Uzman ara..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            className="h-9 flex-1"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 shrink-0"
+          <div className="relative flex-1">
+            <input
+              type="search"
+              placeholder="Uzman ara..."
+              value={inputValue}
+              onChange={(event) => setInputValue(event.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              className="h-9 w-full rounded-md border border-input bg-background pl-3 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input bg-background shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             onClick={handleSearchSubmit}
             aria-label="Ara"
           >
             <Search className="size-4" />
-          </Button>
+          </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <FilterControls {...filterControlsProps} />
         </div>
       </div>
 
-      {/* Mobile filter sheet */}
       <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
         <SheetContent side="bottom" className="max-h-[80dvh]">
           <SheetHeader>
@@ -328,24 +357,24 @@ export function FilterBar({
             <FilterControls {...filterControlsProps} fullWidth />
           </div>
           <SheetFooter>
-            <Button className="w-full" onClick={() => setFilterSheetOpen(false)}>
+            <button
+              type="button"
+              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              onClick={() => setFilterSheetOpen(false)}
+            >
               Uygula
-            </Button>
+            </button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
 
-      {/* Active filter chips */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-1.5">
           {chips.map((chip) => (
-            <Badge
-              key={chip.key}
-              variant="pink"
-              className="flex items-center gap-1 pr-1"
-            >
+            <Badge key={chip.key} variant="pink" className="flex items-center gap-1 pr-1">
               {chip.label}
               <button
+                type="button"
                 onClick={() => navigate({ [chip.key]: undefined })}
                 className="ml-0.5 rounded-full hover:text-foreground focus-visible:outline-none focus-visible:ring-2"
                 aria-label={`${chip.label} filtresini kaldır`}

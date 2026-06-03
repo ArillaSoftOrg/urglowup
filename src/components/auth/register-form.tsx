@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { signUpAction } from "@/app/(auth)/actions";
 import { AuthFormFeedback } from "@/components/auth/auth-form-feedback";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 import { PasswordInput } from "@/components/shared/password-input";
+import { PasswordRequirements } from "@/components/shared/password-requirements";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,15 @@ export function RegisterForm({
   const [state, formAction, pending] = useActionState(signUpAction, {
     success: false,
   });
+  const [passwordValue, setPasswordValue] = useState("");
+  // Snapshot of the password at the moment of last submit. If the live value
+  // differs, the user has re-typed and the stale server error is suppressed.
+  const [submittedPassword, setSubmittedPassword] = useState<string | null>(null);
+
+  const passwordErrorVisible =
+    !!state.errors?.password &&
+    !pending &&
+    passwordValue === submittedPassword;
 
   return (
     <div className="space-y-4">
@@ -35,7 +45,11 @@ export function RegisterForm({
         </>
       ) : null}
 
-      <form action={formAction} className="space-y-4">
+      <form
+        action={formAction}
+        className="space-y-4"
+        onSubmit={() => setSubmittedPassword(passwordValue)}
+      >
       {redirectTo ? (
         <input type="hidden" name="redirectTo" value={redirectTo} />
       ) : null}
@@ -65,10 +79,13 @@ export function RegisterForm({
             id="password"
             name="password"
             autoComplete="new-password"
+            onChange={(e) => setPasswordValue(e.target.value)}
           />
-          {state.errors?.password ? (
-            <p className="text-sm text-destructive">{state.errors.password}</p>
-          ) : null}
+          {passwordErrorVisible ? (
+            <p className="text-sm text-destructive">{state.errors?.password}</p>
+          ) : (
+            <PasswordRequirements password={passwordValue} />
+          )}
         </div>
 
         <div className="space-y-2">

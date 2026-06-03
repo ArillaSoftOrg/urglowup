@@ -95,3 +95,28 @@ export function getOptimizedUrl(
     transformation,
   });
 }
+
+export function getVideoPosterUrl(
+  publicId: string,
+  transforms?: {
+    width?: number;
+    height?: number;
+    quality?: string;
+    crop?: string;
+  }
+): string {
+  ensureConfigured();
+
+  const resizeStep: Record<string, string | number | undefined> = {};
+  if (transforms?.width) resizeStep.width = transforms.width;
+  if (transforms?.height) resizeStep.height = transforms.height;
+  if (transforms?.crop) resizeStep.crop = transforms.crop;
+  resizeStep.quality = transforms?.quality ?? "auto";
+
+  return cloudinary.url(publicId, {
+    secure: true,
+    resource_type: "video",
+    format: "jpg",
+    transformation: [resizeStep],
+  });
+}

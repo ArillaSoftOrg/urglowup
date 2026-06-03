@@ -89,7 +89,12 @@
       "Bash(curl -s \"http://localhost:3000/b/test-business\")",
       "Bash(dir \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\node_modules\\\\better-auth\\\\dist\\\\plugins\\\\two-factor\")",
       "Bash(timeout 120 bash -c 'while [ ! -f \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\\\\.next\\\\build-manifest.json\" ]; do sleep 2; done')",
-      "Bash(npm audit *)"
+      "Bash(npm audit *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)",
+      "Bash(cd C:\\\\\\\\Users\\\\\\\\YUSUF\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\urglowup)",
+      "Bash(curl http://localhost:3000/)",
+      "PowerShell(cd \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\"; npm run lint -- src/components/account/change-password-form.tsx src/components/shared/password-requirements.tsx src/lib/password-policy.ts src/app/\\\\\\(customer\\\\\\)/account/actions.ts 2>&1)"
     ]
   }
 }

@@ -1,13 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useOptimistic, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { LayoutGrid } from "lucide-react";
 import { PostCard } from "./post-card";
 import { PostFeedCategoryFilter } from "./post-feed-category-filter";
-import { PostMediaViewer } from "./post-media-viewer";
 import { PersonalizationNudge } from "./personalization-nudge";
 import type { ExplorePost } from "@/lib/queries/posts";
+
+const PostMediaViewer = dynamic(
+  () => import("./post-media-viewer").then((mod) => mod.PostMediaViewer),
+  {
+    loading: () => (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+        <div className="size-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      </div>
+    ),
+  }
+);
 
 type StyleTagData = {
   id: string;
@@ -20,6 +31,7 @@ type StyleTagData = {
 interface PostFeedProps {
   initialPosts: ExplorePost[];
   initialNextCursor: string | null;
+  initialStyleTags: StyleTagData[];
   categories: Array<{ id: string; name: string; slug: string }>;
   isLoggedIn: boolean;
   showPersonalizationNudge?: boolean;
@@ -33,6 +45,7 @@ type ViewerState = {
 export function PostFeed({
   initialPosts,
   initialNextCursor,
+  initialStyleTags,
   categories,
   isLoggedIn,
   showPersonalizationNudge = false,
@@ -41,18 +54,10 @@ export function PostFeed({
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
   const [selectedStyleTagId, setSelectedStyleTagId] = useState<string | undefined>(undefined);
-  const [styleTags, setStyleTags] = useState<StyleTagData[]>([]);
+  const [styleTags] = useState<StyleTagData[]>(initialStyleTags);
   const [loading, setLoading] = useState(false);
   const [viewerState, setViewerState] = useState<ViewerState>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
-
-  // Fetch style tags once on mount
-  useEffect(() => {
-    fetch("/api/style-tags")
-      .then((r) => r.json())
-      .then((data: StyleTagData[]) => setStyleTags(data))
-      .catch(() => {});
-  }, []);
 
   // Optimistic save state: map of postId -> savedByCurrentUser
   const [optimisticSaves, setOptimisticSaves] = useOptimistic<

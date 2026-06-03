@@ -8,6 +8,7 @@ import {
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
 import { getExplorePosts } from "@/lib/queries/posts";
+import { getAllStyleTags } from "@/lib/queries/style-tags";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
@@ -121,16 +122,26 @@ async function InspirationTab({
     !!user &&
     !preferredCategoryIds;
 
-  const { posts, nextCursor } = await getExplorePosts({
-    take: 20,
-    userId: user?.id,
-    preferredCategoryIds,
-  });
+  const [{ posts, nextCursor }, styleTags] = await Promise.all([
+    getExplorePosts({
+      take: 20,
+      userId: user?.id,
+      preferredCategoryIds,
+    }),
+    getAllStyleTags(),
+  ]);
 
   return (
     <PostFeed
       initialPosts={posts}
       initialNextCursor={nextCursor}
+      initialStyleTags={styleTags.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        slug: tag.slug,
+        categoryId: tag.categoryId,
+        postCount: tag.postCount,
+      }))}
       categories={categories}
       isLoggedIn={!!user}
       showPersonalizationNudge={showPersonalizationNudge}
