@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, MapPin, Search, Tags } from "lucide-react";
 import { getCategoryLabel } from "@/lib/category-labels";
 
 interface HomeSearchPanelProps {
@@ -45,9 +45,9 @@ export function HomeSearchPanel({
   }
 
   return (
-    <div className="mx-auto mt-8 w-full max-w-5xl rounded-[2rem] border border-border/70 bg-background p-2 shadow-[0_18px_60px_oklch(0.145_0_0/0.08)] md:mt-10">
-      <div className="grid gap-2 md:grid-cols-[minmax(0,1.5fr)_minmax(11rem,0.7fr)_minmax(11rem,0.7fr)_auto] md:items-center">
-        <div className="flex h-12 items-center gap-3 rounded-3xl px-3 md:h-14 md:border-r md:border-border/70 md:rounded-none">
+    <div className="mx-auto mt-8 w-full max-w-[23rem] rounded-[1.75rem] border border-brand-purple/40 bg-background p-3 shadow-[0_18px_55px_oklch(0.25_0.05_300/0.16)] md:mt-10 md:max-w-[31rem] md:p-4">
+      <div className="grid gap-3">
+        <label className="flex min-h-12 items-center gap-3 rounded-xl border border-input bg-background px-4 transition-colors hover:border-foreground/20 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/40 md:min-h-14">
           <Search className="size-5 shrink-0 text-muted-foreground" />
           <input
             type="search"
@@ -57,15 +57,16 @@ export function HomeSearchPanel({
             placeholder={labels.searchPlaceholder}
             className="h-10 w-full min-w-0 border-0 bg-transparent px-0 text-base outline-none placeholder:text-muted-foreground"
           />
-        </div>
+        </label>
 
-        <div className="relative">
+        <label className="relative flex min-h-12 items-center gap-3 rounded-xl border border-input bg-background px-4 transition-colors hover:border-foreground/20 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/40 md:min-h-14">
+          <MapPin className="size-5 shrink-0 text-muted-foreground" />
           <select
             value={city}
             onChange={(event) =>
               setCity(event.target.value && event.target.value !== "_all" ? event.target.value : "")
             }
-            className="h-12 w-full appearance-none rounded-3xl border border-border/70 bg-background px-4 pr-10 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-14 md:border-0 md:border-r md:rounded-none md:border-border/70"
+            className="h-10 w-full appearance-none border-0 bg-transparent px-0 pr-8 text-base outline-none"
           >
             <option value="_all">{labels.regionPlaceholder}</option>
             {cities.map(({ city }) => (
@@ -75,9 +76,10 @@ export function HomeSearchPanel({
             ))}
           </select>
           <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        </div>
+        </label>
 
-        <div className="relative">
+        <label className="relative flex min-h-12 items-center gap-3 rounded-xl border border-input bg-background px-4 transition-colors hover:border-foreground/20 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/40 md:min-h-14">
+          <Tags className="size-5 shrink-0 text-muted-foreground" />
           <select
             value={category}
             onChange={(event) =>
@@ -85,7 +87,7 @@ export function HomeSearchPanel({
                 event.target.value && event.target.value !== "_all" ? event.target.value : "",
               )
             }
-            className="h-12 w-full appearance-none rounded-3xl border border-border/70 bg-background px-4 pr-10 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-14 md:border-0 md:rounded-none"
+            className="h-10 w-full appearance-none border-0 bg-transparent px-0 pr-8 text-base outline-none"
           >
             <option value="_all">{labels.categoryPlaceholder}</option>
             {categories.map((category) => (
@@ -95,12 +97,12 @@ export function HomeSearchPanel({
             ))}
           </select>
           <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        </div>
+        </label>
 
         <button
           type="button"
           onClick={submitSearch}
-          className="inline-flex h-12 items-center justify-center rounded-3xl border border-brand-pink/20 bg-brand-pink px-8 text-base font-semibold text-brand-pink-foreground transition-colors hover:bg-surface-pink-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-pink/30 md:h-14"
+          className="inline-flex min-h-12 items-center justify-center rounded-3xl bg-brand-pink px-8 text-base font-semibold text-brand-pink-foreground shadow-[0_10px_24px_oklch(0.25_0.05_10/0.12)] transition-colors hover:bg-surface-pink-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-pink/30 md:min-h-14"
         >
           {labels.submit}
         </button>
