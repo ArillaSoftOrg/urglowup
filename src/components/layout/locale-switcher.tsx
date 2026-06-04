@@ -51,7 +51,7 @@ function getLocalizedPath(
 
 interface LocaleSwitcherProps {
   isLoggedIn?: boolean;
-  variant?: "navbar" | "settings";
+  variant?: "navbar" | "mobile" | "settings";
   savedLocale?: Locale;
 }
 
@@ -109,6 +109,40 @@ export function LocaleSwitcher({
             {LABELS[locale]}
           </button>
         ))}
+      </div>
+    );
+  }
+
+  if (variant === "mobile") {
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        {LOCALES.map((locale) => {
+          const active = locale === currentLocale;
+
+          return (
+            <button
+              key={locale}
+              onClick={() => switchLocale(locale)}
+              className={[
+                "flex min-h-10 items-center justify-between rounded-lg border px-3 text-sm font-medium transition-colors",
+                active
+                  ? "border-foreground/20 bg-foreground text-background"
+                  : "border-border/80 bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground",
+              ].join(" ")}
+              aria-current={active ? "true" : undefined}
+            >
+              <span>{LABELS[locale]}</span>
+              <span
+                className={[
+                  "text-[0.68rem] font-semibold",
+                  active ? "text-background/70" : "text-muted-foreground/70",
+                ].join(" ")}
+              >
+                {LOCALE_CODES[locale]}
+              </span>
+            </button>
+          );
+        })}
       </div>
     );
   }

@@ -126,7 +126,7 @@ export function NavbarMobileMenu({
               <Globe2 className="size-4" />
               Dil
             </div>
-            <LocaleSwitcher isLoggedIn={isLoggedIn} />
+            <LocaleSwitcher isLoggedIn={isLoggedIn} variant="mobile" />
           </div>
         </div>
       </SheetContent>

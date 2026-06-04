@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { getCategoryLabel } from "@/lib/category-labels";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 interface FilterBarProps {
   categories?: Array<{ name: string; slug: string }>;
@@ -42,7 +42,7 @@ function NativeSelect({
       <select
         value={value || "_all"}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 pr-9 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="h-10 w-full appearance-none rounded-lg border border-input bg-background px-3 pr-9 text-sm outline-none transition-colors hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:rounded-md"
       >
         <option value="_all">{placeholder}</option>
         {options.map((option) => (
@@ -59,11 +59,13 @@ function NativeSelect({
 function ToggleButton({
   active,
   fullWidth = false,
+  description,
   children,
   onClick,
 }: {
   active: boolean;
   fullWidth?: boolean;
+  description?: string;
   children: React.ReactNode;
   onClick: () => void;
 }) {
@@ -71,15 +73,32 @@ function ToggleButton({
     <button
       type="button"
       className={cn(
-        "inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-        fullWidth && "w-full",
+        "inline-flex items-center rounded-md text-sm font-medium shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        fullWidth
+          ? "min-h-14 w-full justify-between rounded-xl border px-3.5 py-2 text-left"
+          : "h-9 justify-center px-4",
         active
-          ? "bg-brand text-white hover:bg-brand/90"
+          ? fullWidth
+            ? "border-foreground/20 bg-foreground text-background"
+            : "bg-brand text-white hover:bg-brand/90"
           : "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
       )}
       onClick={onClick}
     >
-      {children}
+      <span className={cn("flex flex-col", !fullWidth && "items-center")}>
+        <span>{children}</span>
+        {description && fullWidth && (
+          <span
+            className={cn(
+              "mt-0.5 text-xs font-normal",
+              active ? "text-background/70" : "text-muted-foreground"
+            )}
+          >
+            {description}
+          </span>
+        )}
+      </span>
+      {fullWidth && active && <Check className="size-4 shrink-0" />}
     </button>
   );
 }
@@ -165,6 +184,7 @@ function FilterControls({
       <ToggleButton
         active={currentHasMedia}
         fullWidth={fullWidth}
+        description="Fotoğraf ve çalışma örnekleri olan işletmeler"
         onClick={() => navigate({ hasMedia: currentHasMedia ? undefined : "true" })}
       >
         Portföyü olanlar
@@ -173,6 +193,7 @@ function FilterControls({
       <ToggleButton
         active={currentHasHours}
         fullWidth={fullWidth}
+        description="Profilinde açık saat bilgisi bulunanlar"
         onClick={() => navigate({ hasHours: currentHasHours ? undefined : "true" })}
       >
         Çalışma saati olanlar
@@ -349,17 +370,28 @@ export function FilterBar({
       </div>
 
       <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-        <SheetContent side="bottom" className="max-h-[80dvh]">
-          <SheetHeader>
-            <SheetTitle>Filtreler</SheetTitle>
+        <SheetContent
+          side="bottom"
+          className="mx-auto max-h-[82dvh] w-[min(100vw,34rem)] gap-0 rounded-t-2xl border-x border-t border-border/80 p-0 shadow-2xl sm:bottom-4 sm:rounded-2xl"
+        >
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/25" />
+          <SheetHeader className="border-b border-border/70 px-4 pb-3 pt-4">
+            <SheetTitle className="text-base font-semibold">Filtreler</SheetTitle>
           </SheetHeader>
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-2">
-            <FilterControls {...filterControlsProps} fullWidth />
+          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Filtre seçenekleri
+              </p>
+              <div className="grid gap-2">
+                <FilterControls {...filterControlsProps} fullWidth />
+              </div>
+            </div>
           </div>
-          <SheetFooter>
+          <SheetFooter className="border-t border-border/70 bg-background/95 p-4">
             <button
               type="button"
-              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               onClick={() => setFilterSheetOpen(false)}
             >
               Uygula

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { getCategoryLabel } from "@/lib/category-labels";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 interface SearchPanelProps {
   categories?: Array<{ name: string; slug: string }>;
@@ -40,7 +40,7 @@ function NativeSelect({
       <select
         value={value || "_all"}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 w-full appearance-none rounded-md border border-input bg-background px-3 pr-9 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="h-10 w-full appearance-none rounded-lg border border-input bg-background px-3 pr-9 text-sm outline-none transition-colors hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:rounded-md"
       >
         <option value="_all">{placeholder}</option>
         {options.map((option) => (
@@ -57,11 +57,13 @@ function NativeSelect({
 function ToggleButton({
   active,
   className,
+  description,
   children,
   onClick,
 }: {
   active: boolean;
   className?: string;
+  description?: string;
   children: React.ReactNode;
   onClick: () => void;
 }) {
@@ -77,7 +79,20 @@ function ToggleButton({
       )}
       onClick={onClick}
     >
-      {children}
+      <span className={cn("flex flex-col", className?.includes("w-full") && "items-start text-left")}>
+        <span>{children}</span>
+        {description && (
+          <span
+            className={cn(
+              "mt-0.5 text-xs font-normal",
+              active ? "text-background/70" : "text-muted-foreground"
+            )}
+          >
+            {description}
+          </span>
+        )}
+      </span>
+      {className?.includes("w-full") && active && <Check className="ml-auto size-4 shrink-0" />}
     </button>
   );
 }
@@ -294,56 +309,76 @@ export function SearchPanel({
       </div>
 
       <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-        <SheetContent side="bottom" className="max-h-[80dvh]">
-          <SheetHeader>
-            <SheetTitle>Gelişmiş Filtreler</SheetTitle>
+        <SheetContent
+          side="bottom"
+          className="mx-auto max-h-[82dvh] w-[min(100vw,34rem)] gap-0 rounded-t-2xl border-x border-t border-border/80 p-0 shadow-2xl sm:bottom-4 sm:rounded-2xl"
+        >
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/25" />
+          <SheetHeader className="border-b border-border/70 px-4 pb-3 pt-4">
+            <SheetTitle className="text-base font-semibold">Gelişmiş Filtreler</SheetTitle>
           </SheetHeader>
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-2">
-            {categories && categories.length > 0 && (
-              <div className="md:hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Eşleşme
+              </p>
+              <div className="grid gap-2">
+                {categories && categories.length > 0 && (
+                  <div className="md:hidden">
+                    <NativeSelect
+                      value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory}
+                      placeholder="Kategori seç"
+                      options={categories.map((category) => ({
+                        label: getCategoryLabel(category.slug, category.name),
+                        value: category.slug,
+                      }))}
+                      onChange={handleCategoryChange}
+                    />
+                  </div>
+                )}
+
                 <NativeSelect
-                  value={categoryPathPrefix ? pathname.split("/").filter(Boolean).at(-1) ?? "" : currentCategory}
-                  placeholder="Kategori seç"
-                  options={categories.map((category) => ({
-                    label: getCategoryLabel(category.slug, category.name),
-                    value: category.slug,
-                  }))}
-                  onChange={handleCategoryChange}
+                  value={currentMinRating}
+                  placeholder="Tüm puanlar"
+                  options={[
+                    { label: "6+ puan", value: "6" },
+                    { label: "8+ puan", value: "8" },
+                    { label: "9+ puan", value: "9" },
+                  ]}
+                  onChange={(value) => navigate({ minRating: value === "_all" ? undefined : value })}
                 />
               </div>
-            )}
+            </div>
 
-            <NativeSelect
-              value={currentMinRating}
-              placeholder="Tüm puanlar"
-              options={[
-                { label: "6+ puan", value: "6" },
-                { label: "8+ puan", value: "8" },
-                { label: "9+ puan", value: "9" },
-              ]}
-              onChange={(value) => navigate({ minRating: value === "_all" ? undefined : value })}
-            />
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Profil kalitesi
+              </p>
+              <div className="grid gap-2">
+                <ToggleButton
+                  active={currentHasMedia}
+                  className="h-auto min-h-14 w-full justify-between rounded-xl border px-3.5 py-2"
+                  description="Fotoğraf ve çalışma örnekleri olan işletmeler"
+                  onClick={() => navigate({ hasMedia: currentHasMedia ? undefined : "true" })}
+                >
+                  Portföyü olanlar
+                </ToggleButton>
 
-            <ToggleButton
-              active={currentHasMedia}
-              className="w-full"
-              onClick={() => navigate({ hasMedia: currentHasMedia ? undefined : "true" })}
-            >
-              Portföyü olanlar
-            </ToggleButton>
-
-            <ToggleButton
-              active={currentHasHours}
-              className="w-full"
-              onClick={() => navigate({ hasHours: currentHasHours ? undefined : "true" })}
-            >
-              Çalışma saati olanlar
-            </ToggleButton>
+                <ToggleButton
+                  active={currentHasHours}
+                  className="h-auto min-h-14 w-full justify-between rounded-xl border px-3.5 py-2"
+                  description="Profilinde açık saat bilgisi bulunanlar"
+                  onClick={() => navigate({ hasHours: currentHasHours ? undefined : "true" })}
+                >
+                  Çalışma saati olanlar
+                </ToggleButton>
+              </div>
+            </div>
           </div>
-          <SheetFooter>
+          <SheetFooter className="border-t border-border/70 bg-background/95 p-4">
             <button
               type="button"
-              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               onClick={() => setFilterSheetOpen(false)}
             >
               Uygula
