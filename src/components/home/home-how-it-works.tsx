@@ -26,10 +26,7 @@ export function HomeHowItWorks() {
     <section className="bg-surface-cream px-4 py-12 md:py-16">
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            Nasıl Çalışır
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.015em] md:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-[-0.015em] md:text-3xl">
             Randevu almak hiç bu kadar{" "}
             <br className="hidden md:block" />
             kolay olmamıştı.

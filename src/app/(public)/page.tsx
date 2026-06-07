@@ -8,7 +8,6 @@ import {
 } from "@/lib/queries/marketplace";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
-import { HomeTrustBar } from "@/components/home/home-trust-bar";
 import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeBusinessCTA } from "@/components/home/home-business-cta";
@@ -88,7 +87,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <HomeTrustBar />
 
       {activeCategories.length > 0 && (
         <section className="bg-surface-pink px-4 py-12 md:py-20">
@@ -130,18 +128,7 @@ export default async function HomePage() {
       {featuredBusinesses.length > 0 && (
         <section className="bg-background px-4 py-12 md:py-20">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-8 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                  Öne Çıkanlar
-                </p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-[-0.015em] md:text-3xl">
-                  Beğenilen uzmanlar
-                </h2>
-                <p className="mt-1.5 text-sm text-muted-foreground">
-                  Müşterilerimizin en çok tercih ettiği uzmanlar.
-                </p>
-              </div>
+            <div className="mb-8 flex items-end justify-end gap-4">
               <Link
                 href="/explore"
                 className="shrink-0 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"

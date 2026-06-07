@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, BadgeCheck, Star } from "lucide-react";
 
 const trustPoints = [
@@ -23,10 +22,6 @@ export function HomeVerifiedCallout() {
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-12">
           <div className="flex-1">
-            <Badge variant="pink" className="mb-4">
-              Doğrulanmış Yorumlar
-            </Badge>
-
             <h2 className="text-2xl font-semibold tracking-[-0.015em] md:text-3xl">
               Her yorum gerçek bir deneyimden gelir.
             </h2>
