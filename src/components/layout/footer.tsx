@@ -21,6 +21,7 @@ const footerColumns = [
     links: [
       { label: "Giris Yap", href: "/login" },
       { label: "Kayit Ol", href: "/register" },
+      { label: "Yardım Merkezi", href: "/help" },
     ],
   },
 ] as const;
