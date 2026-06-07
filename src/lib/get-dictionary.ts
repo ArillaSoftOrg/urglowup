@@ -1,5 +1,5 @@
 import 'server-only'
-import type { Locale } from './i18n-config'
+import { DEFAULT_LOCALE, isValidLocale, type Locale } from './i18n-config'
 
 const dictionaries = {
   tr: () => import('@/dictionaries/tr').then((m) => m.default),
@@ -10,4 +10,7 @@ const dictionaries = {
   bg: () => import('@/dictionaries/bg').then((m) => m.default),
 }
 
-export const getDictionary = async (locale: Locale) => dictionaries[locale]()
+export const getDictionary = async (locale: string) => {
+  const safeLocale: Locale = isValidLocale(locale) ? locale : DEFAULT_LOCALE
+  return dictionaries[safeLocale]()
+}

@@ -3,12 +3,14 @@ import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  DEFAULT_LOCALE,
+  INTL_LOCALES,
+  SUPPORTED_LOCALES,
+  type Locale,
+} from "@/lib/i18n-config";
 
 const PROTECTED_PREFIXES = ["/account", "/business", "/admin"];
-const SUPPORTED_LOCALES = ["tr", "en", "de", "ru", "es"] as const;
-type Locale = (typeof SUPPORTED_LOCALES)[number];
-const DEFAULT_LOCALE: Locale = "tr";
-const INTL_LOCALES = ["en", "de", "ru", "es"] as const;
 const COOKIE_NAME = "NEXT_LOCALE";
 const AUTH_COOKIE_PREFIX = "urglowup";
 
@@ -40,6 +42,7 @@ const LOCALE_BYPASS_PREFIXES = [
   "/forgot-password",
   "/reset-password",
   "/verify-email",
+  "/help",
 ];
 
 function needsLocaleRouting(pathname: string): boolean {
