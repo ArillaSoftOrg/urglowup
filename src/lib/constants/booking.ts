@@ -1,9 +1,26 @@
-import type { AppointmentStatus } from "@/generated/prisma/enums";
+import type { AppointmentStatus, DayOfWeek } from "@/generated/prisma/enums";
 import type { BadgeVariant } from "@/components/ui/badge";
 
 export const MIN_ADVANCE_HOURS = 2;
 export const MAX_ADVANCE_DAYS = 60;
 export const BUSINESS_TIMEZONE = "Europe/Istanbul";
+
+/** JS Date.getDay() (0=Sunday) → Prisma DayOfWeek */
+export const DAY_MAP: Record<number, DayOfWeek> = {
+  0: "SUNDAY",
+  1: "MONDAY",
+  2: "TUESDAY",
+  3: "WEDNESDAY",
+  4: "THURSDAY",
+  5: "FRIDAY",
+  6: "SATURDAY",
+};
+
+/** Resolves the Prisma DayOfWeek for a "YYYY-MM-DD" date string. */
+export function getDayOfWeek(dateString: string): DayOfWeek {
+  const d = new Date(dateString + "T00:00:00");
+  return DAY_MAP[d.getDay()];
+}
 
 /** Statuses that occupy a time slot (block other bookings) */
 export const BLOCKING_STATUSES: AppointmentStatus[] = [

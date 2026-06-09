@@ -122,6 +122,8 @@ export async function getExplorePosts(opts: {
   take?: number;
   userId?: string;
   includePromotions?: boolean;
+  /** Restrict to PROMOTION-type posts only (used by the /deals discovery page) */
+  onlyPromotions?: boolean;
   /** Ranked category IDs from UserPreferences.preferredCategoryIds — first page only */
   preferredCategoryIds?: string[];
 }): Promise<{ posts: ExplorePost[]; nextCursor: string | null }> {
@@ -129,7 +131,11 @@ export async function getExplorePosts(opts: {
 
   const baseWhere = {
     status: "ACTIVE" as const,
-    ...(opts.includePromotions ? {} : { contentType: { not: "PROMOTION" as const } }),
+    ...(opts.onlyPromotions
+      ? { contentType: "PROMOTION" as const }
+      : opts.includePromotions
+        ? {}
+        : { contentType: { not: "PROMOTION" as const } }),
     ...(opts.categoryId ? { categoryId: opts.categoryId } : {}),
     ...(opts.styleTagId ? { styleTags: { some: { styleTagId: opts.styleTagId } } } : {}),
   };

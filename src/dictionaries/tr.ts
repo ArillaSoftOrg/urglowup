@@ -36,6 +36,10 @@ const tr = {
     professionalCount: (n: number) => `${n} uzman bulundu`,
     emptyMessage: 'Henüz listelenmiş uzman yok. Yakında tekrar kontrol edin.',
   },
+  deals: {
+    title: 'Fırsatlar',
+    description: 'İşletmelerden güncel kampanyalar ve fırsatlar.',
+  },
   locale: {
     tr: 'Türkçe',
     en: 'English',

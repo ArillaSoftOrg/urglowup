@@ -2,6 +2,7 @@
 
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { generateUniqueServiceSlug } from "@/lib/slug";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 
@@ -64,16 +65,24 @@ export async function createService(
   const data = result.data;
 
   // Determine next sortOrder
-  const maxSort = await db.businessService.aggregate({
-    where: { businessId },
-    _max: { sortOrder: true },
-  });
+  const [maxSort, business] = await Promise.all([
+    db.businessService.aggregate({
+      where: { businessId },
+      _max: { sortOrder: true },
+    }),
+    db.business.findUniqueOrThrow({
+      where: { id: businessId },
+      select: { name: true },
+    }),
+  ]);
   const nextSort = (maxSort._max.sortOrder ?? -1) + 1;
+  const slug = await generateUniqueServiceSlug(business.name, data.name);
 
   await db.businessService.create({
     data: {
       businessId,
       name: data.name,
+      slug,
       description: data.description,
       durationMinutes: data.durationMinutes,
       price: data.price,

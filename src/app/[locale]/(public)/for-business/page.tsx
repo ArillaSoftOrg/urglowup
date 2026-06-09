@@ -25,12 +25,15 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const alternates = buildAlternates("/for-business", locale);
+  const description =
+    "Güzellik ve kişisel bakım işletmeni UrGlowUp'ta yayınla; portfolyonu, hizmetlerini ve yorumlarını göstererek yeni müşterilerden randevu talepleri al.";
+
   return {
-    title: "For Business",
-    description: "List your beauty or personal care business on UrGlowUp and get discovered by new customers.",
+    title: "İşletmeler İçin",
+    description,
     openGraph: {
-      title: "For Business | UrGlowUp",
-      description: "List your beauty or personal care business on UrGlowUp and get discovered by new customers.",
+      title: "İşletmeler İçin | UrGlowUp",
+      description,
       url: `/${locale}/for-business`,
       locale: getOgLocale(locale),
     },
@@ -41,51 +44,58 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 const features = [
   {
     icon: Globe,
-    title: "Professional Profile",
-    description: "Get a beautiful public page to showcase your business, services, and portfolio.",
+    title: "Profesyonel Profil",
+    description:
+      "İşletmeni, hizmetlerini ve portfolyonu gösterebileceğin şık bir public sayfaya sahip ol.",
   },
   {
     icon: CalendarCheck,
-    title: "Appointment Requests",
-    description: "Let customers request appointments directly from your profile. You stay in control.",
+    title: "Randevu Talepleri",
+    description:
+      "Müşteriler profilinden doğrudan randevu talebi göndersin; kontrol her zaman sende kalsın.",
   },
   {
     icon: Camera,
-    title: "Portfolio Gallery",
-    description: "Upload photos and videos of your work to attract new customers.",
+    title: "Portfolyo Galerisi",
+    description:
+      "Yaptığın işleri fotoğraf ve videolarla sergileyerek yeni müşterilerin ilgisini çek.",
   },
   {
     icon: Star,
-    title: "Verified Reviews",
-    description: "Build trust with verified reviews from customers who completed appointments.",
+    title: "Doğrulanmış Yorumlar",
+    description:
+      "Randevusunu tamamlayan müşterilerden gelen doğrulanmış yorumlarla güven oluştur.",
   },
   {
     icon: Users,
-    title: "Customer Management",
-    description: "Keep track of your customers, their appointments, and preferences.",
+    title: "Müşteri Yönetimi",
+    description:
+      "Müşterilerini, randevularını ve tercihlerini düzenli biçimde takip et.",
   },
   {
     icon: Zap,
-    title: "Easy to Use",
-    description: "Set up in minutes. No technical knowledge required. Works on any device.",
+    title: "Kolay Kullanım",
+    description:
+      "Dakikalar içinde kurulum yap. Teknik bilgi gerekmez; her cihazda rahatça çalışır.",
   },
 ];
 
 const steps = [
   {
     number: "1",
-    title: "Create your account",
-    description: "Sign up and tell us about your business.",
+    title: "Hesabını oluştur",
+    description: "Kayıt ol ve bize işletmenden bahset.",
   },
   {
     number: "2",
-    title: "Set up your profile",
-    description: "Add your services, working hours, and photos.",
+    title: "Profilini hazırla",
+    description: "Hizmetlerini, çalışma saatlerini ve fotoğraflarını ekle.",
   },
   {
     number: "3",
-    title: "Share your link",
-    description: "Share your public page on social media and start getting appointment requests.",
+    title: "Linkini paylaş",
+    description:
+      "Public sayfanı sosyal medyada paylaş ve randevu talepleri almaya başla.",
   },
 ];
 
@@ -95,28 +105,28 @@ export default async function LocaleForBusinessPage() {
       {/* Hero */}
       <section className="px-4 py-20 text-center md:py-32">
         <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-          Grow Your Beauty Business Online
+          Güzellik İşletmeni Online Büyüt
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-          Create your professional profile, showcase your work, and let customers
-          request appointments — all in one place.
+          Profesyonel profilini oluştur, yaptığın işleri sergile ve müşterilerden
+          randevu taleplerini tek yerden al.
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/business/register"
             className={cn(buttonVariants({ size: "lg" }))}
           >
-            Register Your Business
+            İşletmeni Kaydet
           </Link>
           <a
             href="#how-it-works"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
-            How It Works
+            Nasıl Çalışır?
           </a>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
-          Free to get started. No credit card required.
+          Başlamak ücretsiz. Kredi kartı gerekmez.
         </p>
       </section>
 
@@ -124,10 +134,11 @@ export default async function LocaleForBusinessPage() {
       <section className="border-t bg-muted/30 px-4 py-16 md:py-24">
         <div className="container mx-auto max-w-5xl">
           <h2 className="text-center text-3xl font-bold tracking-tight">
-            Everything you need to succeed
+            Başarılı olmak için ihtiyacın olan her şey
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-            UrGlowUp gives you the tools to manage and grow your beauty business.
+            UrGlowUp, güzellik işletmeni yönetmek ve büyütmek için ihtiyaç
+            duyduğun araçları sunar.
           </p>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
@@ -149,7 +160,7 @@ export default async function LocaleForBusinessPage() {
       <section id="how-it-works" className="px-4 py-16 md:py-24">
         <div className="container mx-auto max-w-3xl">
           <h2 className="text-center text-3xl font-bold tracking-tight">
-            Get started in 3 easy steps
+            3 kolay adımda başla
           </h2>
           <div className="mt-12 space-y-8">
             {steps.map((s) => (
@@ -169,7 +180,7 @@ export default async function LocaleForBusinessPage() {
               href="/business/register"
               className={cn(buttonVariants({ size: "lg" }))}
             >
-              Get Started Now
+              Hemen Başla
             </Link>
           </div>
         </div>

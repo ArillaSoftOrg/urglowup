@@ -15,6 +15,17 @@ import { getCategoryLabel } from "@/lib/category-labels";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
+const AVAILABILITY_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "today", label: "Bugün açık" },
+  { value: "tomorrow", label: "Yarın açık" },
+  { value: "weekend", label: "Hafta sonu açık" },
+  { value: "evening", label: "Akşam açık" },
+];
+
+const AVAILABILITY_LABELS: Record<string, string> = Object.fromEntries(
+  AVAILABILITY_OPTIONS.map((option) => [option.value, option.label])
+);
+
 interface FilterBarProps {
   categories?: Array<{ name: string; slug: string }>;
   cities?: Array<{ city: string }>;
@@ -116,6 +127,14 @@ function FilterControls({
   currentMinRating,
   currentHasMedia,
   currentHasHours,
+  currentAvailability,
+  currentPriceMin,
+  currentPriceMax,
+  currentMaxDuration,
+  currentMinReviewCount,
+  onPriceMinChange,
+  onPriceMaxChange,
+  onPriceCommit,
   navigate,
   fullWidth = false,
 }: {
@@ -131,9 +150,21 @@ function FilterControls({
   currentMinRating: string;
   currentHasMedia: boolean;
   currentHasHours: boolean;
+  currentAvailability: string;
+  currentPriceMin: string;
+  currentPriceMax: string;
+  currentMaxDuration: string;
+  currentMinReviewCount: string;
+  onPriceMinChange: (value: string) => void;
+  onPriceMaxChange: (value: string) => void;
+  onPriceCommit: () => void;
   navigate: (updates: Record<string, string | undefined>) => void;
   fullWidth?: boolean;
 }) {
+  function handlePriceKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") onPriceCommit();
+  }
+
   return (
     <>
       {showCategory && categories && categories.length > 0 && (
@@ -170,6 +201,14 @@ function FilterControls({
       )}
 
       <NativeSelect
+        value={currentAvailability}
+        placeholder="Müsaitlik"
+        options={AVAILABILITY_OPTIONS}
+        onChange={(value) => navigate({ availability: value === "_all" ? undefined : value })}
+        className={fullWidth ? "w-full" : "w-[150px]"}
+      />
+
+      <NativeSelect
         value={currentMinRating}
         placeholder="Tüm puanlar"
         options={[
@@ -180,6 +219,62 @@ function FilterControls({
         onChange={(value) => navigate({ minRating: value === "_all" ? undefined : value })}
         className={fullWidth ? "w-full" : "w-[150px]"}
       />
+
+      <NativeSelect
+        value={currentMinReviewCount}
+        placeholder="Tüm değerlendirme sayıları"
+        options={[
+          { label: "10+ değerlendirme", value: "10" },
+          { label: "50+ değerlendirme", value: "50" },
+          { label: "100+ değerlendirme", value: "100" },
+        ]}
+        onChange={(value) => navigate({ minReviewCount: value === "_all" ? undefined : value })}
+        className={fullWidth ? "w-full" : "w-[170px]"}
+      />
+
+      <NativeSelect
+        value={currentMaxDuration}
+        placeholder="Hizmet süresi"
+        options={[
+          { label: "30 dakikaya kadar", value: "30" },
+          { label: "60 dakikaya kadar", value: "60" },
+          { label: "90 dakikaya kadar", value: "90" },
+          { label: "120 dakikaya kadar", value: "120" },
+        ]}
+        onChange={(value) => navigate({ maxDuration: value === "_all" ? undefined : value })}
+        className={fullWidth ? "w-full" : "w-[170px]"}
+      />
+
+      <div className={cn("flex items-center gap-1.5", fullWidth ? "w-full" : "")}>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Min ₺"
+          value={currentPriceMin}
+          onChange={(event) => onPriceMinChange(event.target.value)}
+          onBlur={onPriceCommit}
+          onKeyDown={handlePriceKeyDown}
+          className={cn(
+            "h-9 rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            fullWidth ? "w-full" : "w-[90px]"
+          )}
+        />
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Maks ₺"
+          value={currentPriceMax}
+          onChange={(event) => onPriceMaxChange(event.target.value)}
+          onBlur={onPriceCommit}
+          onKeyDown={handlePriceKeyDown}
+          className={cn(
+            "h-9 rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            fullWidth ? "w-full" : "w-[90px]"
+          )}
+        />
+      </div>
 
       <ToggleButton
         active={currentHasMedia}
@@ -226,12 +321,21 @@ export function FilterBar({
   const currentMinRating = searchParams.get("minRating") ?? "";
   const currentHasMedia = searchParams.get("hasMedia") === "true";
   const currentHasHours = searchParams.get("hasHours") === "true";
+  const currentAvailability = searchParams.get("availability") ?? "";
+  const currentMaxDuration = searchParams.get("maxDuration") ?? "";
+  const currentMinReviewCount = searchParams.get("minReviewCount") ?? "";
 
   const [inputValue, setInputValue] = useState(currentQ);
+  const [priceMinInput, setPriceMinInput] = useState(searchParams.get("priceMin") ?? "");
+  const [priceMaxInput, setPriceMaxInput] = useState(searchParams.get("priceMax") ?? "");
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
     setInputValue(searchParams.get("q") ?? "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
+    setPriceMinInput(searchParams.get("priceMin") ?? "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
+    setPriceMaxInput(searchParams.get("priceMax") ?? "");
   }, [searchParams]);
 
   function navigate(updates: Record<string, string | undefined>) {
@@ -252,11 +356,21 @@ export function FilterBar({
     if (event.key === "Enter") handleSearchSubmit();
   }
 
+  function commitPriceRange() {
+    navigate({
+      priceMin: priceMinInput.trim() || undefined,
+      priceMax: priceMaxInput.trim() || undefined,
+    });
+  }
+
+  const FILTER_KEYS = [
+    "q", "category", "city", "district", "minRating", "hasMedia", "hasHours",
+    "availability", "priceMin", "priceMax", "maxDuration", "minReviewCount",
+  ];
+
   function buildClearAllHref(): string {
     const params = new URLSearchParams(searchParams.toString());
-    ["q", "category", "city", "district", "minRating", "hasMedia", "hasHours"].forEach((key) =>
-      params.delete(key)
-    );
+    FILTER_KEYS.forEach((key) => params.delete(key));
     const qs = params.toString();
     return qs ? `${pathname}?${qs}` : pathname;
   }
@@ -283,6 +397,15 @@ export function FilterBar({
     ...(currentMinRating ? [{ key: "minRating", label: `${currentMinRating}+ yıldız` }] : []),
     ...(currentHasMedia ? [{ key: "hasMedia", label: "Portföyü olanlar" }] : []),
     ...(currentHasHours ? [{ key: "hasHours", label: "Çalışma saati olanlar" }] : []),
+    ...(currentAvailability
+      ? [{ key: "availability", label: AVAILABILITY_LABELS[currentAvailability] ?? currentAvailability }]
+      : []),
+    ...(priceMinInput ? [{ key: "priceMin", label: `₺${priceMinInput}+` }] : []),
+    ...(priceMaxInput ? [{ key: "priceMax", label: `₺${priceMaxInput} ve altı` }] : []),
+    ...(currentMaxDuration ? [{ key: "maxDuration", label: `≤${currentMaxDuration} dk` }] : []),
+    ...(currentMinReviewCount
+      ? [{ key: "minReviewCount", label: `${currentMinReviewCount}+ değerlendirme` }]
+      : []),
   ];
 
   const hasActiveFilters = chips.length > 0;
@@ -301,6 +424,14 @@ export function FilterBar({
     currentMinRating,
     currentHasMedia,
     currentHasHours,
+    currentAvailability,
+    currentPriceMin: priceMinInput,
+    currentPriceMax: priceMaxInput,
+    currentMaxDuration,
+    currentMinReviewCount,
+    onPriceMinChange: setPriceMinInput,
+    onPriceMaxChange: setPriceMaxInput,
+    onPriceCommit: commitPriceRange,
     navigate,
   };
 

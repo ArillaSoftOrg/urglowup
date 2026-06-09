@@ -15,6 +15,17 @@ import { getCategoryLabel } from "@/lib/category-labels";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
+const AVAILABILITY_OPTIONS: Array<{ value: string; label: string; description: string }> = [
+  { value: "today", label: "Bugün", description: "Bugün açık olabilir" },
+  { value: "tomorrow", label: "Yarın", description: "Yarın açık olabilir" },
+  { value: "weekend", label: "Hafta sonu", description: "Cumartesi/Pazar açık olabilir" },
+  { value: "evening", label: "Akşam", description: "Saat 18:00'den sonra açık" },
+];
+
+const AVAILABILITY_LABELS: Record<string, string> = Object.fromEntries(
+  AVAILABILITY_OPTIONS.map((option) => [option.value, option.label])
+);
+
 interface SearchPanelProps {
   categories?: Array<{ name: string; slug: string }>;
   cities?: Array<{ city: string }>;
@@ -119,12 +130,23 @@ export function SearchPanel({
   const currentMinRating = searchParams.get("minRating") ?? "";
   const currentHasMedia = searchParams.get("hasMedia") === "true";
   const currentHasHours = searchParams.get("hasHours") === "true";
+  const currentAvailability = searchParams.get("availability") ?? "";
+  const currentPriceMin = searchParams.get("priceMin") ?? "";
+  const currentPriceMax = searchParams.get("priceMax") ?? "";
+  const currentMaxDuration = searchParams.get("maxDuration") ?? "";
+  const currentMinReviewCount = searchParams.get("minReviewCount") ?? "";
 
   const [inputValue, setInputValue] = useState(currentQ);
+  const [priceMinInput, setPriceMinInput] = useState(currentPriceMin);
+  const [priceMaxInput, setPriceMaxInput] = useState(currentPriceMax);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
     setInputValue(searchParams.get("q") ?? "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
+    setPriceMinInput(searchParams.get("priceMin") ?? "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
+    setPriceMaxInput(searchParams.get("priceMax") ?? "");
   }, [searchParams]);
 
   function navigate(updates: Record<string, string | undefined>) {
@@ -143,6 +165,17 @@ export function SearchPanel({
 
   function handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") handleSearchSubmit();
+  }
+
+  function commitPriceRange() {
+    navigate({
+      priceMin: priceMinInput.trim() || undefined,
+      priceMax: priceMaxInput.trim() || undefined,
+    });
+  }
+
+  function handlePriceKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") commitPriceRange();
   }
 
   function handleCategoryChange(value: string) {
@@ -188,13 +221,27 @@ export function SearchPanel({
     ...(currentMinRating ? [{ key: "minRating", label: `${currentMinRating}+ yıldız` }] : []),
     ...(currentHasMedia ? [{ key: "hasMedia", label: "Portföyü olanlar" }] : []),
     ...(currentHasHours ? [{ key: "hasHours", label: "Çalışma saati olanlar" }] : []),
+    ...(currentAvailability
+      ? [{ key: "availability", label: AVAILABILITY_LABELS[currentAvailability] ?? currentAvailability }]
+      : []),
+    ...(currentPriceMin ? [{ key: "priceMin", label: `₺${currentPriceMin}+` }] : []),
+    ...(currentPriceMax ? [{ key: "priceMax", label: `₺${currentPriceMax} ve altı` }] : []),
+    ...(currentMaxDuration ? [{ key: "maxDuration", label: `≤${currentMaxDuration} dk` }] : []),
+    ...(currentMinReviewCount
+      ? [{ key: "minReviewCount", label: `${currentMinReviewCount}+ değerlendirme` }]
+      : []),
+  ];
+
+  const FILTER_KEYS = [
+    "q", "category", "city", "district", "minRating", "hasMedia", "hasHours",
+    "availability", "priceMin", "priceMax", "maxDuration", "minReviewCount",
   ];
 
   const hasActiveFilters = chips.length > 0;
   const advancedFilterCount = chips.filter((chip) => chip.key !== "q").length;
   function buildClearAllHref(): string {
     const params = new URLSearchParams(searchParams.toString());
-    ["q", "category", "city", "district", "minRating", "hasMedia", "hasHours"].forEach((key) =>
+    FILTER_KEYS.forEach((key) =>
       params.delete(key)
     );
     const qs = params.toString();
@@ -320,6 +367,73 @@ export function SearchPanel({
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Müsaitlik
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {AVAILABILITY_OPTIONS.map((option) => (
+                  <ToggleButton
+                    key={option.value}
+                    active={currentAvailability === option.value}
+                    className="h-auto min-h-14 w-full justify-between rounded-xl border px-3.5 py-2"
+                    description={option.description}
+                    onClick={() =>
+                      navigate({
+                        availability: currentAvailability === option.value ? undefined : option.value,
+                      })
+                    }
+                  >
+                    {option.label}
+                  </ToggleButton>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Fiyat ve süre
+              </p>
+              <div className="grid gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    placeholder="Min ₺"
+                    value={priceMinInput}
+                    onChange={(event) => setPriceMinInput(event.target.value)}
+                    onBlur={commitPriceRange}
+                    onKeyDown={handlePriceKeyDown}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:rounded-md"
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    placeholder="Maks ₺"
+                    value={priceMaxInput}
+                    onChange={(event) => setPriceMaxInput(event.target.value)}
+                    onBlur={commitPriceRange}
+                    onKeyDown={handlePriceKeyDown}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:rounded-md"
+                  />
+                </div>
+
+                <NativeSelect
+                  value={currentMaxDuration}
+                  placeholder="Hizmet süresi"
+                  options={[
+                    { label: "30 dakikaya kadar", value: "30" },
+                    { label: "60 dakikaya kadar", value: "60" },
+                    { label: "90 dakikaya kadar", value: "90" },
+                    { label: "120 dakikaya kadar", value: "120" },
+                  ]}
+                  onChange={(value) => navigate({ maxDuration: value === "_all" ? undefined : value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Eşleşme
               </p>
               <div className="grid gap-2">
@@ -346,6 +460,17 @@ export function SearchPanel({
                     { label: "9+ puan", value: "9" },
                   ]}
                   onChange={(value) => navigate({ minRating: value === "_all" ? undefined : value })}
+                />
+
+                <NativeSelect
+                  value={currentMinReviewCount}
+                  placeholder="Tüm değerlendirme sayıları"
+                  options={[
+                    { label: "10+ değerlendirme", value: "10" },
+                    { label: "50+ değerlendirme", value: "50" },
+                    { label: "100+ değerlendirme", value: "100" },
+                  ]}
+                  onChange={(value) => navigate({ minReviewCount: value === "_all" ? undefined : value })}
                 />
               </div>
             </div>

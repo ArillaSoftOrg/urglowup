@@ -38,6 +38,10 @@ const bg: Dictionary = {
     professionalCount: (n: number) => `${n} специалисти намерени`,
     emptyMessage: 'Все още няма регистрирани специалисти. Проверете отново скоро.',
   },
+  deals: {
+    title: 'Промоции',
+    description: 'Актуални промоции и оферти от бизнеси.',
+  },
   locale: {
     tr: 'Турски',
     en: 'Английски',

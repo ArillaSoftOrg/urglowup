@@ -19,6 +19,8 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
           logoUrl: true,
           city: true,
           district: true,
+          latitude: true,
+          longitude: true,
           categories: {
             select: {
               category: { select: { name: true, slug: true } },
@@ -60,6 +62,8 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
       logoUrl: optimizeBusinessLogoUrl(logoMedia, b.logoUrl),
       city: b.city,
       district: b.district,
+      latitude: b.latitude,
+      longitude: b.longitude,
       categories: b.categories,
       reviewCount: b.ratingStats?.rawReviewCount ?? 0,
       reviewAvg: b.ratingStats ? Number(b.ratingStats.bayesianScore) : null,

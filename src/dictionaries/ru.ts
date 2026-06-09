@@ -38,6 +38,10 @@ const ru: Dictionary = {
     professionalCount: (n: number) => `Найдено ${n} мастеров`,
     emptyMessage: 'Мастера ещё не добавлены. Заходите позже.',
   },
+  deals: {
+    title: 'Акции',
+    description: 'Актуальные акции и предложения от салонов.',
+  },
   locale: {
     tr: 'Türkçe',
     en: 'English',

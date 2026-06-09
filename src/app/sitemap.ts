@@ -4,7 +4,11 @@ import {
   getMarketplaceCategories,
   getMarketplaceCities,
   getMarketplaceDistricts,
+  getMarketplaceCategoryCityCombos,
+  getMarketplaceCategoryDistrictCombos,
+  CATEGORY_LOCATION_INDEX_THRESHOLD,
 } from "@/lib/queries/marketplace";
+import { getAllServiceSlugs } from "@/lib/queries/services";
 import { getAllStyleTags } from "@/lib/queries/style-tags";
 import { PRODUCTION_LOCALES } from "@/lib/i18n-config";
 
@@ -35,17 +39,24 @@ function rootOnly(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [businesses, categories, cities, districts, styleTags] = await Promise.all([
+  const [
+    businesses, categories, cities, districts, styleTags,
+    services, categoryCityCombos, categoryDistrictCombos,
+  ] = await Promise.all([
     getAllMarketplaceBusinessSlugs(),
     getMarketplaceCategories(),
     getMarketplaceCities(),
     getMarketplaceDistricts(),
     getAllStyleTags(),
+    getAllServiceSlugs(),
+    getMarketplaceCategoryCityCombos(),
+    getMarketplaceCategoryDistrictCombos(),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
     ...forAllLocales("",                      { changeFrequency: "daily",   priority: 1.0 }),
     ...forAllLocales("/explore",              { changeFrequency: "daily",   priority: 0.9 }),
+    ...forAllLocales("/deals",                { changeFrequency: "daily",   priority: 0.7 }),
     ...forAllLocales("/styles",               { changeFrequency: "weekly",  priority: 0.6 }),
     ...forAllLocales("/for-business",         { changeFrequency: "monthly", priority: 0.6 }),
     ...forAllLocales("/map",                  { changeFrequency: "weekly",  priority: 0.4 }),
@@ -87,6 +98,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       )
   );
 
+  const servicePages: MetadataRoute.Sitemap = services.flatMap((s) =>
+    forAllLocales(`/services/${s.slug}`, {
+      lastModified:    s.updatedAt,
+      changeFrequency: "weekly",
+      priority:        0.6,
+    })
+  );
+
+  // Only index combos that meet the thin-content threshold — thinner combos
+  // still render (with `robots: { index: false }`) but aren't worth crawling.
+  const categoryCityPages: MetadataRoute.Sitemap = categoryCityCombos
+    .filter((combo) => combo.count >= CATEGORY_LOCATION_INDEX_THRESHOLD)
+    .flatMap((combo) =>
+      forAllLocales(`/category/${combo.categorySlug}/${encodeURIComponent(combo.city)}`, {
+        changeFrequency: "weekly",
+        priority:        0.55,
+      })
+    );
+
+  const categoryDistrictPages: MetadataRoute.Sitemap = categoryDistrictCombos
+    .filter((combo) => combo.count >= CATEGORY_LOCATION_INDEX_THRESHOLD)
+    .flatMap((combo) =>
+      forAllLocales(
+        `/category/${combo.categorySlug}/${encodeURIComponent(combo.city)}/${encodeURIComponent(combo.district!)}`,
+        { changeFrequency: "weekly", priority: 0.5 }
+      )
+    );
+
   const styleTagPages: MetadataRoute.Sitemap = styleTags
     .filter((t) => t.postCount > 0)
     .flatMap((t) =>
@@ -102,6 +141,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categoryPages,
     ...cityPages,
     ...districtPages,
+    ...servicePages,
+    ...categoryCityPages,
+    ...categoryDistrictPages,
     ...styleTagPages,
   ];
 }

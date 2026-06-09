@@ -1,15 +1,25 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { Map } from "lucide-react";
+import {
+  getMarketplaceBusinesses,
+  getMarketplaceCategories,
+  getMarketplaceCities,
+  parseMarketplaceFilters,
+} from "@/lib/queries/marketplace";
+import { FilterBar } from "@/components/marketplace/filter-bar";
+import { MapListLayout } from "@/components/marketplace/map-list-layout";
+import { ChevronRight } from "lucide-react";
 import { buildAlternates } from "@/lib/i18n-metadata";
 
+const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+
 export const metadata: Metadata = {
-  title: "Map",
+  title: "Harita ile Keşfet",
   description:
     "Yakınındaki güzellik ve kişisel bakım uzmanlarını harita üzerinde keşfet.",
   openGraph: {
-    title: "Map | UrGlowUp",
+    title: "Harita ile Keşfet | UrGlowUp",
     description:
       "Yakınındaki güzellik ve kişisel bakım uzmanlarını harita üzerinde keşfet.",
     url: "/map",
@@ -18,25 +28,82 @@ export const metadata: Metadata = {
   alternates: buildAlternates("/map", "tr"),
 };
 
-export default function MapPage() {
+interface PageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function MapPage({ searchParams }: PageProps) {
+  const rawParams = await searchParams;
+  const filters = parseMarketplaceFilters(rawParams);
+
+  const [businesses, categories, cities] = await Promise.all([
+    getMarketplaceBusinesses({
+      categorySlug: filters.categorySlug,
+      city:         filters.city,
+      district:     filters.district,
+      q:            filters.q,
+      minRating:    filters.minRating,
+      hasMedia:     filters.hasMedia || undefined,
+      hasHours:     filters.hasHours || undefined,
+    }),
+    getMarketplaceCategories(),
+    getMarketplaceCities(),
+  ]);
+
+  const hasAnyFilter = !!(
+    filters.q || filters.categorySlug || filters.city || filters.district ||
+    filters.minRating || filters.hasMedia || filters.hasHours
+  );
+
   return (
-    <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
-      <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-        <Map className="size-8 text-muted-foreground" />
+    <div className="container mx-auto space-y-5 px-4 py-6 sm:space-y-8 sm:py-10">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Link href="/" className="hover:underline">Ana Sayfa</Link>
+        <ChevronRight className="size-3.5 text-border" />
+        <span className="font-medium text-foreground">Harita</span>
+      </nav>
+
+      {/* Header */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Harita ile Keşfet
+        </p>
+        <h1 className="mt-1.5 text-3xl font-semibold tracking-[-0.02em]">
+          Yakınındaki uzmanları keşfet
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {hasAnyFilter
+            ? `${businesses.length} uzman bulundu`
+            : `${businesses.length} uzman`}
+        </p>
       </div>
-      <h1 className="mt-6 text-3xl font-bold tracking-tight">Map Discovery</h1>
-      <p className="mt-3 max-w-md text-muted-foreground">
-        Interactive map coming soon. In the meantime, browse professionals by
-        category or city.
-      </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link href="/explore" className={buttonVariants({ variant: "default" })}>
-          Browse All
-        </Link>
-        <Link href="/" className={buttonVariants({ variant: "outline" })}>
-          Go Home
-        </Link>
-      </div>
+
+      {/* Filters */}
+      <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
+        <FilterBar
+          categories={categories.map((c) => ({ name: c.name, slug: c.slug }))}
+          cities={cities}
+          showCategory
+          showCity
+        />
+      </Suspense>
+
+      {/* Map + list */}
+      {mapsApiKey ? (
+        <MapListLayout
+          businesses={businesses}
+          apiKey={mapsApiKey}
+          emptyMessage="Bu filtrelerle eşleşen uzman bulunamadı."
+          unlocatedNotice={(count) => `${count} işletmenin konum bilgisi henüz haritada gösterilemiyor.`}
+          listLabel="Liste"
+          mapLabel="Harita"
+        />
+      ) : (
+        <p className="rounded-2xl border border-border/60 bg-surface-cream p-6 text-sm text-muted-foreground">
+          Harita şu anda kullanılamıyor.
+        </p>
+      )}
     </div>
   );
 }

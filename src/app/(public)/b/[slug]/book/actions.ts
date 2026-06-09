@@ -12,13 +12,13 @@ import {
   MAX_ADVANCE_DAYS,
   BLOCKING_STATUSES,
   nowInBusinessTimezone,
+  getDayOfWeek,
 } from "@/lib/constants/booking";
 import {
   sendNewRequestEmailToBusiness,
   sendRequestReceivedEmailToCustomer,
 } from "@/lib/email-notifications";
 import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
-import type { DayOfWeek } from "@/generated/prisma/enums";
 import { validateBotProtection } from "@/lib/bot-protection";
 
 // ─── Schemas ────────────────────────────────────────────────────
@@ -42,23 +42,6 @@ export type BookingActionState = {
   errors?: Record<string, string>;
   message?: string;
 };
-
-// ─── Helpers ────────────────────────────────────────────────────
-
-const DAY_MAP: Record<number, DayOfWeek> = {
-  0: "SUNDAY",
-  1: "MONDAY",
-  2: "TUESDAY",
-  3: "WEDNESDAY",
-  4: "THURSDAY",
-  5: "FRIDAY",
-  6: "SATURDAY",
-};
-
-function getDayOfWeek(dateString: string): DayOfWeek {
-  const d = new Date(dateString + "T00:00:00");
-  return DAY_MAP[d.getDay()];
-}
 
 // ─── Get Available Slots ────────────────────────────────────────
 

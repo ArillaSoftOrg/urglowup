@@ -38,6 +38,10 @@ const es: Dictionary = {
     professionalCount: (n: number) => `${n} profesionales encontrados`,
     emptyMessage: 'Aún no hay profesionales listados. Vuelve pronto.',
   },
+  deals: {
+    title: 'Ofertas',
+    description: 'Promociones y ofertas actuales de las empresas.',
+  },
   locale: {
     tr: 'Türkçe',
     en: 'English',

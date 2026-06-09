@@ -196,6 +196,7 @@ model User {
   twoFactorEnabled    Boolean          @default(false)
 
   business            Business?
+  professional        Professional?
   accounts            Account[]
   appointments        Appointment[]
   reviews             Review[]
@@ -314,6 +315,7 @@ model Business {
   externalMediaCache  ExternalMediaCache[]
   ratingStats         BusinessRatingStats?
   posts               Post[]
+  professionals       Professional[]
   holidaySuggestions  BusinessHolidaySuggestion[]
 
   @@index([city])
@@ -349,6 +351,7 @@ model BusinessService {
   businessId      String
   business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   name            String
+  slug            String    @unique
   description     String?
   durationMinutes Int
   price           Decimal?  @db.Decimal(10, 2)
@@ -361,6 +364,7 @@ model BusinessService {
   appointments Appointment[]
   media        BusinessMedia[]
   posts        Post[]
+  professionals ProfessionalService[]
 }
 
 model BusinessHour {
@@ -434,6 +438,8 @@ model Appointment {
   customer      User              @relation(fields: [customerId], references: [id])
   serviceId     String
   service       BusinessService   @relation(fields: [serviceId], references: [id])
+  professionalId String?
+  professional  Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
   requestedDate DateTime          @db.Date
   requestedTime String
   status        AppointmentStatus @default(PENDING)
@@ -630,6 +636,8 @@ model Post {
   description         String?
   relatedServiceId    String?
   relatedService      BusinessService?  @relation(fields: [relatedServiceId], references: [id], onDelete: SetNull)
+  professionalId      String?
+  professional        Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
   categoryId          String?
   category            BusinessCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   taggedUserId        String?
@@ -649,6 +657,7 @@ model Post {
   @@index([businessId, status])
   @@index([categoryId, status])
   @@index([contentType, status])
+  @@index([professionalId, status])
   @@index([createdAt(sort: Desc)])
 }
 
@@ -709,6 +718,46 @@ model PostStyleTag {
 
   @@id([postId, styleTagId])
   @@index([styleTagId])
+}
+
+// ─── Professionals ───────────────────────────────────────────────
+// v1 scope: a Professional always belongs to a Business (no standalone
+// solo professionals yet). userId is reserved for future self-managed
+// account linking — no separate professional auth/dashboard exists.
+
+model Professional {
+  id            String   @id @default(cuid())
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId        String?  @unique
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  slug          String   @unique
+  displayName   String
+  title         String?
+  bio           String?
+  avatarUrl     String?
+  coverImageUrl String?
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  services     ProfessionalService[]
+  posts        Post[]
+  appointments Appointment[]
+
+  @@index([businessId, isActive])
+}
+
+model ProfessionalService {
+  professionalId String
+  professional   Professional    @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  serviceId      String
+  service        BusinessService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  assignedAt     DateTime        @default(now())
+
+  @@id([professionalId, serviceId])
+  @@index([serviceId])
 }
 
 // ─── User Preferences & Consent ─────────────────────────────────

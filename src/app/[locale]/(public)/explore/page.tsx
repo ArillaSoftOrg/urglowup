@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Tag } from "lucide-react";
 import {
   getMarketplaceBusinesses,
   getMarketplaceCategories,
@@ -58,9 +59,18 @@ export default async function LocaleExplorePage({ params, searchParams }: PagePr
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-10">
-      <Suspense fallback={<div className="mb-6 h-10" />}>
-        <ExploreTabs activeTab={tab} />
-      </Suspense>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <Suspense fallback={<div className="h-10" />}>
+          <ExploreTabs activeTab={tab} />
+        </Suspense>
+        <Link
+          href={p("/deals")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background px-4 py-1.5 text-sm font-medium transition-colors hover:bg-surface-cream"
+        >
+          <Tag className="size-3.5" />
+          {dict.deals.title}
+        </Link>
+      </div>
 
       {tab === "ilham" ? (
         <InspirationTab
