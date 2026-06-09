@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { requireRole } from "@/lib/auth";
-import { UserRole } from "@/generated/prisma/enums";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { BusinessSidebar } from "@/components/business/layout/business-sidebar";
 import { BusinessTopbar } from "@/components/business/layout/business-topbar";
 import { privateRobots } from "@/lib/seo";
@@ -14,13 +15,23 @@ export default async function BusinessLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireRole(UserRole.BUSINESS_OWNER);
+  const user = await getCurrentUser();
+  if (!user) redirect("/");
+
+  const member = await db.businessMember.findFirst({
+    where: { userId: user.id },
+    select: { id: true },
+  });
+  if (!member) redirect("/");
 
   return (
-    <div className="min-h-screen md:flex">
+    <div className="min-h-screen flex flex-col bg-muted/20">
       <BusinessSidebar />
-      <BusinessTopbar />
-      <main className="flex-1 p-4 md:p-6">{children}</main>
+      <main className="flex-1">
+        <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

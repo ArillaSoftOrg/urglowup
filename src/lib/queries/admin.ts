@@ -978,6 +978,49 @@ export type AdminPendingAppointment = Awaited<
   ReturnType<typeof getAdminPendingQueue>
 >[number];
 
+export async function getAdminAppointmentDetail(id: string) {
+  const [appointment, auditLogs] = await Promise.all([
+    db.appointment.findUnique({
+      where: { id },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        business: {
+          select: { id: true, name: true, slug: true },
+        },
+        service: {
+          select: { name: true, durationMinutes: true, priceType: true, price: true },
+        },
+        professional: {
+          select: { displayName: true, title: true },
+        },
+        review: {
+          select: { rating: true, comment: true, status: true, createdAt: true },
+        },
+      },
+    }),
+    db.adminAction.findMany({
+      where: { targetId: id, targetType: "Appointment" },
+      include: { admin: { select: { firstName: true, lastName: true, email: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  if (!appointment) return null;
+  return { appointment, auditLogs };
+}
+
+export type AdminAppointmentDetail = NonNullable<
+  Awaited<ReturnType<typeof getAdminAppointmentDetail>>
+>;
+
 export async function getAdminAppointmentStats() {
   const now = new Date();
   const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);

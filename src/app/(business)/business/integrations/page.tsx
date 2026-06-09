@@ -58,7 +58,7 @@ const SYNC_STATUS_VARIANTS: Record<string, BadgeVariant> = {
 };
 
 export default async function IntegrationsPage() {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("OWNER");
 
   const googleConfigured = Boolean(
     env.GOOGLE_CLIENT_ID &&

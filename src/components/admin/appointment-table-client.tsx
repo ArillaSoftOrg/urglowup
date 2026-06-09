@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -247,6 +248,7 @@ export function AppointmentTableClient({
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Appt Date</th>
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Age</th>
                   <th className="px-4 py-3 text-left font-semibold text-slate-900">Notes</th>
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900"></th>
                 </tr>
               </thead>
               <tbody>
@@ -296,6 +298,14 @@ export function AppointmentTableClient({
                           {appt.businessNote && (
                             <span className="text-xs italic">{appt.businessNote}</span>
                           )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/admin/appointments/${appt.id}`}
+                            className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap"
+                          >
+                            View →
+                          </Link>
                         </td>
                       </tr>
                     );

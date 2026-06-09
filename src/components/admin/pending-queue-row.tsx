@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { adminOverrideAppointmentStatus } from "@/app/(admin)/admin/actions";
 import { useTransition } from "react";
 import type { AdminPendingAppointment } from "@/lib/queries/admin";
@@ -136,6 +137,12 @@ export function PendingQueueRow({
         >
           Cancel
         </button>
+        <Link
+          href={`/admin/appointments/${appointment.id}`}
+          className="rounded border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 whitespace-nowrap"
+        >
+          Details
+        </Link>
       </div>
     </div>
   );

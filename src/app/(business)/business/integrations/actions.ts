@@ -33,7 +33,7 @@ export type ManualSyncResult =
  * "Max 1 manual sync per 24h" is deferred to a later phase.
  */
 export async function triggerManualSyncAction(): Promise<ManualSyncResult> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("OWNER");
 
   const connection = await getConnection(businessId, "GOOGLE_BUSINESS_PROFILE");
 

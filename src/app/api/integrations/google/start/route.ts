@@ -3,7 +3,6 @@
  */
 import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { UserRole } from "@/generated/prisma/enums";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getGoogleConfig, buildGoogleAuthUrl } from "@/lib/external/google/config";
@@ -21,12 +20,17 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (user.role !== UserRole.BUSINESS_OWNER) {
+  const member = await db.businessMember.findFirst({
+    where: { userId: user.id, role: "OWNER" },
+    select: { businessId: true },
+  });
+
+  if (!member) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   const business = await db.business.findUnique({
-    where: { ownerId: user.id },
+    where: { id: member.businessId },
     select: { id: true },
   });
 

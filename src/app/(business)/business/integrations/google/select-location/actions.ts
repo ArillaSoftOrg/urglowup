@@ -43,13 +43,15 @@ export async function confirmLocation(
   if (Date.now() > pending.expiresAt) redirect("/business/integrations");
   if (pending.userId !== user.id) redirect("/business/integrations");
 
-  const business = await db.business.findUnique({
-    where: { ownerId: user.id },
-    select: { id: true },
+  const member = await db.businessMember.findFirst({
+    where: { userId: user.id, role: "OWNER" },
+    select: { businessId: true },
   });
-  if (!business || business.id !== pending.businessId) {
+  if (!member || member.businessId !== pending.businessId) {
     redirect("/business/integrations");
   }
+
+  const business = { id: member.businessId };
 
   await db.businessExternalConnection.upsert({
     where: {

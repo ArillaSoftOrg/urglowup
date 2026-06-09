@@ -5,7 +5,7 @@ import { PostManager } from "@/components/business/posts/post-manager";
 export const metadata = { title: "Gönderiler" };
 
 export default async function BusinessPostsPage() {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const [posts, services, categoryLinks] = await Promise.all([
     db.post.findMany({

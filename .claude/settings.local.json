@@ -96,7 +96,11 @@
       "Bash(curl http://localhost:3000/)",
       "PowerShell(cd \"C:\\\\Users\\\\YUSUF\\\\Documents\\\\GitHub\\\\urglowup\"; npm run lint -- src/components/account/change-password-form.tsx src/components/shared/password-requirements.tsx src/lib/password-policy.ts src/app/\\\\\\(customer\\\\\\)/account/actions.ts 2>&1)",
       "Bash(^\\\\[\" | head -20)",
-      "PowerShell(head *)"
+      "PowerShell(head *)",
+      "Bash(Select-Object -First 30 FullName)",
+      "Bash(git log *)",
+      "Bash(ls prisma/migrations/20260607120000_add_business_service_slug/)",
+      "Bash(cat prisma/migrations/20260607120000_add_business_service_slug/migration.sql)"
     ]
   }
 }

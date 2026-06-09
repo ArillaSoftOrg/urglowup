@@ -30,7 +30,7 @@ export async function updateBusinessProfile(
   _prev: ProfileActionState,
   formData: FormData
 ): Promise<ProfileActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const raw = {
     name: formData.get("name"),

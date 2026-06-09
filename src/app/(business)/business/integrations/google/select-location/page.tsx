@@ -79,7 +79,7 @@ interface GoogleLocation {
 }
 
 export default async function SelectLocationPage() {
-  const { user, businessId } = await requireBusiness();
+  const { user, businessId } = await requireBusiness("OWNER");
 
   // Read + decrypt pending cookie
   const cookieStore = await cookies();

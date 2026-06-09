@@ -7,7 +7,7 @@ import { ProfileEditForm } from "@/components/business/profile-edit-form";
 export const metadata = { title: "İşletme Profili" };
 
 export default async function ProfilePage() {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const business = await db.business.findUnique({
     where: { id: businessId },

@@ -12,7 +12,7 @@ export type HolidayActionState = {
 export async function applyHoliday(
   holidayId: string
 ): Promise<HolidayActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const holiday = await db.publicHoliday.findUnique({ where: { id: holidayId } });
   if (!holiday) return { success: false, message: "Holiday not found." };
@@ -30,7 +30,7 @@ export async function applyHoliday(
 export async function dismissHoliday(
   holidayId: string
 ): Promise<HolidayActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const holiday = await db.publicHoliday.findUnique({ where: { id: holidayId } });
   if (!holiday) return { success: false, message: "Holiday not found." };
@@ -48,7 +48,7 @@ export async function dismissHoliday(
 export async function removeHolidayOverride(
   holidayId: string
 ): Promise<HolidayActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   await db.businessHolidaySuggestion.deleteMany({
     where: { businessId, holidayId },
@@ -61,7 +61,7 @@ export async function removeHolidayOverride(
 export async function applyAllHolidays(
   year: number
 ): Promise<HolidayActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const holidays = await db.publicHoliday.findMany({
     where: { country: "TR", year },
@@ -90,7 +90,7 @@ export async function applyAllHolidays(
 export async function dismissAllHolidays(
   year: number
 ): Promise<HolidayActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const holidays = await db.publicHoliday.findMany({
     where: { country: "TR", year },

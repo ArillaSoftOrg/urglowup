@@ -54,8 +54,8 @@ export async function completeBusinessOnboarding(
   }
 
   // Check one-business-per-user constraint
-  const existing = await db.business.findUnique({
-    where: { ownerId: user.id },
+  const existing = await db.businessMember.findFirst({
+    where: { userId: user.id },
     select: { id: true },
   });
   if (existing) {
@@ -106,9 +106,9 @@ export async function completeBusinessOnboarding(
     });
   }
 
-  // Create business + link category + update user role in a transaction
-  await db.$transaction([
-    db.business.create({
+  // Create business + OWNER membership + link category + update user role in a transaction
+  await db.$transaction(async (tx) => {
+    const business = await tx.business.create({
       data: {
         ownerId: user.id,
         name: data.name,
@@ -126,12 +126,16 @@ export async function completeBusinessOnboarding(
           create: { categoryId: categoryRecord.id },
         },
       },
-    }),
-    db.user.update({
+      select: { id: true },
+    });
+    await tx.businessMember.create({
+      data: { businessId: business.id, userId: user.id, role: "OWNER" },
+    });
+    await tx.user.update({
       where: { id: user.id },
       data: { role: "BUSINESS_OWNER" },
-    }),
-  ]);
+    });
+  });
 
   redirect("/business/dashboard");
 }

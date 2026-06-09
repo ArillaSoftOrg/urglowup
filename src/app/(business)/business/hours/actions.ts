@@ -30,7 +30,7 @@ export type HoursActionState = {
 // ─── Helpers ────────────────────────────────────────────────────
 
 export async function ensureDefaultHours(businessId: string) {
-  const { businessId: authenticatedBusinessId } = await requireBusiness();
+  const { businessId: authenticatedBusinessId } = await requireBusiness("MANAGER");
   if (businessId !== authenticatedBusinessId) {
     throw new Error("Unauthorized: business ID mismatch");
   }
@@ -56,7 +56,7 @@ export async function saveBusinessHours(
   _prev: HoursActionState,
   formData: FormData
 ): Promise<HoursActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const errors: Record<string, string> = {};
 

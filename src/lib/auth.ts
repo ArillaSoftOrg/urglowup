@@ -8,7 +8,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { passwordSchema } from "@/lib/password-policy";
-import { UserRole } from "@/generated/prisma/enums";
+import { UserRole, BusinessMemberRole } from "@/generated/prisma/enums";
+import { meetsMinRole } from "./permissions";
 import { AuthEmailVerification } from "@/emails/auth-email-verification";
 import { AuthPasswordReset } from "@/emails/auth-password-reset";
 import { isAdminEmail } from "./admin-bootstrap";
@@ -238,19 +239,32 @@ export async function requireRole(role: UserRole) {
   return user;
 }
 
-export async function requireBusiness() {
-  const user = await requireRole(UserRole.BUSINESS_OWNER);
+export async function requireBusiness(
+  minRole: BusinessMemberRole = BusinessMemberRole.STAFF,
+) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/");
 
-  const business = await db.business.findUnique({
-    where: { ownerId: user.id },
-    select: { id: true },
+  const member = await db.businessMember.findFirst({
+    where: { userId: user.id },
+    select: { businessId: true, role: true },
   });
 
-  if (!business) {
-    redirect("/business/onboarding");
+  // Legacy fallback: original BUSINESS_OWNER whose member row may not exist yet
+  if (!member && user.role === UserRole.BUSINESS_OWNER) {
+    const biz = await db.business.findUnique({
+      where: { ownerId: user.id },
+      select: { id: true },
+    });
+    if (!biz) redirect("/business/onboarding");
+    return { user, businessId: biz.id, memberRole: BusinessMemberRole.OWNER };
   }
 
-  return { user, businessId: business.id };
+  if (!member) redirect("/");
+
+  if (!meetsMinRole(member.role, minRole)) redirect("/business/dashboard");
+
+  return { user, businessId: member.businessId, memberRole: member.role };
 }
 
 export async function requireAdminMfa() {

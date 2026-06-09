@@ -11,13 +11,22 @@ const requestSchema = z.object({
 });
 
 export async function DELETE(request: Request) {
+  // Auth — MANAGER or above can delete media
   const user = await getCurrentUser();
-  if (!user || user.role !== "BUSINESS_OWNER") {
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const member = await db.businessMember.findFirst({
+    where: { userId: user.id },
+    select: { businessId: true, role: true },
+  });
+  if (!member || (member.role !== "OWNER" && member.role !== "MANAGER")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const business = await db.business.findUnique({
-    where: { ownerId: user.id },
+    where: { id: member.businessId },
     select: { id: true },
   });
   if (!business) {

@@ -52,7 +52,7 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
 };
 
 export default async function SettingsPage() {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("OWNER");
 
   const business = await db.business.findUnique({
     where: { id: businessId },

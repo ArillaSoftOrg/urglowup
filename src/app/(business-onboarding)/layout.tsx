@@ -17,9 +17,9 @@ export default async function BusinessOnboardingLayout({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  // If user already owns a business, send them to the dashboard
-  const existing = await db.business.findUnique({
-    where: { ownerId: user.id },
+  // If user already has a business membership, send them to the dashboard
+  const existing = await db.businessMember.findFirst({
+    where: { userId: user.id },
     select: { id: true },
   });
   if (existing) redirect("/business/dashboard");

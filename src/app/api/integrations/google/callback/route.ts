@@ -78,15 +78,17 @@ export async function GET(request: Request) {
     return response;
   }
 
-  const business = await db.business.findUnique({
-    where: { ownerId: user.id },
-    select: { id: true },
+  const member = await db.businessMember.findFirst({
+    where: { userId: user.id, role: "OWNER" },
+    select: { businessId: true },
   });
-  if (!business || business.id !== statePayload.businessId) {
+  if (!member || member.businessId !== statePayload.businessId) {
     const response = NextResponse.redirect(integrationUrl);
     clearStateCookie(response);
     return response;
   }
+
+  const business = { id: member.businessId };
 
   let config;
   try {

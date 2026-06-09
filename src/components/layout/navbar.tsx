@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { UserRole } from "@/generated/prisma/enums";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { NavLinks } from "./navbar-nav-links";
@@ -21,15 +22,23 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
     getDictionary(locale),
   ]);
 
+  const membership =
+    user && user.role !== UserRole.ADMIN
+      ? await db.businessMember.findFirst({
+          where: { userId: user.id },
+          select: { id: true },
+        })
+      : null;
+
   const p = (path: string) =>
     locale === "tr" ? path : `/${locale}${path}`;
 
   const businessHref = p("/for-business");
   const accountHref = user
-    ? user.role === UserRole.BUSINESS_OWNER
-      ? { label: dict.nav.businessPanel, href: "/business/dashboard" }
-      : user.role === UserRole.ADMIN
-        ? { label: dict.nav.adminPanel, href: "/admin" }
+    ? user.role === UserRole.ADMIN
+      ? { label: dict.nav.adminPanel, href: "/admin" }
+      : membership
+        ? { label: dict.nav.businessPanel, href: "/business/dashboard" }
         : { label: dict.nav.account, href: "/account" }
     : null;
 

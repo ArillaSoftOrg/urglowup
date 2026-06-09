@@ -43,7 +43,7 @@ const createPostSchema = z
 export async function createPost(
   data: z.infer<typeof createPostSchema>,
 ): Promise<PostActionState> {
-  const { businessId, user } = await requireBusiness();
+  const { businessId, user } = await requireBusiness("MANAGER");
 
   const owner = await db.user.findUnique({
     where: { id: user.id },
@@ -185,7 +185,7 @@ export async function createPost(
 }
 
 export async function deletePost(postId: string): Promise<PostActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const post = await db.post.findFirst({
     where: { id: postId, businessId },
@@ -215,7 +215,7 @@ export async function updatePostStatus(
   postId: string,
   status: PostStatus,
 ): Promise<PostActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const post = await db.post.findFirst({
     where: { id: postId, businessId },

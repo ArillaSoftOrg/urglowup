@@ -7,7 +7,7 @@ import { BusinessPageHeader } from "@/components/business/business-page-header";
 export const metadata = { title: "Medya" };
 
 export default async function MediaPage() {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const [media, counts, services] = await Promise.all([
     getBusinessMedia(businessId),

@@ -70,7 +70,7 @@ function revalidate() {
 export async function saveMediaRecord(
   data: z.infer<typeof saveMediaSchema>
 ): Promise<MediaActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const result = saveMediaSchema.safeParse(data);
   if (!result.success) {
@@ -181,7 +181,7 @@ export async function updateMediaMeta(
   mediaId: string,
   data: z.infer<typeof updateMetaSchema>
 ): Promise<MediaActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const media = await db.businessMedia.findUnique({
     where: { id: mediaId },
@@ -213,7 +213,7 @@ export async function updateMediaMeta(
 export async function reorderMedia(
   orderedIds: string[]
 ): Promise<MediaActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   // Verify all IDs belong to this business
   const media = await db.businessMedia.findMany({
@@ -247,7 +247,7 @@ export async function reorderMedia(
 export async function setAsCover(
   mediaId: string
 ): Promise<MediaActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const media = await db.businessMedia.findUnique({
     where: { id: mediaId },
@@ -286,7 +286,7 @@ export async function setAsCover(
 export async function setAsLogo(
   mediaId: string
 ): Promise<MediaActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const media = await db.businessMedia.findUnique({
     where: { id: mediaId },
@@ -325,7 +325,7 @@ export async function saveCropMeta(
   mediaId: string,
   crop: { x: number; y: number; width: number; height: number }
 ): Promise<MediaActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const media = await db.businessMedia.findUnique({
     where: { id: mediaId },

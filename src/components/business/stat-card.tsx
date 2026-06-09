@@ -46,7 +46,7 @@ export function StatCard({
       >
         <div className={cn("min-w-0", size === "sm" ? "space-y-0.5" : "space-y-1")}>
           <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
-          <div className={cn("font-bold", size === "sm" ? "text-xl" : "text-2xl")}>
+          <div className={cn("font-bold tabular-nums", size === "sm" ? "text-xl" : "text-3xl")}>
             {value}
           </div>
           {hint && (
@@ -56,11 +56,11 @@ export function StatCard({
         <div
           className={cn(
             "flex shrink-0 items-center justify-center rounded-full",
-            size === "sm" ? "size-8" : "size-10",
+            size === "sm" ? "size-8" : "size-12",
             TONE_CLASSES[iconTone]
           )}
         >
-          <Icon className={size === "sm" ? "size-4" : "size-5"} />
+          <Icon className={size === "sm" ? "size-4" : "size-6"} />
         </div>
       </CardContent>
     </Card>

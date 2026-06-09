@@ -24,7 +24,7 @@ const DAY_ORDER = [
 ] as const;
 
 export default async function HoursPage() {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   await ensureDefaultHours(businessId);
 

@@ -48,7 +48,7 @@ export async function createService(
   _prev: ServiceActionState,
   formData: FormData
 ): Promise<ServiceActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const raw = Object.fromEntries(formData.entries());
   const result = serviceSchema.safeParse(raw);
@@ -101,7 +101,7 @@ export async function updateService(
   _prev: ServiceActionState,
   formData: FormData
 ): Promise<ServiceActionState> {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const serviceId = formData.get("serviceId") as string;
   if (!serviceId) return { success: false, message: "Missing service ID" };
@@ -145,7 +145,7 @@ export async function updateService(
 }
 
 export async function toggleServiceActive(serviceId: string) {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const service = await db.businessService.findFirst({
     where: { id: serviceId, businessId },

@@ -168,6 +168,12 @@ enum HolidaySuggestionState {
   DISMISSED
 }
 
+enum BusinessMemberRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
 enum Theme {
   LIGHT
   DARK
@@ -213,6 +219,8 @@ model User {
   createdCampaigns    Campaign[]
   sessions            Session[]
   twoFactor           TwoFactor?
+  businessMemberships BusinessMember[]
+  sentInvitations     BusinessInvitation[] @relation("SentInvitations")
 }
 
 model Session {
@@ -317,6 +325,8 @@ model Business {
   posts               Post[]
   professionals       Professional[]
   holidaySuggestions  BusinessHolidaySuggestion[]
+  members             BusinessMember[]
+  invitations         BusinessInvitation[]
 
   @@index([city])
   @@index([status])
@@ -442,10 +452,11 @@ model Appointment {
   professional  Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
   requestedDate DateTime          @db.Date
   requestedTime String
-  status        AppointmentStatus @default(PENDING)
-  customerNote  String?
-  businessNote  String?
-  createdAt     DateTime          @default(now())
+  status          AppointmentStatus @default(PENDING)
+  customerNote    String?
+  businessNote    String?
+  cancelledReason String?
+  createdAt       DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
   review           Review?
@@ -902,4 +913,40 @@ model ExternalMediaCache {
   @@index([businessId, provider])
   @@index([expiresAt])
   @@index([businessId, visibilityStatus])
+}
+
+// ─── Business Team ────────────────────────────────────────────────
+
+model BusinessMember {
+  id         String             @id @default(cuid())
+  businessId String
+  business   Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       BusinessMemberRole
+  invitedBy  String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@unique([businessId, userId])
+  @@index([userId])
+  @@index([businessId, role])
+}
+
+model BusinessInvitation {
+  id         String             @id @default(cuid())
+  businessId String
+  business   Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  email      String
+  role       BusinessMemberRole
+  token      String             @unique @default(cuid())
+  invitedBy  String
+  inviter    User               @relation("SentInvitations", fields: [invitedBy], references: [id])
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime           @default(now())
+
+  @@unique([businessId, email])
+  @@index([token])
+  @@index([businessId])
 }

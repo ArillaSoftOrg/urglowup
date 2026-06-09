@@ -158,9 +158,17 @@ export async function adminOverrideAppointmentStatus(
     };
   }
 
+  const isCancelledOrRejected =
+    newStatus === "CANCELLED_BY_BUSINESS" ||
+    newStatus === "CANCELLED_BY_CUSTOMER" ||
+    newStatus === "REJECTED";
+
   await db.appointment.update({
     where: { id: appointmentId },
-    data: { status: newStatus },
+    data: {
+      status: newStatus,
+      ...(isCancelledOrRejected ? { cancelledReason: adminReason } : {}),
+    },
   });
 
   // Fire notifications based on the new status
@@ -233,7 +241,7 @@ export async function adminBulkCancelAppointments(
     appointments.map((appt) =>
       db.appointment.update({
         where: { id: appt.id },
-        data: { status: "CANCELLED_BY_BUSINESS" },
+        data: { status: "CANCELLED_BY_BUSINESS", cancelledReason: adminReason },
       })
     )
   );

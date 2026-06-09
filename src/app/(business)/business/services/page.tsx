@@ -8,7 +8,7 @@ import {
 export const metadata = { title: "Hizmetler" };
 
 export default async function ServicesPage() {
-  const { businessId } = await requireBusiness();
+  const { businessId } = await requireBusiness("MANAGER");
 
   const services = await db.businessService.findMany({
     where: { businessId },
