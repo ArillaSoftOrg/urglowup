@@ -185,7 +185,6 @@ export const auth = betterAuth({
   },
   socialProviders: buildSocialProviders(),
   plugins: [
-    nextCookies(),
     twoFactor({
       issuer: env.TOTP_ISSUER,
       skipVerificationOnEnable: false,
@@ -194,6 +193,7 @@ export const auth = betterAuth({
         amount: 10,
       },
     }),
+    nextCookies(),
   ],
 });
 

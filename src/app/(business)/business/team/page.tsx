@@ -12,7 +12,15 @@ export default async function TeamPage() {
     where: { businessId },
     include: {
       user: {
-        select: { id: true, firstName: true, lastName: true, email: true },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          professional: {
+            select: { id: true, businessId: true, displayName: true, title: true },
+          },
+        },
       },
     },
     orderBy: { createdAt: "asc" },

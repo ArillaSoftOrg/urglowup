@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { getAppUrl } from "@/lib/get-app-url";
 import { generateInvitationToken, hashInvitationToken } from "@/lib/invitation-token";
+import { generateUniqueProfessionalSlug } from "@/lib/slug";
 import { BusinessTeamInvitationEmail } from "@/emails/business-team-invitation";
 import { BusinessMemberRole } from "@/generated/prisma/enums";
 
@@ -188,8 +189,96 @@ export async function removeMember(memberId: string): Promise<TeamActionState> {
     };
   }
 
-  await db.businessMember.delete({ where: { id: memberId } });
+  await db.$transaction([
+    db.professional.updateMany({
+      where: { businessId, userId: member.userId },
+      data: { userId: null },
+    }),
+    db.businessMember.delete({ where: { id: memberId } }),
+  ]);
 
   revalidatePath("/business/team");
   return { success: true };
+}
+
+export async function createProfessionalForMember(
+  memberId: string,
+): Promise<TeamActionState> {
+  const { businessId } = await requireBusiness("OWNER");
+
+  const member = await db.businessMember.findFirst({
+    where: { id: memberId, businessId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          professional: { select: { id: true, businessId: true } },
+        },
+      },
+    },
+  });
+  if (!member) return { success: false, message: "Uye bulunamadi." };
+
+  if (member.user.professional) {
+    if (member.user.professional.businessId === businessId) {
+      return { success: true, message: "Uye zaten profesyonel profile bagli." };
+    }
+    return {
+      success: false,
+      message: "Bu kullanici baska bir isletmede profesyonel profile bagli.",
+    };
+  }
+
+  const displayName =
+    [member.user.firstName, member.user.lastName].filter(Boolean).join(" ") ||
+    member.user.email.split("@")[0] ||
+    "Profesyonel";
+  const slug = await generateUniqueProfessionalSlug(displayName);
+
+  await db.professional.create({
+    data: {
+      businessId,
+      userId: member.user.id,
+      slug,
+      displayName,
+      isActive: true,
+    },
+  });
+
+  revalidatePath("/business/team");
+  return { success: true, message: "Profesyonel profil olusturuldu." };
+}
+
+export async function unlinkProfessionalFromMember(
+  memberId: string,
+): Promise<TeamActionState> {
+  const { businessId } = await requireBusiness("OWNER");
+
+  const member = await db.businessMember.findFirst({
+    where: { id: memberId, businessId },
+    include: {
+      user: {
+        select: {
+          professional: { select: { id: true, businessId: true } },
+        },
+      },
+    },
+  });
+  if (!member) return { success: false, message: "Uye bulunamadi." };
+
+  const professional = member.user.professional;
+  if (!professional || professional.businessId !== businessId) {
+    return { success: false, message: "Bagli profesyonel profil bulunamadi." };
+  }
+
+  await db.professional.update({
+    where: { id: professional.id },
+    data: { userId: null },
+  });
+
+  revalidatePath("/business/team");
+  return { success: true, message: "Profesyonel baglantisi kaldirildi." };
 }

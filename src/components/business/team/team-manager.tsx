@@ -6,6 +6,8 @@ import {
   cancelInvitation,
   updateMemberRole,
   removeMember,
+  createProfessionalForMember,
+  unlinkProfessionalFromMember,
   type TeamActionState,
 } from "@/app/(business)/business/team/actions";
 import { Button } from "@/components/ui/button";
@@ -27,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Trash2, UserPlus, X } from "lucide-react";
+import { BriefcaseBusiness, Link2Off, Mail, Trash2, UserPlus, X } from "lucide-react";
 import { BusinessMemberRole } from "@/generated/prisma/enums";
 
 const ROLE_LABELS: Record<BusinessMemberRole, string> = {
@@ -52,6 +54,12 @@ export interface TeamMemberData {
     firstName: string | null;
     lastName: string | null;
     email: string;
+    professional: {
+      id: string;
+      businessId: string;
+      displayName: string;
+      title: string | null;
+    } | null;
   };
 }
 
@@ -164,6 +172,7 @@ function MemberRow({
     .filter(Boolean)
     .join(" ");
   const locked = isLastOwner;
+  const professional = member.user.professional;
 
   function handleRoleChange(value: string | null) {
     if (!value || value === member.role) return;
@@ -178,6 +187,22 @@ function MemberRow({
     setError(null);
     startTransition(async () => {
       const result = await removeMember(member.id);
+      if (!result.success) setError(result.message ?? "İşlem başarısız.");
+    });
+  }
+
+  function handleCreateProfessional() {
+    setError(null);
+    startTransition(async () => {
+      const result = await createProfessionalForMember(member.id);
+      if (!result.success) setError(result.message ?? "İşlem başarısız.");
+    });
+  }
+
+  function handleUnlinkProfessional() {
+    setError(null);
+    startTransition(async () => {
+      const result = await unlinkProfessionalFromMember(member.id);
       if (!result.success) setError(result.message ?? "İşlem başarısız.");
     });
   }
@@ -200,11 +225,44 @@ function MemberRow({
           {fullName && (
             <p className="text-xs text-muted-foreground">{member.user.email}</p>
           )}
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {professional ? (
+              <Badge variant="success">
+                <BriefcaseBusiness className="size-3" />
+                {professional.displayName}
+              </Badge>
+            ) : (
+              <Badge variant="outline">Profesyonel profil yok</Badge>
+            )}
+          </div>
           {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
       </div>
 
       <div className="flex items-center gap-2 sm:shrink-0">
+        {professional ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Profesyonel bağlantısını kaldır"
+            title="Profesyonel bağlantısını kaldır"
+            disabled={isPending}
+            onClick={handleUnlinkProfessional}
+          >
+            <Link2Off className="size-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isPending}
+            onClick={handleCreateProfessional}
+          >
+            <BriefcaseBusiness className="size-4" />
+            Profil oluştur
+          </Button>
+        )}
+
         {locked ? (
           <Badge variant={ROLE_BADGE_VARIANTS[member.role]}>
             {ROLE_LABELS[member.role]}
