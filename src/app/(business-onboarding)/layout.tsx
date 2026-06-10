@@ -21,6 +21,7 @@ export default async function BusinessOnboardingLayout({
   const existing = await db.businessMember.findFirst({
     where: { userId: user.id },
     select: { id: true },
+    orderBy: { createdAt: "asc" },
   });
   if (existing) redirect("/business/dashboard");
 

@@ -27,6 +27,7 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
       ? await db.businessMember.findFirst({
           where: { userId: user.id },
           select: { id: true },
+          orderBy: { createdAt: "asc" },
         })
       : null;
 

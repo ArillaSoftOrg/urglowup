@@ -12,11 +12,20 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { meetsMinRole } from "@/lib/permissions";
+import { BusinessMemberRole } from "@/generated/prisma/enums";
 import { businessNavItems } from "./business-nav-items";
 
-export function BusinessMobileNav() {
+export function BusinessMobileNav({
+  memberRole,
+}: {
+  memberRole: BusinessMemberRole;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const visibleNavItems = businessNavItems.filter((item) =>
+    meetsMinRole(memberRole, item.minRole ?? BusinessMemberRole.STAFF)
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -37,7 +46,7 @@ export function BusinessMobileNav() {
           </SheetTitle>
         </div>
         <nav className="flex flex-col gap-0.5 p-3">
-          {businessNavItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (

@@ -46,6 +46,7 @@ export async function confirmLocation(
   const member = await db.businessMember.findFirst({
     where: { userId: user.id, role: "OWNER" },
     select: { businessId: true },
+    orderBy: { createdAt: "asc" },
   });
   if (!member || member.businessId !== pending.businessId) {
     redirect("/business/integrations");

@@ -939,7 +939,7 @@ model BusinessInvitation {
   business   Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
   email      String
   role       BusinessMemberRole
-  token      String             @unique @default(cuid())
+  tokenHash  String             @unique
   invitedBy  String
   inviter    User               @relation("SentInvitations", fields: [invitedBy], references: [id])
   expiresAt  DateTime
@@ -947,6 +947,6 @@ model BusinessInvitation {
   createdAt  DateTime           @default(now())
 
   @@unique([businessId, email])
-  @@index([token])
+  @@index([tokenHash])
   @@index([businessId])
 }

@@ -33,6 +33,7 @@ export async function POST(request: Request) {
   const member = await db.businessMember.findFirst({
     where: { userId: user.id },
     select: { businessId: true, role: true },
+    orderBy: { createdAt: "asc" },
   });
   if (!member || (member.role !== "OWNER" && member.role !== "MANAGER")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

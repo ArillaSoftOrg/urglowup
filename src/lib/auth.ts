@@ -248,6 +248,7 @@ export async function requireBusiness(
   const member = await db.businessMember.findFirst({
     where: { userId: user.id },
     select: { businessId: true, role: true },
+    orderBy: { createdAt: "asc" },
   });
 
   // Legacy fallback: original BUSINESS_OWNER whose member row may not exist yet

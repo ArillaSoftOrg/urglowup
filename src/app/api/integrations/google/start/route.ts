@@ -23,6 +23,7 @@ export async function GET(request: Request) {
   const member = await db.businessMember.findFirst({
     where: { userId: user.id, role: "OWNER" },
     select: { businessId: true },
+    orderBy: { createdAt: "asc" },
   });
 
   if (!member) {
