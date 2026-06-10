@@ -8,21 +8,25 @@ export const metadata = { title: "Ekip" };
 export default async function TeamPage() {
   const { user, businessId } = await requireBusiness("OWNER");
 
-  const [members, invitations] = await Promise.all([
-    db.businessMember.findMany({
-      where: { businessId },
-      include: {
-        user: {
-          select: { id: true, firstName: true, lastName: true, email: true },
-        },
+  const members = await db.businessMember.findMany({
+    where: { businessId },
+    include: {
+      user: {
+        select: { id: true, firstName: true, lastName: true, email: true },
       },
-      orderBy: { createdAt: "asc" },
-    }),
-    db.businessInvitation.findMany({
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const invitations = await db.businessInvitation
+    .findMany({
       where: { businessId, acceptedAt: null },
       orderBy: { createdAt: "desc" },
-    }),
-  ]);
+    })
+    .catch((error) => {
+      console.error("[business-team] invitations query failed:", error);
+      return [];
+    });
 
   return (
     <div className="space-y-6">
