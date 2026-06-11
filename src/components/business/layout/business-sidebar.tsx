@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { usePathname } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
   Bell,
   ChevronDown,
@@ -15,14 +15,6 @@ import { meetsMinRole } from "@/lib/permissions";
 import { BusinessMemberRole } from "@/generated/prisma/enums";
 import { businessNavItems } from "./business-nav-items";
 import { BusinessMobileNav } from "./business-mobile-nav";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
 import { signOutAction } from "@/app/(auth)/actions";
 
 const TOP_NAV_HREFS = [
@@ -49,7 +41,7 @@ export function BusinessSidebar({
   memberRole: BusinessMemberRole;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const visibleNavItems = businessNavItems.filter((item) =>
@@ -110,14 +102,13 @@ export function BusinessSidebar({
             <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[oklch(0.68_0.22_345)]" />
           </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  className="hidden h-10 items-center gap-2 rounded-full bg-white/10 pl-1.5 pr-3 text-business-nav-fg ring-1 ring-white/10 transition-colors hover:bg-white/15 md:flex"
-                  aria-label="Hesap menüsü"
-                />
-              }
+          <div className="relative hidden md:block">
+            <button
+              type="button"
+              className="flex h-10 items-center gap-2 rounded-full bg-white/10 pl-1.5 pr-3 text-business-nav-fg ring-1 ring-white/10 transition-colors hover:bg-white/15"
+              aria-label="Hesap menüsü"
+              aria-expanded={accountMenuOpen}
+              onClick={() => setAccountMenuOpen((open) => !open)}
             >
               <span className="flex size-7 items-center justify-center rounded-full bg-[oklch(0.88_0.07_345)] text-[oklch(0.30_0.08_285)]">
                 <User className="size-4" />
@@ -129,34 +120,42 @@ export function BusinessSidebar({
                 </span>
               </span>
               <ChevronDown className="size-3.5 text-business-nav-muted" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 rounded-xl p-2 shadow-lg">
-              <DropdownMenuLabel className="px-2 py-2">Yönetim</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {dropdownItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <DropdownMenuItem
-                    key={item.href}
-                    onClick={() => router.push(item.href)}
-                    className="gap-3 rounded-lg py-2.5"
-                  >
-                    <Icon className="size-4 text-muted-foreground" />
-                    {item.title}
-                  </DropdownMenuItem>
-                );
-              })}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => startTransition(() => signOutAction())}
-                className="gap-3 rounded-lg py-2.5"
-              >
-                <LogOut className="size-4" />
-                Çıkış Yap
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </button>
+
+            {accountMenuOpen && (
+              <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-72 rounded-xl border border-border bg-popover p-2 text-popover-foreground shadow-lg">
+                <p className="px-2 py-2 text-xs font-medium text-muted-foreground">
+                  Yönetim
+                </p>
+                <div className="my-1 h-px bg-border" />
+                <div className="space-y-1">
+                  {dropdownItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <Icon className="size-4 text-muted-foreground" />
+                        {item.title}
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="my-1 h-px bg-border" />
+                <button
+                  type="button"
+                  onClick={() => startTransition(() => signOutAction())}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm text-destructive outline-none transition-colors hover:bg-destructive/10 focus:bg-destructive/10"
+                >
+                  <LogOut className="size-4" />
+                  Çıkış Yap
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className="md:hidden">
             <BusinessMobileNav memberRole={memberRole} />
