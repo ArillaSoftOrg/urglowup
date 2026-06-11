@@ -71,35 +71,45 @@ function CoverLogoSection({
   return (
     <div>
       <Card className="bg-surface-cream">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Kapak Fotoğrafı</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <CardTitle className="text-sm font-semibold">Kapak Fotoğrafı</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Profilinizde öne çıkan yatay görsel
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <MediaUploadButton
+                mediaType="COVER"
+                label={cover ? "Kapağı Değiştir" : "Kapak Yükle"}
+                size="sm"
+              />
+              {cover && (
+                <DeleteMediaButton mediaId={cover.id} label="Kaldır" size="sm" />
+              )}
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent>
           {cover ? (
-            <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
+            <div className="relative h-44 overflow-hidden rounded-lg sm:h-56 lg:h-64">
               <Image
                 src={cover.url}
                 alt="Cover"
                 fill
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(max-width: 768px) 100vw, 1024px"
                 className="object-cover"
               />
             </div>
           ) : (
-            <div className="flex aspect-[16/9] items-center justify-center rounded-lg border-2 border-dashed bg-muted/40">
-              <ImageIcon className="size-8 text-muted-foreground" />
+            <div className="flex h-44 items-center justify-center rounded-lg border-2 border-dashed bg-muted/40 sm:h-56 lg:h-64">
+              <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground">
+                <ImageIcon className="size-8" />
+                16:9 kapak görseli yükleyin
+              </div>
             </div>
           )}
-          <div className="flex gap-2">
-            <MediaUploadButton
-              mediaType="COVER"
-              label={cover ? "Kapağı Değiştir" : "Kapak Yükle"}
-              size="sm"
-            />
-            {cover && (
-              <DeleteMediaButton mediaId={cover.id} label="Kaldır" size="sm" />
-            )}
-          </div>
         </CardContent>
       </Card>
     </div>
@@ -167,8 +177,8 @@ function MediaItemCard({
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-lg border bg-card">
-      <div className="relative aspect-square">
+    <div className="group relative overflow-hidden rounded-lg border bg-card transition-colors hover:border-primary/30">
+      <div className="relative aspect-[4/3]">
         {isVideo ? (
           <>
             <video
@@ -187,7 +197,7 @@ function MediaItemCard({
             src={media.url}
             alt={media.title ?? "Media"}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
             className="object-cover"
           />
         )}
@@ -202,7 +212,7 @@ function MediaItemCard({
       </div>
 
       {/* Actions overlay */}
-      <div className="flex items-center justify-between p-2">
+      <div className="flex min-h-12 items-center justify-between gap-2 p-2">
         <div className="min-w-0">
           {media.title && (
             <p className="truncate text-xs font-medium">{media.title}</p>
@@ -424,16 +434,21 @@ export function MediaGrid({
   const videos = portfolioMedia.filter((m) => m.type === "PORTFOLIO_VIDEO");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Cover & Logo */}
       <CoverLogoSection cover={cover} />
 
       {/* Portfolio */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Portfolyo</CardTitle>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <CardHeader className="pb-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1">
+              <CardTitle>Portfolyo</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Fotoğraf, video, önce/sonra ve hizmet görsellerini yönetin.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <ImageIcon className="size-3" />
                 {imageCount}/{MAX_IMAGES_PER_BUSINESS}
@@ -446,43 +461,44 @@ export function MediaGrid({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Upload buttons */}
-          <div className="flex flex-wrap gap-2">
-            <MediaUploadButton
-              mediaType="PORTFOLIO_IMAGE"
-              label="Fotoğraf Yükle"
-              size="sm"
-            />
-            <MediaUploadButton
-              mediaType="PORTFOLIO_VIDEO"
-              label="Video Yükle"
-              size="sm"
-            />
-            <MediaUploadButton
-              mediaType="BEFORE_AFTER"
-              label="Önce/Sonra"
-              size="sm"
-            />
-            <MediaUploadButton
-              mediaType="SERVICE_IMAGE"
-              label="Hizmet görseli"
-              size="sm"
-            />
-          </div>
-
           {/* Tabs */}
           <Tabs defaultValue="all">
-            <TabsList>
-              <TabsTrigger value="all">
-                Tümü ({portfolioMedia.length})
-              </TabsTrigger>
-              <TabsTrigger value="images">
-                Fotoğraflar ({images.length})
-              </TabsTrigger>
-              <TabsTrigger value="videos">
-                Videolar ({videos.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <TabsList>
+                <TabsTrigger value="all">
+                  Tümü ({portfolioMedia.length})
+                </TabsTrigger>
+                <TabsTrigger value="images">
+                  Fotoğraflar ({images.length})
+                </TabsTrigger>
+                <TabsTrigger value="videos">
+                  Videolar ({videos.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="flex flex-wrap gap-2">
+                <MediaUploadButton
+                  mediaType="PORTFOLIO_IMAGE"
+                  label="Fotoğraf Yükle"
+                  size="sm"
+                />
+                <MediaUploadButton
+                  mediaType="PORTFOLIO_VIDEO"
+                  label="Video Yükle"
+                  size="sm"
+                />
+                <MediaUploadButton
+                  mediaType="BEFORE_AFTER"
+                  label="Önce/Sonra"
+                  size="sm"
+                />
+                <MediaUploadButton
+                  mediaType="SERVICE_IMAGE"
+                  label="Hizmet görseli"
+                  size="sm"
+                />
+              </div>
+            </div>
 
             <TabsContent value="all" className="mt-4">
               <PortfolioGrid
@@ -539,7 +555,7 @@ function PortfolioGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {items.map((item) => (
         <MediaItemCard key={item.id} media={item} services={services} />
       ))}
