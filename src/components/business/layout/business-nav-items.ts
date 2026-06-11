@@ -27,7 +27,7 @@ export const businessNavItems: BusinessNavItem[] = [
   { title: "Kontrol Paneli", href: "/business/dashboard", icon: LayoutDashboard },
   { title: "Randevular", href: "/business/appointments", icon: CalendarCheck },
   { title: "Hizmetler", href: "/business/services", icon: Scissors },
-  { title: "Galeri", href: "/business/media", icon: ImageIcon },
+  { title: "Profilim", href: "/business/media", icon: ImageIcon },
   { title: "Gönderiler", href: "/business/posts", icon: LayoutGrid },
   { title: "Profil", href: "/business/profile", icon: User },
   { title: "Çalışma Saatleri", href: "/business/hours", icon: Clock },

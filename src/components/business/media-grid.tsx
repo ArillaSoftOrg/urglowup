@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -30,8 +30,15 @@ import {
   Film,
   Loader2,
   Crop,
+  Camera,
+  Eye,
+  Grid3X3,
+  MapPin,
+  Plus,
+  Scissors,
+  Star,
+  UserRound,
 } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
 import { MediaUploadButton } from "./media-upload-button";
 import { MediaEditDialog } from "./media-edit-dialog";
 import { setAsCover, setAsLogo, saveCropMeta } from "@/app/(business)/business/media/actions";
@@ -40,6 +47,7 @@ import {
   MAX_IMAGES_PER_BUSINESS,
   MAX_VIDEOS_PER_BUSINESS,
 } from "@/lib/constants/media";
+import { cn } from "@/lib/utils";
 import type { BusinessMediaItem } from "@/lib/queries/media";
 
 const CropDialog = dynamic(() => import("./crop-dialog"), {
@@ -61,57 +69,232 @@ interface ServiceOption {
   name: string;
 }
 
-// ─── Cover & Logo Section ───────────────────────────────────────
+interface BusinessProfileSummary {
+  name: string;
+  slug: string;
+  description: string | null;
+  city: string | null;
+  district: string | null;
+  logoUrl: string | null;
+  coverImageUrl: string | null;
+  categories: string[];
+  serviceCount: number;
+  reviewCount: number;
+  rating: number | null;
+}
 
-function CoverLogoSection({
+function formatRating(rating: number | null) {
+  if (rating == null) return "-";
+  return rating.toFixed(1);
+}
+
+function ProfileHero({
+  business,
   cover,
+  logo,
+  portfolioCount,
 }: {
+  business: BusinessProfileSummary;
   cover: BusinessMediaItem | undefined;
+  logo: BusinessMediaItem | undefined;
+  portfolioCount: number;
 }) {
+  const coverUrl = cover?.url ?? business.coverImageUrl;
+  const logoUrl = logo?.url ?? business.logoUrl;
+  const location = [business.district, business.city].filter(Boolean).join(", ");
+  const categoryLine = business.categories.join(" / ");
+
   return (
-    <div>
-      <Card className="bg-surface-cream">
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="space-y-1">
-              <CardTitle className="text-sm font-semibold">Kapak Fotoğrafı</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Profilinizde öne çıkan yatay görsel
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <MediaUploadButton
-                mediaType="COVER"
-                label={cover ? "Kapağı Değiştir" : "Kapak Yükle"}
-                size="sm"
-              />
-              {cover && (
-                <DeleteMediaButton mediaId={cover.id} label="Kaldır" size="sm" />
-              )}
-            </div>
+    <section className="overflow-hidden rounded-lg border bg-card">
+      <div className="relative h-36 bg-muted sm:h-44 lg:h-52">
+        {coverUrl ? (
+          <Image
+            src={coverUrl}
+            alt={`${business.name} kapak görseli`}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1100px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-surface-cream text-muted-foreground">
+            <ImageIcon className="size-8" />
           </div>
-        </CardHeader>
-        <CardContent>
-          {cover ? (
-            <div className="relative h-44 overflow-hidden rounded-lg sm:h-56 lg:h-64">
-              <Image
-                src={cover.url}
-                alt="Cover"
-                fill
-                sizes="(max-width: 768px) 100vw, 1024px"
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="flex h-44 items-center justify-center rounded-lg border-2 border-dashed bg-muted/40 sm:h-56 lg:h-64">
-              <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground">
-                <ImageIcon className="size-8" />
-                16:9 kapak görseli yükleyin
+        )}
+        <div className="absolute right-3 top-3 flex flex-wrap gap-2">
+          <MediaUploadButton
+            mediaType="COVER"
+            label={coverUrl ? "Kapak değiştir" : "Kapak ekle"}
+            size="sm"
+            variant="outline"
+          />
+          {cover && (
+            <DeleteMediaButton mediaId={cover.id} label="Kaldır" size="sm" />
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 pb-5 pt-0 sm:px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 gap-4">
+            <div className="-mt-10 shrink-0">
+              <div className="relative size-24 overflow-hidden rounded-full border-4 border-card bg-muted sm:size-28">
+                {logoUrl ? (
+                  <Image
+                    src={logoUrl}
+                    alt={`${business.name} logosu`}
+                    fill
+                    sizes="112px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center">
+                    <UserRound className="size-9 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className="mt-2">
+                <MediaUploadButton
+                  mediaType="LOGO"
+                  label={logoUrl ? "Logo değiştir" : "Logo ekle"}
+                  size="sm"
+                  variant="outline"
+                />
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="min-w-0 pt-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="truncate text-2xl font-semibold tracking-normal">
+                  {business.name}
+                </h1>
+                {categoryLine && (
+                  <Badge variant="secondary" className="max-w-full truncate">
+                    {categoryLine}
+                  </Badge>
+                )}
+              </div>
+              {location && (
+                <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                  <MapPin className="size-3.5" />
+                  {location}
+                </p>
+              )}
+              {business.description && (
+                <p className="mt-2 line-clamp-2 max-w-2xl text-sm text-muted-foreground">
+                  {business.description}
+                </p>
+              )}
+              <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                <span>
+                  <strong>{portfolioCount}</strong> paylaşım
+                </span>
+                <span>
+                  <strong>{business.serviceCount}</strong> hizmet
+                </span>
+                <span>
+                  <strong>{business.reviewCount}</strong> yorum
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Star className="size-3.5 fill-current" />
+                  <strong>{formatRating(business.rating)}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 sm:pb-1">
+            <Link
+              href="/business/profile"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              Profili düzenle
+            </Link>
+            <Link
+              href={`/b/${business.slug}`}
+              target="_blank"
+              className={cn(buttonVariants({ variant: "default", size: "sm" }))}
+            >
+              <Eye className="size-3.5" />
+              Canlı profili gör
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProfileHighlights({
+  services,
+}: {
+  services: ServiceOption[];
+}) {
+  const highlights = [
+    ...services.slice(0, 4).map((service) => ({
+      id: service.id,
+      label: service.name,
+      icon: Scissors,
+      mediaType: "SERVICE_IMAGE" as const,
+    })),
+    {
+      id: "before-after",
+      label: "Önce/Sonra",
+      icon: ImageIcon,
+      mediaType: "BEFORE_AFTER" as const,
+    },
+  ];
+
+  return (
+    <div className="flex gap-4 overflow-x-auto rounded-lg border bg-card px-4 py-4 sm:px-6">
+      {highlights.map((item) => {
+        const Icon = item.icon;
+        return (
+          <div key={item.id} className="flex w-20 shrink-0 flex-col items-center gap-2">
+            <div className="flex size-16 items-center justify-center rounded-full border bg-muted/30">
+              <Icon className="size-6 text-muted-foreground" />
+            </div>
+            <span className="line-clamp-2 text-center text-xs font-medium">
+              {item.label}
+            </span>
+          </div>
+        );
+      })}
+      <div className="flex w-20 shrink-0 flex-col items-center gap-2">
+        <div className="flex size-16 items-center justify-center rounded-full border border-dashed bg-muted/30">
+          <MediaUploadButton
+            mediaType="PORTFOLIO_IMAGE"
+            label=""
+            size="icon"
+            variant="ghost"
+          />
+        </div>
+        <span className="text-center text-xs font-medium">Yeni</span>
+      </div>
+    </div>
+  );
+}
+
+function AddMediaTile() {
+  return (
+    <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/20 p-3 text-center">
+      <div className="flex size-12 items-center justify-center rounded-full border bg-background">
+        <Plus className="size-6 text-muted-foreground" />
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        <MediaUploadButton
+          mediaType="PORTFOLIO_IMAGE"
+          label="Fotoğraf"
+          size="sm"
+          variant="outline"
+        />
+        <MediaUploadButton
+          mediaType="PORTFOLIO_VIDEO"
+          label="Video"
+          size="sm"
+          variant="outline"
+        />
+      </div>
     </div>
   );
 }
@@ -415,17 +598,20 @@ function DeleteMediaButton({
 // ─── Main Grid ──────────────────────────────────────────────────
 
 export function MediaGrid({
+  business,
   media,
   imageCount,
   videoCount,
   services,
 }: {
+  business: BusinessProfileSummary;
   media: BusinessMediaItem[];
   imageCount: number;
   videoCount: number;
   services: ServiceOption[];
 }) {
   const cover = media.find((m) => m.type === "COVER");
+  const logo = media.find((m) => m.type === "LOGO");
 
   const portfolioMedia = media.filter(
     (m) => m.type !== "COVER" && m.type !== "LOGO"
@@ -434,20 +620,34 @@ export function MediaGrid({
   const videos = portfolioMedia.filter((m) => m.type === "PORTFOLIO_VIDEO");
 
   return (
-    <div className="space-y-5">
-      {/* Cover & Logo */}
-      <CoverLogoSection cover={cover} />
+    <div className="space-y-4">
+      <ProfileHero
+        business={business}
+        cover={cover}
+        logo={logo}
+        portfolioCount={portfolioMedia.length}
+      />
 
-      {/* Portfolio */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-1">
-              <CardTitle>Portfolyo</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Fotoğraf, video, önce/sonra ve hizmet görsellerini yönetin.
-              </p>
-            </div>
+      <ProfileHighlights services={services} />
+
+      <section className="rounded-lg border bg-card">
+        <Tabs defaultValue="all">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
+            <TabsList>
+              <TabsTrigger value="all">
+                <Grid3X3 className="size-4" />
+                Tümü
+              </TabsTrigger>
+              <TabsTrigger value="images">
+                <ImageIcon className="size-4" />
+                Fotoğraflar
+              </TabsTrigger>
+              <TabsTrigger value="videos">
+                <Film className="size-4" />
+                Videolar
+              </TabsTrigger>
+            </TabsList>
+
             <div className="flex items-center gap-3 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <ImageIcon className="size-3" />
@@ -459,74 +659,36 @@ export function MediaGrid({
               </span>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Tabs */}
-          <Tabs defaultValue="all">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <TabsList>
-                <TabsTrigger value="all">
-                  Tümü ({portfolioMedia.length})
-                </TabsTrigger>
-                <TabsTrigger value="images">
-                  Fotoğraflar ({images.length})
-                </TabsTrigger>
-                <TabsTrigger value="videos">
-                  Videolar ({videos.length})
-                </TabsTrigger>
-              </TabsList>
 
-              <div className="flex flex-wrap gap-2">
-                <MediaUploadButton
-                  mediaType="PORTFOLIO_IMAGE"
-                  label="Fotoğraf Yükle"
-                  size="sm"
-                />
-                <MediaUploadButton
-                  mediaType="PORTFOLIO_VIDEO"
-                  label="Video Yükle"
-                  size="sm"
-                />
-                <MediaUploadButton
-                  mediaType="BEFORE_AFTER"
-                  label="Önce/Sonra"
-                  size="sm"
-                />
-                <MediaUploadButton
-                  mediaType="SERVICE_IMAGE"
-                  label="Hizmet görseli"
-                  size="sm"
-                />
-              </div>
-            </div>
-
-            <TabsContent value="all" className="mt-4">
-              <PortfolioGrid
-                items={portfolioMedia}
-                services={services}
-                emptyHeadline="Henüz portfolyo içeriği yok"
-                emptyDescription="Portfolyonuzu oluşturmak için fotoğraf, video veya önce/sonra görseli yükleyin."
-              />
-            </TabsContent>
-            <TabsContent value="images" className="mt-4">
-              <PortfolioGrid
-                items={images}
-                services={services}
-                emptyHeadline="Henüz fotoğraf yok"
-                emptyDescription="Çalışmalarınızı sergilemek için portfolyo fotoğrafları yükleyin."
-              />
-            </TabsContent>
-            <TabsContent value="videos" className="mt-4">
-              <PortfolioGrid
-                items={videos}
-                services={services}
-                emptyHeadline="Henüz video yok"
-                emptyDescription="Çalışmalarınızı göstermek için kısa videolar yükleyin."
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+          <TabsContent value="all" className="m-0 p-4 sm:p-6">
+            <PortfolioGrid
+              items={portfolioMedia}
+              services={services}
+              showAddTile
+              emptyHeadline="Fotoğraflar paylaş"
+              emptyDescription="Paylaştığın fotoğraf ve videolar profilinde görünür."
+            />
+          </TabsContent>
+          <TabsContent value="images" className="m-0 p-4 sm:p-6">
+            <PortfolioGrid
+              items={images}
+              services={services}
+              showAddTile
+              emptyHeadline="İlk fotoğrafını paylaş"
+              emptyDescription="Çalışmalarını müşterilerin gördüğü profil grid'inde sergile."
+            />
+          </TabsContent>
+          <TabsContent value="videos" className="m-0 p-4 sm:p-6">
+            <PortfolioGrid
+              items={videos}
+              services={services}
+              showAddTile
+              emptyHeadline="İlk videonu paylaş"
+              emptyDescription="Kısa videolar profilini daha canlı gösterir."
+            />
+          </TabsContent>
+        </Tabs>
+      </section>
     </div>
   );
 }
@@ -534,28 +696,39 @@ export function MediaGrid({
 function PortfolioGrid({
   items,
   services,
+  showAddTile = false,
   emptyHeadline,
   emptyDescription,
 }: {
   items: BusinessMediaItem[];
   services: ServiceOption[];
+  showAddTile?: boolean;
   emptyHeadline: string;
   emptyDescription: string;
 }) {
   if (items.length === 0) {
     return (
-      <EmptyState
-        icon={ImageIcon}
-        headline={emptyHeadline}
-        description={emptyDescription}
-        surface="cream"
-        compact
-      />
+      <div className="flex min-h-72 flex-col items-center justify-center gap-4 text-center">
+        <div className="flex size-20 items-center justify-center rounded-full border">
+          <Camera className="size-9" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold">{emptyHeadline}</h2>
+          <p className="text-sm text-muted-foreground">{emptyDescription}</p>
+        </div>
+        <MediaUploadButton
+          mediaType="PORTFOLIO_IMAGE"
+          label="İlk fotoğrafını paylaş"
+          variant="ghost"
+          size="sm"
+        />
+      </div>
     );
   }
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {showAddTile && <AddMediaTile />}
       {items.map((item) => (
         <MediaItemCard key={item.id} media={item} services={services} />
       ))}
