@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { accountNavItems } from "./account-nav-items";
 
-export function AccountMobileNav() {
+export function AccountTopNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/96 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-10px_30px_oklch(0.16_0.09_285_/_0.10)] backdrop-blur md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+    <nav className="hidden md:block sticky top-[4.5rem] z-40 border-b border-border bg-surface-cream">
+      <div className="container mx-auto flex items-center gap-1 overflow-x-auto px-4 md:px-6">
         {accountNavItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -22,15 +22,14 @@ export function AccountMobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] font-medium leading-none transition-colors",
+                "flex items-center gap-2 border-b-2 -mb-px px-4 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-brand-pink/15 text-brand-pink-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  ? "border-brand-pink-foreground bg-brand-pink/10 text-brand-pink-foreground"
+                  : "border-transparent text-muted-foreground hover:bg-accent/50 hover:text-foreground"
               )}
             >
-              <Icon className="size-4 shrink-0" />
+              <Icon className="size-4" />
               <span>{item.title}</span>
             </Link>
           );

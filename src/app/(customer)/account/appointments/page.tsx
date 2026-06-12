@@ -12,7 +12,7 @@ export default async function AppointmentsPage() {
   const appointments = await getCustomerAppointments(user.id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Randevularım</h1>
         <p className="text-muted-foreground">

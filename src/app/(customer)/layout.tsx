@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { AccountMobileNav } from "@/components/account/account-mobile-nav";
-import { AccountSidebarNav } from "@/components/account/account-sidebar-nav";
+import { AccountTopNav } from "@/components/account/account-top-nav";
 import { LocaleReconciler } from "@/components/layout/locale-reconciler";
 import { db } from "@/lib/db";
 import { privateRobots } from "@/lib/seo";
@@ -28,15 +28,13 @@ export default async function CustomerLayout({
   return (
     <>
       <LocaleReconciler dbLocale={prefs?.locale ?? null} />
-      <Navbar />
-      <div className="container mx-auto flex-1 px-4 pt-8 pb-24 md:pb-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          <aside className="hidden md:block w-56 shrink-0">
-            <AccountSidebarNav />
-          </aside>
-          <main className="flex-1 min-w-0">{children}</main>
+      <Navbar hideExploreLinks />
+      <AccountTopNav />
+      <main className="flex-1 bg-surface-cream">
+        <div className="container mx-auto px-4 py-6 pb-24 md:py-8 md:pb-10">
+          {children}
         </div>
-      </div>
+      </main>
       <AccountMobileNav />
     </>
   );

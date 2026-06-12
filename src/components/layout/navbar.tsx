@@ -14,9 +14,10 @@ import type { Locale } from "@/lib/i18n-config";
 
 interface NavbarProps {
   locale?: Locale;
+  hideExploreLinks?: boolean;
 }
 
-export async function Navbar({ locale = "tr" }: NavbarProps) {
+export async function Navbar({ locale = "tr", hideExploreLinks = false }: NavbarProps) {
   const [user, dict] = await Promise.all([
     getCurrentUser(),
     getDictionary(locale),
@@ -70,12 +71,14 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
           <span className="text-xl font-bold tracking-tight">UrGlowUp</span>
         </Link>
 
-        <NavLinks
-          links={[
-            { label: dict.nav.explore, href: p("/explore") },
-            { label: dict.nav.forBusiness, href: businessHref },
-          ]}
-        />
+        {!hideExploreLinks && (
+          <NavLinks
+            links={[
+              { label: dict.nav.explore, href: p("/explore") },
+              { label: dict.nav.forBusiness, href: businessHref },
+            ]}
+          />
+        )}
 
         <div className="flex items-center gap-2">
           <div className="hidden lg:block">
@@ -125,6 +128,7 @@ export async function Navbar({ locale = "tr" }: NavbarProps) {
             signUpLabel={dict.nav.signUp}
             accountLabel={dict.nav.account}
             isLoggedIn={!!user}
+            hideMarketingLinks={hideExploreLinks}
           />
         </div>
       </div>

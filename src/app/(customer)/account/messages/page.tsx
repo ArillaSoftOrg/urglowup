@@ -15,7 +15,7 @@ export default function MessagesPage() {
   const thread = selectedId ? (THREADS[selectedId] ?? null) : null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Mesajlar</h1>
         <Badge variant="secondary" className="text-xs">Yakında</Badge>

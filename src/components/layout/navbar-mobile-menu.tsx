@@ -27,6 +27,7 @@ interface NavbarMobileMenuProps {
   signUpLabel: string;
   accountLabel: string;
   isLoggedIn?: boolean;
+  hideMarketingLinks?: boolean;
 }
 
 export function NavbarMobileMenu({
@@ -41,6 +42,7 @@ export function NavbarMobileMenu({
   signUpLabel,
   accountLabel,
   isLoggedIn = false,
+  hideMarketingLinks = false,
 }: NavbarMobileMenuProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "/";
@@ -50,13 +52,15 @@ export function NavbarMobileMenu({
   }
 
   const customerLinks = isLoggedIn
-    ? [
-        { label: accountLabel, href: "/account" },
-        { label: exploreLabel, href: exploreHref },
-      ]
+    ? hideMarketingLinks
+      ? [{ label: accountLabel, href: "/account" }]
+      : [
+          { label: accountLabel, href: "/account" },
+          { label: exploreLabel, href: exploreHref },
+        ]
     : [
         { label: `${signInLabel} / ${signUpLabel}`, href: "/login", isAccent: true },
-        { label: exploreLabel, href: exploreHref },
+        ...(hideMarketingLinks ? [] : [{ label: exploreLabel, href: exploreHref }]),
       ];
 
   const businessLinks =
@@ -109,17 +113,19 @@ export function NavbarMobileMenu({
             ))}
           </MenuSection>
 
-          <MenuSection title={businessLabel}>
-            {businessLinks.map((link) => (
-              <MenuLink
-                key={`${link.href}-${link.label}`}
-                href={link.href}
-                label={link.label}
-                active={isActive(link.href)}
-                onClick={() => setOpen(false)}
-              />
-            ))}
-          </MenuSection>
+          {!hideMarketingLinks && (
+            <MenuSection title={businessLabel}>
+              {businessLinks.map((link) => (
+                <MenuLink
+                  key={`${link.href}-${link.label}`}
+                  href={link.href}
+                  label={link.label}
+                  active={isActive(link.href)}
+                  onClick={() => setOpen(false)}
+                />
+              ))}
+            </MenuSection>
+          )}
 
           <div className="border-t border-border/70 pt-5">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold">

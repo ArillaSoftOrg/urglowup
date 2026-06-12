@@ -80,7 +80,7 @@ export default async function AccountPage() {
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Hesabım</h1>
         <p className="text-muted-foreground">
@@ -200,7 +200,7 @@ export default async function AccountPage() {
             <Card className="transition-colors group-hover:bg-accent/50">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-pink/10 text-brand-pink-foreground">
                     <link.icon className="size-4" />
                   </div>
                   <div>
