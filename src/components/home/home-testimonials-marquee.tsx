@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { Star } from "lucide-react";
 
 const testimonials = [
@@ -99,6 +102,14 @@ const testimonials = [
   },
 ];
 
+function normalizeOffset(offset: number, width: number) {
+  if (width <= 0) {
+    return offset;
+  }
+
+  return ((offset % width) + width) % width;
+}
+
 function TestimonialCard({
   name,
   text,
@@ -107,7 +118,7 @@ function TestimonialCard({
   text: string;
 }) {
   return (
-    <article className="flex h-56 w-[18rem] shrink-0 flex-col justify-between rounded-lg border border-border/70 bg-card p-5 shadow-xs md:h-52 md:w-[20rem]">
+    <article className="flex h-56 w-[18rem] shrink-0 cursor-grab select-none flex-col justify-between rounded-lg border border-border/70 bg-card p-5 shadow-xs active:cursor-grabbing md:h-52 md:w-[20rem]">
       <div>
         <div className="flex gap-1 text-foreground" aria-label="5 yıldız">
           {Array.from({ length: 5 }).map((_, index) => (
@@ -135,15 +146,114 @@ function TestimonialRow({
   items: typeof testimonials;
   reverse?: boolean;
 }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const rowWidthRef = useRef(0);
+  const offsetRef = useRef(0);
+  const lastFrameRef = useRef<number | null>(null);
+  const dragStartRef = useRef({ offset: 0, x: 0 });
+  const [isPaused, setIsPaused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const repeatedItems = [...items, ...items];
 
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) {
+      return;
+    }
+
+    const updateWidth = () => {
+      rowWidthRef.current = track.scrollWidth / 2;
+    };
+
+    updateWidth();
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(track);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let frame = 0;
+
+    const tick = (time: number) => {
+      const previousTime = lastFrameRef.current ?? time;
+      const delta = time - previousTime;
+      const width = rowWidthRef.current;
+      lastFrameRef.current = time;
+
+      if (!isPaused && !isDragging && width > 0) {
+        const direction = reverse ? 1 : -1;
+        offsetRef.current = normalizeOffset(
+          offsetRef.current + direction * delta * 0.035,
+          width
+        );
+      }
+
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
+      }
+
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(frame);
+  }, [isDragging, isPaused, reverse]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragStartRef.current = {
+      offset: offsetRef.current,
+      x: event.clientX,
+    };
+    lastFrameRef.current = null;
+    setIsPaused(true);
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) {
+      return;
+    }
+
+    const width = rowWidthRef.current;
+    const dragDistance = event.clientX - dragStartRef.current.x;
+    offsetRef.current = normalizeOffset(
+      dragStartRef.current.offset - dragDistance,
+      width
+    );
+  };
+
+  const stopDragging = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    lastFrameRef.current = null;
+    setIsDragging(false);
+    setIsPaused(false);
+  };
+
   return (
-    <div className="home-testimonials-mask overflow-hidden">
+    <div
+      className="home-testimonials-mask overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => {
+        if (!isDragging) {
+          lastFrameRef.current = null;
+          setIsPaused(false);
+        }
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={stopDragging}
+      onPointerCancel={stopDragging}
+    >
       <div
-        className={[
-          "home-testimonials-track flex w-max gap-4 py-2",
-          reverse ? "home-testimonials-track-reverse" : "",
-        ].join(" ")}
+        ref={trackRef}
+        className="flex w-max touch-pan-y gap-4 py-2 will-change-transform"
       >
         {repeatedItems.map((testimonial, index) => (
           <div

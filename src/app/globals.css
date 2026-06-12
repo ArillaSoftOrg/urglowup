@@ -247,15 +247,6 @@
   }
 }
 
-@keyframes home-testimonials-scroll {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(calc(-50% - 0.5rem), 0, 0);
-  }
-}
-
 .home-testimonials-mask {
   mask-image: linear-gradient(
     90deg,
@@ -264,23 +255,4 @@
     oklch(0 0 0) 92%,
     transparent
   );
-}
-
-.home-testimonials-track {
-  animation: home-testimonials-scroll 54s linear infinite;
-}
-
-.home-testimonials-track-reverse {
-  animation-direction: reverse;
-}
-
-.home-testimonials-mask:hover .home-testimonials-track {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-testimonials-track {
-    animation-duration: 1ms;
-    animation-iteration-count: 1;
-  }
 }
