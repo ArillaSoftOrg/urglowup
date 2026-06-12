@@ -10,7 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ProfileForm } from "@/components/account/profile-form";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, Star, Settings } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = { title: "Profil" };
@@ -89,6 +89,40 @@ export default async function ProfilePage() {
                 {user.serviceAddress
                   ? user.serviceAddress
                   : "Eve veya konumunuza servis için adres ekleyin."}
+              </p>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground shrink-0" />
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Link href="/account/reviews" className="group block">
+        <Card className="transition-colors group-hover:bg-accent/50">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Star className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Yorumlarım</p>
+              <p className="text-xs text-muted-foreground">
+                Geçmiş randevularınız için bıraktığınız değerlendirmeler.
+              </p>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground shrink-0" />
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Link href="/account/settings" className="group block">
+        <Card className="transition-colors group-hover:bg-accent/50">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Settings className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Ayarlar</p>
+              <p className="text-xs text-muted-foreground">
+                Hesap ve bildirim tercihlerinizi yönetin.
               </p>
             </div>
             <ArrowRight className="size-4 text-muted-foreground shrink-0" />

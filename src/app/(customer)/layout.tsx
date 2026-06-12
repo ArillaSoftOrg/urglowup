@@ -29,11 +29,7 @@ export default async function CustomerLayout({
     <>
       <LocaleReconciler dbLocale={prefs?.locale ?? null} />
       <Navbar />
-      <div className="container mx-auto flex-1 px-4 py-8">
-        <div className="md:hidden mb-4 flex items-center gap-2">
-          <AccountMobileNav />
-          <span className="text-sm font-medium text-muted-foreground">Hesabım</span>
-        </div>
+      <div className="container mx-auto flex-1 px-4 pt-8 pb-24 md:pb-8">
         <div className="flex flex-col md:flex-row gap-8">
           <aside className="hidden md:block w-56 shrink-0">
             <AccountSidebarNav />
@@ -41,6 +37,7 @@ export default async function CustomerLayout({
           <main className="flex-1 min-w-0">{children}</main>
         </div>
       </div>
+      <AccountMobileNav />
     </>
   );
 }

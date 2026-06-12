@@ -1,64 +1,41 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { accountNavItems } from "./account-nav-items";
+import { accountMobileNavItems } from "./account-mobile-nav-items";
 
 export function AccountMobileNav() {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={
-          <Button variant="ghost" size="icon" aria-label="Hesap menüsünü aç" />
-        }
-      >
-        <Menu className="size-5" />
-      </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0">
-        <div className="flex items-center gap-2 border-b p-4">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10">
-            <User className="size-4 text-primary" />
-          </span>
-          <SheetTitle className="text-base font-bold tracking-tight">
-            Hesabım
-          </SheetTitle>
-        </div>
-        <nav className="flex flex-col gap-0.5 p-3">
-          {accountNavItems.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                )}
-              >
-                <Icon className="size-4 shrink-0" />
-                {item.title}
-              </Link>
-            );
-          })}
-        </nav>
-      </SheetContent>
-    </Sheet>
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/96 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-10px_30px_oklch(0.16_0.09_285_/_0.10)] backdrop-blur md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+        {accountMobileNavItems.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            item.href === "/account"
+              ? pathname === "/account"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[11px] font-medium leading-none transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
+            >
+              <Icon className="size-4 shrink-0" />
+              <span>{item.title}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
