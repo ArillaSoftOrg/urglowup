@@ -27,7 +27,7 @@ export default async function BusinessLayout({
   return (
     <div className="min-h-screen flex flex-col bg-[oklch(0.985_0.012_285)]">
       <BusinessSidebar memberRole={member.role} />
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         <div className="mx-auto w-full max-w-[1500px] px-4 py-7 md:px-8 lg:px-10">
           {children}
         </div>

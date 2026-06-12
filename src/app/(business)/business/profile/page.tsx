@@ -1,10 +1,37 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  Clock,
+  ImageIcon,
+  Link2,
+  LogOut,
+  Plug,
+  Scissors,
+  Settings,
+  Star,
+  Users2,
+  LayoutGrid,
+} from "lucide-react";
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { signOutAction } from "@/app/(auth)/actions";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { ProfileEditForm } from "@/components/business/profile-edit-form";
+import { Button } from "@/components/ui/button";
 
-export const metadata = { title: "İşletme Profili" };
+export const metadata = { title: "Profil" };
+
+const profileSections = [
+  { title: "Hizmetler", href: "/business/services", icon: Scissors },
+  { title: "Vitrin", href: "/business/media", icon: ImageIcon },
+  { title: "Gönderiler", href: "/business/posts", icon: LayoutGrid },
+  { title: "Çalışma Saatleri", href: "/business/hours", icon: Clock },
+  { title: "Değerlendirmeler", href: "/business/reviews", icon: Star },
+  { title: "Ekip", href: "/business/team", icon: Users2 },
+  { title: "Randevu Linki", href: "/business/public-link", icon: Link2 },
+  { title: "Entegrasyonlar", href: "/business/integrations", icon: Plug },
+  { title: "Ayarlar", href: "/business/settings", icon: Settings },
+];
 
 export default async function ProfilePage() {
   const { businessId } = await requireBusiness("MANAGER");
@@ -48,10 +75,33 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6">
       <BusinessPageHeader
-        title="İşletme Profili"
-        description="Herkese açık işletme bilgilerinizi güncelleyin."
+        title="Profil"
+        description="İşletme vitrininizi, hizmetlerinizi ve yönetim ayarlarınızı buradan düzenleyin."
       />
+      <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {profileSections.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-cream"
+            >
+              <span className="flex size-9 items-center justify-center rounded-lg bg-brand-pink/12 text-brand-pink-foreground">
+                <Icon className="size-4" />
+              </span>
+              {item.title}
+            </Link>
+          );
+        })}
+      </section>
       <ProfileEditForm business={profileData} />
+      <form action={signOutAction}>
+        <Button type="submit" variant="destructive">
+          <LogOut className="size-4" />
+          Çıkış Yap
+        </Button>
+      </form>
     </div>
   );
 }
