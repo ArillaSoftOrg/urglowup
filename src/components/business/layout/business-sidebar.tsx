@@ -30,8 +30,8 @@ export function BusinessSidebar({
   const visibleNavItems = businessNavItems.filter((item) =>
     meetsMinRole(memberRole, item.minRole ?? BusinessMemberRole.STAFF)
   );
-  const topNavItems = visibleNavItems.filter((item) =>
-    TOP_NAV_HREFS.includes(item.href)
+  const topNavItems = TOP_NAV_HREFS.flatMap((href) =>
+    visibleNavItems.filter((item) => item.href === href)
   );
 
   return (

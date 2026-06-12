@@ -21,10 +21,11 @@ export function BusinessMobileNav({
   memberRole: BusinessMemberRole;
 }) {
   const pathname = usePathname();
-  const mobileNavItems = businessNavItems.filter(
-    (item) =>
-      MOBILE_NAV_HREFS.includes(item.href) &&
-      meetsMinRole(memberRole, item.minRole ?? BusinessMemberRole.STAFF)
+  const visibleNavItems = businessNavItems.filter((item) =>
+    meetsMinRole(memberRole, item.minRole ?? BusinessMemberRole.STAFF)
+  );
+  const mobileNavItems = MOBILE_NAV_HREFS.flatMap((href) =>
+    visibleNavItems.filter((item) => item.href === href)
   );
 
   return (
