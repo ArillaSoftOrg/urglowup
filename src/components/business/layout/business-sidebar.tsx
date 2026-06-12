@@ -7,6 +7,7 @@ import {
   Bell,
   ChevronDown,
   LogOut,
+  Settings,
   Sparkles,
   User,
 } from "lucide-react";
@@ -26,7 +27,6 @@ const TOP_NAV_HREFS = [
 ];
 
 const DROPDOWN_HREFS = [
-  "/business/profile",
   "/business/hours",
   "/business/reviews",
   "/business/team",
@@ -41,6 +41,7 @@ export function BusinessSidebar({
   memberRole: BusinessMemberRole;
 }) {
   const pathname = usePathname();
+  const [managementMenuOpen, setManagementMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -105,10 +106,61 @@ export function BusinessSidebar({
           <div className="relative hidden md:block">
             <button
               type="button"
+              className="flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold text-business-nav-muted ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-business-nav-fg"
+              aria-label="Yönetim menüsü"
+              aria-expanded={managementMenuOpen}
+              onClick={() => {
+                setManagementMenuOpen((open) => !open);
+                setAccountMenuOpen(false);
+              }}
+            >
+              <Settings className="size-4" />
+              <span className="hidden lg:inline">Yönetim</span>
+              <ChevronDown className="size-3.5" />
+            </button>
+
+            {managementMenuOpen && (
+              <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-72 rounded-xl border border-border bg-popover p-2 text-popover-foreground shadow-lg">
+                <p className="px-2 py-2 text-xs font-medium text-muted-foreground">
+                  İşletme yönetimi
+                </p>
+                <div className="my-1 h-px bg-border" />
+                <div className="space-y-1">
+                  {dropdownItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive =
+                      pathname === item.href ||
+                      pathname.startsWith(item.href + "/");
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setManagementMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                          isActive && "bg-accent text-accent-foreground"
+                        )}
+                      >
+                        <Icon className="size-4 text-muted-foreground" />
+                        {item.title}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative hidden md:block">
+            <button
+              type="button"
               className="flex h-10 items-center gap-2 rounded-full bg-white/10 pl-1.5 pr-3 text-business-nav-fg ring-1 ring-white/10 transition-colors hover:bg-white/15"
               aria-label="Hesap menüsü"
               aria-expanded={accountMenuOpen}
-              onClick={() => setAccountMenuOpen((open) => !open)}
+              onClick={() => {
+                setAccountMenuOpen((open) => !open);
+                setManagementMenuOpen(false);
+              }}
             >
               <span className="flex size-7 items-center justify-center rounded-full bg-[oklch(0.88_0.07_345)] text-[oklch(0.30_0.08_285)]">
                 <User className="size-4" />
@@ -125,25 +177,17 @@ export function BusinessSidebar({
             {accountMenuOpen && (
               <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-72 rounded-xl border border-border bg-popover p-2 text-popover-foreground shadow-lg">
                 <p className="px-2 py-2 text-xs font-medium text-muted-foreground">
-                  Yönetim
+                  Hesap
                 </p>
                 <div className="my-1 h-px bg-border" />
-                <div className="space-y-1">
-                  {dropdownItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setAccountMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                      >
-                        <Icon className="size-4 text-muted-foreground" />
-                        {item.title}
-                      </Link>
-                    );
-                  })}
-                </div>
+                <Link
+                  href="/business/profile"
+                  onClick={() => setAccountMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                >
+                  <User className="size-4 text-muted-foreground" />
+                  Profil
+                </Link>
                 <div className="my-1 h-px bg-border" />
                 <button
                   type="button"
