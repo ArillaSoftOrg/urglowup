@@ -2,100 +2,100 @@ import { Star } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Ayse K.",
-    text: "Randevu saatlerimi toparlamak cok kolaylasti. Musterilerim de online rezervasyonu hemen benimsedi.",
+    name: "Ayşe K.",
+    text: "Randevu saatlerimi toparlamak çok kolaylaştı. Müşterilerim de online rezervasyonu hemen benimsedi.",
   },
   {
-    name: "Elifnur",
-    text: "Gun icinde mesajlara yetismek yerine takvimden her seyi net gorebiliyorum.",
+    name: "Elif N.",
+    text: "Gün içinde mesajlara yetişmek yerine takvimden her şeyi net görebiliyorum.",
   },
   {
-    name: "Zeynep_Studio",
-    text: "Yeni basladim ama daha ilk haftadan is akisim daha duzenli hale geldi.",
+    name: "Zeynep S.",
+    text: "Yeni başladım ama daha ilk haftadan iş akışım daha düzenli hale geldi.",
   },
   {
     name: "Merve A.",
-    text: "Musterilerimin tekrar randevu almasi cok daha pratik oldu. Bu kisim gercekten isimi rahatlatti.",
+    text: "Müşterilerimin tekrar randevu alması çok daha pratik oldu. Bu kısım gerçekten işimi rahatlattı.",
   },
   {
-    name: "DeryaBeauty",
-    text: "Takvim, hizmetler ve musteri bilgileri tek yerde olunca gun sonunda daha az yoruluyorum.",
+    name: "Derya B.",
+    text: "Takvim, hizmetler ve müşteri bilgileri tek yerde olunca gün sonunda daha az yoruluyorum.",
   },
   {
-    name: "Seda_lash",
-    text: "Bos saatlerimi doldurmak ve gelen talepleri takip etmek artik daha kolay.",
+    name: "Seda L.",
+    text: "Boş saatlerimi doldurmak ve gelen talepleri takip etmek artık daha kolay.",
   },
   {
-    name: "Buse N.",
-    text: "Profilim daha profesyonel gorunuyor. Musterilerim randevu alirken daha guvende hissediyor.",
+    name: "Büşra N.",
+    text: "Profilim daha profesyonel görünüyor. Müşterilerim randevu alırken daha güvende hissediyor.",
   },
   {
-    name: "Gizem",
-    text: "Hatirlatmalar sayesinde unutulan randevular azaldi. Benim icin en buyuk fark bu oldu.",
+    name: "Gizem T.",
+    text: "Hatırlatmalar sayesinde unutulan randevular azaldı. Benim için en büyük fark bu oldu.",
   },
   {
-    name: "NisaCare",
-    text: "Kullanimi sade ve hizli. Ekibim hic zorlanmadan alisti.",
+    name: "Nisa C.",
+    text: "Kullanımı sade ve hızlı. Ekibim hiç zorlanmadan alıştı.",
   },
   {
-    name: "Melis_35",
-    text: "Gunluk yogunlukta kontrol bende kaliyor. Hangi musterim ne zaman geliyor hemen goruyorum.",
+    name: "Melis Y.",
+    text: "Günlük yoğunlukta kontrol bende kalıyor. Hangi müşterim ne zaman geliyor hemen görüyorum.",
   },
   {
-    name: "Ece Hair",
-    text: "Musteri kayitlari ve randevular daginik durmuyordu ama simdi cok daha temiz ilerliyor.",
+    name: "Ece H.",
+    text: "Müşteri kayıtları ve randevular dağınık duruyordu ama şimdi çok daha temiz ilerliyor.",
   },
   {
-    name: "Cansu",
-    text: "Instagramdan gelen talepleri kacirmamak icin iyi bir toparlayici oldu.",
+    name: "Cansu E.",
+    text: "Instagram'dan gelen talepleri kaçırmamak için iyi bir toparlayıcı oldu.",
   },
   {
-    name: "Yagmur B.",
-    text: "Randevu almak isteyenlere link gonderiyorum, gerisini sistem hallediyor.",
+    name: "Yağmur B.",
+    text: "Randevu almak isteyenlere link gönderiyorum, gerisini sistem hallediyor.",
   },
   {
-    name: "SelinNails",
-    text: "Hizmetlerimi duzenlemek ve sureleri takip etmek cok daha rahat.",
+    name: "Selin N.",
+    text: "Hizmetlerimi düzenlemek ve süreleri takip etmek çok daha rahat.",
   },
   {
-    name: "Irem",
-    text: "Musterilerim fiyat ve uygun saatleri gorunce daha hizli karar veriyor.",
+    name: "İrem D.",
+    text: "Müşterilerim fiyat ve uygun saatleri görünce daha hızlı karar veriyor.",
   },
   {
-    name: "Lara Skin",
-    text: "Salon yogunken bile kim ne istedi, hangi saat dolu, hepsi elimin altinda.",
+    name: "Lara S.",
+    text: "Salon yoğunken bile kim ne istedi, hangi saat dolu, hepsi elimin altında.",
   },
   {
-    name: "Eylul",
-    text: "Basit ama islevli. Gereksiz karmasa yok, bu yuzden sevdim.",
+    name: "Eylül A.",
+    text: "Basit ama işlevli. Gereksiz karmaşa yok, bu yüzden sevdim.",
   },
   {
-    name: "Hazal_Pro",
-    text: "Randevu oncesi iletisim daha duzenli oldu. Musteri deneyimi daha iyi hissettiriyor.",
+    name: "Hazal P.",
+    text: "Randevu öncesi iletişim daha düzenli oldu. Müşteri deneyimi daha iyi hissettiriyor.",
   },
   {
-    name: "Asli",
-    text: "Kendi sayfami paylasmak guzel duruyor. Daha kurumsal bir izlenim veriyor.",
+    name: "Aslı M.",
+    text: "Kendi sayfamı paylaşmak güzel duruyor. Daha kurumsal bir izlenim veriyor.",
   },
   {
-    name: "NazliBeauty",
-    text: "Yeni musterilerin beni bulmasi ve yaptigim isleri gormesi daha kolaylasti.",
+    name: "Nazlı G.",
+    text: "Yeni müşterilerin beni bulması ve yaptığım işleri görmesi daha kolaylaştı.",
   },
   {
-    name: "Beril",
-    text: "Hangi hizmet daha cok talep ediliyor takip etmek is planimi kolaylastirdi.",
+    name: "Beril C.",
+    text: "Hangi hizmet daha çok talep ediliyor takip etmek iş planımı kolaylaştırdı.",
   },
   {
-    name: "Mina",
-    text: "Randevu almak isteyenlere tek tek saat yazmak zorunda kalmiyorum.",
+    name: "Mina Ö.",
+    text: "Randevu almak isteyenlere tek tek saat yazmak zorunda kalmıyorum.",
   },
   {
-    name: "Defne Studio",
-    text: "Hem benim icin hem musteriler icin daha temiz bir sistem oldu.",
+    name: "Defne U.",
+    text: "Hem benim için hem müşteriler için daha temiz bir sistem oldu.",
   },
   {
-    name: "Tuana",
-    text: "Simdilik deneme amacli kullaniyorum ama ilk izlenimim cok iyi.",
+    name: "Tuana R.",
+    text: "Şimdilik deneme amaçlı kullanıyorum ama ilk izlenimim çok iyi.",
   },
 ];
 
@@ -109,7 +109,7 @@ function TestimonialCard({
   return (
     <article className="flex h-56 w-[18rem] shrink-0 flex-col justify-between rounded-lg border border-border/70 bg-card p-5 shadow-xs md:h-52 md:w-[20rem]">
       <div>
-        <div className="flex gap-1 text-foreground" aria-label="5 yildiz">
+        <div className="flex gap-1 text-foreground" aria-label="5 yıldız">
           {Array.from({ length: 5 }).map((_, index) => (
             <Star
               key={index}
@@ -146,7 +146,10 @@ function TestimonialRow({
         ].join(" ")}
       >
         {repeatedItems.map((testimonial, index) => (
-          <div key={`${testimonial.name}-${index}`} aria-hidden={index >= items.length}>
+          <div
+            key={`${testimonial.name}-${index}`}
+            aria-hidden={index >= items.length}
+          >
             <TestimonialCard name={testimonial.name} text={testimonial.text} />
           </div>
         ))}
