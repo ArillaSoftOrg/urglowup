@@ -113,14 +113,24 @@ export function DayCalendarView({
 
   if (professionals.length === 0) {
     return (
-      <div className="space-y-3">
-        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-sm text-muted-foreground">
-          Henüz personel eklenmedi. Randevular tek bir &quot;Genel&quot; sütununda gösterilir.{" "}
-          <Link href="/business/team" className="font-medium text-foreground underline underline-offset-2">
-            Personel ekle
-          </Link>
+      <div className="space-y-4">
+        <div className="flex flex-col items-center rounded-lg border border-dashed border-border/50 bg-muted/20 py-12 px-6 text-center">
+          <div className="space-y-3 max-w-md">
+            <h3 className="text-base font-semibold text-foreground">Takvimi kullanmaya başlamak için personel ekleyin</h3>
+            <p className="text-sm text-muted-foreground">
+              Personel ekledikten sonra, her biri için ayrı takvim sütunlarında randevuları yönetebilirsiniz.
+            </p>
+            <Link
+              href="/business/team"
+              className="inline-flex items-center justify-center rounded-md bg-brand-pink text-brand-pink-foreground px-4 py-2 text-sm font-medium hover:bg-brand-pink/90 transition-colors"
+            >
+              Personel ekle
+            </Link>
+          </div>
         </div>
-        {renderGrid()}
+        <div className="rounded-lg border border-border/50 bg-card">
+          {renderGrid()}
+        </div>
       </div>
     );
   }
@@ -212,14 +222,25 @@ export function DayCalendarView({
       };
     });
 
+    const hasAnyItems = dayAppointments.length > 0 || dayBlocked.length > 0;
+
     return (
-      <CalendarTimelineGrid
-        startHour={CALENDAR_DEFAULT_START_HOUR}
-        endHour={CALENDAR_DEFAULT_END_HOUR}
-        hourHeightPx={CALENDAR_HOUR_HEIGHT_PX}
-        columns={timelineColumns}
-        className="overflow-x-auto"
-      />
+      <div className="relative">
+        <CalendarTimelineGrid
+          startHour={CALENDAR_DEFAULT_START_HOUR}
+          endHour={CALENDAR_DEFAULT_END_HOUR}
+          hourHeightPx={CALENDAR_HOUR_HEIGHT_PX}
+          columns={timelineColumns}
+          className="overflow-x-auto"
+        />
+        {!hasAnyItems && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-gradient-to-b from-transparent to-muted/5 pointer-events-none">
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Bu gün için randevu yok</p>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 }

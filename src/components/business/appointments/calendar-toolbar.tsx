@@ -62,7 +62,7 @@ function getDateLabel(view: CalendarView, date: Date): string {
     case "week": {
       const start = startOfWeek(date, { weekStartsOn: 1 });
       const end = endOfWeek(date, { weekStartsOn: 1 });
-      return `${format(start, "d MMM", { locale: tr })} – ${format(end, "d MMM yyyy", { locale: tr })}`;
+      return `${format(start, "d MMM", { locale: tr })} - ${format(end, "d MMM yyyy", { locale: tr })}`;
     }
     case "month":
       return format(date, "MMMM yyyy", { locale: tr });
@@ -122,7 +122,7 @@ export function CalendarToolbar({
             <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tüm durumlar</SelectItem>
+            <SelectItem value="all">Tümü</SelectItem>
             {ALL_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
                 {STATUS_LABELS[status]}
@@ -137,7 +137,7 @@ export function CalendarToolbar({
               <SelectValue placeholder="Personel" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tüm personel</SelectItem>
+              <SelectItem value="all">Tümü</SelectItem>
               <SelectItem value={CALENDAR_GENERAL_COLUMN_ID}>Personel atanmadı</SelectItem>
               {professionals.map((pro) => (
                 <SelectItem key={pro.id} value={pro.id}>

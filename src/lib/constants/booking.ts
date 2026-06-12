@@ -5,7 +5,7 @@ export const MIN_ADVANCE_HOURS = 2;
 export const MAX_ADVANCE_DAYS = 60;
 export const BUSINESS_TIMEZONE = "Europe/Istanbul";
 
-/** JS Date.getDay() (0=Sunday) → Prisma DayOfWeek */
+/** JS Date.getDay() (0=Sunday) to Prisma DayOfWeek. */
 export const DAY_MAP: Record<number, DayOfWeek> = {
   0: "SUNDAY",
   1: "MONDAY",
@@ -22,21 +22,21 @@ export function getDayOfWeek(dateString: string): DayOfWeek {
   return DAY_MAP[d.getDay()];
 }
 
-/** Statuses that occupy a time slot (block other bookings) */
+/** Statuses that occupy a time slot (block other bookings). */
 export const BLOCKING_STATUSES: AppointmentStatus[] = [
   "PENDING",
   "CONFIRMED",
   "CHECKED_IN",
 ];
 
-/** Statuses considered "upcoming" for display purposes */
+/** Statuses considered "upcoming" for display purposes. */
 export const UPCOMING_STATUSES: AppointmentStatus[] = [
   "PENDING",
   "CONFIRMED",
   "CHECKED_IN",
 ];
 
-/** Terminal statuses (no further transitions allowed) */
+/** Terminal statuses (no further transitions allowed). */
 export const TERMINAL_STATUSES: AppointmentStatus[] = [
   "REJECTED",
   "CANCELLED_BY_CUSTOMER",
@@ -45,13 +45,13 @@ export const TERMINAL_STATUSES: AppointmentStatus[] = [
   "NO_SHOW",
 ];
 
-/** Statuses a customer can cancel from */
+/** Statuses a customer can cancel from. */
 export const CUSTOMER_CANCELLABLE: AppointmentStatus[] = [
   "PENDING",
   "CONFIRMED",
 ];
 
-/** Valid status transitions */
+/** Valid status transitions. */
 export const STATUS_TRANSITIONS: Record<
   AppointmentStatus,
   AppointmentStatus[]

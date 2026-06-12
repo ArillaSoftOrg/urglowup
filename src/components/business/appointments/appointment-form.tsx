@@ -109,6 +109,19 @@ export function AppointmentForm({
     [services, serviceId]
   );
 
+  const selectedServiceLabel = useMemo(() => {
+    if (!selectedService) return "";
+    const price = formatServicePrice(selectedService);
+    return `${selectedService.name} · ${selectedService.durationMinutes} dk${
+      price ? ` · ${price}` : ""
+    }`;
+  }, [selectedService]);
+
+  const selectedProfessionalLabel = useMemo(() => {
+    if (!professionalId) return "Genel (personel atanmadı)";
+    return professionals.find((pro) => pro.id === professionalId)?.displayName ?? "Personel seçin";
+  }, [professionalId, professionals]);
+
   const availableSlots = useMemo(() => {
     if (!date || !selectedService) return [];
 
@@ -256,7 +269,7 @@ export function AppointmentForm({
           <Label>Hizmet</Label>
           <Select value={serviceId} onValueChange={(v) => setServiceId(v as string)}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Hizmet seçin" />
+              <SelectValue placeholder="Hizmet seçin">{selectedServiceLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {services.map((service) => {
@@ -279,7 +292,7 @@ export function AppointmentForm({
             onValueChange={(v) => setProfessionalId(v === NO_PROFESSIONAL_VALUE ? null : (v as string))}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Personel seçin" />
+              <SelectValue placeholder="Personel seçin">{selectedProfessionalLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NO_PROFESSIONAL_VALUE}>Genel (personel atanmadı)</SelectItem>

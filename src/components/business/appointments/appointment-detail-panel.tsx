@@ -68,9 +68,14 @@ export function AppointmentDetailPanel({
 }: AppointmentDetailPanelProps) {
   if (!selection) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
-        <Calendar className="size-8 opacity-40" />
-        <p>Detaylarını görmek için bir randevu veya blokaj seçin.</p>
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+        <Calendar className="size-10 opacity-30" />
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Randevu seçin</p>
+          <p className="text-xs text-muted-foreground">
+            Takvimden bir randevu veya bloklu zaman seçerek detaylarını, müşteri bilgilerini ve durum işlemlerini burada yönetin.
+          </p>
+        </div>
       </div>
     );
   }

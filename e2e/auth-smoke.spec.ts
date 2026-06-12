@@ -105,7 +105,7 @@ test("login page shows an error for invalid credentials", async ({ page }) => {
   await page.goto("/login");
 
   await page.getByLabel("E-posta").fill("unknown-login@example.com");
-  await page.getByLabel(/^Şifre$/).fill("definitely-wrong-password");
+  await page.getByLabel(/^Şifre$/).fill("Definitely-wrong-1!");
   await page.getByRole("button", { name: "Giriş yap" }).click();
 
   await expect(
