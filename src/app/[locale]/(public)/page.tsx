@@ -12,6 +12,7 @@ import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeBusinessCTA } from "@/components/home/home-business-cta";
 import { HomeSearchPanel } from "@/components/home/home-search-panel";
+import { HomeTestimonialsMarquee } from "@/components/home/home-testimonials-marquee";
 import { getDictionary } from "@/lib/get-dictionary";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import type { Locale } from "@/lib/i18n-config";
@@ -213,6 +214,7 @@ export default async function LocaleHomePage({ params }: PageProps) {
         </div>
       </section>
 
+      <HomeTestimonialsMarquee />
 
       {activeCategories.length > 0 && (
         <section className="bg-surface-pink px-4 py-12 md:py-20">
