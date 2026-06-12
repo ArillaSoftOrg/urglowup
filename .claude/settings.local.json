@@ -104,7 +104,8 @@
       "Bash(Select-Object -First 30)",
       "Bash(env)",
       "PowerShell(Get-ChildItem Env: | Where-Object { $_.Name -match \"DATABASE|DIRECT\" } | ForEach-Object { \"$\\($_.Name\\)=$\\($_.Value.Substring\\(0,30\\)\\)...\" })",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "PowerShell(taskkill *)"
     ]
   }
 }

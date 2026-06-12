@@ -40,14 +40,6 @@ const tr = {
     title: 'Fırsatlar',
     description: 'İşletmelerden güncel kampanyalar ve fırsatlar.',
   },
-  locale: {
-    tr: 'Türkçe',
-    en: 'English',
-    de: 'Deutsch',
-    ru: 'Русский',
-    es: 'Español',
-    bg: 'Bulgarca',
-  },
   cookieConsent: {
     // Banner
     bannerTitle: 'Çerez Kullanımı',

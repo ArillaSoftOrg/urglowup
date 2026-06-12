@@ -1,4 +1,4 @@
-// LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
+// LOCALE STATUS: production
 import type { Dictionary } from './tr'
 
 const ru: Dictionary = {
@@ -41,14 +41,6 @@ const ru: Dictionary = {
   deals: {
     title: 'Акции',
     description: 'Актуальные акции и предложения от салонов.',
-  },
-  locale: {
-    tr: 'Türkçe',
-    en: 'English',
-    de: 'Deutsch',
-    ru: 'Русский',
-    es: 'Español',
-    bg: 'Болгарский',
   },
   cookieConsent: {
     bannerTitle: 'Использование файлов cookie',

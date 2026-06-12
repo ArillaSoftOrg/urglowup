@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "env:check": "node scripts/check-env.mjs",
-    "release:check": "npm run env:check && npm audit --audit-level=moderate && npm run lint && npx tsc --noEmit && npm run build",
+    "check:dictionaries": "node scripts/check-dictionaries.mjs",
+    "release:check": "npm run env:check && npm run check:dictionaries && npm audit --audit-level=moderate && npm run lint && npx tsc --noEmit && npm run build",
     "smoke:deploy": "node scripts/post-deploy-smoke.mjs",
     "test:e2e": "playwright test",
     "postinstall": "prisma generate"

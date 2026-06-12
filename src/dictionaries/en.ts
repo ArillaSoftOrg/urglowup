@@ -42,14 +42,6 @@ const en: Dictionary = {
     title: 'Deals',
     description: 'Current promotions and offers from businesses.',
   },
-  locale: {
-    tr: 'Türkçe',
-    en: 'English',
-    de: 'Deutsch',
-    ru: 'Русский',
-    es: 'Español',
-    bg: 'Bulgarian',
-  },
   cookieConsent: {
     bannerTitle: 'Cookie Usage',
     bannerDescription: 'We use cookies to keep the site secure, remember your language preference, and improve your experience. See our',

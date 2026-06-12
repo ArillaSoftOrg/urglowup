@@ -3,6 +3,8 @@
 import { usePathname, useRouter, useParams } from "next/navigation";
 import { useTransition } from "react";
 import { Globe, ChevronDown, Check } from "lucide-react";
+import { SUPPORTED_LOCALES, type Locale } from "@/lib/i18n-config";
+import { LOCALE_LABELS, LOCALE_CODES } from "@/lib/i18n-labels";
 import { updateLocalePreference } from "@/app/(customer)/account/actions";
 import {
   DropdownMenu,
@@ -11,27 +13,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { setClientCookie } from "@/lib/cookies";
-
-const LOCALES = ["tr", "en", "de", "ru", "es", "bg"] as const;
-type Locale = (typeof LOCALES)[number];
-
-const LABELS: Record<Locale, string> = {
-  tr: "Türkçe",
-  en: "English",
-  de: "Deutsch",
-  ru: "Русский",
-  es: "Español",
-  bg: "Български",
-};
-
-const LOCALE_CODES: Record<Locale, string> = {
-  tr: "TR",
-  en: "EN",
-  de: "DE",
-  ru: "RU",
-  es: "ES",
-  bg: "BG",
-};
 
 function getLocalizedPath(
   pathname: string,
@@ -95,7 +76,7 @@ export function LocaleSwitcher({
   if (variant === "settings") {
     return (
       <div className="flex flex-wrap gap-2">
-        {LOCALES.map((locale) => (
+        {SUPPORTED_LOCALES.map((locale) => (
           <button
             key={locale}
             onClick={() => switchLocale(locale)}
@@ -106,7 +87,7 @@ export function LocaleSwitcher({
                 : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
             ].join(" ")}
           >
-            {LABELS[locale]}
+            {LOCALE_LABELS[locale]}
           </button>
         ))}
       </div>
@@ -116,7 +97,7 @@ export function LocaleSwitcher({
   if (variant === "mobile") {
     return (
       <div className="grid grid-cols-2 gap-2">
-        {LOCALES.map((locale) => {
+        {SUPPORTED_LOCALES.map((locale) => {
           const active = locale === currentLocale;
 
           return (
@@ -131,7 +112,7 @@ export function LocaleSwitcher({
               ].join(" ")}
               aria-current={active ? "true" : undefined}
             >
-              <span>{LABELS[locale]}</span>
+              <span>{LOCALE_LABELS[locale]}</span>
               <span
                 className={[
                   "text-[0.68rem] font-semibold",
@@ -160,9 +141,9 @@ export function LocaleSwitcher({
         <ChevronDown className="size-2.5 shrink-0 opacity-50" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={6} className="min-w-[140px]">
-        {LOCALES.map((locale) => (
+        {SUPPORTED_LOCALES.map((locale) => (
           <DropdownMenuItem key={locale} onClick={() => switchLocale(locale)}>
-            {LABELS[locale]}
+            {LOCALE_LABELS[locale]}
             {locale === currentLocale && (
               <Check className="ml-auto size-3.5 shrink-0" />
             )}

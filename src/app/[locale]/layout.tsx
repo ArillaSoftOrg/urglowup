@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
-
-const INTL_LOCALES = ["en", "de", "ru", "es", "bg"] as const;
-export type IntlLocale = (typeof INTL_LOCALES)[number];
+import { INTL_LOCALES, type IntlLocale } from "@/lib/i18n-config";
 
 export function generateStaticParams() {
   return INTL_LOCALES.map((locale) => ({ locale }));

@@ -2,10 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
+import { SUPPORTED_LOCALES, type Locale } from "@/lib/i18n-config";
 import { updateLocalePreference } from "@/app/(customer)/account/actions";
-
-const LOCALES = ["tr", "en", "de", "ru", "es"] as const;
-type Locale = (typeof LOCALES)[number];
 
 interface LocaleReconcilerProps {
   /** The locale stored in the user's DB preferences. null means no preference set. */
@@ -32,7 +30,7 @@ export function LocaleReconciler({ dbLocale }: LocaleReconcilerProps) {
   useEffect(() => {
     if (reconciled.current) return;
     if (!dbLocale || dbLocale === currentLocale) return;
-    if (!LOCALES.includes(dbLocale as Locale)) return;
+    if (!SUPPORTED_LOCALES.includes(dbLocale as Locale)) return;
 
     reconciled.current = true;
     const target = dbLocale as Locale;

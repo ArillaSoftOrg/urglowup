@@ -10,7 +10,7 @@ interface StatCardProps {
   href?: string;
   surface?: "default" | "cream";
   iconTone?: "pink" | "warning" | "info" | "muted";
-  size?: "default" | "sm";
+  size?: "default" | "sm" | "compact";
 }
 
 const TONE_CLASSES: Record<NonNullable<StatCardProps["iconTone"]>, string> = {
@@ -41,25 +41,32 @@ export function StatCard({
       <CardContent
         className={cn(
           "flex items-center gap-4",
-          size === "sm" ? "p-3" : "p-6"
+          size === "compact" && "flex-col items-start gap-2 px-3 py-4 sm:flex-row sm:items-center sm:gap-4",
+          size === "sm" ? "p-3" : size === "compact" ? "" : "p-6"
         )}
       >
         <div
           className={cn(
             "flex shrink-0 items-center justify-center rounded-full",
-            size === "sm" ? "size-8" : "size-16",
+            size === "sm" ? "size-8" : size === "compact" ? "size-11 sm:size-14" : "size-16",
             TONE_CLASSES[iconTone]
           )}
         >
-          <Icon className={size === "sm" ? "size-4" : "size-7"} />
+          <Icon className={size === "sm" ? "size-4" : size === "compact" ? "size-5 sm:size-6" : "size-7"} />
         </div>
         <div className={cn("min-w-0", size === "sm" ? "space-y-0.5" : "space-y-1")}>
-          <p className="truncate text-sm font-semibold text-[oklch(0.24_0.055_285)]">{label}</p>
-          <div className={cn("font-bold tabular-nums", size === "sm" ? "text-xl" : "text-3xl")}>
+          <p className={cn(
+            "truncate font-semibold text-[oklch(0.24_0.055_285)]",
+            size === "compact" ? "text-[13px] sm:text-sm" : "text-sm"
+          )}>{label}</p>
+          <div className={cn("font-bold tabular-nums", size === "sm" ? "text-xl" : size === "compact" ? "text-2xl sm:text-3xl" : "text-3xl")}>
             {value}
           </div>
           {hint && (
-            <p className="truncate text-sm text-[oklch(0.48_0.045_285)]">{hint}</p>
+            <p className={cn(
+              "truncate text-[oklch(0.48_0.045_285)]",
+              size === "compact" ? "text-xs sm:text-sm" : "text-sm"
+            )}>{hint}</p>
           )}
         </div>
       </CardContent>

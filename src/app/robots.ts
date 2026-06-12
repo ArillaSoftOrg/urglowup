@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { INTL_LOCALES } from "@/lib/i18n-config";
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl =
@@ -7,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/en/", "/de/", "/ru/", "/es/", "/bg/"],
+      allow: ["/", ...INTL_LOCALES.map((l) => `/${l}/`)],
       disallow: [
         "/admin/",
         "/business/",

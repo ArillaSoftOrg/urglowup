@@ -8,13 +8,16 @@ import {
   Scissors,
   Clock,
   CalendarCheck,
+  CalendarPlus,
   Link2,
   ArrowRight,
+  ChevronRight,
   AlertCircle,
   CalendarDays,
   ImageIcon,
   CalendarClock,
   MessageCircle,
+  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { nowInBusinessTimezone } from "@/lib/constants/booking";
@@ -152,27 +155,47 @@ export default async function DashboardPage() {
       icon: Link2,
       tone: "bg-[oklch(0.94_0.045_345)] text-[oklch(0.48_0.16_345)]",
     },
+    {
+      href: "/business/customers",
+      title: "Yeni Müşteri",
+      description: "Müşteri listesine git",
+      icon: UserPlus,
+      tone: "bg-[oklch(0.95_0.035_245)] text-[oklch(0.43_0.13_245)]",
+    },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="space-y-6 md:space-y-7">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[oklch(0.20_0.06_285)] md:text-3xl">
+          <h1 className="text-[1.65rem] font-bold leading-tight tracking-tight text-[oklch(0.20_0.06_285)] md:text-3xl">
             Hoş geldiniz, {business.name} 👋
           </h1>
-          <p className="mt-2 text-sm text-[oklch(0.46_0.045_285)]">
+          <p className="mt-1.5 text-sm text-[oklch(0.46_0.045_285)] md:text-base">
             İşletmenizin genel durumunu buradan takip edebilirsiniz.
           </p>
         </div>
-        <Badge variant={statusBadge.variant} className="mt-1 shrink-0 rounded-full px-3">
+        <Badge variant={statusBadge.variant} className="shrink-0 rounded-full px-3">
           {statusBadge.label}
         </Badge>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_330px]">
         <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold tracking-tight text-[oklch(0.20_0.06_285)] md:text-xl">
+              Bugünkü Özet
+            </h2>
+            <Link
+              href="/business/appointments"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-[oklch(0.50_0.18_285)] transition-colors hover:text-[oklch(0.42_0.18_285)]"
+            >
+              Tümünü görüntüle
+              <ChevronRight className="size-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             <StatCard
               icon={AlertCircle}
               label="Bekleyen"
@@ -180,6 +203,7 @@ export default async function DashboardPage() {
               hint={pendingCount > 0 ? "Yanıtınızı bekliyor" : "Yeni talep yok"}
               href="/business/appointments?tab=pending"
               iconTone="warning"
+              size="compact"
             />
             <StatCard
               icon={CalendarCheck}
@@ -187,6 +211,7 @@ export default async function DashboardPage() {
               value={todayCount}
               hint={todayCount > 0 ? "Onaylanan randevular" : "Bugün randevu yok"}
               iconTone="pink"
+              size="compact"
             />
             <StatCard
               icon={CalendarDays}
@@ -194,8 +219,23 @@ export default async function DashboardPage() {
               value={weekCount}
               hint="Bu hafta toplam"
               iconTone="info"
+              size="compact"
             />
           </div>
+
+          <Link
+            href="/business/appointments"
+            className="group flex items-center gap-4 rounded-xl bg-[oklch(0.54_0.20_285)] px-4 py-4 text-white shadow-[0_12px_26px_oklch(0.36_0.16_285_/_0.22)] transition-transform hover:-translate-y-0.5 hover:bg-[oklch(0.50_0.20_285)] sm:px-5"
+          >
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/16 text-white ring-1 ring-white/12">
+              <CalendarPlus className="size-6" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-bold sm:text-lg">Yeni Randevu Oluştur</span>
+              <span className="block text-sm text-white/78">Hızlı randevu oluşturun</span>
+            </span>
+            <ChevronRight className="size-6 shrink-0 transition-transform group-hover:translate-x-0.5" />
+          </Link>
 
           {completion.score < 100 && (
             <ProfileCompletionCard completion={completion} />

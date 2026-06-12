@@ -42,14 +42,6 @@ const es: Dictionary = {
     title: 'Ofertas',
     description: 'Promociones y ofertas actuales de las empresas.',
   },
-  locale: {
-    tr: 'Türkçe',
-    en: 'English',
-    de: 'Deutsch',
-    ru: 'Русский',
-    es: 'Español',
-    bg: 'Búlgaro',
-  },
   cookieConsent: {
     bannerTitle: 'Uso de Cookies',
     bannerDescription: 'Usamos cookies para mantener el sitio seguro, recordar tu idioma preferido y mejorar tu experiencia. Consulta nuestra',
