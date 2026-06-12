@@ -266,7 +266,8 @@ export function Footer() {
               </div>
             </div>
 
-            <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4 xl:gap-11">
+            <div className="space-y-8">
+              <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4 xl:gap-11">
               {footerColumns.map((col) => {
                 const Icon = col.icon;
                 return (
@@ -316,34 +317,32 @@ export function Footer() {
                   </li>
                 </ul>
               </div>
-            </div>
-          </div>
+              </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1.28fr_3.45fr] lg:items-center">
-            <div className="hidden lg:block" />
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {trustItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.title}
-                    className="flex gap-4 border-violet-200/80 xl:border-l xl:pl-8"
-                  >
-                    <Icon
-                      aria-hidden="true"
-                      className="mt-1 h-11 w-11 shrink-0 text-violet-700"
-                    />
-                    <div>
-                      <p className="font-extrabold text-slate-950">
-                        {item.title}
-                      </p>
-                      <p className="mt-2 text-[15px] leading-7 text-slate-700">
-                        {item.description}
-                      </p>
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                {trustItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.title}
+                      className="flex gap-4 border-violet-200/80 xl:border-l xl:pl-8"
+                    >
+                      <Icon
+                        aria-hidden="true"
+                        className="mt-1 h-11 w-11 shrink-0 text-violet-700"
+                      />
+                      <div>
+                        <p className="font-extrabold text-slate-950">
+                          {item.title}
+                        </p>
+                        <p className="mt-2 text-[15px] leading-7 text-slate-700">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
