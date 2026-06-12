@@ -105,7 +105,10 @@
       "Bash(env)",
       "PowerShell(Get-ChildItem Env: | Where-Object { $_.Name -match \"DATABASE|DIRECT\" } | ForEach-Object { \"$\\($_.Name\\)=$\\($_.Value.Substring\\(0,30\\)\\)...\" })",
       "Bash(curl *)",
-      "PowerShell(taskkill *)"
+      "PowerShell(taskkill *)",
+      "Skill(run)",
+      "Bash(bash test_nav.sh)",
+      "Bash(bash verify_changes.sh)"
     ]
   }
 }
