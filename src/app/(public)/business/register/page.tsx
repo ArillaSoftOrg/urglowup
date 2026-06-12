@@ -9,14 +9,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 
-export const metadata = { title: "Register Your Business" };
+export const metadata = { title: "İşletmeni Kaydet" };
 
 const benefits = [
-  "Create your professional business profile",
-  "Showcase your work with photos and videos",
-  "Let customers discover and request appointments",
-  "Manage your services and working hours",
-  "Build your reputation with verified reviews",
+  "Profesyonel işletme profilini oluştur",
+  "Hizmetlerini, fotoğraflarını ve çalışmalarını sergile",
+  "Müşterilerden randevu taleplerini tek yerden al",
+  "Çalışma saatlerini ve iletişim bilgilerini yönet",
+  "Doğrulanmış yorumlarla güven oluştur",
 ];
 
 export default function RegisterPage() {
@@ -24,10 +24,10 @@ export default function RegisterPage() {
     <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Register Your Business</CardTitle>
+          <CardTitle className="text-2xl">İşletmeni UrGlowUp&apos;a Kaydet</CardTitle>
           <CardDescription>
-            Set up your business profile in a few simple steps. It only takes a
-            couple of minutes.
+            Önce işletmeni tanıtalım. Hesap bilgilerini profilini oluştururken
+            güvenli erişim için alacağız.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -40,19 +40,22 @@ export default function RegisterPage() {
             ))}
           </ul>
 
-          <Link href="/business/onboarding" className="block">
+          <Link
+            href="/register?redirect_url=/business/onboarding"
+            className="block"
+          >
             <Button className="w-full" size="lg">
-              Get Started
+              Kaydol ve işletmeni oluştur
             </Button>
           </Link>
 
           <p className="text-center text-xs text-muted-foreground">
-            Already have a business?{" "}
+            Zaten hesabın var mı?{" "}
             <Link
-              href="/business/dashboard"
+              href="/login?redirect_url=/business/onboarding"
               className="font-medium text-primary hover:underline"
             >
-              Go to Dashboard
+              Giriş yap
             </Link>
           </p>
         </CardContent>

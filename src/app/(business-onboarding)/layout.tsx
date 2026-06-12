@@ -15,7 +15,9 @@ export default async function BusinessOnboardingLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    redirect("/register?redirect_url=/business/onboarding");
+  }
 
   // If user already has a business membership, send them to the dashboard
   const existing = await db.businessMember.findFirst({

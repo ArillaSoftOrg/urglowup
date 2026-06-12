@@ -1,23 +1,39 @@
 /**
- * Pure slot generation — no DB or framework dependencies.
+ * Pure slot generation, no DB or framework dependencies.
  */
 
 import { timeToMinutes, minutesToTime } from "@/lib/calendar";
 
 export interface ExistingAppointment {
-  requestedTime: string; // "HH:MM"
+  requestedTime: string;
   durationMinutes: number;
+}
+
+export interface TimeBlock {
+  startTime: string;
+  endTime: string;
+}
+
+export interface AdvancedSlotRules {
+  workBlocks?: TimeBlock[];
+  breakBlocks?: TimeBlock[];
+  appointmentBufferMinutes?: number;
+}
+
+function normalizeBlocks(blocks: TimeBlock[] | undefined): TimeBlock[] {
+  if (!blocks) return [];
+  return blocks.filter((block) => {
+    if (!block.startTime || !block.endTime) return false;
+    return block.endTime > block.startTime;
+  });
+}
+
+function overlaps(start: number, end: number, block: { start: number; end: number }) {
+  return start < block.end && block.start < end;
 }
 
 /**
  * Generate available booking time slots for a given day.
- *
- * @param openTime          Business open time, e.g. "09:00"
- * @param closeTime         Business close time, e.g. "18:00"
- * @param intervalMinutes   Slot interval (e.g. 30)
- * @param serviceDurationMinutes  Duration of the selected service
- * @param existingAppointments    Already-booked appointments (PENDING/CONFIRMED)
- * @param minTimeMinutes    Earliest allowed slot in minutes-from-midnight (for today's advance check)
  */
 export function generateTimeSlots(
   openTime: string,
@@ -25,31 +41,43 @@ export function generateTimeSlots(
   intervalMinutes: number,
   serviceDurationMinutes: number,
   existingAppointments: ExistingAppointment[],
-  minTimeMinutes?: number
+  minTimeMinutes?: number,
+  rules?: AdvancedSlotRules
 ): string[] {
   const openMin = timeToMinutes(openTime);
   const closeMin = timeToMinutes(closeTime);
   const slots: string[] = [];
+  const buffer = rules?.appointmentBufferMinutes ?? 0;
+  const workBlocks = normalizeBlocks(rules?.workBlocks);
+  const effectiveWorkBlocks =
+    workBlocks.length > 0 ? workBlocks : [{ startTime: openTime, endTime: closeTime }];
+  const breakBlocks = normalizeBlocks(rules?.breakBlocks).map((block) => ({
+    start: timeToMinutes(block.startTime),
+    end: timeToMinutes(block.endTime),
+  }));
 
-  // Pre-compute existing appointment intervals
-  const occupied = existingAppointments.map((a) => {
-    const start = timeToMinutes(a.requestedTime);
-    return { start, end: start + a.durationMinutes };
+  const occupied = existingAppointments.map((appointment) => {
+    const start = timeToMinutes(appointment.requestedTime);
+    return {
+      start: start - buffer,
+      end: start + appointment.durationMinutes + buffer,
+    };
   });
 
-  for (let t = openMin; t + serviceDurationMinutes <= closeMin; t += intervalMinutes) {
-    // Today advance check
-    if (minTimeMinutes !== undefined && t < minTimeMinutes) continue;
+  for (const block of effectiveWorkBlocks) {
+    const blockStart = Math.max(openMin, timeToMinutes(block.startTime));
+    const blockEnd = Math.min(closeMin, timeToMinutes(block.endTime));
 
-    // Conflict check — does [t, t+duration) overlap any occupied interval?
-    const slotEnd = t + serviceDurationMinutes;
-    const hasConflict = occupied.some(
-      (o) => t < o.end && o.start < slotEnd
-    );
-    if (hasConflict) continue;
+    for (let t = blockStart; t + serviceDurationMinutes <= blockEnd; t += intervalMinutes) {
+      if (minTimeMinutes !== undefined && t < minTimeMinutes) continue;
 
-    slots.push(minutesToTime(t));
+      const slotEnd = t + serviceDurationMinutes;
+      if (breakBlocks.some((breakBlock) => overlaps(t, slotEnd, breakBlock))) continue;
+      if (occupied.some((appointment) => overlaps(t, slotEnd, appointment))) continue;
+
+      slots.push(minutesToTime(t));
+    }
   }
 
-  return slots;
+  return Array.from(new Set(slots)).sort();
 }

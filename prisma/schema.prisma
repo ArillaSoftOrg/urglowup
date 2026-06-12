@@ -388,6 +388,11 @@ model BusinessHour {
   openTime            String?
   closeTime           String?
   slotIntervalMinutes Int       @default(30)
+  appointmentBufferMinutes Int   @default(0)
+  workBlocks          Json?
+  breakBlocks         Json?
+  staffNotes          String?
+  exceptionNotes      String?
 
   @@unique([businessId, dayOfWeek])
 }

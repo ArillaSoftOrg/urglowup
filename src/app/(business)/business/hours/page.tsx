@@ -5,6 +5,7 @@ import { syncTRHolidays, getHolidaysForYear } from "@/lib/holidays";
 import {
   HoursManager,
   type HourData,
+  type TimeBlockData,
 } from "@/components/business/hours-manager";
 import {
   HolidaySuggestions,
@@ -23,6 +24,15 @@ const DAY_ORDER = [
   "SUNDAY",
 ] as const;
 
+function parseTimeBlocks(value: unknown): TimeBlockData[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is TimeBlockData => {
+    if (!item || typeof item !== "object") return false;
+    const block = item as Record<string, unknown>;
+    return typeof block.startTime === "string" && typeof block.endTime === "string";
+  });
+}
+
 export default async function HoursPage() {
   const { businessId } = await requireBusiness("MANAGER");
 
@@ -40,6 +50,11 @@ export default async function HoursPage() {
       openTime: h?.openTime ?? "09:00",
       closeTime: h?.closeTime ?? "18:00",
       slotIntervalMinutes: h?.slotIntervalMinutes ?? 30,
+      appointmentBufferMinutes: h?.appointmentBufferMinutes ?? 0,
+      workBlocks: parseTimeBlocks(h?.workBlocks),
+      breakBlocks: parseTimeBlocks(h?.breakBlocks),
+      staffNotes: h?.staffNotes ?? null,
+      exceptionNotes: h?.exceptionNotes ?? null,
     };
   });
 

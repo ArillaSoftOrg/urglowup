@@ -1,14 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { CalendarDays, Check, Clock, Coffee, Info, Plus, Timer, Users } from "lucide-react";
 import {
   saveBusinessHours,
   type HoursActionState,
 } from "@/app/(business)/business/hours/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,10 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Clock, Check } from "lucide-react";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-// ─── Types ──────────────────────────────────────────────────────
+export type TimeBlockData = {
+  startTime: string;
+  endTime: string;
+};
 
 export type HourData = {
   dayOfWeek: string;
@@ -27,6 +29,11 @@ export type HourData = {
   openTime: string | null;
   closeTime: string | null;
   slotIntervalMinutes: number;
+  appointmentBufferMinutes: number;
+  workBlocks: TimeBlockData[];
+  breakBlocks: TimeBlockData[];
+  staffNotes: string | null;
+  exceptionNotes: string | null;
 };
 
 const DAY_LABELS: Record<string, string> = {
@@ -39,32 +46,19 @@ const DAY_LABELS: Record<string, string> = {
   SUNDAY: "Pazar",
 };
 
-const SLOT_OPTIONS = [
-  { value: 15, label: "15 min" },
-  { value: 30, label: "30 min" },
-  { value: 45, label: "45 min" },
-  { value: 60, label: "60 min" },
-];
+const SLOT_OPTIONS = [15, 30, 45, 60];
+const BUFFER_OPTIONS = [0, 5, 10, 15, 20, 30];
 
-// ─── Component ──────────────────────────────────────────────────
+function blockAt(blocks: TimeBlockData[], index: number, fallback: TimeBlockData) {
+  return blocks[index] ?? fallback;
+}
 
-export function HoursManager({
-  initialHours,
-}: {
-  initialHours: HourData[];
-}) {
+export function HoursManager({ initialHours }: { initialHours: HourData[] }) {
   const initial: HoursActionState = { success: false };
-  const [state, formAction, isPending] = useActionState(
-    saveBusinessHours,
-    initial
-  );
-
-  // Local state for toggling open/closed (controls UI visibility)
+  const [state, formAction, isPending] = useActionState(saveBusinessHours, initial);
   const [openDays, setOpenDays] = useState<Record<string, boolean>>(() => {
     const map: Record<string, boolean> = {};
-    for (const h of initialHours) {
-      map[h.dayOfWeek] = h.isOpen;
-    }
+    for (const h of initialHours) map[h.dayOfWeek] = h.isOpen;
     return map;
   });
 
@@ -74,52 +68,59 @@ export function HoursManager({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Çalışma Saatleri</h1>
-        <p className="text-sm text-muted-foreground">
-          Haftalık çalışma saatlerinizi belirleyin
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight">Çalışma Saatleri</h1>
+          <Badge variant="secondary">Gelişmiş program</Badge>
+        </div>
+        <p className="max-w-3xl text-sm text-muted-foreground">
+          Açık saatleri, randevu aralıklarını, sabit molaları, hizmet sürelerini ve personel notlarını tek programda yönetin.
         </p>
       </div>
 
       {state.success && (
-        <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/15 p-3 text-sm text-success-foreground">
+        <div className="flex items-center gap-2 rounded-lg border border-success/30 bg-success/15 p-3 text-sm text-success-foreground">
           <Check className="size-4 shrink-0" />
           {state.message}
         </div>
       )}
 
       {state.message && !state.success && (
-        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
           {state.message}
         </div>
       )}
 
-      <form action={formAction}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Clock className="size-5" />
-              Haftalık Program
-            </CardTitle>
-            <CardDescription>
-              Günleri açık/kapalı ayarlayın ve çalışma saatlerini belirleyin
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Clock className="size-5" />
+            Haftalık Program
+          </CardTitle>
+          <CardDescription>
+            Her gün için çalışma bloğu, öğle arası, randevu tamponu ve özel notları ayarlayın.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={formAction} className="space-y-4">
             {initialHours.map((hour) => {
               const day = hour.dayOfWeek;
               const isOpen = openDays[day] ?? false;
+              const work1 = blockAt(hour.workBlocks, 0, {
+                startTime: hour.openTime ?? "09:00",
+                endTime: hour.closeTime ?? "18:00",
+              });
+              const work2 = blockAt(hour.workBlocks, 1, { startTime: "", endTime: "" });
+              const break1 = blockAt(hour.breakBlocks, 0, { startTime: "12:30", endTime: "13:30" });
+              const break2 = blockAt(hour.breakBlocks, 1, { startTime: "", endTime: "" });
 
               return (
-                <div
+                <section
                   key={day}
-                  className={`rounded-xl border p-4 transition-colors ${
-                    isOpen ? "bg-card border-border/50" : "bg-surface-cream border-border/30"
-                  }`}
+                  className="rounded-lg border border-border/70 bg-card p-4 shadow-sm"
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    {/* Day name + toggle */}
-                    <div className="flex items-center gap-3 sm:w-36">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         name={`${day}_isOpen`}
@@ -127,99 +128,196 @@ export function HoursManager({
                         onChange={() => toggleDay(day)}
                         className="size-4 rounded border-input"
                       />
-                      <span className="text-sm font-medium">
-                        {DAY_LABELS[day]}
-                      </span>
-                      {!isOpen && (
-                        <Badge variant="secondary" className="text-[10px]">
-                          Kapalı
-                        </Badge>
-                      )}
+                      <div>
+                        <h2 className="text-sm font-semibold">{DAY_LABELS[day]}</h2>
+                        <p className="text-xs text-muted-foreground">
+                          {isOpen ? "Randevu alınabilir" : "Kapalı gün"}
+                        </p>
+                      </div>
+                      {!isOpen && <Badge variant="secondary">Kapalı</Badge>}
                     </div>
 
-                    {/* Time inputs */}
                     {isOpen && (
-                      <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-                        <div className="flex items-center gap-2">
-                          <Label
-                            htmlFor={`${day}_open`}
-                            className="w-14 text-xs text-muted-foreground sm:w-auto"
-                          >
-                            Açılış
-                          </Label>
-                          <Input
-                            id={`${day}_open`}
-                            name={`${day}_openTime`}
-                            type="time"
-                            defaultValue={hour.openTime ?? "09:00"}
-                            className="w-full sm:w-28"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Label
-                            htmlFor={`${day}_close`}
-                            className="w-14 text-xs text-muted-foreground sm:w-auto"
-                          >
-                            Kapanış
-                          </Label>
-                          <Input
-                            id={`${day}_close`}
-                            name={`${day}_closeTime`}
-                            type="time"
-                            defaultValue={hour.closeTime ?? "18:00"}
-                            className="w-full sm:w-28"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Label
-                            htmlFor={`${day}_slot`}
-                            className="w-14 text-xs text-muted-foreground whitespace-nowrap sm:w-auto"
-                          >
-                            Aralık
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <div className="space-y-1">
+                          <Label htmlFor={`${day}_slotIntervalMinutes`} className="text-xs">
+                            Slot süresi
                           </Label>
                           <select
-                            id={`${day}_slot`}
+                            id={`${day}_slotIntervalMinutes`}
                             name={`${day}_slotIntervalMinutes`}
                             defaultValue={hour.slotIntervalMinutes}
-                            className="flex h-8 rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                           >
-                            {SLOT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
+                            {SLOT_OPTIONS.map((minutes) => (
+                              <option key={minutes} value={minutes}>
+                                {minutes} dk
                               </option>
                             ))}
                           </select>
                         </div>
+                        <div className="space-y-1">
+                          <Label htmlFor={`${day}_appointmentBufferMinutes`} className="text-xs">
+                            Randevu sonrası mola
+                          </Label>
+                          <select
+                            id={`${day}_appointmentBufferMinutes`}
+                            name={`${day}_appointmentBufferMinutes`}
+                            defaultValue={hour.appointmentBufferMinutes}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                          >
+                            {BUFFER_OPTIONS.map((minutes) => (
+                              <option key={minutes} value={minutes}>
+                                {minutes === 0 ? "Yok" : `${minutes} dk`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Hizmet süresi</Label>
+                          <div className="flex h-9 items-center gap-2 rounded-md border border-input px-2 text-xs text-muted-foreground">
+                            <Timer className="size-3.5" />
+                            Hizmetlerden alınır
+                          </div>
+                        </div>
                       </div>
-                    )}
-
-                    {/* Hidden slot interval when closed */}
-                    {!isOpen && (
-                      <input
-                        type="hidden"
-                        name={`${day}_slotIntervalMinutes`}
-                        value={hour.slotIntervalMinutes}
-                      />
                     )}
                   </div>
 
-                  {state.errors?.[day] && (
-                    <p className="mt-2 text-xs text-destructive">
-                      {state.errors[day]}
-                    </p>
+                  {isOpen && (
+                    <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_1fr]">
+                      <div className="space-y-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-1">
+                            <Label htmlFor={`${day}_openTime`} className="text-xs">
+                              Gün açılışı
+                            </Label>
+                            <Input id={`${day}_openTime`} name={`${day}_openTime`} type="time" defaultValue={hour.openTime ?? "09:00"} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor={`${day}_closeTime`} className="text-xs">
+                              Gün kapanışı
+                            </Label>
+                            <Input id={`${day}_closeTime`} name={`${day}_closeTime`} type="time" defaultValue={hour.closeTime ?? "18:00"} />
+                          </div>
+                        </div>
+
+                        <div className="rounded-md border border-border/70 p-3">
+                          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+                            <CalendarDays className="size-4" />
+                            Çalışma blokları
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <TimeRangeFields day={day} prefix="workBlock1" label="Blok 1" block={work1} />
+                            <TimeRangeFields day={day} prefix="workBlock2" label="Blok 2" block={work2} optional />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="rounded-md border border-border/70 p-3">
+                          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+                            <Coffee className="size-4" />
+                            Molalar
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <TimeRangeFields day={day} prefix="breakBlock1" label="Öğle arası" block={break1} optional />
+                            <TimeRangeFields day={day} prefix="breakBlock2" label="Ek mola" block={break2} optional />
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-1">
+                            <Label htmlFor={`${day}_staffNotes`} className="flex items-center gap-1 text-xs">
+                              <Users className="size-3.5" />
+                              Personel detayı
+                            </Label>
+                            <Input
+                              id={`${day}_staffNotes`}
+                              name={`${day}_staffNotes`}
+                              defaultValue={hour.staffNotes ?? ""}
+                              placeholder="Ayşe 09:00-17:00"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor={`${day}_exceptionNotes`} className="flex items-center gap-1 text-xs">
+                              <Info className="size-3.5" />
+                              Özel gün notu
+                            </Label>
+                            <Input
+                              id={`${day}_exceptionNotes`}
+                              name={`${day}_exceptionNotes`}
+                              defaultValue={hour.exceptionNotes ?? ""}
+                              placeholder="Bayram haftası kısa mesai"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                </div>
+
+                  {!isOpen && (
+                    <>
+                      <input type="hidden" name={`${day}_slotIntervalMinutes`} value={hour.slotIntervalMinutes} />
+                      <input type="hidden" name={`${day}_appointmentBufferMinutes`} value={hour.appointmentBufferMinutes} />
+                    </>
+                  )}
+
+                  {state.errors?.[day] && (
+                    <p className="mt-3 text-xs text-destructive">{state.errors[day]}</p>
+                  )}
+                </section>
               );
             })}
 
-            <div className="pt-4">
-              <Button type="submit" disabled={isPending} className="gap-1.5">
+            <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Plus className="size-3.5" />
+                Daha detaylı personel takvimleri için personel notlarını bugünlük açıklama olarak kullanabilirsiniz.
+              </p>
+              <Button type="submit" disabled={isPending}>
                 {isPending ? "Kaydediliyor..." : "Çalışma Saatlerini Kaydet"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      </form>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function TimeRangeFields({
+  day,
+  prefix,
+  label,
+  block,
+  optional = false,
+}: {
+  day: string;
+  prefix: string;
+  label: string;
+  block: TimeBlockData;
+  optional?: boolean;
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">{label}</Label>
+      <div className="grid grid-cols-2 gap-2">
+        <Input
+          aria-label={`${label} başlangıç`}
+          name={`${day}_${prefix}Start`}
+          type="time"
+          defaultValue={block.startTime}
+          placeholder={optional ? "Opsiyonel" : undefined}
+        />
+        <Input
+          aria-label={`${label} bitiş`}
+          name={`${day}_${prefix}End`}
+          type="time"
+          defaultValue={block.endTime}
+          placeholder={optional ? "Opsiyonel" : undefined}
+        />
+      </div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from "@/lib/i18n-config";
 
 const PROTECTED_PREFIXES = ["/account", "/business", "/admin"];
+const PUBLIC_BUSINESS_PREFIXES = ["/business/register", "/business/invite"];
 const COOKIE_NAME = "NEXT_LOCALE";
 const AUTH_COOKIE_PREFIX = "urglowup";
 
@@ -53,8 +54,12 @@ function needsLocaleRouting(pathname: string): boolean {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isPublicBusinessPath = PUBLIC_BUSINESS_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
+  );
 
   if (
+    !isPublicBusinessPath &&
     PROTECTED_PREFIXES.some(
       (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
     )
@@ -63,10 +68,13 @@ export function proxy(request: NextRequest) {
       cookiePrefix: AUTH_COOKIE_PREFIX,
     });
     if (!sessionCookie) {
-      const loginUrl = new URL("/login", request.url);
+      const authUrl = new URL(
+        pathname === "/business/onboarding" ? "/register" : "/login",
+        request.url,
+      );
       const redirectTarget = `${pathname}${request.nextUrl.search}`;
-      loginUrl.searchParams.set("redirect_url", redirectTarget);
-      return NextResponse.redirect(loginUrl);
+      authUrl.searchParams.set("redirect_url", redirectTarget);
+      return NextResponse.redirect(authUrl);
     }
     return NextResponse.next();
   }

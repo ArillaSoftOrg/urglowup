@@ -84,6 +84,19 @@ function shiftDate(view: CalendarView, date: Date, direction: 1 | -1): Date {
   }
 }
 
+function getStatusFilterLabel(statusFilter: AppointmentStatus | "all"): string {
+  return statusFilter === "all" ? "Tümü" : STATUS_LABELS[statusFilter];
+}
+
+function getProfessionalFilterLabel(
+  professionalFilter: string | "all",
+  professionals: CalendarProfessional[]
+): string {
+  if (professionalFilter === "all") return "Tümü";
+  if (professionalFilter === CALENDAR_GENERAL_COLUMN_ID) return "Personel atanmadı";
+  return professionals.find((pro) => pro.id === professionalFilter)?.displayName ?? "Personel";
+}
+
 export function CalendarToolbar({
   view,
   onViewChange,
@@ -98,6 +111,9 @@ export function CalendarToolbar({
   onNewBlockedTime,
   isMobile,
 }: CalendarToolbarProps) {
+  const statusFilterLabel = getStatusFilterLabel(statusFilter);
+  const professionalFilterLabel = getProfessionalFilterLabel(professionalFilter, professionals);
+
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-2">
@@ -119,7 +135,7 @@ export function CalendarToolbar({
           onValueChange={(v) => onStatusFilterChange(v as AppointmentStatus | "all")}
         >
           <SelectTrigger size="sm">
-            <SelectValue placeholder="Durum" />
+            <SelectValue placeholder="Durum">{statusFilterLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tümü</SelectItem>
@@ -134,7 +150,7 @@ export function CalendarToolbar({
         {professionals.length > 0 && view !== "staff" && (
           <Select value={professionalFilter} onValueChange={(v) => onProfessionalFilterChange(v as string)}>
             <SelectTrigger size="sm">
-              <SelectValue placeholder="Personel" />
+              <SelectValue placeholder="Personel">{professionalFilterLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>

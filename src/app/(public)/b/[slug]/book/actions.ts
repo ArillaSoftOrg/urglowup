@@ -6,6 +6,7 @@ import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { generateTimeSlots } from "@/lib/slots";
+import type { TimeBlock } from "@/lib/slots";
 import { isSuspended } from "@/lib/admin/user-suspension";
 import {
   MIN_ADVANCE_HOURS,
@@ -42,6 +43,15 @@ export type BookingActionState = {
   errors?: Record<string, string>;
   message?: string;
 };
+
+function parseTimeBlocks(value: unknown): TimeBlock[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is TimeBlock => {
+    if (!item || typeof item !== "object") return false;
+    const block = item as Record<string, unknown>;
+    return typeof block.startTime === "string" && typeof block.endTime === "string";
+  });
+}
 
 // ─── Get Available Slots ────────────────────────────────────────
 
@@ -120,7 +130,12 @@ export async function getAvailableSlots(
     hour.slotIntervalMinutes,
     service.durationMinutes,
     occupied,
-    minTimeMinutes
+    minTimeMinutes,
+    {
+      appointmentBufferMinutes: hour.appointmentBufferMinutes,
+      workBlocks: parseTimeBlocks(hour.workBlocks),
+      breakBlocks: parseTimeBlocks(hour.breakBlocks),
+    }
   );
 }
 

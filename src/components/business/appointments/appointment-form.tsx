@@ -16,6 +16,7 @@ import {
 import { ResponsiveDialog } from "./responsive-dialog";
 import { CustomerPicker } from "./customer-picker";
 import { generateTimeSlots } from "@/lib/slots";
+import type { TimeBlock } from "@/lib/slots";
 import { timeToMinutes, toDateKey } from "@/lib/calendar";
 import { getDayOfWeek, BLOCKING_STATUSES } from "@/lib/constants/booking";
 import {
@@ -40,6 +41,15 @@ import {
 } from "./types";
 
 const NO_PROFESSIONAL_VALUE = CALENDAR_GENERAL_COLUMN_ID;
+
+function parseTimeBlocks(value: unknown): TimeBlock[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is TimeBlock => {
+    if (!item || typeof item !== "object") return false;
+    const block = item as Record<string, unknown>;
+    return typeof block.startTime === "string" && typeof block.endTime === "string";
+  });
+}
 
 interface AppointmentFormProps {
   open: boolean;
@@ -160,7 +170,15 @@ export function AppointmentForm({
       closeTime,
       interval,
       selectedService.durationMinutes,
-      [...occupiedAppointments, ...occupiedBlocks]
+      [...occupiedAppointments, ...occupiedBlocks],
+      undefined,
+      hour
+        ? {
+            appointmentBufferMinutes: hour.appointmentBufferMinutes,
+            workBlocks: parseTimeBlocks(hour.workBlocks),
+            breakBlocks: parseTimeBlocks(hour.breakBlocks),
+          }
+        : undefined
     );
   }, [date, selectedService, businessHours, appointments, blockedTimes, professionalId, mode, appointment]);
 
