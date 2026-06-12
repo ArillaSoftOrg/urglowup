@@ -185,9 +185,9 @@ export function Footer() {
   return (
     <footer className="bg-[oklch(0.985_0.008_300)] px-3 pb-4 pt-10 text-slate-950 md:px-6 md:pt-14">
       <div className="mx-auto max-w-[1800px] overflow-hidden rounded-t-2xl border border-violet-200/80 border-t-4 border-t-violet-600 bg-[oklch(0.992_0.006_300)] shadow-[0_22px_70px_oklch(0.42_0.12_300/0.10)]">
-        <div className="px-6 py-9 sm:px-8 md:px-10 lg:px-16 lg:py-14">
-          <div className="grid gap-10 lg:grid-cols-[1.15fr_3.55fr] lg:gap-16">
-            <div className="space-y-8">
+        <div className="px-6 py-8 sm:px-8 md:px-10 lg:px-16 lg:py-12">
+          <div className="grid gap-9 lg:grid-cols-[1.28fr_3.45fr] lg:gap-14">
+            <div className="space-y-7">
               <div>
                 <Link
                   href="/"
@@ -200,7 +200,7 @@ export function Footer() {
                     Ur<span className="text-violet-700">Glow</span>Up
                   </span>
                 </Link>
-                <p className="mt-7 max-w-xs text-lg leading-8 text-slate-800">
+                <p className="mt-6 max-w-xs text-lg leading-8 text-slate-800">
                   Güzellik, bakım ve wellness hizmetlerini keşfet. Yakındaki
                   uzmanlardan kolayca randevu al.
                 </p>
@@ -240,23 +240,23 @@ export function Footer() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-violet-200 bg-violet-50/70 p-6 shadow-sm">
-                <div className="flex gap-4">
+              <div className="rounded-2xl border border-violet-200 bg-violet-50/70 p-5 shadow-sm">
+                <div className="flex gap-3.5">
                   <Store
                     aria-hidden="true"
-                    className="mt-1 h-12 w-12 shrink-0 text-violet-700"
+                    className="mt-1 h-11 w-11 shrink-0 text-violet-700"
                   />
                   <div>
-                    <p className="text-lg font-extrabold text-violet-700">
+                    <p className="text-base font-extrabold leading-7 text-violet-700">
                       İşletmenizi UrGlowUp&apos;a ekleyin
                     </p>
-                    <p className="mt-2 text-[15px] leading-7 text-slate-700">
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
                       Daha fazla müşteriye ulaşın, randevularınızı kolayca
                       yönetin.
                     </p>
                     <Link
                       href="/business/register"
-                      className="mt-4 inline-flex h-12 items-center gap-2 rounded-lg bg-violet-700 px-5 text-sm font-extrabold text-white shadow-md shadow-violet-700/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-800"
+                      className="mt-4 inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-lg bg-violet-700 px-4 text-sm font-extrabold text-white shadow-md shadow-violet-700/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-800"
                     >
                       Ücretsiz İşletme Kaydı
                       <ChevronRight aria-hidden="true" className="h-4 w-4" />
@@ -266,7 +266,7 @@ export function Footer() {
               </div>
             </div>
 
-            <div className="grid gap-9 sm:grid-cols-2 xl:grid-cols-4 xl:gap-12">
+            <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4 xl:gap-11">
               {footerColumns.map((col) => {
                 const Icon = col.icon;
                 return (
@@ -279,7 +279,7 @@ export function Footer() {
                         {col.heading}
                       </p>
                     </div>
-                    <ul className="mt-8 space-y-3">
+                    <ul className="mt-7 space-y-3">
                       {col.links.map((link) => (
                         <li key={link.label}>
                           <FooterLink href={link.href} label={link.label} />
@@ -299,7 +299,7 @@ export function Footer() {
                     Yasal
                   </p>
                 </div>
-                <ul className="mt-8 space-y-3">
+                <ul className="mt-7 space-y-3">
                   {legalLinks.map((link) => (
                     <li key={link.label}>
                       <FooterLink href={link.href} label={link.label} />
@@ -319,7 +319,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-[1fr_3fr] lg:items-center">
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1.28fr_3.45fr] lg:items-center">
             <div className="hidden lg:block" />
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {trustItems.map((item) => {
