@@ -143,9 +143,7 @@ export function SearchPanel({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
     setInputValue(searchParams.get("q") ?? "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
     setPriceMinInput(searchParams.get("priceMin") ?? "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL->state sync for back/forward navigation
     setPriceMaxInput(searchParams.get("priceMax") ?? "");
   }, [searchParams]);
 

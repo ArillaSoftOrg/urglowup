@@ -89,8 +89,6 @@ export async function GET(request: Request) {
     return response;
   }
 
-  const business = { id: member.businessId };
-
   let config;
   try {
     config = getGoogleConfig();

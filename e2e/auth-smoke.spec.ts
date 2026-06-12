@@ -56,12 +56,20 @@ test("invalid reset token shows hardened state", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("protected route redirects unauthenticated users to login", async ({
+test("protected account route redirects unauthenticated users to login", async ({
   page,
 }) => {
   await page.goto("/account");
 
-  // /account does redirect("/login") — no redirect_url appended for the default route
+  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByLabel("E-posta")).toBeVisible();
+});
+
+test("protected admin appointments route redirects unauthenticated users to login", async ({
+  page,
+}) => {
+  await page.goto("/admin/appointments");
+
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByLabel("E-posta")).toBeVisible();
 });
@@ -119,7 +127,7 @@ test("login page shows Google sign-in button when configured", async ({
 }) => {
   test.skip(
     !process.env.GOOGLE_AUTH_CLIENT_ID,
-    "Google Sign-In not configured — set GOOGLE_AUTH_CLIENT_ID to run this test",
+    "Google Sign-In not configured, set GOOGLE_AUTH_CLIENT_ID to run this test",
   );
   await page.goto("/login");
   await expect(
@@ -132,7 +140,7 @@ test("register page shows Google sign-in button when configured", async ({
 }) => {
   test.skip(
     !process.env.GOOGLE_AUTH_CLIENT_ID,
-    "Google Sign-In not configured — set GOOGLE_AUTH_CLIENT_ID to run this test",
+    "Google Sign-In not configured, set GOOGLE_AUTH_CLIENT_ID to run this test",
   );
   await page.goto("/register");
   await expect(

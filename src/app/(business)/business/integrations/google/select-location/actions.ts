@@ -52,8 +52,6 @@ export async function confirmLocation(
     redirect("/business/integrations");
   }
 
-  const business = { id: member.businessId };
-
   await db.businessExternalConnection.upsert({
     where: {
       businessId_provider: {

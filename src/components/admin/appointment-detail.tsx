@@ -11,6 +11,7 @@ import type { AppointmentStatus } from "@/generated/prisma/enums";
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   PENDING: "Pending",
   CONFIRMED: "Confirmed",
+  CHECKED_IN: "Checked In",
   REJECTED: "Rejected",
   CANCELLED_BY_CUSTOMER: "Cancelled by Customer",
   CANCELLED_BY_BUSINESS: "Cancelled by Business",
@@ -21,6 +22,7 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
 const STATUS_BADGE: Record<AppointmentStatus, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
   CONFIRMED: "bg-blue-100 text-blue-800",
+  CHECKED_IN: "bg-cyan-100 text-cyan-800",
   REJECTED: "bg-red-100 text-red-800",
   CANCELLED_BY_CUSTOMER: "bg-slate-100 text-slate-700",
   CANCELLED_BY_BUSINESS: "bg-orange-100 text-orange-800",
@@ -31,6 +33,7 @@ const STATUS_BADGE: Record<AppointmentStatus, string> = {
 const ALL_STATUSES: AppointmentStatus[] = [
   "PENDING",
   "CONFIRMED",
+  "CHECKED_IN",
   "COMPLETED",
   "NO_SHOW",
   "REJECTED",
@@ -109,7 +112,7 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-1 flex-wrap">
-            {ALL_STATUSES.map((s, i) => {
+            {ALL_STATUSES.map((s) => {
               const isCurrent = s === appointment.status;
               const terminalStatuses: AppointmentStatus[] = [
                 "COMPLETED",

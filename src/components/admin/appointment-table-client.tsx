@@ -13,6 +13,7 @@ import type { AppointmentStatus } from "@/generated/prisma/enums";
 const STATUSES: AppointmentStatus[] = [
   "PENDING",
   "CONFIRMED",
+  "CHECKED_IN",
   "REJECTED",
   "CANCELLED_BY_CUSTOMER",
   "CANCELLED_BY_BUSINESS",

@@ -72,10 +72,11 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
   useEffect(() => {
     if (!isLoaded || !mapRef.current) return;
     const map = mapRef.current;
+    const markersById = markersRef.current;
 
     clustererRef.current?.clearMarkers();
-    markersRef.current.forEach((marker) => marker.setMap(null));
-    markersRef.current.clear();
+    markersById.forEach((marker) => marker.setMap(null));
+    markersById.clear();
 
     const markers = businesses.map((business) => {
       const marker = new google.maps.Marker({
@@ -86,11 +87,12 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
       marker.addListener("click", () => onActivate(business.id));
       marker.addListener("mouseover", () => onActivate(business.id));
       marker.addListener("mouseout", () => onActivate(null));
-      markersRef.current.set(business.id, marker);
+      markersById.set(business.id, marker);
       return marker;
     });
 
-    clustererRef.current = new MarkerClusterer({ map, markers });
+    const clusterer = new MarkerClusterer({ map, markers });
+    clustererRef.current = clusterer;
 
     if (markers.length > 0) {
       const bounds = new google.maps.LatLngBounds();
@@ -105,12 +107,11 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
     }
 
     return () => {
-      clustererRef.current?.clearMarkers();
-      markersRef.current.forEach((marker) => marker.setMap(null));
-      markersRef.current.clear();
+      clusterer.clearMarkers();
+      markersById.forEach((marker) => marker.setMap(null));
+      markersById.clear();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, businesses]);
+  }, [isLoaded, businesses, onActivate]);
 
   // Re-style + pan to the active marker without rebuilding everything
   useEffect(() => {

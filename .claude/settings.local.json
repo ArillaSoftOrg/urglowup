@@ -100,7 +100,11 @@
       "Bash(Select-Object -First 30 FullName)",
       "Bash(git log *)",
       "Bash(ls prisma/migrations/20260607120000_add_business_service_slug/)",
-      "Bash(cat prisma/migrations/20260607120000_add_business_service_slug/migration.sql)"
+      "Bash(cat prisma/migrations/20260607120000_add_business_service_slug/migration.sql)",
+      "Bash(Select-Object -First 30)",
+      "Bash(env)",
+      "PowerShell(Get-ChildItem Env: | Where-Object { $_.Name -match \"DATABASE|DIRECT\" } | ForEach-Object { \"$\\($_.Name\\)=$\\($_.Value.Substring\\(0,30\\)\\)...\" })",
+      "Bash(curl *)"
     ]
   }
 }

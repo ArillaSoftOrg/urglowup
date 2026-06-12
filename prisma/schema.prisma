@@ -34,6 +34,7 @@ enum PriceType {
 enum AppointmentStatus {
   PENDING
   CONFIRMED
+  CHECKED_IN
   REJECTED
   CANCELLED_BY_CUSTOMER
   CANCELLED_BY_BUSINESS
@@ -327,6 +328,7 @@ model Business {
   holidaySuggestions  BusinessHolidaySuggestion[]
   members             BusinessMember[]
   invitations         BusinessInvitation[]
+  blockedTimes        BlockedTime[]
 
   @@index([city])
   @@index([status])
@@ -464,6 +466,23 @@ model Appointment {
 
   @@index([businessId, status])
   @@index([customerId])
+}
+
+model BlockedTime {
+  id             String        @id @default(cuid())
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  professionalId String?
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  date           DateTime      @db.Date
+  startTime      String
+  endTime        String
+  reason         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([businessId, date])
+  @@index([professionalId, date])
 }
 
 model NotificationLog {
@@ -756,6 +775,7 @@ model Professional {
   services     ProfessionalService[]
   posts        Post[]
   appointments Appointment[]
+  blockedTimes BlockedTime[]
 
   @@index([businessId, isActive])
 }

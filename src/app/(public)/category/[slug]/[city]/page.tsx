@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getMarketplaceBusinesses,
-  getMarketplaceCategories,
   getMarketplaceCategoryBySlug,
   CATEGORY_LOCATION_INDEX_THRESHOLD,
   parseMarketplaceFilters,
@@ -33,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!category) return { title: "Kategori Bulunamadı" };
 
   const displayName = getCategoryLabel(slug, category.name);
-  const title = `${displayName} — ${city}`;
+  const title = `${displayName} - ${city}`;
   const description = `${city}'deki ${displayName.toLowerCase()} uzmanlarını UrGlowUp'ta keşfedin.`;
   const path = `/category/${slug}/${encodeURIComponent(city)}`;
 
@@ -58,16 +57,16 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
   const rawParams = await searchParams;
   const filters = parseMarketplaceFilters(rawParams);
 
-  const [category, businesses, districts, categories] = await Promise.all([
+  const [category, businesses, districts] = await Promise.all([
     getMarketplaceCategoryBySlug(slug),
     getMarketplaceBusinesses({
       categorySlug: slug,
       city,
-      district:  filters.district,
-      q:         filters.q,
+      district: filters.district,
+      q: filters.q,
       minRating: filters.minRating,
-      hasMedia:  filters.hasMedia || undefined,
-      hasHours:  filters.hasHours || undefined,
+      hasMedia: filters.hasMedia || undefined,
+      hasHours: filters.hasHours || undefined,
     }),
     db.business.findMany({
       where: {
@@ -81,7 +80,6 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
       distinct: ["district"],
       orderBy: { district: "asc" },
     }),
-    getMarketplaceCategories(),
   ]);
 
   if (!category) notFound();
@@ -93,14 +91,17 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
     .filter((d): d is string => d !== null);
 
   const hasAnyFilter = !!(
-    filters.q || filters.district || filters.minRating ||
-    filters.hasMedia || filters.hasHours
+    filters.q ||
+    filters.district ||
+    filters.minRating ||
+    filters.hasMedia ||
+    filters.hasHours
   );
 
   const collectionJsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${displayName} — ${city}`,
+    name: `${displayName} - ${city}`,
     url: absoluteUrl(path),
     about: { "@type": "Thing", name: displayName },
     mainEntity: {
@@ -121,16 +122,18 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
       />
       <div className="container mx-auto space-y-5 px-4 py-6 sm:space-y-8 sm:py-10">
-        {/* Breadcrumb */}
         <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
-          <Link href="/" className="hover:underline">Ana Sayfa</Link>
+          <Link href="/" className="hover:underline">
+            Ana Sayfa
+          </Link>
           <ChevronRight className="size-3.5 text-border" />
-          <Link href={`/category/${slug}`} className="hover:underline">{displayName}</Link>
+          <Link href={`/category/${slug}`} className="hover:underline">
+            {displayName}
+          </Link>
           <ChevronRight className="size-3.5 text-border" />
           <span className="font-medium text-foreground">{city}</span>
         </nav>
 
-        {/* Header */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Kategori & Şehir
@@ -138,7 +141,7 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
           <div className="mt-1.5 flex items-center gap-2">
             <MapPin className="size-5 shrink-0 text-muted-foreground" />
             <h1 className="text-3xl font-semibold tracking-[-0.02em]">
-              {displayName} — {city}
+              {displayName} - {city}
             </h1>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -148,19 +151,14 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
           </p>
         </div>
 
-        {/* Filters */}
         <Suspense fallback={<div className="h-9 animate-pulse rounded-lg bg-brand-pink/8" />}>
-          <FilterBar
-            districts={districtList}
-            showDistrict
-          />
+          <FilterBar districts={districtList} showDistrict />
         </Suspense>
 
-        {/* District navigation pills — hidden when district filter is active */}
         {districtList.length > 0 && !filters.district && (
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              İlçeye göre gözat
+              İlçeye göre göz at
             </p>
             <div className="flex flex-wrap gap-2">
               {districtList.map((district) => (
@@ -176,7 +174,6 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
           </div>
         )}
 
-        {/* Results */}
         {businesses.length === 0 && hasAnyFilter ? (
           <EmptyFilterState clearHref={path} />
         ) : (

@@ -26,12 +26,14 @@ export function getDayOfWeek(dateString: string): DayOfWeek {
 export const BLOCKING_STATUSES: AppointmentStatus[] = [
   "PENDING",
   "CONFIRMED",
+  "CHECKED_IN",
 ];
 
 /** Statuses considered "upcoming" for display purposes */
 export const UPCOMING_STATUSES: AppointmentStatus[] = [
   "PENDING",
   "CONFIRMED",
+  "CHECKED_IN",
 ];
 
 /** Terminal statuses (no further transitions allowed) */
@@ -56,11 +58,13 @@ export const STATUS_TRANSITIONS: Record<
 > = {
   PENDING: ["CONFIRMED", "REJECTED", "CANCELLED_BY_CUSTOMER"],
   CONFIRMED: [
+    "CHECKED_IN",
     "COMPLETED",
     "NO_SHOW",
     "CANCELLED_BY_CUSTOMER",
     "CANCELLED_BY_BUSINESS",
   ],
+  CHECKED_IN: ["COMPLETED", "NO_SHOW", "CANCELLED_BY_BUSINESS"],
   REJECTED: [],
   CANCELLED_BY_CUSTOMER: [],
   CANCELLED_BY_BUSINESS: [],
@@ -71,6 +75,7 @@ export const STATUS_TRANSITIONS: Record<
 export const STATUS_LABELS: Record<AppointmentStatus, string> = {
   PENDING: "Bekliyor",
   CONFIRMED: "Onaylandı",
+  CHECKED_IN: "Geldi",
   REJECTED: "Reddedildi",
   CANCELLED_BY_CUSTOMER: "Müşteri iptal etti",
   CANCELLED_BY_BUSINESS: "İşletme iptal etti",
@@ -81,6 +86,7 @@ export const STATUS_LABELS: Record<AppointmentStatus, string> = {
 export const STATUS_COLORS: Record<AppointmentStatus, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
   CONFIRMED: "bg-green-100 text-green-800",
+  CHECKED_IN: "bg-blue-100 text-blue-800",
   REJECTED: "bg-red-100 text-red-800",
   CANCELLED_BY_CUSTOMER: "bg-gray-100 text-gray-800",
   CANCELLED_BY_BUSINESS: "bg-gray-100 text-gray-800",
@@ -91,6 +97,7 @@ export const STATUS_COLORS: Record<AppointmentStatus, string> = {
 export const STATUS_VARIANTS: Record<AppointmentStatus, BadgeVariant> = {
   PENDING: "warning",
   CONFIRMED: "success",
+  CHECKED_IN: "info",
   REJECTED: "destructive",
   CANCELLED_BY_CUSTOMER: "neutral",
   CANCELLED_BY_BUSINESS: "neutral",

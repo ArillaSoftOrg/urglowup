@@ -1049,6 +1049,7 @@ export async function getAdminAppointmentStats() {
   const counts: Record<AppointmentStatus, number> = {
     PENDING: 0,
     CONFIRMED: 0,
+    CHECKED_IN: 0,
     REJECTED: 0,
     CANCELLED_BY_CUSTOMER: 0,
     CANCELLED_BY_BUSINESS: 0,
