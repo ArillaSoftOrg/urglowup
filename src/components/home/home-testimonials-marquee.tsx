@@ -118,7 +118,7 @@ function TestimonialCard({
   text: string;
 }) {
   return (
-    <article className="flex h-56 w-[18rem] shrink-0 cursor-grab select-none flex-col justify-between rounded-lg border border-border/70 bg-card p-5 shadow-xs active:cursor-grabbing md:h-52 md:w-[20rem]">
+    <article className="flex h-56 w-[18rem] shrink-0 cursor-grab select-none flex-col justify-between rounded-lg border border-sky-100 bg-sky-50 p-5 shadow-xs active:cursor-grabbing md:h-52 md:w-[20rem]">
       <div>
         <div className="flex gap-1 text-foreground" aria-label="5 yıldız">
           {Array.from({ length: 5 }).map((_, index) => (
@@ -273,7 +273,7 @@ export function HomeTestimonialsMarquee() {
   const secondRow = testimonials.slice(12);
 
   return (
-    <section className="bg-background py-14 md:py-20">
+    <section className="bg-sky-50/45 py-14 md:py-20">
       <div className="mx-auto mb-8 max-w-6xl px-4 text-center md:mb-10">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           Yorumlar

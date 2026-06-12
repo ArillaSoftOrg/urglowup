@@ -214,8 +214,6 @@ export default async function LocaleHomePage({ params }: PageProps) {
         </div>
       </section>
 
-      <HomeTestimonialsMarquee />
-
       {activeCategories.length > 0 && (
         <section className="bg-surface-pink px-4 py-12 md:py-20">
           <div className="mx-auto max-w-7xl">
@@ -277,6 +275,7 @@ export default async function LocaleHomePage({ params }: PageProps) {
 
       <HomeHowItWorks />
       <HomeVerifiedCallout />
+      <HomeTestimonialsMarquee />
       <HomeBusinessCTA />
     </div>
   );
