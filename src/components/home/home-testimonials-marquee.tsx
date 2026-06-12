@@ -275,11 +275,8 @@ export function HomeTestimonialsMarquee() {
   return (
     <section className="bg-sky-50/45 py-14 md:py-20">
       <div className="mx-auto mb-8 max-w-6xl px-4 text-center md:mb-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Yorumlar
-        </p>
-        <h2 className="mx-auto mt-2 max-w-3xl text-3xl font-semibold leading-tight tracking-[-0.015em] md:text-5xl">
-          Güzellik profesyonelleri UrGlowUp deneyimini seviyor
+        <h2 className="mx-auto max-w-4xl text-3xl font-semibold leading-tight tracking-[-0.015em] md:text-5xl">
+          Üyelerimiz UrGlowUp ile elde ettikleri kolaylıktan ve avantajdan memnun
         </h2>
       </div>
       <div className="space-y-2">
