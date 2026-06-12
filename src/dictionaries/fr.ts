@@ -1,0 +1,69 @@
+// LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
+import type { Dictionary } from './tr'
+
+const fr: Dictionary = {
+  nav: {
+    explore: 'Explorer',
+    forBusiness: 'Pour les professionnels',
+    account: 'Mon compte',
+    businessPanel: 'Tableau de bord pro',
+    adminPanel: 'Tableau de bord admin',
+    signIn: 'Connexion',
+    signUp: 'Inscription',
+    listBusiness: 'Inscrivez votre entreprise',
+    openMenu: 'Ouvrir le menu',
+  },
+  home: {
+    badge: 'Beauté et soins personnels',
+    heroTitle: 'Vous méritez les meilleurs soins',
+    heroBrand: 'pour vous.',
+    heroDescription:
+      'Découvrez les spécialistes de la beauté près de vous. Consultez des travaux réels, lisez les avis vérifiés et réservez en toute confiance.',
+    categoriesLabel: 'Catégories',
+    categoriesTitle: 'Que recherchez-vous?',
+    categoriesSeeAll: 'Explorez tous →',
+    featuredLabel: 'En vedette',
+    featuredTitle: 'Spécialistes populaires',
+    featuredDescription: 'Les spécialistes les plus appréciés par nos clients.',
+    featuredSeeAll: 'Voir tous les spécialistes →',
+    ctaExplore: 'Explorez les spécialistes',
+    ctaForBusiness: 'Pour les professionnels',
+  },
+  explore: {
+    searchTitle: 'Rechercher des services',
+    searchDescription: 'Recherchez par service, entreprise ou catégorie.',
+    regionTitle: 'Explorer par région',
+    categoriesTitle: 'Que recherchez-vous?',
+    allCategories: 'Toutes les catégories →',
+    professionalCount: (n: number) => `${n} spécialistes trouvés`,
+    emptyMessage: 'Aucun spécialiste répertorié pour le moment. Veuillez vérifier à nouveau bientôt.',
+  },
+  deals: {
+    title: 'Offres',
+    description: 'Promotions et offres actuelles des entreprises.',
+  },
+  cookieConsent: {
+    bannerTitle: 'Utilisation des cookies',
+    bannerDescription: 'Nous utilisons des cookies pour sécuriser le site, mémoriser votre préférence de langue et améliorer votre expérience. Pour plus de détails,',
+    acceptAll: 'Accepter tous',
+    rejectNonEssential: 'Seulement nécessaires',
+    managePreferences: 'Gérer les préférences',
+    savePreferences: 'Enregistrer les préférences',
+    necessaryTitle: 'Nécessaire',
+    necessaryDesc: 'Requis pour la connexion, la sécurité et les fonctions principales du site. Ne peut pas être désactivé.',
+    preferenceTitle: 'Préférence',
+    preferenceDesc: 'Se souvient de vos choix de langue et de thème. Requis pour les fonctionnalités demandées par l\'utilisateur.',
+    analyticsTitle: 'Analytique',
+    analyticsDesc: 'Permet l\'analyse anonyme du comportement de navigation pour nous aider à améliorer la plateforme.',
+    marketingTitle: 'Marketing',
+    marketingDesc: 'Requis pour recevoir les communications de campagne et promotionnelles.',
+    alwaysActive: 'Toujours actif',
+    enabled: 'Activé',
+    disabled: 'Désactivé',
+    policyUpdatedTitle: 'Notre politique de confidentialité a été mise à jour',
+    policyUpdatedDesc: 'Nous avons apporté des modifications à notre politique relative aux cookies et à la confidentialité. Veuillez examiner vos préférences pour continuer.',
+    cookieSettings: 'Paramètres des cookies',
+  },
+}
+
+export default fr

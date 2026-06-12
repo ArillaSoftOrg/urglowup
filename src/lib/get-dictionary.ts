@@ -8,6 +8,12 @@ const dictionaries = {
   ru: () => import('@/dictionaries/ru').then((m) => m.default),
   es: () => import('@/dictionaries/es').then((m) => m.default),
   bg: () => import('@/dictionaries/bg').then((m) => m.default),
+  fa: () => import('@/dictionaries/fa').then((m) => m.default),
+  pl: () => import('@/dictionaries/pl').then((m) => m.default),
+  ar: () => import('@/dictionaries/ar').then((m) => m.default),
+  fr: () => import('@/dictionaries/fr').then((m) => m.default),
+  nl: () => import('@/dictionaries/nl').then((m) => m.default),
+  ro: () => import('@/dictionaries/ro').then((m) => m.default),
 }
 
 export const getDictionary = async (locale: string) => {

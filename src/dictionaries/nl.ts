@@ -1,0 +1,69 @@
+// LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
+import type { Dictionary } from './tr'
+
+const nl: Dictionary = {
+  nav: {
+    explore: 'Verkennen',
+    forBusiness: 'Voor bedrijven',
+    account: 'Mijn account',
+    businessPanel: 'Bedrijfsdashboard',
+    adminPanel: 'Beheerdashboard',
+    signIn: 'Inloggen',
+    signUp: 'Registreren',
+    listBusiness: 'Uw bedrijf toevoegen',
+    openMenu: 'Menu openen',
+  },
+  home: {
+    badge: 'Schoonheid en persoonlijke verzorging',
+    heroTitle: 'U verdient de beste zorg',
+    heroBrand: 'voor jezelf.',
+    heroDescription:
+      'Ontdek schoonheidsspecialisten in de buurt. Bekijk echt werk, lees geverifieerde reviews en boek met vertrouwen.',
+    categoriesLabel: 'Categorieën',
+    categoriesTitle: 'Waar bent u naar op zoek?',
+    categoriesSeeAll: 'Alles verkennen →',
+    featuredLabel: 'Aanbevolen',
+    featuredTitle: 'Populaire specialisten',
+    featuredDescription: 'De meest voorkomen specialisten van onze klanten.',
+    featuredSeeAll: 'Bekijk alle specialisten →',
+    ctaExplore: 'Verken specialisten',
+    ctaForBusiness: 'Voor bedrijven',
+  },
+  explore: {
+    searchTitle: 'Diensten zoeken',
+    searchDescription: 'Zoeken op dienst, bedrijf of categorie.',
+    regionTitle: 'Verken op regio',
+    categoriesTitle: 'Waar bent u naar op zoek?',
+    allCategories: 'Alle categorieën →',
+    professionalCount: (n: number) => `${n} specialisten gevonden`,
+    emptyMessage: 'Er zijn nog geen specialisten geregistreerd. Kom binnenkort terug.',
+  },
+  deals: {
+    title: 'Aanbiedingen',
+    description: 'Huidige promoties en aanbiedingen van bedrijven.',
+  },
+  cookieConsent: {
+    bannerTitle: 'Cookiegebruik',
+    bannerDescription: 'We gebruiken cookies om de site veilig te houden, uw taalvoorkeur te onthouden en uw ervaring te verbeteren. Voor meer informatie,',
+    acceptAll: 'Alles accepteren',
+    rejectNonEssential: 'Alleen noodzakelijk',
+    managePreferences: 'Voorkeuren beheren',
+    savePreferences: 'Voorkeuren opslaan',
+    necessaryTitle: 'Noodzakelijk',
+    necessaryDesc: 'Vereist voor inloggen, beveiliging en basisfunctionaliteit van de site. Kan niet worden uitgeschakeld.',
+    preferenceTitle: 'Voorkeur',
+    preferenceDesc: 'Onthoud uw taal- en thema-instellingen. Vereist voor door gebruikers aangevraagde functionaliteit.',
+    analyticsTitle: 'Analytics',
+    analyticsDesc: 'Sta anonieme analyse van navigatiegedrag toe om ons te helpen het platform te verbeteren.',
+    marketingTitle: 'Marketing',
+    marketingDesc: 'Vereist voor het ontvangen van campagne- en promotiemededeling.',
+    alwaysActive: 'Altijd actief',
+    enabled: 'Ingeschakeld',
+    disabled: 'Uitgeschakeld',
+    policyUpdatedTitle: 'Ons privacybeleid is bijgewerkt',
+    policyUpdatedDesc: 'We hebben wijzigingen aangebracht in ons cookie- en privacybeleid. Controleer uw voorkeuren om door te gaan.',
+    cookieSettings: 'Cookie-instellingen',
+  },
+}
+
+export default nl

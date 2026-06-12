@@ -69,3 +69,63 @@ test("İlham tab — locale-aware route /de/explore renders feed", async ({
   await expect(page.locator("body")).not.toContainText("500");
   await expect(page.locator("body")).not.toContainText("Internal Server Error");
 });
+
+test("İlham tab — locale-aware route /fa/explore renders feed with RTL direction", async ({
+  page,
+}) => {
+  await page.goto("/fa/explore?tab=ilham");
+
+  await expect(page.locator("body")).not.toContainText("500");
+  await expect(page.locator("body")).not.toContainText("Internal Server Error");
+
+  // Verify RTL direction is set for Persian locale
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+});
+
+test("İlham tab — locale-aware route /pl/explore renders feed", async ({
+  page,
+}) => {
+  await page.goto("/pl/explore?tab=ilham");
+
+  await expect(page.locator("body")).not.toContainText("500");
+  await expect(page.locator("body")).not.toContainText("Internal Server Error");
+});
+
+test("İlham tab — locale-aware route /ar/explore renders feed with RTL direction", async ({
+  page,
+}) => {
+  await page.goto("/ar/explore?tab=ilham");
+
+  await expect(page.locator("body")).not.toContainText("500");
+  await expect(page.locator("body")).not.toContainText("Internal Server Error");
+
+  // Verify RTL direction is set for Arabic locale
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+});
+
+test("İlham tab — locale-aware route /fr/explore renders feed", async ({
+  page,
+}) => {
+  await page.goto("/fr/explore?tab=ilham");
+
+  await expect(page.locator("body")).not.toContainText("500");
+  await expect(page.locator("body")).not.toContainText("Internal Server Error");
+});
+
+test("İlham tab — locale-aware route /nl/explore renders feed", async ({
+  page,
+}) => {
+  await page.goto("/nl/explore?tab=ilham");
+
+  await expect(page.locator("body")).not.toContainText("500");
+  await expect(page.locator("body")).not.toContainText("Internal Server Error");
+});
+
+test("İlham tab — locale-aware route /ro/explore renders feed", async ({
+  page,
+}) => {
+  await page.goto("/ro/explore?tab=ilham");
+
+  await expect(page.locator("body")).not.toContainText("500");
+  await expect(page.locator("body")).not.toContainText("Internal Server Error");
+});

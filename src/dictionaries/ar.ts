@@ -1,0 +1,69 @@
+// LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
+import type { Dictionary } from './tr'
+
+const ar: Dictionary = {
+  nav: {
+    explore: 'استكشاف',
+    forBusiness: 'للشركات',
+    account: 'حسابي',
+    businessPanel: 'لوحة العمل التجارية',
+    adminPanel: 'لوحة المسؤول',
+    signIn: 'تسجيل الدخول',
+    signUp: 'إنشاء حساب',
+    listBusiness: 'أدرج عملك',
+    openMenu: 'فتح القائمة',
+  },
+  home: {
+    badge: 'الجمال والعناية الشخصية',
+    heroTitle: 'تستحق أفضل عناية',
+    heroBrand: 'لنفسك.',
+    heroDescription:
+      'اكتشف متخصصي الجمال بالقرب منك. شاهد أعمالاً حقيقية واقرأ التقييمات المتحققة وتحتفظ بثقة.',
+    categoriesLabel: 'الفئات',
+    categoriesTitle: 'ماذا تبحث عن؟',
+    categoriesSeeAll: 'استكشف الكل ←',
+    featuredLabel: 'مميز',
+    featuredTitle: 'المتخصصون المشهورون',
+    featuredDescription: 'المتخصصون الأكثر تفضيلاً من قبل عملائنا.',
+    featuredSeeAll: 'عرض جميع المتخصصين ←',
+    ctaExplore: 'استكشاف المتخصصين',
+    ctaForBusiness: 'للشركات',
+  },
+  explore: {
+    searchTitle: 'البحث عن الخدمات',
+    searchDescription: 'ابحث حسب الخدمة أو النشاط التجاري أو الفئة.',
+    regionTitle: 'استكشف حسب المنطقة',
+    categoriesTitle: 'ماذا تبحث عن؟',
+    allCategories: 'جميع الفئات ←',
+    professionalCount: (n: number) => `تم العثور على ${n} متخصص`,
+    emptyMessage: 'لا توجد متخصصون مدرجون حتى الآن. تحقق مرة أخرى قريباً.',
+  },
+  deals: {
+    title: 'العروض',
+    description: 'العروض الترويجية والعروض الحالية من الشركات.',
+  },
+  cookieConsent: {
+    bannerTitle: 'استخدام ملفات تعريف الارتباط',
+    bannerDescription: 'نحن نستخدم ملفات تعريف الارتباط لحماية الموقع وتذكر تفضيل اللغة وتحسين التجربة. للمزيد من التفاصيل،',
+    acceptAll: 'قبول الكل',
+    rejectNonEssential: 'الضروري فقط',
+    managePreferences: 'إدارة التفضيلات',
+    savePreferences: 'حفظ التفضيلات',
+    necessaryTitle: 'ضروري',
+    necessaryDesc: 'مطلوب لتسجيل الدخول والأمان والوظائف الأساسية للموقع. لا يمكن تعطيله.',
+    preferenceTitle: 'التفضيلات',
+    preferenceDesc: 'يتذكر خيارات اللغة والمظهر. مطلوب للوظائف المطلوبة من المستخدم.',
+    analyticsTitle: 'التحليلات',
+    analyticsDesc: 'يسمح بتحليل مجهول لسلوك التصفح لمساعدتنا على تحسين المنصة.',
+    marketingTitle: 'التسويق',
+    marketingDesc: 'مطلوب لتلقي الحملات والاتصالات الترويجية.',
+    alwaysActive: 'دائماً نشط',
+    enabled: 'مفعل',
+    disabled: 'معطل',
+    policyUpdatedTitle: 'تم تحديث سياسة الخصوصية الخاصة بنا',
+    policyUpdatedDesc: 'أجرينا تغييرات على سياسة ملفات تعريف الارتباط والخصوصية الخاصة بنا. يرجى مراجعة التفضيلات الخاصة بك للمتابعة.',
+    cookieSettings: 'إعدادات ملفات تعريف الارتباط',
+  },
+}
+
+export default ar

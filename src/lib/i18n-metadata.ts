@@ -22,6 +22,12 @@ export function getOgLocale(locale: string): string {
     ru: 'ru_RU',
     es: 'es_ES',
     bg: 'bg_BG',
+    fa: 'fa_IR',
+    pl: 'pl_PL',
+    ar: 'ar_AR',
+    fr: 'fr_FR',
+    nl: 'nl_NL',
+    ro: 'ro_RO',
   }
   return map[locale] ?? 'tr_TR'
 }

@@ -10,9 +10,11 @@ import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
 import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
-import { HomeBusinessCTA } from "@/components/home/home-business-cta";
 import { HomeSearchPanel } from "@/components/home/home-search-panel";
 import { HomeTestimonialsMarquee } from "@/components/home/home-testimonials-marquee";
+import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
+import { HomeFinalCTA } from "@/components/home/home-final-cta";
+import { HomeFAQ } from "@/components/home/home-faq";
 import { getDictionary } from "@/lib/get-dictionary";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import type { Locale } from "@/lib/i18n-config";
@@ -127,6 +129,96 @@ const homeSearchCopy: Record<
     nails: "Маникюр",
     skinCare: "Грижа за кожа",
     tattoo: "Татуировки & Пиърсинг",
+  },
+  fa: {
+    title: "متخصصین زیبایی نزدیک خود را کاوش کنید",
+    description:
+      "خدمت، منطقه و متخصص مناسب را انتخاب کنید. کارهای واقعی را ببینید، نظرات تایید‌شده را بخوانید، و با اطمینان نوبت بگیرید.",
+    searchPlaceholder: "جستجوی متخصص، خدمت یا کسب‌وکار",
+    regionPlaceholder: "منطقه یا ناحیه را انتخاب کنید",
+    categoryPlaceholder: "دسته‌بندی را انتخاب کنید",
+    submit: "جستجو",
+    popularSearches: "جستجوهای محبوب:",
+    popularServicesTitle: "خدمات محبوب",
+    hair: "آرایشگر",
+    nails: "ناخن",
+    skinCare: "مراقبت پوست",
+    tattoo: "تاتو و پیرسینگ",
+  },
+  pl: {
+    title: "Odkryj specjalistów urody w pobliżu",
+    description:
+      "Wybierz odpowiednią usługę, lokalizację i specjalistę. Patrz na rzeczywiste prace, przeczytaj zweryfikowane opinie i zarezerwuj z pewnością.",
+    searchPlaceholder: "Szukaj specjalisty, usługi lub biznesu",
+    regionPlaceholder: "Wybierz region lub dzielnicę",
+    categoryPlaceholder: "Wybierz kategorię",
+    submit: "Szukaj",
+    popularSearches: "Popularne wyszukiwania:",
+    popularServicesTitle: "Popularne usługi",
+    hair: "Fryzjer",
+    nails: "Paznokcie",
+    skinCare: "Pielęgnacja skóry",
+    tattoo: "Tatuaż & Piercing",
+  },
+  ar: {
+    title: "اكتشف متخصصي الجمال بالقرب منك",
+    description:
+      "اختر الخدمة والموقع والمتخصص المناسب. شاهد أعمالاً حقيقية واقرأ التقييمات المتحققة واحجز بثقة.",
+    searchPlaceholder: "ابحث عن متخصص أو خدمة أو عمل",
+    regionPlaceholder: "اختر المنطقة أو الحي",
+    categoryPlaceholder: "اختر الفئة",
+    submit: "بحث",
+    popularSearches: "عمليات البحث الشهيرة:",
+    popularServicesTitle: "الخدمات الشهيرة",
+    hair: "صالون الشعر",
+    nails: "الأظافر",
+    skinCare: "العناية بالبشرة",
+    tattoo: "الوشم والثقب",
+  },
+  fr: {
+    title: "Découvrez les spécialistes de la beauté près de vous",
+    description:
+      "Choisissez le service, l'emplacement et le spécialiste appropriés. Consultez les vrais travaux, lisez les avis vérifiés et réservez en toute confiance.",
+    searchPlaceholder: "Rechercher un spécialiste, un service ou une entreprise",
+    regionPlaceholder: "Choisir région ou arrondissement",
+    categoryPlaceholder: "Choisir une catégorie",
+    submit: "Rechercher",
+    popularSearches: "Recherches populaires:",
+    popularServicesTitle: "Services populaires",
+    hair: "Salon de coiffure",
+    nails: "Ongles",
+    skinCare: "Soins de la peau",
+    tattoo: "Tatouage & Piercing",
+  },
+  nl: {
+    title: "Ontdek schoonheidsspecialisten in de buurt",
+    description:
+      "Kies de juiste service, locatie en specialist. Bekijk echt werk, lees geverifieerde beoordelingen en boek met vertrouwen.",
+    searchPlaceholder: "Zoeken naar specialist, service of bedrijf",
+    regionPlaceholder: "Kies regio of wijk",
+    categoryPlaceholder: "Kies categorie",
+    submit: "Zoeken",
+    popularSearches: "Populaire zoekopdrachten:",
+    popularServicesTitle: "Populaire services",
+    hair: "Kapsalon",
+    nails: "Nagels",
+    skinCare: "Huidverzorging",
+    tattoo: "Tattoo & Piercing",
+  },
+  ro: {
+    title: "Descoperi specialiști în frumusețe aproape de tine",
+    description:
+      "Alege serviciul, locația și specialistul potrivit. Vezi lucrări reale, citește recenzii verificate și rezervă cu încredere.",
+    searchPlaceholder: "Cauta specialist, serviciu sau afacere",
+    regionPlaceholder: "Alege regiune sau district",
+    categoryPlaceholder: "Alege categorie",
+    submit: "Cauta",
+    popularSearches: "Căutări populare:",
+    popularServicesTitle: "Servicii populare",
+    hair: "Coafor",
+    nails: "Unghii",
+    skinCare: "Îngrijirea pielii",
+    tattoo: "Tatuaj & Piercing",
   },
 };
 
@@ -276,7 +368,9 @@ export default async function LocaleHomePage({ params }: PageProps) {
       <HomeHowItWorks />
       <HomeVerifiedCallout />
       <HomeTestimonialsMarquee />
-      <HomeBusinessCTA />
+      <HomeMigrationTransfer registerHref={p("/business/register")} />
+      <HomeFinalCTA registerHref={p("/business/register")} />
+      <HomeFAQ />
     </div>
   );
 }

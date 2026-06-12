@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers, cookies } from "next/headers";
 import { bootstrapEmailConfig } from "@/lib/email-bootstrap";
+import { getDirection } from "@/lib/i18n-config";
 import {
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
@@ -64,6 +65,7 @@ export default async function RootLayout({
 }>) {
   const h = await headers();
   const locale = h.get("x-locale") ?? "tr";
+  const direction = getDirection(locale);
 
   const jar = await cookies();
   const themeCookie = jar.get("ugl_theme")?.value ?? "SYSTEM";
@@ -94,6 +96,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      dir={direction}
       className={`h-full antialiased${isDark === true ? " dark" : ""}`}
       suppressHydrationWarning
     >

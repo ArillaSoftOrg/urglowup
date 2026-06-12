@@ -1,6 +1,6 @@
-export const SUPPORTED_LOCALES = ['tr', 'en', 'de', 'ru', 'es', 'bg'] as const
+export const SUPPORTED_LOCALES = ['tr', 'en', 'de', 'ru', 'es', 'bg', 'fa', 'pl', 'ar', 'fr', 'nl', 'ro'] as const
 export const DEFAULT_LOCALE = 'tr' as const
-export const INTL_LOCALES = ['en', 'de', 'ru', 'es', 'bg'] as const
+export const INTL_LOCALES = ['en', 'de', 'ru', 'es', 'bg', 'fa', 'pl', 'ar', 'fr', 'nl', 'ro'] as const
 
 // Locales that are native-reviewed and safe to index.
 // Add a locale here only after a native speaker has reviewed its dictionary file
