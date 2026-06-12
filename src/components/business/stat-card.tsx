@@ -41,25 +41,47 @@ export function StatCard({
       <CardContent
         className={cn(
           "flex items-center gap-4",
-          size === "compact" && "flex-col items-start gap-2 px-3 py-4 sm:flex-row sm:items-center sm:gap-4",
+          size === "compact" &&
+            "gap-3 px-3 py-3 min-[360px]:flex-col min-[360px]:items-start min-[360px]:gap-2 sm:flex-row sm:items-center sm:gap-4 sm:py-4",
           size === "sm" ? "p-3" : size === "compact" ? "" : "p-6"
         )}
       >
         <div
           className={cn(
             "flex shrink-0 items-center justify-center rounded-full",
-            size === "sm" ? "size-8" : size === "compact" ? "size-11 sm:size-14" : "size-16",
+            size === "sm"
+              ? "size-8"
+              : size === "compact"
+                ? "size-10 min-[360px]:size-11 sm:size-14"
+                : "size-16",
             TONE_CLASSES[iconTone]
           )}
         >
-          <Icon className={size === "sm" ? "size-4" : size === "compact" ? "size-5 sm:size-6" : "size-7"} />
+          <Icon
+            className={
+              size === "sm"
+                ? "size-4"
+                : size === "compact"
+                  ? "size-5 sm:size-6"
+                  : "size-7"
+            }
+          />
         </div>
         <div className={cn("min-w-0", size === "sm" ? "space-y-0.5" : "space-y-1")}>
           <p className={cn(
             "truncate font-semibold text-[oklch(0.24_0.055_285)]",
-            size === "compact" ? "text-[13px] sm:text-sm" : "text-sm"
+            size === "compact" ? "text-xs min-[360px]:text-[13px] sm:text-sm" : "text-sm"
           )}>{label}</p>
-          <div className={cn("font-bold tabular-nums", size === "sm" ? "text-xl" : size === "compact" ? "text-2xl sm:text-3xl" : "text-3xl")}>
+          <div
+            className={cn(
+              "font-bold tabular-nums",
+              size === "sm"
+                ? "text-xl"
+                : size === "compact"
+                  ? "text-xl min-[360px]:text-2xl sm:text-3xl"
+                  : "text-3xl"
+            )}
+          >
             {value}
           </div>
           {hint && (

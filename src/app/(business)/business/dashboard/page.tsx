@@ -180,9 +180,9 @@ export default async function DashboardPage() {
         </Badge>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_330px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
         <div className="space-y-6">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-bold tracking-tight text-[oklch(0.20_0.06_285)] md:text-xl">
               Bugünkü Özet
             </h2>
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+          <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-3 sm:gap-4">
             <StatCard
               icon={AlertCircle}
               label="Bekleyen"
@@ -241,7 +241,7 @@ export default async function DashboardPage() {
             <ProfileCompletionCard completion={completion} />
           )}
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-[oklch(0.90_0.014_285)] bg-card px-5 py-3 text-sm shadow-xs">
+          <div className="grid gap-2 rounded-xl border border-[oklch(0.90_0.014_285)] bg-card px-4 py-3 text-sm shadow-xs sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:px-5">
             <Link
               href="/business/services"
               className="flex items-center gap-2 text-[oklch(0.43_0.045_285)] transition-colors hover:text-foreground"
@@ -252,7 +252,7 @@ export default async function DashboardPage() {
                 {" "}aktif hizmet
               </span>
             </Link>
-            <span className="select-none text-muted-foreground/35">·</span>
+            <span className="hidden select-none text-muted-foreground/35 sm:inline">·</span>
             <Link
               href="/business/hours"
               className="flex items-center gap-2 text-[oklch(0.43_0.045_285)] transition-colors hover:text-foreground"
@@ -260,7 +260,7 @@ export default async function DashboardPage() {
               <Clock className="size-4 shrink-0" />
               <span>{hoursConfigured ? "Saatler ayarlı" : "Saatler ayarlanmadı"}</span>
             </Link>
-            <span className="select-none text-muted-foreground/35">·</span>
+            <span className="hidden select-none text-muted-foreground/35 sm:inline">·</span>
             <Link
               href="/business/public-link"
               className="flex items-center gap-2 font-mono text-xs text-[oklch(0.43_0.045_285)] transition-colors hover:text-foreground"
@@ -270,12 +270,11 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <Card className="border-[oklch(0.91_0.015_285)] bg-card shadow-sm">
-            <CardContent className="p-5">
+          <section>
               <p className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-[oklch(0.48_0.055_285)]">
                 Hızlı İşlemler
               </p>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 min-[520px]:grid-cols-3 lg:grid-cols-5">
                 {quickActions.map((action) => {
                   const Icon = action.icon;
                   return (
@@ -284,27 +283,63 @@ export default async function DashboardPage() {
                       href={action.href}
                       className={cn(
                         buttonVariants({ variant: "outline" }),
-                        "group h-auto min-h-24 justify-start whitespace-normal rounded-xl border-[oklch(0.90_0.015_285)] bg-[oklch(0.997_0.004_285)] px-4 py-4 text-left shadow-xs transition-all hover:-translate-y-0.5 hover:border-[oklch(0.82_0.045_285)] hover:bg-card hover:shadow-sm"
+                        "group h-auto min-h-[104px] flex-col items-center justify-center gap-2 whitespace-normal rounded-xl border-[oklch(0.90_0.015_285)] bg-[oklch(0.997_0.004_285)] px-2.5 py-3 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:border-[oklch(0.82_0.045_285)] hover:bg-card hover:shadow-sm sm:min-h-[116px] sm:px-3 sm:py-4"
                       )}
                     >
                       <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", action.tone)}>
-                        <Icon className="size-5" />
+                        <Icon className="size-6" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-[oklch(0.21_0.055_285)]">
+                        <span className="block text-[13px] font-bold leading-snug text-[oklch(0.21_0.055_285)] sm:text-sm">
                           {action.title}
                         </span>
-                        <span className="mt-1 block text-xs leading-5 text-[oklch(0.46_0.045_285)]">
+                        <span className="mt-1 hidden text-xs leading-5 text-[oklch(0.46_0.045_285)] sm:block">
                           {action.description}
                         </span>
                       </span>
-                      <ArrowRight className="ml-auto size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                      <ArrowRight className="hidden size-4 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block" />
                     </Link>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+          </section>
+
+          <section className="xl:hidden">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-bold tracking-tight text-[oklch(0.20_0.06_285)] md:text-xl">
+                Son Aktiviteler
+              </h2>
+              <Link
+                href="/business/settings"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-[oklch(0.50_0.18_285)] transition-colors hover:text-[oklch(0.42_0.18_285)]"
+              >
+                Tümünü görüntüle
+                <ChevronRight className="size-4" />
+              </Link>
+            </div>
+            <Card className="border-[oklch(0.91_0.015_285)] bg-card shadow-sm">
+              <CardContent className="divide-y divide-[oklch(0.92_0.012_285)] p-0">
+                <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 px-4 py-3 text-sm min-[430px]:grid-cols-[auto_minmax(0,1fr)_auto]">
+                  <span className="mt-1.5 size-2.5 rounded-full bg-[oklch(0.66_0.16_165)]" />
+                  <span className="min-w-0 font-medium text-[oklch(0.25_0.045_285)]">
+                    Profil bilgileri güncellendi
+                  </span>
+                  <span className="col-start-2 text-xs text-muted-foreground min-[430px]:col-start-auto min-[430px]:text-sm">
+                    2 gün önce
+                  </span>
+                </div>
+                <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 px-4 py-3 text-sm min-[430px]:grid-cols-[auto_minmax(0,1fr)_auto]">
+                  <span className="mt-1.5 size-2.5 rounded-full bg-[oklch(0.62_0.16_245)]" />
+                  <span className="min-w-0 font-medium text-[oklch(0.25_0.045_285)]">
+                    Çalışma saatleri ayarlandı
+                  </span>
+                  <span className="col-start-2 text-xs text-muted-foreground min-[430px]:col-start-auto min-[430px]:text-sm">
+                    5 gün önce
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
         </div>
 
         <aside className="hidden space-y-4 xl:block">

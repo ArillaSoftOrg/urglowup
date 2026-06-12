@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import type { ProfileCompletion } from "@/lib/profile-completion";
 
-const VISIBLE_MISSING_COUNT = 4;
+const VISIBLE_MISSING_COUNT = 1;
 
 interface ProfileCompletionCardProps {
   completion: ProfileCompletion;
@@ -57,10 +57,10 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
 
   return (
     <Card className="border-[oklch(0.91_0.02_285)] bg-[oklch(0.995_0.01_285)] shadow-sm">
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-5">
         <div className="flex items-start gap-5">
-          <div className="hidden size-16 shrink-0 items-center justify-center rounded-2xl bg-[oklch(0.93_0.055_285)] text-[oklch(0.50_0.18_285)] sm:flex">
-            <Store className="size-7" />
+          <div className="hidden size-12 shrink-0 items-center justify-center rounded-xl bg-[oklch(0.93_0.055_285)] text-[oklch(0.50_0.18_285)] lg:flex">
+            <Store className="size-6" />
           </div>
           <div className="min-w-0 flex-1 space-y-4">
             <div className="flex items-center justify-between gap-3">
@@ -99,7 +99,7 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
 
             {!collapsed && (
               <>
-                <p className="text-xs text-muted-foreground">{encouragement}</p>
+                <p className="hidden text-xs text-muted-foreground sm:block">{encouragement}</p>
 
                 <ul className="space-y-1.5">
                   {visibleMissing.map((item) => (
