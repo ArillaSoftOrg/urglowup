@@ -3,6 +3,7 @@ import type { ComponentProps } from "react";
 import {
   Apple,
   BadgeCheck,
+  Building2,
   ChevronDown,
   ChevronRight,
   Globe2,
@@ -13,7 +14,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Store,
   UserRound,
 } from "lucide-react";
 import { CookieSettingsButton } from "@/components/layout/cookie-settings-button";
@@ -77,7 +77,7 @@ const footerColumns = [
   },
   {
     heading: "İşletmeler",
-    icon: Store,
+    icon: Building2,
     links: [
       { label: "İşletmeler İçin", href: "/for-business" },
       { label: "İşletme Kaydı", href: "/business/register" },
@@ -187,7 +187,7 @@ export function Footer() {
       <div className="mx-auto max-w-[1800px] overflow-hidden rounded-t-2xl border border-violet-200/80 border-t-4 border-t-violet-600 bg-[oklch(0.992_0.006_300)] shadow-[0_22px_70px_oklch(0.42_0.12_300/0.10)]">
         <div className="px-6 py-8 sm:px-8 md:px-10 lg:px-16 lg:py-12">
           <div className="grid gap-9 lg:grid-cols-[1.28fr_3.45fr] lg:gap-14">
-            <div className="space-y-7">
+            <div className="space-y-7 lg:pt-1">
               <div>
                 <Link
                   href="/"
@@ -240,33 +240,9 @@ export function Footer() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-violet-200 bg-violet-50/70 p-5 shadow-sm">
-                <div className="flex gap-3.5">
-                  <Store
-                    aria-hidden="true"
-                    className="mt-1 h-11 w-11 shrink-0 text-violet-700"
-                  />
-                  <div>
-                    <p className="text-base font-extrabold leading-7 text-violet-700">
-                      İşletmenizi UrGlowUp&apos;a ekleyin
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">
-                      Daha fazla müşteriye ulaşın, randevularınızı kolayca
-                      yönetin.
-                    </p>
-                    <Link
-                      href="/business/register"
-                      className="mt-4 inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-lg bg-violet-700 px-4 text-sm font-extrabold text-white shadow-md shadow-violet-700/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-800"
-                    >
-                      Ücretsiz İşletme Kaydı
-                      <ChevronRight aria-hidden="true" className="h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-7">
               <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4 xl:gap-11">
               {footerColumns.map((col) => {
                 const Icon = col.icon;
@@ -319,23 +295,23 @@ export function Footer() {
               </div>
               </div>
 
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {trustItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <div
                       key={item.title}
-                      className="flex gap-4 border-violet-200/80 xl:border-l xl:pl-8"
+                      className="flex gap-3 border-violet-200/80 xl:border-l xl:pl-6"
                     >
                       <Icon
                         aria-hidden="true"
-                        className="mt-1 h-11 w-11 shrink-0 text-violet-700"
+                        className="mt-0.5 h-9 w-9 shrink-0 text-violet-700"
                       />
                       <div>
-                        <p className="font-extrabold text-slate-950">
+                        <p className="text-sm font-extrabold leading-6 text-slate-950">
                           {item.title}
                         </p>
-                        <p className="mt-2 text-[15px] leading-7 text-slate-700">
+                        <p className="mt-1 text-sm leading-6 text-slate-700">
                           {item.description}
                         </p>
                       </div>
