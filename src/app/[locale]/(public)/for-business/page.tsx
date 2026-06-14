@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { ForBusinessDifferenceSection } from "@/components/business/for-business-difference-section";
 import { ForBusinessHero } from "@/components/business/for-business-hero";
 import { HomeFAQ } from "@/components/home/home-faq";
 import { HomeFinalCTA } from "@/components/home/home-final-cta";
@@ -111,6 +112,7 @@ export default async function LocaleForBusinessPage({ params }: PageProps) {
   return (
     <div>
       <ForBusinessHero registerHref={registerHref} />
+      <ForBusinessDifferenceSection />
 
       <section className="border-t bg-muted/30 px-4 py-16 md:py-24">
         <div className="container mx-auto max-w-5xl">
