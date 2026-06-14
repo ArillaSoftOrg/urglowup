@@ -17,6 +17,7 @@ import {
   enforceVerificationEmailRateLimit,
 } from "@/lib/auth-rate-limit";
 import { validateBotProtection } from "@/lib/bot-protection";
+import { isAdminEmail } from "@/lib/admin-bootstrap";
 import { db } from "@/lib/db";
 
 type AuthMessageTone = "success" | "error" | "info";
@@ -261,19 +262,39 @@ export async function forgotPasswordAction(
 
   try {
     const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
+    const email = parsed.data.email.trim().toLowerCase();
+    const isAdmin = isAdminEmail(email);
+
+    const resetPath = isAdmin ? "/admin/reset-password" : "/reset-password";
     const resetRedirect =
-      redirectTo === "/account"
-        ? "/reset-password"
-        : `/reset-password?next=${encodeURIComponent(redirectTo)}`;
+      redirectTo === "/account" || (isAdmin && redirectTo === "/admin")
+        ? resetPath
+        : `${resetPath}?next=${encodeURIComponent(redirectTo)}`;
+
+    console.log("[auth:forgot-password-action]", {
+      email: maskEmail(email),
+      isAdmin,
+      resetPath,
+      resetRedirect,
+    });
 
     await auth.api.requestPasswordReset({
       body: {
-        email: parsed.data.email,
+        email,
         redirectTo: resetRedirect,
       },
       headers: requestHeaders,
     });
+
+    console.log("[auth:forgot-password-requested]", {
+      email: maskEmail(email),
+      isAdmin,
+    });
   } catch (error) {
+    console.error("[auth:forgot-password-error]", {
+      email: maskEmail(email),
+      error: String(error),
+    });
     return mapAuthError(error, "forgotPassword");
   }
 

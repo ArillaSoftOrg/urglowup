@@ -123,9 +123,15 @@ export const auth = betterAuth({
       },
     },
     sendResetPassword: async ({ user, url }) => {
+      console.log("[auth:password-reset-email-attempt]", {
+        userId: user.id,
+        email: user.email,
+        resetUrl: url,
+      });
+
       const result = await sendEmail({
         to: user.email,
-        subject: "UrGlowUp sifre sifirlama baglantin",
+        subject: "UrGlowUp şifre sıfırlama bağlantısı",
         react: React.createElement(AuthPasswordReset, { resetUrl: url }),
         tags: [
           { name: "flow", value: "auth" },
@@ -140,9 +146,16 @@ export const auth = betterAuth({
           email: user.email,
           errorType: result.errorType,
           errorMessage: result.error,
+          resetUrl: url,
         });
         // Don't throw — let the reset token be created anyway.
         // Better to have a reset token than to fail the entire request.
+      } else {
+        console.log("[auth:password-reset-email-sent]", {
+          userId: user.id,
+          email: user.email,
+          messageId: result.messageId,
+        });
       }
     },
   },
@@ -273,10 +286,24 @@ export async function requireBusiness(
 }
 
 export async function requireAdminMfa() {
-  const user = await requireRole(UserRole.ADMIN);
+  const user = await requireAdminRole();
 
   if (!user.twoFactorEnabled) {
     redirect("/admin/mfa/setup");
+  }
+
+  return user;
+}
+
+export async function requireAdminRole() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/admin/login");
+  }
+
+  if (user.role !== UserRole.ADMIN) {
+    redirect("/");
   }
 
   return user;
