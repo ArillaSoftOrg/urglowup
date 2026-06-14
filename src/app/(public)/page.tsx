@@ -12,9 +12,6 @@ import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeSearchPanel } from "@/components/home/home-search-panel";
 import { HomeTestimonialsMarquee } from "@/components/home/home-testimonials-marquee";
-import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
-import { HomeFinalCTA } from "@/components/home/home-final-cta";
-import { HomeFAQ } from "@/components/home/home-faq";
 import { buildAlternates } from "@/lib/i18n-metadata";
 
 export const metadata: Metadata = {
@@ -148,9 +145,6 @@ export default async function HomePage() {
       <HomeHowItWorks />
       <HomeVerifiedCallout />
       <HomeTestimonialsMarquee />
-      <HomeMigrationTransfer />
-      <HomeFinalCTA />
-      <HomeFAQ />
     </div>
   );
 }

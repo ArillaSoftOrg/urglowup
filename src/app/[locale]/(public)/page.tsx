@@ -12,9 +12,6 @@ import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeSearchPanel } from "@/components/home/home-search-panel";
 import { HomeTestimonialsMarquee } from "@/components/home/home-testimonials-marquee";
-import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
-import { HomeFinalCTA } from "@/components/home/home-final-cta";
-import { HomeFAQ } from "@/components/home/home-faq";
 import { getDictionary } from "@/lib/get-dictionary";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import type { Locale } from "@/lib/i18n-config";
@@ -368,9 +365,6 @@ export default async function LocaleHomePage({ params }: PageProps) {
       <HomeHowItWorks />
       <HomeVerifiedCallout />
       <HomeTestimonialsMarquee />
-      <HomeMigrationTransfer registerHref={p("/business/register")} />
-      <HomeFinalCTA registerHref={p("/business/register")} />
-      <HomeFAQ />
     </div>
   );
 }

@@ -17,6 +17,9 @@ import {
   Zap,
 } from "lucide-react";
 import { buildAlternates } from "@/lib/i18n-metadata";
+import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
+import { HomeFinalCTA } from "@/components/home/home-final-cta";
+import { HomeFAQ } from "@/components/home/home-faq";
 
 const description =
   "Güzellik ve kişisel bakım işletmeni UrGlowUp'ta yayınla; portfolyonu, hizmetlerini ve yorumlarını göstererek yeni müşterilerden randevu talepleri al.";
@@ -177,6 +180,10 @@ export default function ForBusinessPage() {
           </div>
         </div>
       </section>
+
+      <HomeMigrationTransfer />
+      <HomeFinalCTA />
+      <HomeFAQ />
     </div>
   );
 }

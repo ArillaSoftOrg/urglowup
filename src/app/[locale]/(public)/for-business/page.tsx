@@ -17,6 +17,9 @@ import {
   Zap,
 } from "lucide-react";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
+import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
+import { HomeFinalCTA } from "@/components/home/home-final-cta";
+import { HomeFAQ } from "@/components/home/home-faq";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -99,7 +102,10 @@ const steps = [
   },
 ];
 
-export default async function LocaleForBusinessPage() {
+export default async function LocaleForBusinessPage({ params }: PageProps) {
+  const { locale } = await params;
+  const registerHref = `/${locale}/business/register`;
+
   return (
     <div>
       {/* Hero */}
@@ -185,6 +191,10 @@ export default async function LocaleForBusinessPage() {
           </div>
         </div>
       </section>
+
+      <HomeMigrationTransfer registerHref={registerHref} />
+      <HomeFinalCTA registerHref={registerHref} />
+      <HomeFAQ />
     </div>
   );
 }
