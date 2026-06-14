@@ -195,33 +195,41 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-3 sm:gap-4">
-            <StatCard
-              icon={AlertCircle}
-              label="Bekleyen"
-              value={pendingCount}
-              hint={pendingCount > 0 ? "Yanıtınızı bekliyor" : "Yeni talep yok"}
-              href="/business/appointments?tab=pending"
-              iconTone="warning"
-              size="compact"
-            />
-            <StatCard
-              icon={CalendarCheck}
-              label="Bugün"
-              value={todayCount}
-              hint={todayCount > 0 ? "Onaylanan randevular" : "Bugün randevu yok"}
-              iconTone="pink"
-              size="compact"
-            />
-            <StatCard
-              icon={CalendarDays}
-              label="Bu Hafta"
-              value={weekCount}
-              hint="Bu hafta toplam"
-              iconTone="info"
-              size="compact"
-            />
-          </div>
+          {(pendingCount > 0 || todayCount > 0 || weekCount > 0) && (
+            <div className="grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:grid-cols-3 sm:gap-4">
+              {pendingCount > 0 && (
+                <StatCard
+                  icon={AlertCircle}
+                  label="Bekleyen"
+                  value={pendingCount}
+                  hint="Yanıtınızı bekliyor"
+                  href="/business/appointments?tab=pending"
+                  iconTone="warning"
+                  size="compact"
+                />
+              )}
+              {todayCount > 0 && (
+                <StatCard
+                  icon={CalendarCheck}
+                  label="Bugün"
+                  value={todayCount}
+                  hint="Onaylanan randevular"
+                  iconTone="pink"
+                  size="compact"
+                />
+              )}
+              {weekCount > 0 && (
+                <StatCard
+                  icon={CalendarDays}
+                  label="Bu Hafta"
+                  value={weekCount}
+                  hint="Bu hafta toplam"
+                  iconTone="info"
+                  size="compact"
+                />
+              )}
+            </div>
+          )}
 
           <Link
             href="/business/appointments"
@@ -343,39 +351,47 @@ export default async function DashboardPage() {
         </div>
 
         <aside className="hidden space-y-4 xl:block">
-          <Card className="border-[oklch(0.91_0.015_285)] bg-card shadow-sm">
-            <CardContent className="p-5">
-              <div className="mb-5 flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-[oklch(0.94_0.045_345)] text-[oklch(0.48_0.16_345)]">
-                  <CalendarClock className="size-5" />
-                </span>
-                <p className="text-base font-semibold text-[oklch(0.21_0.055_285)]">
-                  Yaklaşan Randevular
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between rounded-lg bg-[oklch(0.985_0.01_285)] px-3 py-2 text-sm">
-                  <span className="text-muted-foreground">Bekleyen</span>
-                  <span className="font-bold tabular-nums">{pendingCount}</span>
+          {(pendingCount > 0 || todayCount > 0 || weekCount > 0) && (
+            <Card className="border-[oklch(0.91_0.015_285)] bg-card shadow-sm">
+              <CardContent className="p-5">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-[oklch(0.94_0.045_345)] text-[oklch(0.48_0.16_345)]">
+                    <CalendarClock className="size-5" />
+                  </span>
+                  <p className="text-base font-semibold text-[oklch(0.21_0.055_285)]">
+                    Yaklaşan Randevular
+                  </p>
                 </div>
-                <div className="flex items-center justify-between rounded-lg bg-[oklch(0.985_0.01_285)] px-3 py-2 text-sm">
-                  <span className="text-muted-foreground">Bugün onaylı</span>
-                  <span className="font-bold tabular-nums">{todayCount}</span>
+                <div className="space-y-2">
+                  {pendingCount > 0 && (
+                    <div className="flex items-center justify-between rounded-lg bg-[oklch(0.985_0.01_285)] px-3 py-2 text-sm">
+                      <span className="text-muted-foreground">Bekleyen</span>
+                      <span className="font-bold tabular-nums">{pendingCount}</span>
+                    </div>
+                  )}
+                  {todayCount > 0 && (
+                    <div className="flex items-center justify-between rounded-lg bg-[oklch(0.985_0.01_285)] px-3 py-2 text-sm">
+                      <span className="text-muted-foreground">Bugün onaylı</span>
+                      <span className="font-bold tabular-nums">{todayCount}</span>
+                    </div>
+                  )}
+                  {weekCount > 0 && (
+                    <div className="flex items-center justify-between rounded-lg bg-[oklch(0.985_0.01_285)] px-3 py-2 text-sm">
+                      <span className="text-muted-foreground">Bu hafta toplam</span>
+                      <span className="font-bold tabular-nums">{weekCount}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center justify-between rounded-lg bg-[oklch(0.985_0.01_285)] px-3 py-2 text-sm">
-                  <span className="text-muted-foreground">Bu hafta toplam</span>
-                  <span className="font-bold tabular-nums">{weekCount}</span>
-                </div>
-              </div>
-              <Link
-                href="/business/appointments"
-                className="mt-4 flex items-center gap-1 text-sm font-semibold text-[oklch(0.50_0.18_285)] hover:underline"
-              >
-                Tüm randevuları görüntüle
-                <ArrowRight className="size-3.5" />
-              </Link>
-            </CardContent>
-          </Card>
+                <Link
+                  href="/business/appointments"
+                  className="mt-4 flex items-center gap-1 text-sm font-semibold text-[oklch(0.50_0.18_285)] hover:underline"
+                >
+                  Tüm randevuları görüntüle
+                  <ArrowRight className="size-3.5" />
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-[oklch(0.91_0.015_285)] bg-card shadow-sm">
             <CardContent className="p-5">
