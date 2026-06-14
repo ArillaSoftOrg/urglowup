@@ -19,6 +19,7 @@ import {
   sendNewRequestEmailToBusiness,
   sendRequestReceivedEmailToCustomer,
 } from "@/lib/email-notifications";
+import { notifyBusinessAppointmentRequested } from "@/lib/in-app-notifications";
 import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
 import { validateBotProtection } from "@/lib/bot-protection";
 
@@ -271,6 +272,14 @@ export async function createAppointmentRequest(
         await sendBookingConfirmationWhatsApp(appointment.id);
       } catch (err) {
         console.error("[whatsapp] createAppointmentRequest → unexpected:", err);
+      }
+    });
+
+    after(async () => {
+      try {
+        await notifyBusinessAppointmentRequested(appointment.id);
+      } catch (err) {
+        console.error("[in-app] createAppointmentRequest -> business:", err);
       }
     });
 

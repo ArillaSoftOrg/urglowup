@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { CUSTOMER_CANCELLABLE } from "@/lib/constants/booking";
 import { sendCancelledByCustomerEmailToBusiness } from "@/lib/email-notifications";
+import { notifyBusinessAppointmentCancelledByCustomer } from "@/lib/in-app-notifications";
 
 export type AppointmentActionState = {
   success: boolean;
@@ -46,6 +47,14 @@ export async function cancelAppointment(
       await sendCancelledByCustomerEmailToBusiness(appointmentId);
     } catch (err) {
       console.error("[email] cancelAppointment:", err);
+    }
+  });
+
+  after(async () => {
+    try {
+      await notifyBusinessAppointmentCancelledByCustomer(appointmentId);
+    } catch (err) {
+      console.error("[in-app] cancelAppointment -> business:", err);
     }
   });
 

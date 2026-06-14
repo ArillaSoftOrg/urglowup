@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell,
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +10,10 @@ import { meetsMinRole } from "@/lib/permissions";
 import { BusinessMemberRole } from "@/generated/prisma/enums";
 import { businessNavItems } from "./business-nav-items";
 import { BusinessMobileNav } from "./business-mobile-nav";
+import {
+  BusinessNotificationMenu,
+  type BusinessNotificationMenuItem,
+} from "./business-notification-menu";
 
 const TOP_NAV_HREFS = [
   "/business/dashboard",
@@ -22,8 +25,12 @@ const TOP_NAV_HREFS = [
 
 export function BusinessSidebar({
   memberRole,
+  notifications,
+  unreadCount,
 }: {
   memberRole: BusinessMemberRole;
+  notifications: BusinessNotificationMenuItem[];
+  unreadCount: number;
 }) {
   const pathname = usePathname();
 
@@ -73,14 +80,10 @@ export function BusinessSidebar({
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link
-            href="/business/appointments?tab=pending"
-            aria-label="Bekleyen randevular"
-            className="relative flex size-9 items-center justify-center rounded-full text-business-nav-muted transition-colors hover:bg-white/10 hover:text-business-nav-fg"
-          >
-            <Bell className="size-4" />
-            <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[oklch(0.68_0.22_345)]" />
-          </Link>
+          <BusinessNotificationMenu
+            notifications={notifications}
+            unreadCount={unreadCount}
+          />
 
           <div className="md:hidden">
             <BusinessMobileNav memberRole={memberRole} />
