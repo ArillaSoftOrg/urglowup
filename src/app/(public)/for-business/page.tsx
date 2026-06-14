@@ -1,13 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import {
   CalendarCheck,
   Camera,
@@ -16,10 +8,19 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { buildAlternates } from "@/lib/i18n-metadata";
-import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
-import { HomeFinalCTA } from "@/components/home/home-final-cta";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
+import { ForBusinessHero } from "@/components/business/for-business-hero";
 import { HomeFAQ } from "@/components/home/home-faq";
+import { HomeFinalCTA } from "@/components/home/home-final-cta";
+import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
+import { buildAlternates } from "@/lib/i18n-metadata";
+import { cn } from "@/lib/utils";
 
 const description =
   "Güzellik ve kişisel bakım işletmeni UrGlowUp'ta yayınla; portfolyonu, hizmetlerini ve yorumlarını göstererek yeni müşterilerden randevu talepleri al.";
@@ -97,35 +98,8 @@ const steps = [
 export default function ForBusinessPage() {
   return (
     <div>
-      {/* Hero */}
-      <section className="px-4 py-20 text-center md:py-32">
-        <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-          Güzellik İşletmeni Online Büyüt
-        </h1>
-        <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-          Profesyonel profilini oluştur, yaptığın işleri sergile ve müşterilerden
-          randevu taleplerini tek yerden al.
-        </p>
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href="/business/register"
-            className={cn(buttonVariants({ size: "lg" }))}
-          >
-            İşletmeni Kaydet
-          </Link>
-          <a
-            href="#how-it-works"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-          >
-            Nasıl Çalışır?
-          </a>
-        </div>
-        <p className="mt-4 text-sm text-muted-foreground">
-          Başlamak ücretsiz. Kredi kartı gerekmez.
-        </p>
-      </section>
+      <ForBusinessHero registerHref="/business/register" />
 
-      {/* Features */}
       <section className="border-t bg-muted/30 px-4 py-16 md:py-24">
         <div className="container mx-auto max-w-5xl">
           <h2 className="text-center text-3xl font-bold tracking-tight">
@@ -151,21 +125,22 @@ export default function ForBusinessPage() {
         </div>
       </section>
 
-      {/* How it works */}
       <section id="how-it-works" className="px-4 py-16 md:py-24">
         <div className="container mx-auto max-w-3xl">
           <h2 className="text-center text-3xl font-bold tracking-tight">
             3 kolay adımda başla
           </h2>
           <div className="mt-12 space-y-8">
-            {steps.map((s) => (
-              <div key={s.number} className="flex gap-4">
+            {steps.map((step) => (
+              <div key={step.number} className="flex gap-4">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                  {s.number}
+                  {step.number}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{s.title}</h3>
-                  <p className="mt-1 text-muted-foreground">{s.description}</p>
+                  <h3 className="text-lg font-semibold">{step.title}</h3>
+                  <p className="mt-1 text-muted-foreground">
+                    {step.description}
+                  </p>
                 </div>
               </div>
             ))}

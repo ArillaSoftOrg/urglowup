@@ -256,3 +256,32 @@
     transparent
   );
 }
+
+.business-panel-mask {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    oklch(0 0 0) 8%,
+    oklch(0 0 0) 92%,
+    transparent
+  );
+}
+
+.business-panel-track {
+  animation: business-panel-scroll 34s linear infinite;
+}
+
+@keyframes business-panel-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-50% - 1rem), 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .business-panel-track {
+    animation: none;
+  }
+}
