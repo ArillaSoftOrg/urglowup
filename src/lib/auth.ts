@@ -232,7 +232,11 @@ export async function getCurrentUser() {
 export async function requireRole(role: UserRole) {
   const user = await getCurrentUser();
 
-  if (!user || user.role !== role) {
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  if (user.role !== role) {
     redirect("/");
   }
 
@@ -243,7 +247,7 @@ export async function requireBusiness(
   minRole: BusinessMemberRole = BusinessMemberRole.STAFF,
 ) {
   const user = await getCurrentUser();
-  if (!user) redirect("/");
+  if (!user) redirect("/auth/login");
 
   const member = await db.businessMember.findFirst({
     where: { userId: user.id },
@@ -261,7 +265,7 @@ export async function requireBusiness(
     return { user, businessId: biz.id, memberRole: BusinessMemberRole.OWNER };
   }
 
-  if (!member) redirect("/");
+  if (!member) redirect("/auth/login");
 
   if (!meetsMinRole(member.role, minRole)) redirect("/business/dashboard");
 

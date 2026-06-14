@@ -7,6 +7,8 @@ import { AppointmentConfirmedEmail } from "@/emails/appointment-confirmed";
 import { AppointmentRejectedEmail } from "@/emails/appointment-rejected";
 import { AppointmentCancelledByBusinessEmail } from "@/emails/appointment-cancelled-by-business";
 import { AppointmentCancelledByCustomerEmail } from "@/emails/appointment-cancelled-by-customer";
+import { AppointmentCancellationConfirmationEmail } from "@/emails/appointment-cancellation-confirmation";
+import { AppointmentRescheduleRequestEmail } from "@/emails/appointment-reschedule-request";
 import { ReviewRequestEmail } from "@/emails/review-request";
 import React from "react";
 
@@ -273,6 +275,75 @@ export async function sendCancelledByCustomerEmailToBusiness(
       serviceName: appt.service.name,
       requestedDate: formatDate(appt.requestedDate),
       requestedTime: appt.requestedTime,
+      dashboardUrl: appUrl("/business/appointments"),
+    }),
+  });
+}
+
+/**
+ * Sent to the customer when they cancel their appointment.
+ */
+export async function sendCancellationConfirmationEmailToCustomer(
+  appointmentId: string
+): Promise<void> {
+  const appt = await getAppointmentEmailPayload(appointmentId);
+
+  if (appt.status !== "CANCELLED_BY_CUSTOMER") {
+    console.log(
+      `[email] sendCancellationConfirmationEmailToCustomer: skipped — status is ${appt.status}`
+    );
+    return;
+  }
+
+  if (!(await isEmailTransactionalEnabled(appt.customerId))) {
+    console.log(`[email] sendCancellationConfirmationEmailToCustomer: skipped — customer opted out`);
+    return;
+  }
+
+  await sendEmail({
+    to: appt.customer.email,
+    subject: `Randevunuz iptal edilmiştir — ${appt.business.name}`,
+    react: React.createElement(AppointmentCancellationConfirmationEmail, {
+      customerName: fullName(appt.customer.firstName, appt.customer.lastName),
+      businessName: appt.business.name,
+      serviceName: appt.service.name,
+      requestedDate: formatDate(appt.requestedDate),
+      requestedTime: appt.requestedTime,
+      dashboardUrl: appUrl("/account/appointments"),
+    }),
+  });
+}
+
+/**
+ * Sent to the business when a customer requests to reschedule.
+ * Note: appointmentId points to the ORIGINAL appointment; pass originalDate/Time + newDate/Time.
+ * newDate format: YYYY-MM-DD, newTime format: HH:MM
+ */
+export async function sendRescheduleRequestEmailToBusiness(
+  appointmentId: string,
+  newDate: string,
+  newTime: string
+): Promise<void> {
+  const appt = await getAppointmentEmailPayload(appointmentId);
+
+  // Parse newDate string (YYYY-MM-DD) into a Date object for formatting
+  const newDateObj = new Date(newDate + "T00:00:00Z");
+
+  await sendEmail({
+    to: appt.business.owner.email,
+    subject: `${fullName(appt.customer.firstName, appt.customer.lastName)} requested to reschedule their appointment`,
+    react: React.createElement(AppointmentRescheduleRequestEmail, {
+      businessOwnerName: fullName(
+        appt.business.owner.firstName,
+        appt.business.owner.lastName,
+        ""
+      ),
+      customerName: fullName(appt.customer.firstName, appt.customer.lastName),
+      serviceName: appt.service.name,
+      originalDate: formatDate(appt.requestedDate),
+      originalTime: appt.requestedTime,
+      requestedDate: formatDate(newDateObj),
+      requestedTime: newTime,
       dashboardUrl: appUrl("/business/appointments"),
     }),
   });

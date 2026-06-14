@@ -8,17 +8,17 @@ export const metadata: Metadata = {
 };
 
 const adminNav = [
-  { title: "Dashboard", href: "/admin" },
-  { title: "Moderation", href: "/admin/moderation" },
-  { title: "Businesses", href: "/admin/businesses" },
-  { title: "Users", href: "/admin/users" },
-  { title: "Appointments", href: "/admin/appointments" },
-  { title: "Campaigns", href: "/admin/campaigns" },
-  { title: "Media", href: "/admin/media" },
-  { title: "Reviews", href: "/admin/reviews" },
-  { title: "Categories", href: "/admin/categories" },
-  { title: "Style Tags", href: "/admin/style-tags" },
-  { title: "Posts", href: "/admin/posts" },
+  { title: "Kontrol Paneli", href: "/admin" },
+  { title: "Moderasyon", href: "/admin/moderation" },
+  { title: "İşletmeler", href: "/admin/businesses" },
+  { title: "Kullanıcılar", href: "/admin/users" },
+  { title: "Randevular", href: "/admin/appointments" },
+  { title: "Kampanyalar", href: "/admin/campaigns" },
+  { title: "Medya", href: "/admin/media" },
+  { title: "Yorumlar", href: "/admin/reviews" },
+  { title: "Kategoriler", href: "/admin/categories" },
+  { title: "Stil Etiketleri", href: "/admin/style-tags" },
+  { title: "Gönderiler", href: "/admin/posts" },
   { title: "Marketplace", href: "/admin/marketplace" },
 ];
 
@@ -35,7 +35,11 @@ export default async function AdminLayout({
         <div className="mb-6 px-3 text-lg font-bold tracking-tight">
           Admin Panel
         </div>
-        <SidebarNav items={adminNav} />
+        <SidebarNav
+          items={adminNav}
+          mobileTitle="Admin Paneli"
+          mobileLabel="Admin menüsü"
+        />
       </aside>
       <main className="flex-1 p-6">{children}</main>
     </div>

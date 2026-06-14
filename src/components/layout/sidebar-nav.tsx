@@ -22,6 +22,8 @@ interface NavItem {
 
 interface SidebarNavProps {
   items: NavItem[];
+  mobileTitle?: string;
+  mobileLabel?: string;
 }
 
 function NavLinks({
@@ -44,7 +46,7 @@ function NavLinks({
             "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent",
             pathname === item.href
               ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground"
+              : "text-muted-foreground",
           )}
         >
           {item.icon && <item.icon className="size-4 shrink-0" />}
@@ -55,7 +57,11 @@ function NavLinks({
   );
 }
 
-export function SidebarNav({ items }: SidebarNavProps) {
+export function SidebarNav({
+  items,
+  mobileTitle = "Menü",
+  mobileLabel = "Menü",
+}: SidebarNavProps) {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
 
@@ -68,9 +74,7 @@ export function SidebarNav({ items }: SidebarNavProps) {
       <div className="md:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
-            render={
-              <Button variant="outline" size="sm" aria-label="Hesap menüsü" />
-            }
+            render={<Button variant="outline" size="sm" aria-label={mobileLabel} />}
           >
             <Menu className="size-4 mr-2" />
             Menü
@@ -78,7 +82,7 @@ export function SidebarNav({ items }: SidebarNavProps) {
           <SheetContent side="left" className="w-64 p-0">
             <div className="border-b p-4">
               <SheetTitle className="text-base font-bold tracking-tight">
-                Hesabım
+                {mobileTitle}
               </SheetTitle>
             </div>
             <div className="p-3">

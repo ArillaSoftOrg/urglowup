@@ -363,6 +363,14 @@ export async function createAppointment(
     select: { id: true },
   });
 
+  after(async () => {
+    try {
+      await sendConfirmedEmailToCustomer(created.id);
+    } catch (err) {
+      console.error("[email] createAppointment → customer:", err);
+    }
+  });
+
   revalidate();
   return {
     success: true,
@@ -444,6 +452,14 @@ export async function rescheduleAppointment(
       professionalId,
       serviceId: effectiveServiceId,
     },
+  });
+
+  after(async () => {
+    try {
+      await sendConfirmedEmailToCustomer(appointmentId);
+    } catch (err) {
+      console.error("[email] rescheduleAppointment → customer:", err);
+    }
   });
 
   revalidate();

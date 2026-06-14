@@ -17,6 +17,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { ForBusinessDifferenceSection } from "@/components/business/for-business-difference-section";
 import { ForBusinessHero } from "@/components/business/for-business-hero";
+import { ForBusinessSuitableSection } from "@/components/business/for-business-suitable-section";
 import { HomeFAQ } from "@/components/home/home-faq";
 import { HomeFinalCTA } from "@/components/home/home-final-cta";
 import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
@@ -113,6 +114,7 @@ export default async function LocaleForBusinessPage({ params }: PageProps) {
     <div>
       <ForBusinessHero registerHref={registerHref} />
       <ForBusinessDifferenceSection />
+      <ForBusinessSuitableSection />
 
       <section className="border-t bg-muted/30 px-4 py-16 md:py-24">
         <div className="container mx-auto max-w-5xl">

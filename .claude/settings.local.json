@@ -108,7 +108,12 @@
       "PowerShell(taskkill *)",
       "Skill(run)",
       "Bash(bash test_nav.sh)",
-      "Bash(bash verify_changes.sh)"
+      "Bash(bash verify_changes.sh)",
+      "Bash(Get-Process node *)",
+      "Bash(Select-Object Id, ProcessName, CommandLine)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(\\\\.ts\")",
+      "Bash(pkill -f \"npm run dev\")"
     ]
   }
 }

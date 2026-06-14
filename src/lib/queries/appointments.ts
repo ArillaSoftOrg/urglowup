@@ -13,6 +13,7 @@ export async function getCustomerAppointments(userId: string) {
     include: {
       service: {
         select: {
+          id: true,
           name: true,
           durationMinutes: true,
           price: true,
@@ -20,7 +21,7 @@ export async function getCustomerAppointments(userId: string) {
         },
       },
       business: {
-        select: { name: true, slug: true, logoUrl: true },
+        select: { id: true, name: true, slug: true, logoUrl: true },
       },
       review: {
         select: { id: true, rating: true, status: true },

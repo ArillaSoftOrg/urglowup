@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarCheck, Clock, CalendarDays, Star } from "lucide-react";
 import Link from "next/link";
 import { CancelAppointmentButton } from "./cancel-appointment-button";
+import { RescheduleAppointmentDialog } from "./reschedule-appointment-dialog";
 import {
   STATUS_LABELS,
   STATUS_COLORS,
@@ -66,10 +68,12 @@ function AppointmentCard({
 }: {
   appointment: CustomerAppointment;
 }) {
+  const [refreshKey, setRefreshKey] = useState(0);
   const canCancel = CUSTOMER_CANCELLABLE.includes(appointment.status);
+  const canReschedule = CUSTOMER_CANCELLABLE.includes(appointment.status);
 
   return (
-    <Card>
+    <Card key={refreshKey}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-1.5">
@@ -118,6 +122,12 @@ function AppointmentCard({
             )}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
+            {canReschedule && (
+              <RescheduleAppointmentDialog
+                appointment={appointment}
+                onSuccess={() => setRefreshKey((k) => k + 1)}
+              />
+            )}
             {canCancel && (
               <CancelAppointmentButton appointmentId={appointment.id} />
             )}
