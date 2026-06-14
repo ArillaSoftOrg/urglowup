@@ -16,10 +16,10 @@ import {
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { ForBusinessDifferenceSection } from "@/components/business/for-business-difference-section";
+import { ForBusinessFinalCTA } from "@/components/business/for-business-final-cta";
 import { ForBusinessHero } from "@/components/business/for-business-hero";
 import { ForBusinessSuitableSection } from "@/components/business/for-business-suitable-section";
 import { HomeFAQ } from "@/components/home/home-faq";
-import { HomeFinalCTA } from "@/components/home/home-final-cta";
 import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { cn } from "@/lib/utils";
@@ -173,8 +173,8 @@ export default async function LocaleForBusinessPage({ params }: PageProps) {
       </section>
 
       <HomeMigrationTransfer registerHref={registerHref} />
-      <HomeFinalCTA registerHref={registerHref} />
       <HomeFAQ />
+      <ForBusinessFinalCTA registerHref={registerHref} />
     </div>
   );
 }
