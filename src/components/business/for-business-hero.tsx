@@ -1,88 +1,73 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PlayCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const panelImages = [
+const AUTO_ADVANCE_MS = 5200;
+
+const panels = [
   {
+    tab: "Takvim",
     src: "/business/panel-appointments.png",
     alt: "UrGlowUp randevu paneli haftalık takvim görünümü",
   },
   {
+    tab: "Çevrimiçi Rezervasyon",
+    src: "/business/panel-appointments.png",
+    alt: "UrGlowUp çevrimiçi rezervasyon paneli görünümü",
+  },
+  {
+    tab: "Satışlar ve Ödemeler",
+    src: "/business/panel-appointments.png",
+    alt: "UrGlowUp satışlar ve ödemeler paneli görünümü",
+  },
+  {
+    tab: "Aramalar ve Mesajlar",
     src: "/business/panel-messages.png",
     alt: "UrGlowUp işletme paneli mesajlar ve müşteri detayları görünümü",
   },
   {
-    src: "/business/panel-appointments.png",
-    alt: "UrGlowUp randevu paneli takvim ve işletme özet görünümü",
+    tab: "Pazarlama",
+    src: "/business/panel-messages.png",
+    alt: "UrGlowUp pazarlama ve müşteri iletişimi paneli görünümü",
   },
 ] as const;
 
-const tabs = [
-  "Takvim",
-  "Çevrimiçi Rezervasyon",
-  "Satışlar ve Ödemeler",
-  "Aramalar ve Mesajlar",
-  "Pazarlama",
-] as const;
+function getRelativePanelIndex(index: number, activeIndex: number) {
+  let offset = index - activeIndex;
+  const midpoint = panels.length / 2;
 
-function normalizeOffset(offset: number, width: number) {
-  if (width <= 0) {
-    return offset;
+  if (offset > midpoint) {
+    offset -= panels.length;
   }
 
-  return ((offset % width) + width) % width;
+  if (offset < -midpoint) {
+    offset += panels.length;
+  }
+
+  return offset;
 }
 
 export function ForBusinessHero({ registerHref }: { registerHref: string }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const rowWidthRef = useRef(0);
-  const offsetRef = useRef(0);
-  const lastFrameRef = useRef<number | null>(null);
-  const dragStartRef = useRef({ offset: 0, x: 0 });
-  const [isPaused, setIsPaused] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) {
-      return;
-    }
-
-    const updateWidth = () => {
-      rowWidthRef.current = track.scrollWidth / 2;
-    };
-
-    updateWidth();
-
-    const resizeObserver = new ResizeObserver(updateWidth);
-    resizeObserver.observe(track);
-
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  useEffect(() => {
+    const startedAt = performance.now();
     let frame = 0;
 
     const tick = (time: number) => {
-      const previousTime = lastFrameRef.current ?? time;
-      const delta = time - previousTime;
-      const width = rowWidthRef.current;
-      lastFrameRef.current = time;
+      const nextProgress = Math.min((time - startedAt) / AUTO_ADVANCE_MS, 1);
+      setProgress(nextProgress);
 
-      if (!isPaused && !isDragging && width > 0) {
-        offsetRef.current = normalizeOffset(
-          offsetRef.current - delta * 0.035,
-          width
-        );
-      }
-
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
+      if (nextProgress >= 1) {
+        setActiveIndex((current) => (current + 1) % panels.length);
+        setProgress(0);
+        return;
       }
 
       frame = requestAnimationFrame(tick);
@@ -91,41 +76,7 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
     frame = requestAnimationFrame(tick);
 
     return () => cancelAnimationFrame(frame);
-  }, [isDragging, isPaused]);
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragStartRef.current = {
-      offset: offsetRef.current,
-      x: event.clientX,
-    };
-    lastFrameRef.current = null;
-    setIsPaused(true);
-    setIsDragging(true);
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) {
-      return;
-    }
-
-    const width = rowWidthRef.current;
-    const dragDistance = event.clientX - dragStartRef.current.x;
-    offsetRef.current = normalizeOffset(
-      dragStartRef.current.offset - dragDistance,
-      width
-    );
-  };
-
-  const stopDragging = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-
-    lastFrameRef.current = null;
-    setIsDragging(false);
-    setIsPaused(false);
-  };
+  }, [activeIndex]);
 
   return (
     <section className="relative isolate overflow-hidden bg-[linear-gradient(120deg,oklch(0.82_0.08_260),oklch(0.92_0.08_330)_55%,oklch(0.90_0.09_55))] px-4 pb-0 pt-16 text-center md:pt-20">
@@ -162,59 +113,69 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
           id="panel-preview"
           className="mt-12 flex flex-wrap items-center justify-center gap-3"
         >
-          {tabs.map((tab, index) => (
-            <span
-              key={tab}
-              className={cn(
-                "rounded-full border border-white/35 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-700 backdrop-blur-sm",
-                index === 2 ? "bg-white text-slate-950 shadow-sm" : "bg-white/24"
-              )}
-            >
-              {tab}
-            </span>
-          ))}
+          {panels.map((panel, index) => {
+            const isActive = index === activeIndex;
+
+            return (
+              <button
+                key={panel.tab}
+                type="button"
+                aria-current={isActive}
+                onClick={() => {
+                  setActiveIndex(index);
+                  setProgress(0);
+                }}
+                className={cn(
+                  "relative isolate overflow-hidden rounded-full border border-white/35 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-700 backdrop-blur-sm transition-colors",
+                  isActive ? "text-slate-950 shadow-sm" : "bg-white/24"
+                )}
+              >
+                <span
+                  className="absolute inset-y-0 left-0 -z-10 bg-white transition-[width] duration-100 ease-linear"
+                  style={{ width: isActive ? `${progress * 100}%` : "0%" }}
+                />
+                <span
+                  className={cn(
+                    "absolute inset-0 -z-20",
+                    isActive ? "bg-white/45" : "bg-transparent"
+                  )}
+                />
+                {panel.tab}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div
-        className="business-panel-mask mx-[calc(50%-50vw)] mt-7 overflow-hidden pb-10"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => {
-          if (!isDragging) {
-            lastFrameRef.current = null;
-            setIsPaused(false);
-          }
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={stopDragging}
-        onPointerCancel={stopDragging}
-      >
-        <div
-          ref={trackRef}
-          className="flex w-max touch-pan-y items-end gap-8 px-8 will-change-transform"
-        >
-          {[...panelImages, ...panelImages].map((panel, index) => (
-            <div
-              aria-hidden={index >= panelImages.length}
-              key={`${panel.src}-${index}`}
-              className={cn(
-                "relative cursor-grab select-none overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_24px_70px_oklch(0.25_0.08_300/0.20)] active:cursor-grabbing",
-                index % 3 === 1
-                  ? "w-[min(74vw,980px)]"
-                  : "w-[min(58vw,760px)] opacity-75"
-              )}
-            >
-              <Image
-                src={panel.src}
-                alt={panel.alt}
-                width={1600}
-                height={900}
-                priority={index < 2}
-                className="h-auto w-full"
-              />
-            </div>
-          ))}
+      <div className="business-panel-mask mx-[calc(50%-50vw)] mt-7 h-[340px] overflow-hidden pb-10 sm:h-[430px] lg:h-[520px]">
+        <div className="relative h-full">
+          {panels.map((panel, index) => {
+            const offset = getRelativePanelIndex(index, activeIndex);
+            const isActive = offset === 0;
+
+            return (
+              <div
+                aria-hidden={!isActive}
+                key={panel.tab}
+                className="absolute bottom-10 left-1/2 overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_24px_70px_oklch(0.25_0.08_300/0.20)] transition-all duration-700 ease-out"
+                style={{
+                  opacity: Math.abs(offset) > 1 ? 0 : isActive ? 1 : 0.48,
+                  transform: `translate3d(calc(-50% + ${offset * 58}vw), 0, 0) scale(${isActive ? 1 : 0.9})`,
+                  width: isActive ? "min(74vw, 980px)" : "min(58vw, 760px)",
+                  zIndex: isActive ? 2 : 1,
+                }}
+              >
+                <Image
+                  src={panel.src}
+                  alt={panel.alt}
+                  width={1600}
+                  height={900}
+                  priority={index === 0}
+                  className="h-auto w-full"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
