@@ -63,6 +63,13 @@ export interface WhatsAppTemplateParams {
   businessAddress: string; // {{6}}
 }
 
+export interface SendWhatsAppTemplateParams {
+  to: string; // E.164 with leading "+"
+  templateName?: string;
+  templateLanguage?: string;
+  bodyParameters: string[];
+}
+
 /**
  * Sends a WhatsApp template message via Meta Business Cloud API.
  *
@@ -80,24 +87,40 @@ export async function sendWhatsAppTemplateMessage(
 ): Promise<string> {
   const config = getWhatsAppConfig();
 
+  return sendWhatsAppTemplate({
+    to: params.to,
+    templateName: config.templateName,
+    templateLanguage: config.templateLanguage,
+    bodyParameters: [
+      params.customerName,
+      params.businessName,
+      params.serviceName,
+      params.bookingDate,
+      params.bookingTime,
+      params.businessAddress,
+    ],
+  });
+}
+
+/**
+ * Sends any approved WhatsApp body-template message via Meta Business Cloud API.
+ */
+export async function sendWhatsAppTemplate(
+  params: SendWhatsAppTemplateParams,
+): Promise<string> {
+  const config = getWhatsAppConfig();
+
   const body = {
     messaging_product: "whatsapp",
     to: params.to.replace(/^\+/, ""), // Meta accepts digits-only international format
     type: "template",
     template: {
-      name: config.templateName,
-      language: { code: config.templateLanguage },
+      name: params.templateName ?? config.templateName,
+      language: { code: params.templateLanguage ?? config.templateLanguage },
       components: [
         {
           type: "body",
-          parameters: [
-            { type: "text", text: params.customerName },
-            { type: "text", text: params.businessName },
-            { type: "text", text: params.serviceName },
-            { type: "text", text: params.bookingDate },
-            { type: "text", text: params.bookingTime },
-            { type: "text", text: params.businessAddress },
-          ],
+          parameters: params.bodyParameters.map((text) => ({ type: "text", text })),
         },
       ],
     },

@@ -1,6 +1,10 @@
 import { db } from "./db";
 import { normalizeTurkishPhone, maskPhoneForLogging } from "./external/whatsapp/phone";
-import { sendWhatsAppTemplateMessage } from "./external/whatsapp/client";
+import {
+  sendWhatsAppTemplate,
+  sendWhatsAppTemplateMessage,
+} from "./external/whatsapp/client";
+import { env } from "./env";
 
 // ─── Data Fetcher ─────────────────────────────────────────────────
 
@@ -73,6 +77,10 @@ function fullName(
 
 function isWhatsAppEnabled(): boolean {
   return process.env.WHATSAPP_NOTIFICATIONS_ENABLED === "true";
+}
+
+function appUrl(path: string): string {
+  return `${env.NEXT_PUBLIC_APP_URL}${path}`;
 }
 
 // ─── Duplicate Prevention ─────────────────────────────────────────
@@ -243,5 +251,155 @@ export async function sendBookingConfirmationWhatsApp(
         );
       });
     // No rethrow — booking flow must not be affected
+  }
+}
+
+/**
+ * Sends a WhatsApp review request to the customer when an appointment is completed.
+ *
+ * Uses an approved Meta template. Recommended body variables:
+ *   {{1}} customer name
+ *   {{2}} business name
+ *   {{3}} service name
+ *   {{4}} review URL
+ */
+export async function sendReviewRequestWhatsAppToCustomer(
+  appointmentId: string,
+): Promise<void> {
+  if (!isWhatsAppEnabled()) {
+    console.log("[whatsapp] notifications disabled");
+    return;
+  }
+
+  const templateName =
+    process.env.WHATSAPP_TEMPLATE_REVIEW_REQUEST ?? "review_request";
+
+  let appt: Awaited<ReturnType<typeof getAppointmentWhatsAppPayload>>;
+  try {
+    appt = await getAppointmentWhatsAppPayload(appointmentId);
+  } catch (err) {
+    console.error("[whatsapp] failed to fetch appointment", appointmentId, err);
+    return;
+  }
+
+  if (appt.status !== "COMPLETED") {
+    console.log(
+      `[whatsapp] sendReviewRequestWhatsAppToCustomer: skipped — status is ${appt.status}`,
+    );
+    return;
+  }
+
+  if (!(await isWhatsAppTransactionalEnabled(appt.customerId))) {
+    console.log(
+      "[whatsapp] sendReviewRequestWhatsAppToCustomer: skipped — customer opted out",
+    );
+    return;
+  }
+
+  const phone = normalizeTurkishPhone(appt.customer.phone);
+
+  if (phone === null) {
+    console.log(
+      `[whatsapp] skipped — phone not normalizable: ${maskPhoneForLogging(appt.customer.phone)}`,
+    );
+    await db.notificationLog
+      .create({
+        data: {
+          appointmentId,
+          channel: "WHATSAPP",
+          recipientPhone: appt.customer.phone ?? "",
+          templateName,
+          status: "SKIPPED",
+          errorMessage: "invalid or missing phone",
+        },
+      })
+      .catch((err: unknown) => {
+        console.error("[whatsapp] failed to write SKIPPED log:", err);
+      });
+    return;
+  }
+
+  const blocking = await db.notificationLog
+    .findFirst({
+      where: {
+        appointmentId,
+        channel: "WHATSAPP",
+        templateName,
+        status: { in: ["SENT", "PENDING"] },
+      },
+      select: { status: true },
+    })
+    .catch((err: unknown) => {
+      console.error("[whatsapp] failed to check duplicate log:", err);
+      return null;
+    });
+
+  if (blocking) {
+    console.log(
+      `[whatsapp] skipped — ${blocking.status} record already exists for appointment ${appointmentId}`,
+    );
+    return;
+  }
+
+  let log: { id: string };
+  try {
+    log = await db.notificationLog.create({
+      data: {
+        appointmentId,
+        channel: "WHATSAPP",
+        recipientPhone: phone,
+        templateName,
+        status: "PENDING",
+      },
+      select: { id: true },
+    });
+  } catch (err) {
+    if (isPrismaUniqueError(err)) {
+      console.log(
+        `[whatsapp] skipped — race condition resolved by DB unique constraint for appointment ${appointmentId}`,
+      );
+      return;
+    }
+    console.error("[whatsapp] failed to create PENDING log:", err);
+    return;
+  }
+
+  try {
+    const messageId = await sendWhatsAppTemplate({
+      to: phone,
+      templateName,
+      templateLanguage: process.env.WHATSAPP_TEMPLATE_LANGUAGE ?? "tr",
+      bodyParameters: [
+        fullName(appt.customer.firstName, appt.customer.lastName),
+        appt.business.name,
+        appt.service.name,
+        appUrl("/account/reviews"),
+      ],
+    });
+
+    await db.notificationLog.update({
+      where: { id: log.id },
+      data: { status: "SENT", providerMessageId: messageId, sentAt: new Date() },
+    });
+  } catch (err) {
+    console.error(
+      "[whatsapp] failed to send review request for appointment",
+      appointmentId,
+      err,
+    );
+    await db.notificationLog
+      .update({
+        where: { id: log.id },
+        data: {
+          status: "FAILED",
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      })
+      .catch((dbErr: unknown) => {
+        console.error(
+          "[whatsapp] also failed to persist FAILED status:",
+          dbErr,
+        );
+      });
   }
 }

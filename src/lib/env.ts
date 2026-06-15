@@ -69,6 +69,7 @@ const envSchema = z.object({
   WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
   WHATSAPP_ACCESS_TOKEN: z.string().optional(),
   WHATSAPP_TEMPLATE_BOOKING_CONFIRMED: z.string().optional(),
+  WHATSAPP_TEMPLATE_REVIEW_REQUEST: z.string().optional(),
   WHATSAPP_TEMPLATE_LANGUAGE: z.string().optional(),
   WHATSAPP_API_VERSION: z.string().optional(),
 });

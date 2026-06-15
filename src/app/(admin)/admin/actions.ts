@@ -17,11 +17,11 @@ import {
   sendConfirmedEmailToCustomer,
   sendRejectedEmailToCustomer,
   sendCancelledByBusinessEmailToCustomer,
-  sendReviewRequestEmailToCustomer,
   sendReviewModeratedEmail,
   sendPostModeratedEmail,
   sendMediaModeratedEmail,
 } from "@/lib/email-notifications";
+import { sendReviewRequestWhatsAppToCustomer } from "@/lib/whatsapp-notifications";
 import type { BusinessStatus, PostStatus, AppointmentStatus } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -181,10 +181,10 @@ export async function adminOverrideAppointmentStatus(
       } else if (newStatus === "CANCELLED_BY_BUSINESS") {
         await sendCancelledByBusinessEmailToCustomer(appointmentId);
       } else if (newStatus === "COMPLETED") {
-        await sendReviewRequestEmailToCustomer(appointmentId);
+        await sendReviewRequestWhatsAppToCustomer(appointmentId);
       }
     } catch (err) {
-      console.error("[email] adminOverrideAppointmentStatus:", err);
+      console.error("[notification] adminOverrideAppointmentStatus:", err);
     }
   });
 

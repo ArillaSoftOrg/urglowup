@@ -9,7 +9,6 @@ import { AppointmentCancelledByBusinessEmail } from "@/emails/appointment-cancel
 import { AppointmentCancelledByCustomerEmail } from "@/emails/appointment-cancelled-by-customer";
 import { AppointmentCancellationConfirmationEmail } from "@/emails/appointment-cancellation-confirmation";
 import { AppointmentRescheduleRequestEmail } from "@/emails/appointment-reschedule-request";
-import { ReviewRequestEmail } from "@/emails/review-request";
 import React from "react";
 
 // ─── Data Fetcher ────────────────────────────────────────────────
@@ -345,38 +344,6 @@ export async function sendRescheduleRequestEmailToBusiness(
       requestedDate: formatDate(newDateObj),
       requestedTime: newTime,
       dashboardUrl: appUrl("/business/appointments"),
-    }),
-  });
-}
-
-/**
- * Sent to the customer when the business marks their appointment as completed.
- */
-export async function sendReviewRequestEmailToCustomer(
-  appointmentId: string
-): Promise<void> {
-  const appt = await getAppointmentEmailPayload(appointmentId);
-
-  if (appt.status !== "COMPLETED") {
-    console.log(
-      `[email] sendReviewRequestEmailToCustomer: skipped — status is ${appt.status}`
-    );
-    return;
-  }
-
-  if (!(await isEmailTransactionalEnabled(appt.customerId))) {
-    console.log(`[email] sendReviewRequestEmailToCustomer: skipped — customer opted out`);
-    return;
-  }
-
-  await sendEmail({
-    to: appt.customer.email,
-    subject: `How was your experience at ${appt.business.name}?`,
-    react: React.createElement(ReviewRequestEmail, {
-      customerName: fullName(appt.customer.firstName, appt.customer.lastName),
-      businessName: appt.business.name,
-      serviceName: appt.service.name,
-      reviewUrl: appUrl("/account/reviews"),
     }),
   });
 }
