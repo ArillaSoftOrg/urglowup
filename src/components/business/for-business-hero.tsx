@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, PlayCircle } from "lucide-react";
+import { ArrowDown, ChevronLeft, ChevronRight, PlayCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -128,27 +128,32 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
   }, [activeIndex]);
 
   return (
-    <section className="relative isolate overflow-hidden bg-[linear-gradient(120deg,oklch(0.82_0.08_260),oklch(0.92_0.08_330)_55%,oklch(0.90_0.09_55))] px-4 pb-0 pt-16 text-center md:pt-20">
+    <section className="relative isolate overflow-hidden bg-[linear-gradient(180deg,oklch(0.995_0.004_300),oklch(0.97_0.022_315)_58%,oklch(0.86_0.095_315))] px-4 pb-0 pt-14 text-center md:pt-20">
       <div className="absolute inset-x-0 top-0 -z-10 h-56 bg-[radial-gradient(circle_at_50%_0%,oklch(0.99_0.004_300)_0%,oklch(0.99_0.004_300/0.82)_42%,transparent_72%)]" />
       <div className="mx-auto max-w-5xl">
-        <h1 className="mx-auto max-w-3xl text-4xl font-extrabold leading-[1.06] tracking-normal text-slate-950 md:text-6xl">
-          Salonunuzu ve spa&apos;nızı beslemek için ihtiyacınız olan her şey
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-indigo-900/72">
+          Neden farklıyız?
+        </p>
+        <h1 className="mx-auto mt-8 max-w-3xl text-4xl font-extrabold leading-[1.06] tracking-normal text-slate-950 md:text-6xl">
+          Salon ve spa yazılımı, sonunda doğru yapıldı
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-800 md:text-lg">
-          Rezervasyon, ödemeler, otomasyonlar ve daha fazlası. Hızlı, güzel,
-          sezgisel ve her cihazda çalışan tam bir platformun tadını çıkarın.
+          Çoğu salon ve spa yazılımı ekiplerin hızını keser. UrGlowUp,
+          randevudan mesaja, müşteriden panele kadar işletmenin her gün
+          kullanacağı akışları daha sade, daha hızlı ve daha kârlı hale getirir.
         </p>
 
         <div className="mt-8 flex flex-col items-center gap-4">
-          <Link
-            href={registerHref}
+          <a
+            href="#why-different"
             className={cn(
               buttonVariants({ size: "lg" }),
-              "bg-slate-950 px-7 text-white hover:bg-slate-900"
+              "gap-2 rounded-full bg-fuchsia-700 px-8 text-white hover:bg-fuchsia-800"
             )}
           >
-            Ücretsiz Başla
-          </Link>
+            Neden farklı olduğumuzu gör
+            <ArrowDown aria-hidden="true" className="h-4 w-4" />
+          </a>
           <a
             href="#panel-preview"
             className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-fuchsia-700 transition-colors hover:text-fuchsia-900"
@@ -156,6 +161,12 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
             <PlayCircle aria-hidden="true" className="h-4 w-4" />
             Bir video turu izleyin
           </a>
+          <Link
+            href={registerHref}
+            className="text-sm font-bold text-slate-800 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-950"
+          >
+            Hemen ücretsiz başla
+          </Link>
         </div>
 
         <div

@@ -5,6 +5,7 @@ import {
   createService,
   updateService,
   toggleServiceActive,
+  addTemplateServices,
   type ServiceActionState,
 } from "@/app/(business)/business/services/actions";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,13 @@ const PRICE_TYPE_LABELS: Record<string, string> = {
   STARTS_FROM: "Başlangıç fiyatı",
   CONSULTATION_REQUIRED: "Danışma ücreti",
   FREE_CONSULTATION: "Ücretsiz danışma",
+};
+
+export type TemplateData = {
+  name: string;
+  durationMinutes: number;
+  description?: string;
+  priceType?: string;
 };
 
 function formatPrice(service: ServiceData) {
@@ -301,12 +309,114 @@ function ServiceCard({
   );
 }
 
+// ─── Template Services Panel ────────────────────────────────────
+
+function TemplateServicesPanel({
+  templates,
+  onManual,
+}: {
+  templates: TemplateData[];
+  onManual: () => void;
+}) {
+  const initial: ServiceActionState = { success: false };
+  const [state, formAction, isPending] = useActionState(
+    addTemplateServices,
+    initial
+  );
+  const [selected, setSelected] = useState<Set<string>>(
+    new Set(templates.map((t) => t.name))
+  );
+
+  const toggleTemplate = (name: string) => {
+    const newSelected = new Set(selected);
+    if (newSelected.has(name)) {
+      newSelected.delete(name);
+    } else {
+      newSelected.add(name);
+    }
+    setSelected(newSelected);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Klasik hizmetlerle başlayın</CardTitle>
+        <CardDescription>
+          İşletmeniz için önerilen hizmetleri seçip tek tıkla ekleyin
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form action={formAction} className="space-y-4">
+          {state.message && !state.success && (
+            <p className="text-sm text-destructive">{state.message}</p>
+          )}
+
+          <div className="space-y-3">
+            {templates.map((template) => (
+              <div key={template.name} className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id={`template-${template.name}`}
+                  name="templates"
+                  value={template.name}
+                  checked={selected.has(template.name)}
+                  onChange={() => toggleTemplate(template.name)}
+                  className="size-4 rounded border-input"
+                />
+                <label
+                  htmlFor={`template-${template.name}`}
+                  className="flex-1 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {template.name}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="size-3" />
+                      {template.durationMinutes} min
+                    </span>
+                  </div>
+                  {template.description && (
+                    <p className="text-xs text-muted-foreground">
+                      {template.description}
+                    </p>
+                  )}
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              type="submit"
+              disabled={isPending || selected.size === 0}
+              className="flex-1"
+            >
+              {isPending ? "Ekleniyor..." : "Seçilenleri Ekle"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onManual}
+              className="flex-1"
+            >
+              Kendi hizmetimi ekleyeceğim
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Service Manager ────────────────────────────────────────────
 
 export function ServiceManager({
   initialServices,
+  availableTemplates = [],
 }: {
   initialServices: ServiceData[];
+  availableTemplates?: TemplateData[];
 }) {
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState<ServiceData | undefined>(
@@ -348,13 +458,20 @@ export function ServiceManager({
       )}
 
       {initialServices.length === 0 && !showForm ? (
-        <EmptyState
-          icon={Scissors}
-          headline="Henüz hizmet yok"
-          description="Randevu almaya başlamak için ilk hizmetinizi ekleyin."
-          action={{ label: "Hizmet Ekle", onClick: handleAdd }}
-          surface="pink"
-        />
+        availableTemplates.length > 0 ? (
+          <TemplateServicesPanel
+            templates={availableTemplates}
+            onManual={handleAdd}
+          />
+        ) : (
+          <EmptyState
+            icon={Scissors}
+            headline="Henüz hizmet yok"
+            description="Randevu almaya başlamak için ilk hizmetinizi ekleyin."
+            action={{ label: "Hizmet Ekle", onClick: handleAdd }}
+            surface="pink"
+          />
+        )
       ) : (
         <div className="space-y-3">
           {initialServices.map((service) => (

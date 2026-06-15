@@ -7,7 +7,6 @@ import { db } from "@/lib/db";
 import { UserRole } from "@/generated/prisma/enums";
 import { NavbarMobileMenu } from "./navbar-mobile-menu";
 import { NavLinks } from "./navbar-nav-links";
-import { LocaleSwitcher } from "./locale-switcher";
 import { NavbarScrollEffect } from "./navbar-scroll-effect";
 import { getDictionary } from "@/lib/get-dictionary";
 import type { Locale } from "@/lib/i18n-config";
@@ -81,9 +80,6 @@ export async function Navbar({ locale = "tr", hideExploreLinks = false }: Navbar
         )}
 
         <div className="flex items-center gap-2">
-          <div className="hidden lg:block">
-            <LocaleSwitcher isLoggedIn={!!user} />
-          </div>
           {user ? (
             <Link
               href={accountHref?.href ?? "/account"}

@@ -1,5 +1,6 @@
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getServiceTemplatesForCategories } from "@/lib/service-templates";
 import {
   ServiceManager,
   type ServiceData,
@@ -10,10 +11,22 @@ export const metadata = { title: "Hizmetler" };
 export default async function ServicesPage() {
   const { businessId } = await requireBusiness("MANAGER");
 
-  const services = await db.businessService.findMany({
-    where: { businessId },
-    orderBy: { sortOrder: "asc" },
-  });
+  const [services, business] = await Promise.all([
+    db.businessService.findMany({
+      where: { businessId },
+      orderBy: { sortOrder: "asc" },
+    }),
+    db.business.findUnique({
+      where: { id: businessId },
+      select: {
+        categories: {
+          select: {
+            category: { select: { slug: true } },
+          },
+        },
+      },
+    }),
+  ]);
 
   const serialized: ServiceData[] = services.map((s) => ({
     id: s.id,
@@ -26,5 +39,14 @@ export default async function ServicesPage() {
     sortOrder: s.sortOrder,
   }));
 
-  return <ServiceManager initialServices={serialized} />;
+  const categorySlugs = business?.categories.map((c) => c.category.slug) ?? [];
+  const availableTemplates =
+    getServiceTemplatesForCategories(categorySlugs);
+
+  return (
+    <ServiceManager
+      initialServices={serialized}
+      availableTemplates={availableTemplates}
+    />
+  );
 }

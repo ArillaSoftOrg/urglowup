@@ -3,6 +3,7 @@
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateUniqueServiceSlug } from "@/lib/slug";
+import { SERVICE_TEMPLATES } from "@/lib/service-templates";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 
@@ -159,4 +160,63 @@ export async function toggleServiceActive(serviceId: string) {
 
   revalidatePath("/business/services");
   revalidatePath("/business/dashboard");
+}
+
+export async function addTemplateServices(
+  _prev: ServiceActionState,
+  formData: FormData
+): Promise<ServiceActionState> {
+  const { businessId } = await requireBusiness("MANAGER");
+
+  const templateNames = formData.getAll("templates") as string[];
+
+  // Filter by valid template names
+  const validTemplates = templateNames.filter(
+    (name) => name in SERVICE_TEMPLATES
+  );
+
+  if (validTemplates.length === 0) {
+    return { success: false, message: "Lütfen en az bir hizmet seçin" };
+  }
+
+  const [maxSort, business] = await Promise.all([
+    db.businessService.aggregate({
+      where: { businessId },
+      _max: { sortOrder: true },
+    }),
+    db.business.findUniqueOrThrow({
+      where: { id: businessId },
+      select: { name: true },
+    }),
+  ]);
+
+  let nextSort = (maxSort._max.sortOrder ?? -1) + 1;
+
+  for (const templateName of validTemplates) {
+    const template = SERVICE_TEMPLATES[templateName];
+    const slug = await generateUniqueServiceSlug(
+      business.name,
+      templateName
+    );
+
+    await db.businessService.create({
+      data: {
+        businessId,
+        name: templateName,
+        slug,
+        description: template.description ?? null,
+        durationMinutes: template.durationMinutes,
+        price: null,
+        priceType: template.priceType ?? "FIXED",
+        isActive: true,
+        sortOrder: nextSort,
+      },
+    });
+
+    nextSort++;
+  }
+
+  revalidatePath("/business/services");
+  revalidatePath("/business/dashboard");
+  return { success: true, message: "Hizmetler eklendi" };
 }

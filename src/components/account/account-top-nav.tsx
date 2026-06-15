@@ -10,7 +10,7 @@ export function AccountTopNav() {
 
   return (
     <nav className="hidden md:block sticky top-[4.5rem] z-40 border-b border-border bg-surface-cream">
-      <div className="container mx-auto flex items-center gap-1 overflow-x-auto px-4 md:px-6">
+      <div className="container mx-auto flex items-center justify-center gap-1 overflow-x-auto px-4 md:px-6">
         {accountNavItems.map((item) => {
           const Icon = item.icon;
           const isActive =
