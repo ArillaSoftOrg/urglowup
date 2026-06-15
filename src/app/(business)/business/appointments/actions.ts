@@ -21,6 +21,7 @@ import {
   sendConfirmedEmailToCustomer,
   sendRejectedEmailToCustomer,
   sendCancelledByBusinessEmailToCustomer,
+  sendReviewRequestEmailToCustomer,
 } from "@/lib/email-notifications";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
 
@@ -153,6 +154,14 @@ export async function completeAppointment(
   await db.appointment.update({
     where: { id: appointmentId },
     data: { status: "COMPLETED" },
+  });
+
+  after(async () => {
+    try {
+      await sendReviewRequestEmailToCustomer(appointmentId);
+    } catch (err) {
+      console.error("[email] completeAppointment:", err);
+    }
   });
 
   revalidate();
