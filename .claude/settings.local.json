@@ -113,7 +113,10 @@
       "Bash(Select-Object Id, ProcessName, CommandLine)",
       "Bash(Format-Table -AutoSize)",
       "Bash(\\\\.ts\")",
-      "Bash(pkill -f \"npm run dev\")"
+      "Bash(pkill -f \"npm run dev\")",
+      "Bash(npm run *)",
+      "Bash(echo \"Dev server starting... \\(PID: $!\\)\")",
+      "Bash(npx playwright *)"
     ]
   }
 }

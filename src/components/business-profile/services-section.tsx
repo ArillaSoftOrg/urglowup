@@ -1,15 +1,8 @@
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
-import { Clock, Scissors, CalendarCheck } from "lucide-react";
+import { CalendarCheck, Clock, Scissors } from "lucide-react";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 function formatPrice(service: BusinessWithDetails["services"][number]): {
@@ -17,12 +10,12 @@ function formatPrice(service: BusinessWithDetails["services"][number]): {
   qualifier: string | null;
 } {
   if (service.priceType === "FREE_CONSULTATION")
-    return { amount: "Ücretsiz danışma", qualifier: null };
+    return { amount: "Ucretsiz danisma", qualifier: null };
   if (service.priceType === "CONSULTATION_REQUIRED")
-    return { amount: "Fiyat için danışın", qualifier: null };
+    return { amount: "Fiyat icin danisin", qualifier: null };
   if (!service.price) return { amount: null, qualifier: null };
 
-  const amount = `₺${Number(service.price)}`;
+  const amount = `TRY ${Number(service.price)}`;
   if (service.priceType === "STARTS_FROM")
     return { amount, qualifier: "itibaren" };
   return { amount, qualifier: null };
@@ -33,75 +26,109 @@ export function ServicesSection({
 }: {
   business: BusinessWithDetails;
 }) {
+  const categories = business.categories.map((bc) => bc.category);
+  const featuredServices = business.services.slice(0, 3);
+  const remainingServices = business.services.slice(3);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Scissors className="size-5" />
-          Hizmetler
-        </CardTitle>
-        {business.services.length > 0 && (
-          <CardDescription>
-            {business.services.length} hizmet mevcut
-          </CardDescription>
+    <section className="space-y-5" id="services">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-normal">Hizmetler</h2>
+          {business.services.length > 0 && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {business.services.length} hizmet mevcut
+            </p>
+          )}
+        </div>
+
+        {categories.length > 0 && (
+          <div className="flex max-w-full gap-2 overflow-x-auto pb-1 sm:justify-end">
+            <span className="inline-flex h-10 shrink-0 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
+              One cikan
+            </span>
+            {categories.map((cat) => (
+              <span
+                key={cat.id}
+                className="inline-flex h-10 shrink-0 items-center rounded-full border bg-background px-5 text-sm font-medium"
+              >
+                {cat.name}
+              </span>
+            ))}
+          </div>
         )}
-      </CardHeader>
-      <CardContent>
-        {business.services.length === 0 ? (
+      </div>
+
+      {business.services.length === 0 ? (
+        <div className="rounded-lg border bg-background p-6">
           <EmptyState
             icon={Scissors}
-            headline="Henüz hizmet eklenmedi"
-            description="Bu işletme yakında hizmetlerini ekleyecek."
+            headline="Henuz hizmet eklenmedi"
+            description="Bu isletme yakinda hizmetlerini ekleyecek."
             surface="cream"
             compact
           />
-        ) : (
-          <div className="divide-y divide-border/50">
-            {business.services.map((service) => {
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-lg border bg-background">
+          {featuredServices.length > 0 && (
+            <div className="border-b bg-muted/25 px-5 py-3">
+              <p className="text-sm font-semibold">One cikan hizmetler</p>
+            </div>
+          )}
+
+          <div className="divide-y">
+            {[...featuredServices, ...remainingServices].map((service) => {
               const { amount, qualifier } = formatPrice(service);
               return (
                 <div
                   key={service.id}
-                  className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0"
+                  className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between"
                 >
-                  <div className="min-w-0 space-y-1.5">
-                    <p className="text-base font-semibold">{service.name}</p>
-                    {service.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {service.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="size-3.5" />
-                      {service.durationMinutes} dk
-                    </div>
-                    {amount && (
-                      <div className="flex items-center gap-1.5">
-                        {qualifier && (
-                          <span className="text-xs text-muted-foreground">{qualifier}</span>
-                        )}
-                        <span className="text-base font-bold text-foreground">{amount}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="shrink-0 pt-0.5">
-                    <Link
-                      href={`/b/${business.slug}/book?service=${service.id}`}
-                      className={cn(
-                        buttonVariants({ variant: "brand", size: "sm" }),
-                        "gap-1.5"
+                  <div className="min-w-0 space-y-2">
+                    <div>
+                      <p className="text-base font-semibold">{service.name}</p>
+                      {service.description && (
+                        <p className="mt-1 max-w-2xl text-sm text-muted-foreground line-clamp-2">
+                          {service.description}
+                        </p>
                       )}
-                    >
-                      <CalendarCheck className="size-3.5" />
-                      Randevu Al
-                    </Link>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="size-4" />
+                        {service.durationMinutes} dk
+                      </span>
+                      {amount && (
+                        <span className="font-semibold text-foreground">
+                          {qualifier && (
+                            <span className="mr-1 font-normal text-muted-foreground">
+                              {qualifier}
+                            </span>
+                          )}
+                          {amount}
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  <Link
+                    href={`/b/${business.slug}/book?service=${service.id}`}
+                    className={cn(
+                      buttonVariants({ variant: "default", size: "lg" }),
+                      "w-full gap-1.5 sm:w-auto",
+                    )}
+                  >
+                    <CalendarCheck className="size-4" />
+                    Randevu al
+                  </Link>
                 </div>
               );
             })}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </section>
   );
 }

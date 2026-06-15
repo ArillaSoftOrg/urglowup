@@ -260,9 +260,10 @@ export async function forgotPasswordAction(
     );
   }
 
+  const email = parsed.data.email.trim().toLowerCase();
+
   try {
     const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
-    const email = parsed.data.email.trim().toLowerCase();
     const isAdmin = isAdminEmail(email);
 
     const resetPath = isAdmin ? "/admin/reset-password" : "/reset-password";

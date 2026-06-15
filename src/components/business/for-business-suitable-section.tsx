@@ -6,35 +6,27 @@ import Image from "next/image";
 const businessTypes = [
   {
     title: "Kuaför & Saç Salonu",
-    image: "/business/suitable-hair.svg",
+    image: "/business/Kuaför.jpeg",
   },
   {
-    title: "Kaş & Kirpik Stüdyosu",
-    image: "/business/suitable-brow.svg",
+    title: "Güzellik Salonu",
+    image: "/business/Güzellik-Salonu.jpeg",
   },
   {
     title: "Nail Salon",
-    image: "/business/suitable-nail.svg",
+    image: "/business/Tırnak.jpeg",
   },
   {
     title: "Barber Shop",
-    image: "/business/suitable-barber.svg",
+    image: "/business/Berber.jpeg",
   },
   {
-    title: "Cilt Bakımı",
-    image: "/business/suitable-skin.svg",
+    title: "Dövme Stüdyosu",
+    image: "/business/Dövme.jpeg",
   },
   {
-    title: "Spa & Masaj",
-    image: "/business/suitable-spa.svg",
-  },
-  {
-    title: "Lazer Epilasyon",
-    image: "/business/suitable-skin.svg",
-  },
-  {
-    title: "Makyaj Stüdyosu",
-    image: "/business/suitable-brow.svg",
+    title: "Piercing Stüdyosu",
+    image: "/business/Piercing.jpeg",
   },
 ];
 

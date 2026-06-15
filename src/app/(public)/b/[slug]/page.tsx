@@ -3,17 +3,16 @@ import { getBusinessBySlug } from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
 import { buildAlternates } from "@/lib/i18n-metadata";
 import { absoluteUrl } from "@/lib/seo";
-import { CoverSection } from "@/components/business-profile/cover-section";
 import { ProfileHeader } from "@/components/business-profile/profile-header";
-import { QuickInfoBar } from "@/components/business-profile/quick-info-bar";
 import { AboutSection } from "@/components/business-profile/about-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
-import { MediaSection } from "@/components/business-profile/media-section";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { LocationSection } from "@/components/business-profile/location-section";
 import { HoursSection, isBusinessOpen } from "@/components/business-profile/hours-section";
 import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
 import { MobileBookingBar } from "@/components/business-profile/mobile-booking-bar";
+import { BusinessGalleryHero } from "@/components/business-profile/business-gallery-hero";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -73,6 +72,8 @@ export default async function BusinessProfilePage({ params }: PageProps) {
   const addressText = [business.address, business.district, business.city]
     .filter(Boolean)
     .join(", ");
+  const location = [business.district, business.city].filter(Boolean).join(", ");
+  const primaryCategory = business.categories[0]?.category;
   const pricedServices = business.services
     .map((service) => Number(service.price))
     .filter((price) => Number.isFinite(price) && price > 0);
@@ -162,43 +163,73 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           __html: JSON.stringify(localBusinessJsonLd),
         }}
       />
-      <CoverSection business={business} />
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Main content */}
-          <div className="min-w-0 flex-1 space-y-6">
-            <ProfileHeader business={business} />
-            <QuickInfoBar
-              hours={business.hours}
-              reviewSummary={reviewSummary}
-              city={business.city}
-              district={business.district}
-              serviceCount={business.services.length}
-            />
-            <AboutSection business={business} />
-            <ServicesSection business={business} />
-            <HoursSection business={business} />
-            <MediaSection business={business} />
-            <ReviewsSection
+      <main className="bg-background">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
+          <nav className="mb-7 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-foreground">
+              Ana sayfa
+            </Link>
+            <span aria-hidden>·</span>
+            {primaryCategory && (
+              <>
+                <Link
+                  href={`/category/${primaryCategory.slug}`}
+                  className="hover:text-foreground"
+                >
+                  {primaryCategory.name}
+                </Link>
+                <span aria-hidden>·</span>
+              </>
+            )}
+            {business.city && (
+              <>
+                <Link
+                  href={`/city/${encodeURIComponent(business.city)}`}
+                  className="hover:text-foreground"
+                >
+                  {business.city}
+                </Link>
+                <span aria-hidden>·</span>
+              </>
+            )}
+            <span className="font-medium text-foreground">{business.name}</span>
+          </nav>
+
+          <div className="space-y-7">
+            <ProfileHeader
               business={business}
               reviewSummary={reviewSummary}
+              isOpen={isOpen}
+              location={location}
+              locale="tr"
             />
-            <LocationSection business={business} />
-
-            {/* Spacer for mobile sticky CTA */}
-            <div className="h-20 lg:hidden" />
+            <BusinessGalleryHero business={business} />
           </div>
-
-          {/* Desktop sidebar */}
-          <aside className="hidden w-80 shrink-0 lg:block">
-            <ContactSidebar business={business} reviewSummary={reviewSummary} />
-          </aside>
         </div>
-      </div>
 
-      {/* Mobile sticky CTA */}
-      <MobileBookingBar slug={business.slug} isOpen={isOpen} />
+        <div className="container mx-auto px-4 pb-8">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+            <div className="min-w-0 flex-1 space-y-8">
+              <ServicesSection business={business} />
+              <AboutSection business={business} />
+              <HoursSection business={business} />
+              <ReviewsSection
+                business={business}
+                reviewSummary={reviewSummary}
+              />
+              <LocationSection business={business} />
+              <div className="h-20 lg:hidden" />
+            </div>
+
+            <aside className="hidden w-80 shrink-0 lg:block">
+              <ContactSidebar business={business} reviewSummary={reviewSummary} />
+            </aside>
+          </div>
+        </div>
+      </main>
+
+      <MobileBookingBar slug={business.slug} isOpen={isOpen} locale="tr" />
     </>
   );
 }

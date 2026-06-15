@@ -113,22 +113,22 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
         <div className="container mx-auto px-4 pb-8">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
             <div className="min-w-0 flex-1 space-y-8">
-            <ServicesSection business={business} />
-            <AboutSection business={business} />
-            <HoursSection business={business} />
-            <ReviewsSection
-              business={business}
-              reviewSummary={reviewSummary}
-            />
-            <LocationSection business={business} />
-            <div className="h-20 lg:hidden" />
-          </div>
+              <ServicesSection business={business} />
+              <AboutSection business={business} />
+              <HoursSection business={business} />
+              <ReviewsSection
+                business={business}
+                reviewSummary={reviewSummary}
+              />
+              <LocationSection business={business} />
+              <div className="h-20 lg:hidden" />
+            </div>
 
-          <aside className="hidden w-80 shrink-0 lg:block">
-            <ContactSidebar business={business} reviewSummary={reviewSummary} />
-          </aside>
+            <aside className="hidden w-80 shrink-0 lg:block">
+              <ContactSidebar business={business} reviewSummary={reviewSummary} />
+            </aside>
+          </div>
         </div>
-      </div>
       </main>
 
       <MobileBookingBar slug={business.slug} isOpen={isOpen} locale={locale} />
