@@ -17,7 +17,6 @@ import {
   sendConfirmedEmailToCustomer,
   sendRejectedEmailToCustomer,
   sendCancelledByBusinessEmailToCustomer,
-  sendReviewRequestEmailToCustomer,
   sendReviewModeratedEmail,
   sendPostModeratedEmail,
   sendMediaModeratedEmail,
@@ -180,8 +179,6 @@ export async function adminOverrideAppointmentStatus(
         await sendRejectedEmailToCustomer(appointmentId);
       } else if (newStatus === "CANCELLED_BY_BUSINESS") {
         await sendCancelledByBusinessEmailToCustomer(appointmentId);
-      } else if (newStatus === "COMPLETED") {
-        await sendReviewRequestEmailToCustomer(appointmentId);
       }
     } catch (err) {
       console.error("[email] adminOverrideAppointmentStatus:", err);
