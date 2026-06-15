@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 const businessTypes = [
@@ -37,7 +40,103 @@ const businessTypes = [
 
 const scrollingBusinessTypes = [...businessTypes, ...businessTypes];
 
+function normalizeOffset(offset: number, width: number) {
+  if (width <= 0) {
+    return offset;
+  }
+
+  return ((offset % width) + width) % width;
+}
+
 export function ForBusinessSuitableSection() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const rowWidthRef = useRef(0);
+  const offsetRef = useRef(0);
+  const lastFrameRef = useRef<number | null>(null);
+  const dragStartRef = useRef({ offset: 0, x: 0 });
+  const [isPaused, setIsPaused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) {
+      return;
+    }
+
+    const updateWidth = () => {
+      rowWidthRef.current = track.scrollWidth / 2;
+    };
+
+    updateWidth();
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(track);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let frame = 0;
+
+    const tick = (time: number) => {
+      const previousTime = lastFrameRef.current ?? time;
+      const delta = time - previousTime;
+      const width = rowWidthRef.current;
+      lastFrameRef.current = time;
+
+      if (!isPaused && !isDragging && width > 0) {
+        offsetRef.current = normalizeOffset(
+          offsetRef.current - delta * 0.035,
+          width
+        );
+      }
+
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
+      }
+
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(frame);
+  }, [isDragging, isPaused]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragStartRef.current = {
+      offset: offsetRef.current,
+      x: event.clientX,
+    };
+    lastFrameRef.current = null;
+    setIsPaused(true);
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) {
+      return;
+    }
+
+    const width = rowWidthRef.current;
+    const dragDistance = event.clientX - dragStartRef.current.x;
+    offsetRef.current = normalizeOffset(
+      dragStartRef.current.offset - dragDistance,
+      width
+    );
+  };
+
+  const stopDragging = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    lastFrameRef.current = null;
+    setIsDragging(false);
+    setIsPaused(false);
+  };
+
   return (
     <section className="overflow-hidden border-t bg-background px-4 py-16 md:py-24">
       <div className="container mx-auto">
@@ -53,11 +152,28 @@ export function ForBusinessSuitableSection() {
         </div>
       </div>
 
-      <div className="business-suitable-mask mt-10 overflow-hidden md:mt-14">
-        <div className="business-suitable-track flex w-max gap-5 pr-5">
+      <div
+        className="business-suitable-mask mt-10 overflow-hidden md:mt-14"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => {
+          if (!isDragging) {
+            lastFrameRef.current = null;
+            setIsPaused(false);
+          }
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={stopDragging}
+        onPointerCancel={stopDragging}
+      >
+        <div
+          ref={trackRef}
+          className="flex w-max touch-pan-y gap-5 py-2 pr-5 will-change-transform"
+        >
           {scrollingBusinessTypes.map((type, index) => (
             <article
-              className="group relative h-48 w-[78vw] max-w-[360px] shrink-0 overflow-hidden rounded-lg bg-muted shadow-sm ring-1 ring-border/70 sm:w-[330px] md:h-56 md:w-[380px]"
+              aria-hidden={index >= businessTypes.length}
+              className="group relative h-48 w-[78vw] max-w-[360px] shrink-0 cursor-grab select-none overflow-hidden rounded-lg bg-muted shadow-sm ring-1 ring-border/70 active:cursor-grabbing sm:w-[330px] md:h-56 md:w-[380px]"
               key={`${type.title}-${index}`}
             >
               <Image

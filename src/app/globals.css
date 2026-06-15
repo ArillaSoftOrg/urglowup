@@ -281,10 +281,6 @@
   );
 }
 
-.business-suitable-track {
-  animation: business-suitable-scroll 42s linear infinite;
-}
-
 @keyframes business-panel-scroll {
   from {
     transform: translate3d(0, 0, 0);
@@ -294,18 +290,8 @@
   }
 }
 
-@keyframes business-suitable-scroll {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(calc(-50% - 0.625rem), 0, 0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .business-panel-track,
-  .business-suitable-track {
+  .business-panel-track {
     animation: none;
   }
 }
