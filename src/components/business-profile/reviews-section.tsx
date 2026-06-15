@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MessageSquare } from "lucide-react";
-import Link from "next/link";
 import { GoogleReviewsPlaceholder } from "./google-reviews-placeholder";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
@@ -60,7 +59,7 @@ export function ReviewsSection({
             <EmptyState
               icon={MessageSquare}
               headline="Henüz değerlendirme yok"
-              description="Randevunuzun ardından ilk değerlendirmeyi siz yapın."
+              description="Bu işletme için henüz yayınlanmış değerlendirme bulunmuyor."
               surface="cream"
               compact
             />
@@ -129,16 +128,6 @@ export function ReviewsSection({
               </div>
             </div>
           )}
-
-          <div className="mt-4 flex items-center gap-2.5 rounded-lg bg-surface-cream p-3">
-            <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
-            <Link
-              href="/account/reviews"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Randevunuz tamamlandı mı? Değerlendirme bırakın
-            </Link>
-          </div>
         </CardContent>
       </Card>
 
