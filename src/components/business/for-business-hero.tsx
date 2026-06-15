@@ -147,7 +147,7 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
         </div>
       </div>
 
-      <div className="business-panel-mask mx-[calc(50%-50vw)] mt-7 h-[340px] overflow-hidden pb-10 sm:h-[430px] lg:h-[520px]">
+      <div className="business-panel-mask mx-[calc(50%-50vw)] mt-7 h-[300px] overflow-hidden pb-10 sm:h-[390px] lg:h-[470px]">
         <div className="relative h-full">
           {panels.map((panel, index) => {
             const offset = getRelativePanelIndex(index, activeIndex);
@@ -160,8 +160,8 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
                 className="absolute bottom-10 left-1/2 overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_24px_70px_oklch(0.25_0.08_300/0.20)] transition-all duration-700 ease-out"
                 style={{
                   opacity: Math.abs(offset) > 1 ? 0 : isActive ? 1 : 0.48,
-                  transform: `translate3d(calc(-50% + ${offset * 58}vw), 0, 0) scale(${isActive ? 1 : 0.9})`,
-                  width: isActive ? "min(74vw, 980px)" : "min(58vw, 760px)",
+                  transform: `translate3d(calc(-50% + ${offset * 64}vw), 0, 0) scale(${isActive ? 1 : 0.88})`,
+                  width: isActive ? "min(66vw, 880px)" : "min(50vw, 680px)",
                   zIndex: isActive ? 2 : 1,
                 }}
               >
