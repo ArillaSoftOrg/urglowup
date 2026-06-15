@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PlayCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlayCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +55,55 @@ function getRelativePanelIndex(index: number, activeIndex: number) {
 export function ForBusinessHero({ registerHref }: { registerHref: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const dragStartXRef = useRef<number | null>(null);
+  const dragDeltaXRef = useRef(0);
+
+  const goToPanel = (index: number) => {
+    setActiveIndex((index + panels.length) % panels.length);
+    setProgress(0);
+  };
+
+  const goPrevious = () => {
+    goToPanel(activeIndex - 1);
+  };
+
+  const goNext = () => {
+    goToPanel(activeIndex + 1);
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragStartXRef.current = event.clientX;
+    dragDeltaXRef.current = 0;
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (dragStartXRef.current === null) {
+      return;
+    }
+
+    dragDeltaXRef.current = event.clientX - dragStartXRef.current;
+  };
+
+  const handlePointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    const delta = dragDeltaXRef.current;
+    dragStartXRef.current = null;
+    dragDeltaXRef.current = 0;
+
+    if (Math.abs(delta) < 52) {
+      return;
+    }
+
+    if (delta < 0) {
+      goNext();
+    } else {
+      goPrevious();
+    }
+  };
 
   useEffect(() => {
     const startedAt = performance.now();
@@ -122,8 +171,7 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
                 type="button"
                 aria-current={isActive}
                 onClick={() => {
-                  setActiveIndex(index);
-                  setProgress(0);
+                  goToPanel(index);
                 }}
                 className={cn(
                   "relative isolate overflow-hidden rounded-full border border-white/35 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-700 backdrop-blur-sm transition-colors",
@@ -147,8 +195,44 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
         </div>
       </div>
 
-      <div className="business-panel-mask mx-[calc(50%-50vw)] mt-7 h-[300px] overflow-hidden pb-10 sm:h-[390px] lg:h-[470px]">
+      <div
+        className="business-panel-mask mx-[calc(50%-50vw)] mt-7 h-[300px] overflow-hidden pb-10 sm:h-[390px] lg:h-[470px]"
+        role="region"
+        aria-label="Panel ön izlemeleri"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            goPrevious();
+          }
+
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            goNext();
+          }
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+      >
         <div className="relative h-full">
+          <button
+            type="button"
+            aria-label="Önceki panel"
+            onClick={goPrevious}
+            className="absolute left-5 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/80 text-slate-950 shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-700 md:left-10"
+          >
+            <ChevronLeft className="size-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label="Sonraki panel"
+            onClick={goNext}
+            className="absolute right-5 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/80 text-slate-950 shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-700 md:right-10"
+          >
+            <ChevronRight className="size-5" aria-hidden="true" />
+          </button>
           {panels.map((panel, index) => {
             const offset = getRelativePanelIndex(index, activeIndex);
             const isActive = offset === 0;
@@ -157,7 +241,7 @@ export function ForBusinessHero({ registerHref }: { registerHref: string }) {
               <div
                 aria-hidden={!isActive}
                 key={panel.tab}
-                className="absolute bottom-10 left-1/2 overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_24px_70px_oklch(0.25_0.08_300/0.20)] transition-all duration-700 ease-out"
+                className="absolute bottom-10 left-1/2 cursor-grab select-none overflow-hidden rounded-2xl border border-white/50 bg-white/70 shadow-[0_24px_70px_oklch(0.25_0.08_300/0.20)] transition-all duration-700 ease-out active:cursor-grabbing"
                 style={{
                   opacity: Math.abs(offset) > 1 ? 0 : isActive ? 1 : 0.48,
                   transform: `translate3d(calc(-50% + ${offset * 64}vw), 0, 0) scale(${isActive ? 1 : 0.88})`,
