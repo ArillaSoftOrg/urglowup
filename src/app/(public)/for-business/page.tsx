@@ -19,6 +19,7 @@ import { ForBusinessDifferenceSection } from "@/components/business/for-business
 import { ForBusinessFinalCTA } from "@/components/business/for-business-final-cta";
 import { ForBusinessHero } from "@/components/business/for-business-hero";
 import { ForBusinessSuitableSection } from "@/components/business/for-business-suitable-section";
+import { ForBusinessTestimonialsMarquee } from "@/components/business/for-business-testimonials-marquee";
 import { HomeFAQ } from "@/components/home/home-faq";
 import { HomeMigrationTransfer } from "@/components/home/home-migration-transfer";
 import { buildAlternates } from "@/lib/i18n-metadata";
@@ -160,6 +161,7 @@ export default function ForBusinessPage() {
         </div>
       </section>
 
+      <ForBusinessTestimonialsMarquee />
       <HomeMigrationTransfer />
       <HomeFAQ />
       <ForBusinessFinalCTA registerHref="/business/register" />
