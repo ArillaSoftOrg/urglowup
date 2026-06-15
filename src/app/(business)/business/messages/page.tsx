@@ -1,15 +1,10 @@
-import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { BusinessMessageCenter } from "@/components/business/messages/message-center";
 
 export const metadata = { title: "Mesajlar" };
 
 export default function BusinessMessagesPage() {
   return (
-    <div className="space-y-6">
-      <BusinessPageHeader
-        title="Mesajlar"
-        description="Müşteri konuşmaları, randevu soruları ve takip mesajları tek ekranda."
-      />
+    <div className="-mx-4 -mt-7 -mb-7 h-[calc(100vh-9rem)] overflow-hidden md:-mx-8 md:h-[calc(100vh-4rem)] lg:-mx-10">
       <BusinessMessageCenter />
     </div>
   );
