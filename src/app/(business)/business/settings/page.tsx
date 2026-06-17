@@ -192,23 +192,23 @@ export default async function SettingsPage() {
                 olarak silin.
               </p>
             </div>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled
-              title="Hesabınızı silmek için destek ekibiyle iletişime geçin."
-              className="shrink-0"
-            >
-              İşletmeyi Sil
-            </Button>
+            <div className="flex flex-col gap-2 shrink-0 sm:flex-row">
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled
+                title="Hesabınızı silmek için destek ekibiyle iletişime geçin."
+              >
+                İşletmeyi Sil
+              </Button>
+              <a
+                href="mailto:support@urglowup.com"
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                Destek ile İletişime Geç
+              </a>
+            </div>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            İşletmenizi silmek için{" "}
-            <a href="mailto:support@urglowup.com" className="underline underline-offset-2">
-              support@urglowup.com
-            </a>{" "}
-            ile iletişime geçin.
-          </p>
         </CardContent>
       </Card>
     </div>

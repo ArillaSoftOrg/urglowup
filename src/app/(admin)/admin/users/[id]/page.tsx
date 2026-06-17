@@ -1,6 +1,6 @@
 import { getAdminUserDetail } from "@/lib/queries/admin";
 import { UserDetailView } from "@/components/admin/user-detail";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdminMfa } from "@/lib/auth";
 import { notFound } from "next/navigation";
 
 export const metadata = { title: "Admin - User Details" };
@@ -15,10 +15,10 @@ export default async function AdminUserDetailPage({
   const { id } = await params;
   const [data, currentAdmin] = await Promise.all([
     getAdminUserDetail(id),
-    getCurrentUser(),
+    requireAdminMfa(),
   ]);
 
-  if (!data || !currentAdmin) {
+  if (!data) {
     notFound();
   }
 

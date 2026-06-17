@@ -82,6 +82,7 @@ export function PostFeed({
   async function handleCategorySelect(categoryId: string | undefined) {
     setSelectedCategoryId(categoryId);
     setSelectedStyleTagId(undefined);
+    setPosts([]); // Reset posts immediately to show skeleton loader
     setLoading(true);
     setError(null);
     try {
@@ -107,6 +108,7 @@ export function PostFeed({
   // Reset feed when style tag changes
   async function handleStyleTagSelect(styleTagId: string | undefined) {
     setSelectedStyleTagId(styleTagId);
+    setPosts([]); // Reset posts immediately to show skeleton loader
     setLoading(true);
     setError(null);
     try {

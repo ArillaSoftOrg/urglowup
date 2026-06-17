@@ -154,8 +154,8 @@ export async function GET(req: Request) {
 - [ ] Update `sendMarketingEmailCampaign` action to enqueue instead of send directly
 - [ ] Update `sendMarketingWhatsAppCampaign` action similarly
 - [ ] Create batch send functions that respect rate limits
-- [ ] Add webhook handlers for delivery confirmations (Resend webhooks)
-- [ ] Implement bounce/complaint suppression from Resend webhooks
+- [x] Add webhook handlers for delivery confirmations (Resend webhooks) — implemented at `/api/webhooks/resend`
+- [x] Implement bounce/complaint suppression from Resend webhooks — marks CampaignRecipient as SKIPPED
 - [ ] Add job status monitoring dashboard
 - [ ] Test with 5,000+ recipient campaign
 - [ ] Document suppression list model and behavior
