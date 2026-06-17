@@ -257,7 +257,13 @@ function HoursPreview({ business }: { business: BusinessWithDetails }) {
   );
 }
 
-function ServicesPreview({ business }: { business: BusinessWithDetails }) {
+function ServicesPreview({
+  business,
+  hrefPrefix = "",
+}: {
+  business: BusinessWithDetails;
+  hrefPrefix?: string;
+}) {
   const categories = business.categories.map((bc) => bc.category);
 
   return (
@@ -295,7 +301,7 @@ function ServicesPreview({ business }: { business: BusinessWithDetails }) {
           return (
             <Link
               key={service.id}
-              href={`/b/${business.slug}/book?service=${service.id}`}
+              href={`${hrefPrefix}/b/${business.slug}/book?service=${service.id}`}
               className="block px-4 py-4"
             >
               <div className="flex items-start justify-between gap-4">
@@ -377,15 +383,18 @@ export function MobileBusinessProfile({
   reviewSummary,
   isOpen,
   location,
+  locale,
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
   isOpen: boolean;
   location: string;
+  locale?: string;
 }) {
   const galleryItems = buildGalleryItems(business);
   const categories = business.categories.map((bc) => bc.category);
   const primaryCategory = categories[0]?.name;
+  const hrefPrefix = locale && locale !== "tr" ? `/${locale}` : "";
   const addressQuery = [business.name, business.address, business.district, business.city]
     .filter(Boolean)
     .join(" ");
@@ -394,7 +403,7 @@ export function MobileBusinessProfile({
     <div className="min-h-screen bg-background pb-28 lg:hidden">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Link
-          href="/"
+          href={hrefPrefix || "/"}
           aria-label="Geri dön"
           className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
         >
@@ -507,7 +516,7 @@ export function MobileBusinessProfile({
         </section>
       )}
 
-      <ServicesPreview business={business} />
+      <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
       <section id="team" className="border-t px-5 py-8">
         <h2 className="text-xl font-bold tracking-normal">Ekip</h2>
@@ -527,7 +536,7 @@ export function MobileBusinessProfile({
           </p>
         )}
         <Link
-          href={`/b/${business.slug}/book`}
+          href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
             buttonVariants({ size: "lg" }),
             "h-14 w-full rounded-full text-base font-bold",

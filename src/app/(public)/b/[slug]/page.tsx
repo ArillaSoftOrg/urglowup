@@ -10,8 +10,8 @@ import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { LocationSection } from "@/components/business-profile/location-section";
 import { HoursSection, isBusinessOpen } from "@/components/business-profile/hours-section";
 import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
-import { MobileBookingBar } from "@/components/business-profile/mobile-booking-bar";
 import { BusinessGalleryHero } from "@/components/business-profile/business-gallery-hero";
+import { MobileBusinessProfile } from "@/components/business-profile/mobile-business-profile";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -168,7 +168,14 @@ export default async function BusinessProfilePage({ params }: PageProps) {
       />
 
       <main className="bg-background">
-        <div className="container mx-auto px-4 py-6 sm:py-8">
+        <MobileBusinessProfile
+          business={business}
+          reviewSummary={reviewSummary}
+          isOpen={isOpen}
+          location={location}
+        />
+
+        <div className="container mx-auto hidden px-4 py-6 sm:py-8 lg:block">
           <nav className="mb-7 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Link href="/" className="hover:text-foreground">
               Ana sayfa
@@ -211,7 +218,7 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 pb-8">
+        <div className="container mx-auto hidden px-4 pb-8 lg:block">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
             <div className="min-w-0 flex-1 space-y-8">
               <ServicesSection business={business} />
@@ -233,7 +240,6 @@ export default async function BusinessProfilePage({ params }: PageProps) {
         </div>
       </main>
 
-      <MobileBookingBar slug={business.slug} isOpen={isOpen} locale="tr" />
     </>
   );
 }

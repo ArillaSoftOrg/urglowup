@@ -16,14 +16,54 @@ import {
 
 export const metadata = { title: "Admin Dashboard" };
 
+interface AdminMetricsError {
+  message: string;
+}
+
 export default async function AdminDashboardPage() {
   // Admin metrics depend on live database state and should never run at build time.
   await connection();
 
-  const [metrics, recentActions] = await Promise.all([
-    getAdminDashboardMetrics(),
+  let metrics;
+  let metricsError: AdminMetricsError | null = null;
+  
+  const [recentActions] = await Promise.all([
     getRecentAdminActions(10),
   ]);
+
+  try {
+    metrics = await getAdminDashboardMetrics();
+  } catch (err) {
+    console.error("[admin:dashboard] Failed to fetch metrics:", err);
+    metricsError = {
+      message: err instanceof Error ? err.message : "Unknown error loading metrics",
+    };
+    // If metrics completely fail, return error page
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="Operations"
+          title="Control Tower"
+          description="Real-time platform health and pending actions."
+        />
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <h2 className="text-lg font-semibold text-red-900 mb-2">
+            Dashboard Unavailable
+          </h2>
+          <p className="text-sm text-red-700 mb-4">
+            {metricsError.message}
+          </p>
+          <p className="text-xs text-red-600">
+            Try refreshing the page or contact support if this persists.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return null;
+  }
 
   const appointmentTrendData = buildAppointmentTrendData(
     metrics.appointmentTrend
@@ -39,6 +79,14 @@ export default async function AdminDashboardPage() {
         title="Control Tower"
         description="Real-time platform health and pending actions."
       />
+
+      {metricsError && (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <p className="text-sm text-yellow-800">
+            <strong>⚠️ Some metrics may be incomplete:</strong> {metricsError.message}
+          </p>
+        </div>
+      )}
 
       <KpiGrid metrics={metrics} />
 

@@ -40,7 +40,6 @@ export async function getConversationMessages(
   conversationId: string,
   userId: string
 ) {
-  // Verify user is part of this conversation
   const conversation = await db.conversation.findUnique({
     where: { id: conversationId },
   });
@@ -49,7 +48,6 @@ export async function getConversationMessages(
     return null;
   }
 
-  // Mark messages from business as read
   await db.message.updateMany({
     where: {
       conversationId,
@@ -59,7 +57,6 @@ export async function getConversationMessages(
     data: { isRead: true },
   });
 
-  // Fetch all messages
   const messages = await db.message.findMany({
     where: { conversationId },
     include: {
@@ -82,12 +79,115 @@ export type ConversationWithMessages = Awaited<
   ReturnType<typeof getConversationMessages>
 >;
 
+// ── Business-side queries ────────────────────────────────────────────────────
+
+export type BusinessConversation = {
+  id: string;
+  businessId: string;
+  customerId: string;
+  lastMessageAt: Date;
+  createdAt: Date;
+  customer: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    avatarUrl: string | null;
+  };
+  messages: {
+    content: string;
+    createdAt: Date;
+    senderId: string;
+  }[];
+  _count: { messages: number };
+};
+
+export async function getConversationsForBusiness(
+  businessId: string
+): Promise<BusinessConversation[]> {
+  return db.conversation.findMany({
+    where: { businessId },
+    select: {
+      id: true,
+      businessId: true,
+      customerId: true,
+      lastMessageAt: true,
+      createdAt: true,
+      customer: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+      messages: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: {
+          content: true,
+          createdAt: true,
+          senderId: true,
+        },
+      },
+      _count: {
+        select: {
+          messages: { where: { isRead: false } },
+        },
+      },
+    },
+    orderBy: { lastMessageAt: "desc" },
+  }) as Promise<BusinessConversation[]>;
+}
+
+export async function getBusinessConversationMessages(
+  conversationId: string,
+  businessId: string
+) {
+  const conversation = await db.conversation.findUnique({
+    where: { id: conversationId },
+  });
+
+  if (!conversation || conversation.businessId !== businessId) {
+    return null;
+  }
+
+  // Mark messages from customer as read
+  await db.message.updateMany({
+    where: {
+      conversationId,
+      isRead: false,
+      senderId: conversation.customerId,
+    },
+    data: { isRead: true },
+  });
+
+  const messages = await db.message.findMany({
+    where: { conversationId },
+    include: {
+      sender: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return { conversation, messages };
+}
+
+// ── Shared send ──────────────────────────────────────────────────────────────
+
 export async function sendMessage(
   conversationId: string,
   senderId: string,
   content: string
 ) {
-  // Verify conversation exists and sender has access
   const conversation = await db.conversation.findUnique({
     where: { id: conversationId },
   });
@@ -96,30 +196,24 @@ export async function sendMessage(
     throw new Error("Conversation not found");
   }
 
-  // Only business owner (as a user) or customer can send messages
-  // For now, only customer sends (business sends via admin actions)
-  if (conversation.customerId !== senderId) {
+  // Both customer and business members (validated upstream) may send
+  const isParticipant =
+    conversation.customerId === senderId ||
+    conversation.businessId !== null;
+
+  if (!isParticipant) {
     throw new Error("Unauthorized");
   }
 
   const message = await db.message.create({
-    data: {
-      conversationId,
-      senderId,
-      content,
-    },
+    data: { conversationId, senderId, content },
     include: {
       sender: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
+        select: { id: true, firstName: true, lastName: true },
       },
     },
   });
 
-  // Update conversation's lastMessageAt
   await db.conversation.update({
     where: { id: conversationId },
     data: { lastMessageAt: new Date() },
