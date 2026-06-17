@@ -49,18 +49,7 @@ export function LocationSection({
             name={business.name}
             apiKey={mapsApiKey}
           />
-        ) : (
-          <div className="flex h-40 items-center justify-center rounded-xl bg-surface-cream">
-            <div className="text-center">
-              <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-brand-pink/15">
-                <MapPin className="size-5 text-brand-pink-foreground" />
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Harita yakında eklenecek
-              </p>
-            </div>
-          </div>
-        )}
+        ) : null}
 
         <a
           href={directionsUrl}

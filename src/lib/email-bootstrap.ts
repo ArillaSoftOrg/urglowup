@@ -28,8 +28,4 @@ export function bootstrapEmailConfig() {
       warnings: diagnostic.warnings,
     });
   }
-
-  if (diagnostic.isValid) {
-    console.log("[email-bootstrap:success] Email configuration is valid");
-  }
 }

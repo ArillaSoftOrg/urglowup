@@ -255,9 +255,11 @@ export function AppointmentTableClient({
               <tbody>
                 {appointments.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="flex flex-col items-center py-8 text-center">
-                      <Calendar className="size-8 text-slate-400" />
-                      <p className="mt-2 text-slate-600">No appointments found</p>
+                    <td colSpan={8} className="py-8 text-center">
+                      <div className="flex flex-col items-center">
+                        <Calendar className="size-8 text-slate-400" />
+                        <p className="mt-2 text-slate-600">No appointments found</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (

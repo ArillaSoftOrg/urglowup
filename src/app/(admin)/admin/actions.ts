@@ -2014,9 +2014,6 @@ export async function sendMarketingWhatsAppCampaign(
 
           try {
             if (isDryRun) {
-              console.log(
-                `[WHATSAPP_DRY_RUN] Would send WhatsApp template "${templateName}" to ${normalizedPhone}`
-              );
               return { success: true, messageId: `dry-run-${Date.now()}` };
             }
 
@@ -2219,9 +2216,6 @@ export async function sendMarketingEmailCampaign(
             ).toString();
 
             if (isDryRun) {
-              console.log(
-                `[CAMPAIGN_DRY_RUN] Would send email to ${recipient.recipientEmail}`
-              );
               return { success: true, messageId: `dry-run-${Date.now()}` };
             }
 
