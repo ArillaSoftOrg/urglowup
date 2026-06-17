@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBusinessBySlug } from "@/lib/queries/business";
+import { getBusinessBySlug, getGoogleReviewsForBusiness } from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
 import { buildAlternates } from "@/lib/i18n-metadata";
 import { absoluteUrl } from "@/lib/seo";
@@ -66,7 +66,10 @@ export default async function BusinessProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  const reviewSummary = await getBusinessReviewSummary(business.id);
+  const [reviewSummary, googleReviews] = await Promise.all([
+    getBusinessReviewSummary(business.id),
+    getGoogleReviewsForBusiness(business.id),
+  ]);
   const isOpen = isBusinessOpen(business.hours);
   const businessUrl = absoluteUrl(`/b/${business.slug}`);
   const addressText = [business.address, business.district, business.city]
@@ -217,6 +220,7 @@ export default async function BusinessProfilePage({ params }: PageProps) {
               <ReviewsSection
                 business={business}
                 reviewSummary={reviewSummary}
+                googleReviews={googleReviews}
               />
               <LocationSection business={business} />
               <div className="h-20 lg:hidden" />

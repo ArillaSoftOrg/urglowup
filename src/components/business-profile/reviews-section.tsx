@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MessageSquare } from "lucide-react";
 import { GoogleReviewsPlaceholder } from "./google-reviews-placeholder";
-import type { BusinessWithDetails } from "@/lib/queries/business";
+import type { BusinessWithDetails, GoogleReview } from "@/lib/queries/business";
 
 interface ReviewSummary {
   averageRating: number | null;
@@ -44,9 +44,11 @@ function formatReviewDate(date: Date) {
 export function ReviewsSection({
   business,
   reviewSummary,
+  googleReviews = [],
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
+  googleReviews?: GoogleReview[];
 }) {
   return (
     <div className="space-y-4">
@@ -131,7 +133,16 @@ export function ReviewsSection({
         </CardContent>
       </Card>
 
-      <GoogleReviewsPlaceholder googlePlaceId={business.googlePlaceId} />
+      {googleReviews.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <GoogleReviewsPlaceholder
+              reviews={googleReviews}
+              businessName={business.name}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

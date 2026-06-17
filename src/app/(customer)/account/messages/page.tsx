@@ -1,42 +1,52 @@
-"use client";
-
-import { useState } from "react";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getConversationsForCustomer } from "@/lib/queries/messages";
 import { Badge } from "@/components/ui/badge";
-import { ConversationList } from "@/components/account/messages/conversation-list";
-import { ThreadView } from "@/components/account/messages/thread-view";
-import type { ConversationItem, MessageThread } from "@/components/account/messages/message-types";
+import { EmptyState } from "@/components/ui/empty-state";
+import { MessageSquare } from "lucide-react";
+import { MessagesClientWrapper } from "@/components/account/messages/messages-client-wrapper";
 
-// No conversations yet — backend to be wired up in a future PR.
-const CONVERSATIONS: ConversationItem[] = [];
-const THREADS: Record<string, MessageThread> = {};
+export const metadata = { title: "Mesajlar" };
 
-export default function MessagesPage() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const thread = selectedId ? (THREADS[selectedId] ?? null) : null;
+export default async function MessagesPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const conversations = await getConversationsForCustomer(user.id);
+
+  if (conversations.length === 0) {
+    return (
+      <div className="space-y-5">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight">Mesajlar</h1>
+        </div>
+
+        <EmptyState
+          icon={MessageSquare}
+          headline="Henüz konuşma yok"
+          description="İşletmelerle mesajlaşmaya başlamak için bir randevuyu tamamlayın."
+          surface="cream"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Mesajlar</h1>
-        <Badge variant="secondary" className="text-xs">Yakında</Badge>
+        <Badge variant="secondary" className="text-xs">
+          {conversations.length}
+        </Badge>
       </div>
 
-      <div className="flex overflow-hidden rounded-xl border" style={{ height: "calc(100vh - 14rem)" }}>
-        {/* On mobile: show list when no conversation selected, thread otherwise */}
-        <div className={selectedId ? "hidden md:flex" : "flex w-full md:w-auto"}>
-          <ConversationList
-            conversations={CONVERSATIONS}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
-        </div>
-        <div className={selectedId ? "flex flex-1" : "hidden md:flex flex-1"}>
-          <ThreadView
-            thread={thread}
-            onBack={() => setSelectedId(null)}
-          />
-        </div>
-      </div>
+      <MessagesClientWrapper
+        conversations={conversations}
+        currentUserId={user.id}
+      />
     </div>
   );
 }

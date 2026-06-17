@@ -1,0 +1,542 @@
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  CalendarCheck,
+  Clock,
+  Heart,
+  MapPin,
+  Navigation,
+  Share2,
+  Star,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { getOptimizedUrl } from "@/lib/cloudinary";
+import type { BusinessWithDetails } from "@/lib/queries/business";
+
+const DAY_ORDER = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+] as const;
+
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: "Pazartesi",
+  TUESDAY: "Salı",
+  WEDNESDAY: "Çarşamba",
+  THURSDAY: "Perşembe",
+  FRIDAY: "Cuma",
+  SATURDAY: "Cumartesi",
+  SUNDAY: "Pazar",
+};
+
+interface ReviewSummary {
+  averageRating: number | null;
+  totalCount: number;
+}
+
+interface MobileGalleryItem {
+  id: string;
+  thumbnailUrl: string;
+  title: string | null;
+  isVideo: boolean;
+}
+
+function getTodayDayOfWeek(): string {
+  const days = [
+    "SUNDAY",
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+  ];
+  return days[new Date().getDay()];
+}
+
+function formatTime(time: string) {
+  return time.substring(0, 5);
+}
+
+function formatPrice(service: BusinessWithDetails["services"][number]) {
+  if (service.priceType === "FREE_CONSULTATION") return "Ücretsiz danışma";
+  if (service.priceType === "CONSULTATION_REQUIRED") return "Fiyat için danışın";
+  if (!service.price) return null;
+
+  const amount = `₺${Number(service.price)}`;
+  return service.priceType === "STARTS_FROM" ? `${amount} itibaren` : amount;
+}
+
+function buildGalleryItems(business: BusinessWithDetails): MobileGalleryItem[] {
+  const items = business.media
+    .filter((media) => media.type !== "LOGO")
+    .map((media) => {
+      const isVideo = media.type === "PORTFOLIO_VIDEO";
+      const cropMeta =
+        !isVideo && media.cropX != null
+          ? {
+              x: media.cropX,
+              y: media.cropY!,
+              width: media.cropWidth!,
+              height: media.cropHeight!,
+            }
+          : undefined;
+      const thumbnailUrl =
+        !isVideo && media.publicId
+          ? getOptimizedUrl(media.publicId, { width: 640, crop: "limit" }, cropMeta)
+          : media.url;
+
+      return {
+        id: media.id,
+        thumbnailUrl,
+        title: media.title,
+        isVideo,
+      };
+    });
+
+  if (items.length > 0) return items;
+
+  if (business.coverImageUrl) {
+    return [
+      {
+        id: "cover",
+        thumbnailUrl: business.coverImageUrl,
+        title: business.name,
+        isVideo: false,
+      },
+    ];
+  }
+
+  return [];
+}
+
+function HeroImage({
+  business,
+  items,
+}: {
+  business: BusinessWithDetails;
+  items: MobileGalleryItem[];
+}) {
+  const hero = items[0];
+
+  return (
+    <section className="relative aspect-[4/3] overflow-hidden bg-muted">
+      {hero ? (
+        hero.isVideo ? (
+          <video
+            src={hero.thumbnailUrl}
+            className="size-full object-cover"
+            muted
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <Image
+            src={hero.thumbnailUrl}
+            alt={hero.title ?? business.name}
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
+          />
+        )
+      ) : (
+        <div className="flex size-full items-center justify-center bg-surface-cream text-sm font-medium text-muted-foreground">
+          Fotoğraflar yakında
+        </div>
+      )}
+
+      {items.length > 1 && (
+        <div className="absolute bottom-4 right-4 rounded-full bg-foreground/75 px-3 py-1 text-sm font-bold text-background">
+          1/{items.length}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PortfolioGrid({ items }: { items: MobileGalleryItem[] }) {
+  if (items.length === 0) return null;
+
+  const visible = items.slice(0, 9);
+  const remaining = Math.max(items.length - visible.length, 0);
+
+  return (
+    <section id="portfolio" className="border-t px-5 py-8">
+      <div className="mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-bold tracking-normal">Portföy</h2>
+        <span className="rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          {items.length}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {visible.map((item, index) => (
+          <div
+            key={item.id}
+            className="relative aspect-square overflow-hidden rounded-lg bg-muted"
+          >
+            {item.isVideo ? (
+              <video
+                src={item.thumbnailUrl}
+                className="size-full object-cover"
+                muted
+                playsInline
+                preload="metadata"
+              />
+            ) : (
+              <Image
+                src={item.thumbnailUrl}
+                alt={item.title ?? "Portföy görseli"}
+                fill
+                sizes="33vw"
+                className="object-cover"
+              />
+            )}
+            {index === visible.length - 1 && remaining > 0 && (
+              <div className="absolute inset-0 flex items-center justify-center bg-foreground/55 text-3xl font-bold text-background">
+                +{remaining}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function HoursPreview({ business }: { business: BusinessWithDetails }) {
+  if (business.hours.length === 0) return null;
+
+  const today = getTodayDayOfWeek();
+  const sorted = DAY_ORDER.map((day) =>
+    business.hours.find((hour) => hour.dayOfWeek === day),
+  ).filter(Boolean);
+
+  return (
+    <section id="hours" className="border-t px-5 py-8">
+      <h2 className="mb-4 text-xl font-bold tracking-normal">Açılış saatleri</h2>
+      <div className="space-y-1">
+        {sorted.map((hour) => {
+          if (!hour) return null;
+          const isToday = hour.dayOfWeek === today;
+          return (
+            <div
+              key={hour.dayOfWeek}
+              className={cn(
+                "flex items-center justify-between gap-4 rounded-md py-2 text-sm",
+                isToday && "font-semibold",
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <span
+                  className={cn(
+                    "size-3 shrink-0 rounded-full bg-muted-foreground/35",
+                    hour.isOpen && "bg-green-500",
+                  )}
+                />
+                {DAY_LABELS[hour.dayOfWeek]}
+              </span>
+              <span className="shrink-0 text-right tabular-nums">
+                {hour.isOpen && hour.openTime && hour.closeTime
+                  ? `${formatTime(hour.openTime)} - ${formatTime(hour.closeTime)}`
+                  : "Kapalı"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ServicesPreview({ business }: { business: BusinessWithDetails }) {
+  const categories = business.categories.map((bc) => bc.category);
+
+  return (
+    <section id="services" className="border-t px-5 py-8">
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold tracking-normal">Hizmetler</h2>
+          {business.services.length > 0 && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              mevcut {business.services.length} hizmet
+            </p>
+          )}
+        </div>
+      </div>
+
+      {categories.length > 0 && (
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          <span className="inline-flex h-9 shrink-0 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground">
+            Öne Çıkanlar
+          </span>
+          {categories.map((category) => (
+            <span
+              key={category.id}
+              className="inline-flex h-9 shrink-0 items-center rounded-full border bg-background px-4 text-sm font-medium"
+            >
+              {category.name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="divide-y rounded-lg border bg-background">
+        {business.services.slice(0, 5).map((service) => {
+          const price = formatPrice(service);
+          return (
+            <Link
+              key={service.id}
+              href={`/b/${business.slug}/book?service=${service.id}`}
+              className="block px-4 py-4"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-semibold">{service.name}</p>
+                  {service.description && (
+                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                      {service.description}
+                    </p>
+                  )}
+                  <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Clock className="size-4" />
+                    {service.durationMinutes} dk
+                  </p>
+                </div>
+                {price && (
+                  <span className="shrink-0 text-sm font-bold">{price}</span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ReviewsPreview({
+  business,
+  reviewSummary,
+}: {
+  business: BusinessWithDetails;
+  reviewSummary: ReviewSummary;
+}) {
+  return (
+    <section id="reviews" className="border-t px-5 py-8">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2 className="text-xl font-bold tracking-normal">Değerlendirmeler</h2>
+        {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
+          <span className="inline-flex items-center gap-1 text-sm font-bold">
+            <Star className="size-4 fill-amber-400 text-amber-400" />
+            {reviewSummary.averageRating.toFixed(1)}
+          </span>
+        )}
+      </div>
+
+      {business.reviews.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Henüz değerlendirme yok.</p>
+      ) : (
+        <div className="space-y-4">
+          {business.reviews.slice(0, 3).map((review) => {
+            const name = [review.customer.firstName, review.customer.lastName]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <article key={review.id} className="rounded-lg border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold">{name || "Müşteri"}</p>
+                  <span className="text-sm font-bold tabular-nums">
+                    {(review.rating as number).toFixed(1)} / 10
+                  </span>
+                </div>
+                {review.comment && (
+                  <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+                    {review.comment}
+                  </p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function MobileBusinessProfile({
+  business,
+  reviewSummary,
+  isOpen,
+  location,
+}: {
+  business: BusinessWithDetails;
+  reviewSummary: ReviewSummary;
+  isOpen: boolean;
+  location: string;
+}) {
+  const galleryItems = buildGalleryItems(business);
+  const categories = business.categories.map((bc) => bc.category);
+  const primaryCategory = categories[0]?.name;
+  const addressQuery = [business.name, business.address, business.district, business.city]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div className="min-h-screen bg-background pb-28 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+        <Link
+          href="/"
+          aria-label="Geri dön"
+          className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
+        >
+          <ArrowLeft className="size-5" />
+        </Link>
+        <p className="min-w-0 flex-1 truncate px-2 text-lg font-bold">
+          {business.name}
+        </p>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="Paylaş"
+            className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
+          >
+            <Share2 className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Favorilere ekle"
+            className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
+          >
+            <Heart className="size-5" />
+          </button>
+        </div>
+      </header>
+
+      <nav className="sticky top-14 z-30 flex gap-6 overflow-x-auto border-b bg-background px-5 text-sm font-bold">
+        {[
+          ["#services", "Hizmetler"],
+          ["#team", "Ekip"],
+          ["#reviews", "Değerlendirmeler"],
+          ["#portfolio", "Portföy"],
+          ["#hours", "Diğer"],
+        ].map(([href, label]) => (
+          <a
+            key={href}
+            href={href}
+            className="shrink-0 border-b-2 border-transparent py-4 hover:border-foreground"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
+      <HeroImage business={business} items={galleryItems} />
+
+      <section className="-mt-8 rounded-t-[28px] bg-background px-5 pb-7 pt-6">
+        <h1 className="text-3xl font-bold leading-tight tracking-normal">
+          {business.name}
+        </h1>
+        {primaryCategory && (
+          <p className="mt-1 text-base text-muted-foreground">{primaryCategory}</p>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+          {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null ? (
+            <span className="inline-flex items-center gap-1 font-bold">
+              <Star className="size-4 fill-amber-400 text-amber-400" />
+              {reviewSummary.averageRating.toFixed(1)}
+              <span className="text-primary">({reviewSummary.totalCount})</span>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">Henüz yorum yok</span>
+          )}
+          <span aria-hidden className="text-muted-foreground">
+            ·
+          </span>
+          <span className={cn("inline-flex items-center gap-1", !isOpen && "text-orange-600")}>
+            <Clock className="size-4" />
+            {isOpen ? "Açık" : "Kapalı"}
+          </span>
+        </div>
+
+        {location && (
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted px-4 py-3 text-sm font-medium">
+            <MapPin className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{location}</span>
+          </div>
+        )}
+
+        {categories.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <Badge key={category.id} variant="neutral">
+                {category.name}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {addressQuery && (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-primary"
+          >
+            <Navigation className="size-4" />
+            Yol tarifi
+          </a>
+        )}
+      </section>
+
+      {business.description && (
+        <section id="about" className="px-5 pb-8">
+          <h2 className="mb-3 text-xl font-bold tracking-normal">Hakkında</h2>
+          <p className="line-clamp-5 whitespace-pre-line text-base leading-relaxed">
+            {business.description}
+          </p>
+        </section>
+      )}
+
+      <ServicesPreview business={business} />
+
+      <section id="team" className="border-t px-5 py-8">
+        <h2 className="text-xl font-bold tracking-normal">Ekip</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Ekip bilgileri yakında burada görünecek.
+        </p>
+      </section>
+
+      <ReviewsPreview business={business} reviewSummary={reviewSummary} />
+      <PortfolioGrid items={galleryItems} />
+      <HoursPreview business={business} />
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-5 pb-4 pt-3 shadow-[0_-8px_24px_oklch(0.2_0.01_10/0.08)] backdrop-blur">
+        {business.services.length > 0 && (
+          <p className="mb-2 text-sm text-muted-foreground">
+            mevcut {business.services.length} hizmet
+          </p>
+        )}
+        <Link
+          href={`/b/${business.slug}/book`}
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            "h-14 w-full rounded-full text-base font-bold",
+          )}
+        >
+          <CalendarCheck className="size-4" />
+          Hemen rezervasyon yapın
+        </Link>
+      </div>
+    </div>
+  );
+}

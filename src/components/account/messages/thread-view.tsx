@@ -1,26 +1,116 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import type { MessageThread } from "./message-types";
+import { sendCustomerMessage } from "@/app/(customer)/account/messages/actions";
 
 interface ThreadViewProps {
-  thread: MessageThread | null;
-  currentUserId?: string;
+  conversationId: string;
+  currentUserId: string;
   onBack?: () => void;
 }
 
-export function ThreadView({ thread, currentUserId, onBack }: ThreadViewProps) {
-  if (!thread) {
+interface Message {
+  id: string;
+  content: string;
+  createdAt: Date;
+  senderId: string;
+  sender: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+}
+
+interface ConversationData {
+  id: string;
+  businessId: string;
+  business: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+  };
+  messages: Message[];
+}
+
+export function ThreadView({
+  conversationId,
+  currentUserId,
+  onBack,
+}: ThreadViewProps) {
+  const [data, setData] = useState<ConversationData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch messages when conversation changes
+  useEffect(() => {
+    async function fetchMessages() {
+      try {
+        const response = await fetch(
+          `/api/messages/conversations/${conversationId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setData(data);
+        }
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMessages();
+  }, [conversationId]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [data?.messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || sending) return;
+
+    setSending(true);
+    try {
+      const result = await sendCustomerMessage(conversationId, message);
+      if (result.success) {
+        setMessage("");
+        // Refetch messages
+        const response = await fetch(
+          `/api/messages/conversations/${conversationId}`
+        );
+        if (response.ok) {
+          const updatedData = await response.json();
+          setData(updatedData);
+        }
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="hidden flex-1 flex-col items-center justify-center gap-3 p-8 text-center md:flex">
-        <p className="text-sm text-muted-foreground">
-          Bir konuşma seçin
-        </p>
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <p className="text-sm text-muted-foreground">Konuşma bulunamadı</p>
       </div>
     );
   }
@@ -39,18 +129,22 @@ export function ThreadView({ thread, currentUserId, onBack }: ThreadViewProps) {
             <ArrowLeft className="size-4" />
           </Button>
         )}
-        <p className="text-sm font-semibold">{thread.businessName}</p>
+        <p className="text-sm font-semibold">{data.business.name}</p>
       </div>
 
       {/* Messages */}
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {thread.messages.length === 0 ? (
+        {data.messages.length === 0 ? (
           <p className="py-8 text-center text-xs text-muted-foreground">
             Henüz mesaj yok. İlk mesajı siz gönderin.
           </p>
         ) : (
-          thread.messages.map((msg) => {
+          data.messages.map((msg) => {
             const isOwn = msg.senderId === currentUserId;
+            const senderName = msg.sender.firstName
+              ? `${msg.sender.firstName} ${msg.sender.lastName || ""}`
+              : msg.sender.email;
+
             return (
               <div
                 key={msg.id}
@@ -67,6 +161,9 @@ export function ThreadView({ thread, currentUserId, onBack }: ThreadViewProps) {
                       : "bg-muted text-foreground"
                   )}
                 >
+                  {!isOwn && (
+                    <p className="text-xs font-medium opacity-70">{senderName}</p>
+                  )}
                   <p>{msg.content}</p>
                   <p
                     className={cn(
@@ -74,32 +171,32 @@ export function ThreadView({ thread, currentUserId, onBack }: ThreadViewProps) {
                       isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
                     )}
                   >
-                    {format(msg.sentAt, "HH:mm", { locale: tr })}
+                    {format(new Date(msg.createdAt), "HH:mm", { locale: tr })}
                   </p>
                 </div>
               </div>
             );
           })
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="border-t p-3">
+      <form onSubmit={handleSendMessage} className="border-t p-3">
         <div className="flex items-end gap-2">
           <Textarea
             placeholder="Mesajınızı yazın..."
             rows={2}
-            disabled
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={sending}
             className="min-h-0 resize-none"
           />
-          <Button size="icon" disabled>
+          <Button size="icon" type="submit" disabled={sending || !message.trim()}>
             <Send className="size-4" />
           </Button>
         </div>
-        <p className="mt-1.5 text-center text-xs text-muted-foreground">
-          Mesajlaşma yakında aktif olacak.
-        </p>
-      </div>
+      </form>
     </div>
   );
 }

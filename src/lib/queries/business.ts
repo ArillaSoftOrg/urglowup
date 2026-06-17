@@ -74,3 +74,19 @@ export async function getBusinessForPublicLink(businessId: string) {
 export type BusinessForPublicLink = NonNullable<
   Awaited<ReturnType<typeof getBusinessForPublicLink>>
 >;
+
+export async function getGoogleReviewsForBusiness(businessId: string) {
+  return db.externalReviewCache.findMany({
+    where: {
+      businessId,
+      provider: "GOOGLE_BUSINESS_PROFILE",
+      expiresAt: { gt: new Date() }, // Only non-expired reviews
+    },
+    orderBy: { createTime: "desc" },
+    take: 10,
+  });
+}
+
+export type GoogleReview = Awaited<
+  ReturnType<typeof getGoogleReviewsForBusiness>
+>[number];

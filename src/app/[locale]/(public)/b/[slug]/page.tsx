@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBusinessBySlug } from "@/lib/queries/business";
+import { getBusinessBySlug, getGoogleReviewsForBusiness } from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
 import { ProfileHeader } from "@/components/business-profile/profile-header";
 import { AboutSection } from "@/components/business-profile/about-section";
@@ -59,7 +59,10 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  const reviewSummary = await getBusinessReviewSummary(business.id);
+  const [reviewSummary, googleReviews] = await Promise.all([
+    getBusinessReviewSummary(business.id),
+    getGoogleReviewsForBusiness(business.id),
+  ]);
   const isOpen = isBusinessOpen(business.hours);
   const location = [business.district, business.city].filter(Boolean).join(", ");
   const primaryCategory = business.categories[0]?.category;
@@ -119,6 +122,7 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
               <ReviewsSection
                 business={business}
                 reviewSummary={reviewSummary}
+                googleReviews={googleReviews}
               />
               <LocationSection business={business} />
               <div className="h-20 lg:hidden" />
