@@ -80,13 +80,19 @@ export interface RateLimitCheckResult {
 /**
  * Checks whether a Google API request is within rate limits for the given business.
  *
- * Phase 15: Always returns allowed — no enforcement yet.
- * Phase 16: Replace with token-bucket implementation backed by a KV store.
+ * ⚠️  SECURITY STUB: Currently always allows all requests (no enforcement).
+ *
+ * Phase 15 (current): No-op stub to allow feature development without quota concerns.
+ * Phase 16 (deferred): Implement token-bucket (or leaky-bucket) rate limiting backed by
+ * Redis or DB to protect against quota exhaustion on Google My Business API calls.
+ *
+ * Until Phase 16 is complete, there is ZERO protection against quota exhaustion.
+ * A burst of concurrent profile fetches could exhaust the daily quota.
  */
 export function checkRateLimit(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _businessId: string,
 ): RateLimitCheckResult {
-  // TODO: Implement in Phase 16 with actual token bucket logic
+  // TODO: Phase 16 — Implement token-bucket rate limiter backed by KV store (Redis / Vercel KV)
   return { allowed: true };
 }

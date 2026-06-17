@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useOptimistic, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
-import { LayoutGrid } from "lucide-react";
+import { AlertCircle, LayoutGrid, RotateCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PostCard } from "./post-card";
 import { PostFeedCategoryFilter } from "./post-feed-category-filter";
 import { PersonalizationNudge } from "./personalization-nudge";
@@ -56,6 +57,7 @@ export function PostFeed({
   const [selectedStyleTagId, setSelectedStyleTagId] = useState<string | undefined>(undefined);
   const [styleTags] = useState<StyleTagData[]>(initialStyleTags);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [viewerState, setViewerState] = useState<ViewerState>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -81,13 +83,22 @@ export function PostFeed({
     setSelectedCategoryId(categoryId);
     setSelectedStyleTagId(undefined);
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({ take: "20" });
       if (categoryId) params.set("categoryId", categoryId);
       const res = await fetch(`/api/posts?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error(`Failed to load posts: ${res.statusText}`);
+      }
       const data = await res.json();
-      setPosts(data.posts);
-      setNextCursor(data.nextCursor);
+      setPosts(data.posts ?? []);
+      setNextCursor(data.nextCursor ?? null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Postlar yüklenirken bir hata oluştu";
+      setError(message);
+      setPosts([]);
+      setNextCursor(null);
     } finally {
       setLoading(false);
     }
@@ -97,14 +108,23 @@ export function PostFeed({
   async function handleStyleTagSelect(styleTagId: string | undefined) {
     setSelectedStyleTagId(styleTagId);
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({ take: "20" });
       if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
       if (styleTagId) params.set("styleTagId", styleTagId);
       const res = await fetch(`/api/posts?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error(`Failed to load posts: ${res.statusText}`);
+      }
       const data = await res.json();
-      setPosts(data.posts);
-      setNextCursor(data.nextCursor);
+      setPosts(data.posts ?? []);
+      setNextCursor(data.nextCursor ?? null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Postlar yüklenirken bir hata oluştu";
+      setError(message);
+      setPosts([]);
+      setNextCursor(null);
     } finally {
       setLoading(false);
     }
@@ -112,19 +132,25 @@ export function PostFeed({
 
   // Infinite scroll: load next page
   const loadMore = useCallback(async () => {
-    if (!nextCursor || loading) return;
+    if (!nextCursor || loading || error) return;
     setLoading(true);
     try {
       const params = buildParams({ cursor: nextCursor });
       const res = await fetch(`/api/posts?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error(`Failed to load more posts: ${res.statusText}`);
+      }
       const data = await res.json();
-      setPosts((prev) => [...prev, ...data.posts]);
-      setNextCursor(data.nextCursor);
+      setPosts((prev) => [...prev, ...(data.posts ?? [])]);
+      setNextCursor(data.nextCursor ?? null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Postlar yüklenirken bir hata oluştu";
+      setError(message);
     } finally {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nextCursor, loading, selectedCategoryId, selectedStyleTagId]);
+  }, [nextCursor, loading, error, selectedCategoryId, selectedStyleTagId]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -158,6 +184,30 @@ export function PostFeed({
       // Revert on error
       setOptimisticSaves({ postId, saved: currentlySaved });
     }
+  }
+
+  if (error && posts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+        <AlertCircle className="size-12 text-destructive/60" />
+        <div className="space-y-2">
+          <p className="font-medium">Postlar yüklenemedi</p>
+          <p className="text-sm text-muted-foreground max-w-sm">{error}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setError(null);
+            handleCategorySelect(selectedCategoryId);
+          }}
+          className="gap-2"
+        >
+          <RotateCw className="size-4" />
+          Yeniden Dene
+        </Button>
+      </div>
+    );
   }
 
   if (posts.length === 0 && !loading) {
@@ -244,6 +294,29 @@ export function PostFeed({
         {loading && posts.length > 0 && (
           <div className="flex justify-center py-4">
             <div className="size-5 animate-spin rounded-full border-2 border-border border-t-foreground" />
+          </div>
+        )}
+
+        {error && posts.length > 0 && (
+          <div className="mx-auto my-4 max-w-[480px] rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+            <div className="flex gap-3">
+              <AlertCircle className="size-5 shrink-0 text-destructive/70 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-destructive/90">{error}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setError(null);
+                    loadMore();
+                  }}
+                  className="mt-2 gap-2 h-8"
+                >
+                  <RotateCw className="size-3" />
+                  Yeniden Dene
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

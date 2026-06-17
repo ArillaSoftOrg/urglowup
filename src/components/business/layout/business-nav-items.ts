@@ -4,7 +4,6 @@ import {
   Scissors,
   ImageIcon,
   LayoutGrid,
-  MessageCircle,
   User,
   Clock,
   Star,
@@ -27,7 +26,6 @@ export interface BusinessNavItem {
 export const businessNavItems: BusinessNavItem[] = [
   { title: "Ana Sayfa", href: "/business/dashboard", icon: Home },
   { title: "Randevular", href: "/business/appointments", icon: CalendarCheck },
-  { title: "Mesajlar", href: "/business/messages", icon: MessageCircle },
   { title: "Hizmetler", href: "/business/services", icon: Scissors },
   { title: "Vitrin", href: "/business/media", icon: ImageIcon },
   { title: "Gönderiler", href: "/business/posts", icon: LayoutGrid },

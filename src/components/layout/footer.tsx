@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import {
-  Apple,
   BadgeCheck,
   Building2,
   ChevronDown,
@@ -10,7 +9,6 @@ import {
   Headphones,
   Languages,
   LockKeyhole,
-  Play,
   Search,
   ShieldCheck,
   Sparkles,
@@ -158,29 +156,6 @@ function FooterLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-function StoreButton({
-  icon: Icon,
-  eyebrow,
-  label,
-}: {
-  icon: typeof Apple;
-  eyebrow: string;
-  label: string;
-}) {
-  return (
-    <Link
-      href="#"
-      className="flex h-11 min-w-36 items-center gap-2 rounded-md bg-slate-950 px-3 text-slate-50 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:bg-slate-900"
-    >
-      <Icon aria-hidden="true" className="h-6 w-6 shrink-0" />
-      <span className="grid text-left leading-none">
-        <span className="text-[10px] font-medium">{eyebrow}</span>
-        <span className="mt-0.5 text-sm font-semibold">{label}</span>
-      </span>
-    </Link>
-  );
-}
-
 export function Footer() {
   return (
     <footer className="bg-[oklch(0.985_0.008_300)] px-3 pb-4 pt-10 text-slate-950 md:px-6 md:pt-14">
@@ -222,23 +197,6 @@ export function Footer() {
                 })}
               </div>
 
-              <div>
-                <p className="text-lg font-extrabold text-slate-950">
-                  Uygulamamızı İndirin
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <StoreButton
-                    icon={Apple}
-                    eyebrow="App Store'dan"
-                    label="İndirin"
-                  />
-                  <StoreButton
-                    icon={Play}
-                    eyebrow="Google Play"
-                    label="DEN ALIN"
-                  />
-                </div>
-              </div>
 
             </div>
 
