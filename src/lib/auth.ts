@@ -292,6 +292,14 @@ export async function requireAdminMfa() {
     redirect("/admin/mfa/setup");
   }
 
+  // Verify session exists: per better-auth's two-factor plugin architecture,
+  // a session is only created AFTER successful TOTP verification during login.
+  // If a session exists and twoFactorEnabled=true, MFA was verified in this login.
+  const session = await getSession();
+  if (!session) {
+    redirect("/admin/login");
+  }
+
   return user;
 }
 
