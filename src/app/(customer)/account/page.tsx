@@ -6,17 +6,12 @@ import { getCustomerReviews } from "@/lib/queries/reviews";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import {
-  CalendarDays,
-  Heart,
-  Star,
-  MessageSquare,
   ArrowRight,
   Clock,
 } from "lucide-react";
@@ -25,33 +20,6 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
 export const metadata = { title: "Hesabım" };
-
-const quickLinks = [
-  {
-    title: "Randevularım",
-    description: "Randevu isteklerinizi görüntüleyin",
-    href: "/account/appointments",
-    icon: CalendarDays,
-  },
-  {
-    title: "Mesajlar",
-    description: "İşletmelerle iletişime geçin",
-    href: "/account/messages",
-    icon: MessageSquare,
-  },
-  {
-    title: "Favorilerim",
-    description: "Kaydettiğiniz işletmeler",
-    href: "/account/favorites",
-    icon: Heart,
-  },
-  {
-    title: "Yorumlarım",
-    description: "Yazdığınız yorumlar",
-    href: "/account/reviews",
-    icon: Star,
-  },
-];
 
 export default async function AccountPage() {
   const user = await getCurrentUser();
@@ -193,28 +161,6 @@ export default async function AccountPage() {
         </CardContent>
       </Card>
 
-      {/* Quick links */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {quickLinks.map((link) => (
-          <Link key={link.href} href={link.href} className="group">
-            <Card className="transition-colors group-hover:bg-accent/50">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-pink/10 text-brand-pink-foreground">
-                    <link.icon className="size-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-sm">{link.title}</CardTitle>
-                    <CardDescription className="text-xs">
-                      {link.description}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

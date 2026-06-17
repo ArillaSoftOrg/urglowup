@@ -68,7 +68,27 @@ export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ── Rate limit check stub ─────────────────────────────────────────────────────
+// ── In-Memory Token Bucket Rate Limiter ────────────────────────────────────────
+
+/** Per-business rate limit bucket state */
+interface TokenBucket {
+  tokens: number;
+  lastRefillMs: number;
+}
+
+/**
+ * Token bucket state: businessId → bucket.
+ *
+ * PHASE 18 MVP: In-memory, per-process. Survives pod restarts.
+ * PHASE 19+: Migrate to Redis/Upstash for distributed state across pods.
+ *
+ * Rate limit: 10 requests per minute per business (sustainable for sync jobs)
+ */
+const TOKEN_BUCKETS = new Map<string, TokenBucket>();
+
+const TOKENS_PER_MINUTE = 10;
+const REFILL_RATE_PER_MS = TOKENS_PER_MINUTE / (60 * 1000); // tokens/ms
+const MAX_BURST = TOKENS_PER_MINUTE; // Allow burst up to the limit
 
 /** Result shape for rate limit checks */
 export interface RateLimitCheckResult {
@@ -80,19 +100,58 @@ export interface RateLimitCheckResult {
 /**
  * Checks whether a Google API request is within rate limits for the given business.
  *
- * ⚠️  SECURITY STUB: Currently always allows all requests (no enforcement).
+ * Uses token bucket algorithm:
+ * - Each business gets a bucket with capacity = TOKENS_PER_MINUTE
+ * - Tokens refill at REFILL_RATE_PER_MS per millisecond
+ * - Each request costs 1 token
+ * - If tokens available, allow and deduct; otherwise return retryAfter
  *
- * Phase 15 (current): No-op stub to allow feature development without quota concerns.
- * Phase 16 (deferred): Implement token-bucket (or leaky-bucket) rate limiting backed by
- * Redis or DB to protect against quota exhaustion on Google My Business API calls.
+ * PHASE 18 MVP: In-memory token buckets (per-process).
+ * Limitation: Does not survive pod restarts; consider distributed state for Phase 19+
  *
- * Until Phase 16 is complete, there is ZERO protection against quota exhaustion.
- * A burst of concurrent profile fetches could exhaust the daily quota.
+ * @param businessId - Business identifier for rate limit bucket
+ * @returns { allowed, retryAfterMs?, remainingRequests? }
  */
-export function checkRateLimit(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _businessId: string,
-): RateLimitCheckResult {
-  // TODO: Phase 16 — Implement token-bucket rate limiter backed by KV store (Redis / Vercel KV)
-  return { allowed: true };
+export function checkRateLimit(businessId: string): RateLimitCheckResult {
+  const now = Date.now();
+
+  // Get or create bucket for this business
+  let bucket = TOKEN_BUCKETS.get(businessId);
+  if (!bucket) {
+    bucket = { tokens: MAX_BURST, lastRefillMs: now };
+    TOKEN_BUCKETS.set(businessId, bucket);
+  }
+
+  // Refill tokens based on elapsed time
+  const elapsedMs = now - bucket.lastRefillMs;
+  const tokensToAdd = elapsedMs * REFILL_RATE_PER_MS;
+  bucket.tokens = Math.min(MAX_BURST, bucket.tokens + tokensToAdd);
+  bucket.lastRefillMs = now;
+
+  // Check if request is allowed
+  if (bucket.tokens >= 1) {
+    bucket.tokens -= 1;
+    return {
+      allowed: true,
+      remainingRequests: Math.floor(bucket.tokens),
+    };
+  }
+
+  // Compute retry-after: time until 1 token is available
+  const tokensNeeded = 1 - bucket.tokens;
+  const retryAfterMs = Math.ceil(tokensNeeded / REFILL_RATE_PER_MS);
+
+  return {
+    allowed: false,
+    retryAfterMs,
+    remainingRequests: 0,
+  };
+}
+
+/**
+ * Clear rate limit state for a business (e.g., after quota reset).
+ * Useful for testing and emergency resets.
+ */
+export function resetRateLimit(businessId: string): void {
+  TOKEN_BUCKETS.delete(businessId);
 }

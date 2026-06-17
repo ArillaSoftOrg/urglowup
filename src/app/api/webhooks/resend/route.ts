@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 import { db } from "@/lib/db";
 import { NotificationStatus } from "@/generated/prisma/enums";
 
-// Resend webhook signature verification (optional but recommended)
 const RESEND_WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
 
 interface ResendWebhookEvent {
@@ -16,11 +16,43 @@ interface ResendWebhookEvent {
 }
 
 /**
+ * Verify Resend webhook signature using HMAC-SHA256.
+ * Resend signs the body with: HMAC-SHA256(body, secret) → base64 in x-resend-signature header
+ */
+function verifyResendSignature(
+  body: string,
+  signature: string,
+  secret: string
+): boolean {
+  try {
+    const hash = createHmac("sha256", secret)
+      .update(body, "utf8")
+      .digest("base64");
+
+    // Use timing-safe comparison to prevent timing attacks
+    if (signature.length !== hash.length) {
+      return false;
+    }
+
+    let mismatch = 0;
+    for (let i = 0; i < signature.length; i++) {
+      mismatch |= signature.charCodeAt(i) ^ hash.charCodeAt(i);
+    }
+    return mismatch === 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Handle Resend email delivery events (bounces and complaints).
  * Updates the campaign recipient status to prevent future sends to bad addresses.
  */
 export async function POST(request: NextRequest) {
   try {
+    // Read raw body for signature verification
+    const rawBody = await request.text();
+
     // Verify webhook signature if secret is configured
     if (RESEND_WEBHOOK_SECRET) {
       const signature = request.headers.get("x-resend-signature");
@@ -28,11 +60,14 @@ export async function POST(request: NextRequest) {
         console.warn("[webhook:resend] Missing signature header");
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      // TODO: Implement Resend signature verification using crypto
-      // For now, accept if secret is configured but signature missing (lenient)
+
+      if (!verifyResendSignature(rawBody, signature, RESEND_WEBHOOK_SECRET)) {
+        console.warn("[webhook:resend] Invalid signature");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
     }
 
-    const event: ResendWebhookEvent = await request.json();
+    const event: ResendWebhookEvent = JSON.parse(rawBody);
 
     if (!event.type || !event.data?.id) {
       return NextResponse.json(

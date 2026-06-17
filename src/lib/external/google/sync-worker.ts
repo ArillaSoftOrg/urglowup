@@ -36,6 +36,7 @@ import {
   GoogleApiError,
 } from "./api-client";
 import { normalizeReview, normalizePhoto } from "./normalizers";
+import { checkRateLimit } from "./rate-limit";
 import { db } from "@/lib/db";
 
 // ── Return type ───────────────────────────────────────────────────────────────
@@ -63,6 +64,18 @@ async function doReviewSync(
   connectionId: string,
 ): Promise<{ synced: number; error?: { status?: number; message: string } }> {
   try {
+    // Check rate limit before API call
+    const rateLimitCheck = checkRateLimit(businessId);
+    if (!rateLimitCheck.allowed) {
+      const retryAfterSec = Math.ceil((rateLimitCheck.retryAfterMs ?? 0) / 1000);
+      return {
+        synced: 0,
+        error: {
+          message: `Rate limited: retry in ${retryAfterSec}s`,
+        },
+      };
+    }
+
     const raw = await fetchGoogleReviews(accessToken, accountId, locationId);
     const reviews = raw.reviews ?? [];
     // nextPageToken is present but ignored in MVP — multi-page support deferred
@@ -115,6 +128,19 @@ async function doPhotoSync(
   error?: { status?: number; message: string };
 }> {
   try {
+    // Check rate limit before API call
+    const rateLimitCheck = checkRateLimit(businessId);
+    if (!rateLimitCheck.allowed) {
+      const retryAfterSec = Math.ceil((rateLimitCheck.retryAfterMs ?? 0) / 1000);
+      return {
+        synced: 0,
+        skipped: 0,
+        error: {
+          message: `Rate limited: retry in ${retryAfterSec}s`,
+        },
+      };
+    }
+
     const raw = await fetchGoogleMediaItems(accessToken, accountId, locationId);
     const items = raw.mediaItems ?? [];
     // nextPageToken is present but ignored in MVP — multi-page support deferred

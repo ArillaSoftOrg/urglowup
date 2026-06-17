@@ -117,7 +117,11 @@
       "Bash(npm run *)",
       "Bash(echo \"Dev server starting... \\(PID: $!\\)\")",
       "Bash(npx playwright *)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "Bash(echo \"TypeScript exit code: $?\")",
+      "Bash(echo \"ESLint exit code: $?\")",
+      "Bash(echo \"TypeScript exit: $?\")",
+      "Bash(echo \"ESLint exit: $?\")"
     ]
   }
 }
