@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { requireRole } from "@/lib/auth";
 import { UserRole } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import { z } from "zod/v4";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { ADMIN_DASHBOARD_CACHE_TAG } from "@/lib/queries/admin";
@@ -17,6 +18,7 @@ import {
   sendConfirmedEmailToCustomer,
   sendRejectedEmailToCustomer,
   sendCancelledByBusinessEmailToCustomer,
+  sendAdminCancelledEmailToBusinessOwner,
   sendReviewModeratedEmail,
   sendPostModeratedEmail,
   sendMediaModeratedEmail,
@@ -24,6 +26,7 @@ import {
 import { sendReviewRequestWhatsAppToCustomer } from "@/lib/whatsapp-notifications";
 import type { BusinessStatus, PostStatus, AppointmentStatus } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
+import { recalculateBusinessStats } from "@/lib/ratings/calculator";
 
 export type AdminActionState = {
   success: boolean;
@@ -201,6 +204,89 @@ export async function adminOverrideAppointmentStatus(
     success: true,
     message: `Appointment status changed to ${newStatus}.`,
   };
+}
+
+const appointmentCancelSchema = z.object({
+  appointmentId: z.string().min(1),
+  reason: z
+    .string()
+    .min(10, "Reason must be at least 10 characters")
+    .max(500, "Reason must not exceed 500 characters"),
+});
+
+export async function adminCancelAppointment(
+  appointmentId: string,
+  reason: string
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const parsed = appointmentCancelSchema.safeParse({ appointmentId, reason });
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0].message };
+  }
+
+  const appointment = await db.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { status: true, businessId: true, customerId: true },
+  });
+
+  if (!appointment) {
+    return { success: false, message: "Appointment not found." };
+  }
+
+  const alreadyCancelled =
+    appointment.status === "CANCELLED_BY_CUSTOMER" ||
+    appointment.status === "CANCELLED_BY_BUSINESS" ||
+    appointment.status === "REJECTED" ||
+    appointment.status === "COMPLETED" ||
+    appointment.status === "NO_SHOW";
+
+  if (alreadyCancelled) {
+    return {
+      success: false,
+      message: `Appointment is already in a terminal state (${appointment.status}) and cannot be cancelled.`,
+    };
+  }
+
+  await db.appointment.update({
+    where: { id: appointmentId },
+    data: {
+      status: "CANCELLED_BY_BUSINESS",
+      cancelledReason: reason,
+    },
+  });
+
+  after(async () => {
+    try {
+      await Promise.all([
+        sendCancelledByBusinessEmailToCustomer(appointmentId),
+        sendAdminCancelledEmailToBusinessOwner(appointmentId, reason),
+      ]);
+    } catch (err) {
+      console.error("[notification] adminCancelAppointment:", err);
+    }
+
+    try {
+      // Recalculate rating stats in case the appointment had a linked review
+      const globalAvg = await db.review
+        .aggregate({ _avg: { rating: true }, where: { status: "APPROVED" } })
+        .then((r) => r._avg?.rating ?? 0);
+      await recalculateBusinessStats(appointment.businessId, globalAvg);
+    } catch (err) {
+      console.error("[ratings] adminCancelAppointment recalculate:", err);
+    }
+  });
+
+  await logAdminAction(
+    admin.id,
+    "appointment.admin_cancel",
+    "Appointment",
+    appointmentId,
+    `Admin cancelled. Reason: ${reason}`
+  );
+
+  revalidateAppointmentPaths();
+  return { success: true, message: "Appointment cancelled successfully." };
 }
 
 export async function adminBulkCancelAppointments(
@@ -2212,7 +2298,7 @@ export async function sendMarketingEmailCampaign(
             );
             const unsubscribeUrl = new URL(
               `/api/unsubscribe/${unsubscribeToken}`,
-              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+              env.NEXT_PUBLIC_APP_URL
             ).toString();
 
             if (isDryRun) {

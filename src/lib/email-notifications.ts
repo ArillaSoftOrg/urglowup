@@ -247,6 +247,37 @@ export async function sendCancelledByBusinessEmailToCustomer(
 }
 
 /**
+ * Sent to the business owner when an admin cancels their appointment on their behalf.
+ */
+export async function sendAdminCancelledEmailToBusinessOwner(
+  appointmentId: string,
+  adminReason: string
+): Promise<void> {
+  const appt = await getAppointmentEmailPayload(appointmentId);
+
+  const customerName = fullName(appt.customer.firstName, appt.customer.lastName);
+  const ownerName = fullName(appt.business.owner.firstName, appt.business.owner.lastName, "");
+
+  await sendEmail({
+    to: appt.business.owner.email,
+    subject: `Admin cancelled an appointment at ${appt.business.name}`,
+    react: React.createElement(AppointmentCancelledByCustomerEmail, {
+      businessOwnerName: ownerName,
+      customerName,
+      serviceName: appt.service.name,
+      requestedDate: formatDate(appt.requestedDate),
+      requestedTime: appt.requestedTime,
+      dashboardUrl: appUrl("/business/appointments"),
+    }),
+    tags: [
+      { name: "flow", value: "admin" },
+      { name: "template", value: "appointment-admin-cancel" },
+    ],
+    template: "appointment-admin-cancel",
+  });
+}
+
+/**
  * Sent to the business owner when a customer cancels their appointment.
  */
 export async function sendCancelledByCustomerEmailToBusiness(

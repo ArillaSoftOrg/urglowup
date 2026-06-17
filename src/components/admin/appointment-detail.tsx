@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { adminOverrideAppointmentStatus } from "@/app/(admin)/admin/actions";
+import { adminCancelAppointment } from "@/app/(admin)/admin/actions";
 import type { AdminAppointmentDetail } from "@/lib/queries/admin";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
 
@@ -57,17 +57,13 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
     appointment.status === "PENDING" || appointment.status === "CONFIRMED";
 
   const handleCancel = () => {
-    if (!cancelReason.trim()) {
-      setError("Reason is required.");
+    if (cancelReason.trim().length < 10) {
+      setError("Reason must be at least 10 characters.");
       return;
     }
     setError(null);
     startTransition(async () => {
-      const result = await adminOverrideAppointmentStatus(
-        appointment.id,
-        "CANCELLED_BY_BUSINESS",
-        cancelReason,
-      );
+      const result = await adminCancelAppointment(appointment.id, cancelReason);
       if (result.success) {
         setShowCancel(false);
         setCancelReason("");
@@ -270,12 +266,18 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
                 <textarea
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Reason for cancellation (required, visible in audit log)"
+                  placeholder="Reason for cancellation — min 10 characters, visible in audit log"
                   maxLength={500}
                   disabled={isPending}
                   rows={3}
                   className="w-full rounded border border-slate-300 p-2 text-sm placeholder-slate-400 disabled:bg-slate-100"
                 />
+                <p className="text-xs text-slate-400">
+                  {cancelReason.length}/500 characters
+                  {cancelReason.length > 0 && cancelReason.length < 10 && (
+                    <span className="text-amber-600"> · {10 - cancelReason.length} more needed</span>
+                  )}
+                </p>
                 {error && <p className="text-sm text-red-600">{error}</p>}
                 <div className="flex gap-2">
                   <button
