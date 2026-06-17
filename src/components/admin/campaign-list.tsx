@@ -62,11 +62,11 @@ export async function CampaignListComponent() {
                   {campaign.recipientCount ?? 0}
                 </td>
                 <td className="px-4 py-3 text-xs text-slate-600">
-                  {new Date(campaign.createdAt).toLocaleDateString()}
+                  {new Date(campaign.createdAt).toLocaleDateString("en-US")}
                 </td>
                 <td className="px-4 py-3 text-xs text-slate-600">
                   {campaign.sentAt
-                    ? new Date(campaign.sentAt).toLocaleDateString()
+                    ? new Date(campaign.sentAt).toLocaleDateString("en-US")
                     : "—"}
                 </td>
                 <td className="px-4 py-3 text-right">

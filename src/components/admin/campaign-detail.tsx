@@ -99,7 +99,7 @@ export function CampaignDetailComponent({
           <div>
             <h3 className="text-sm font-medium text-gray-500 mb-2">Created</h3>
             <p className="text-lg font-semibold">
-              {new Date(campaign.createdAt).toLocaleDateString()}
+              {new Date(campaign.createdAt).toLocaleDateString("en-US")}
             </p>
           </div>
         </div>
@@ -221,7 +221,7 @@ export function CampaignDetailComponent({
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-600">
                       {recipient.sentAt
-                        ? new Date(recipient.sentAt).toLocaleString()
+                        ? new Date(recipient.sentAt).toLocaleString("en-US")
                         : "—"}
                     </td>
                     <td className="px-4 py-3 text-xs text-red-600">

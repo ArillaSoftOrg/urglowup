@@ -15,6 +15,7 @@ import { ConsentPreferencesForm } from "@/components/account/consent-preferences
 import { ThemeSelector } from "@/components/account/theme-selector";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { getUserPreferences } from "@/lib/preferences";
+import { isValidLocale } from "@/lib/i18n-config";
 import { signOutAction } from "@/app/(auth)/actions";
 import { db } from "@/lib/db";
 
@@ -112,8 +113,7 @@ export default async function SettingsPage() {
           <LocaleSwitcher
             isLoggedIn
             variant="settings"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            savedLocale={(prefs.locale ?? undefined) as any}
+            savedLocale={prefs.locale && isValidLocale(prefs.locale) ? prefs.locale : undefined}
           />
         </CardContent>
       </Card>
