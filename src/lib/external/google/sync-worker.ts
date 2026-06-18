@@ -65,7 +65,7 @@ async function doReviewSync(
 ): Promise<{ synced: number; error?: { status?: number; message: string } }> {
   try {
     // Check rate limit before API call
-    const rateLimitCheck = checkRateLimit(businessId);
+    const rateLimitCheck = await checkRateLimit(businessId);
     if (!rateLimitCheck.allowed) {
       const retryAfterSec = Math.ceil((rateLimitCheck.retryAfterMs ?? 0) / 1000);
       return {
@@ -129,7 +129,7 @@ async function doPhotoSync(
 }> {
   try {
     // Check rate limit before API call
-    const rateLimitCheck = checkRateLimit(businessId);
+    const rateLimitCheck = await checkRateLimit(businessId);
     if (!rateLimitCheck.allowed) {
       const retryAfterSec = Math.ceil((rateLimitCheck.retryAfterMs ?? 0) / 1000);
       return {

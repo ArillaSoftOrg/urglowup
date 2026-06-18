@@ -27,9 +27,8 @@ export function ThreadView({
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
-  const [isUserTyping, setIsUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Use polling hook for real-time messages
   const {
@@ -237,7 +236,6 @@ export function ThreadView({
 
               // Send typing indicator
               const isTyping = e.target.value.length > 0;
-              setIsUserTyping(isTyping);
               void setIsTyping(isTyping);
 
               // Reset typing timeout
@@ -246,7 +244,6 @@ export function ThreadView({
               }
               if (isTyping) {
                 typingTimeoutRef.current = setTimeout(() => {
-                  setIsUserTyping(false);
                   void setIsTyping(false);
                 }, 3000);
               }

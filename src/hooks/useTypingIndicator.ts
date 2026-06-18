@@ -19,8 +19,8 @@ export function useTypingIndicator({
   typingTimeoutMs = 3000, // Show "typing" for 3 seconds after last update
 }: UseTypingIndicatorOptions): UseTypingIndicatorResult {
   const [isOtherTyping, setIsOtherTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>();
-  const pollIntervalRef = useRef<NodeJS.Timeout | undefined>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTypingStateRef = useRef<boolean>(false);
 
   // Check if other user is typing
@@ -57,10 +57,13 @@ export function useTypingIndicator({
   useEffect(() => {
     if (!enabled) return;
 
-    checkTypingStatus();
+    const timeoutId = window.setTimeout(() => {
+      void checkTypingStatus();
+    }, 0);
     pollIntervalRef.current = setInterval(checkTypingStatus, pollIntervalMs);
 
     return () => {
+      window.clearTimeout(timeoutId);
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }

@@ -69,6 +69,15 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
 
   return (
     <>
+      <style>{`
+        @media (max-width: 1023px) {
+          [data-navbar],
+          body > footer {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       <main className="bg-background">
         <MobileBusinessProfile
           business={business}

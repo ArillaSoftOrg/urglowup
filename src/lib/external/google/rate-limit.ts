@@ -68,9 +68,9 @@ export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ── In-Memory Token Bucket Rate Limiter ────────────────────────────────────────
+// ── Token Bucket Rate Limiter: Redis + In-Memory Fallback ────────────────────
 
-/** Per-business rate limit bucket state */
+/** Per-business rate limit bucket state (in-memory fallback) */
 interface TokenBucket {
   tokens: number;
   lastRefillMs: number;
@@ -79,8 +79,8 @@ interface TokenBucket {
 /**
  * Token bucket state: businessId → bucket.
  *
- * PHASE 18 MVP: In-memory, per-process. Survives pod restarts.
- * PHASE 19+: Migrate to Redis/Upstash for distributed state across pods.
+ * PHASE 20: Redis/Upstash for distributed state across pods.
+ * Fallback: In-memory buckets if Redis unavailable.
  *
  * Rate limit: 10 requests per minute per business (sustainable for sync jobs)
  */
@@ -106,15 +106,39 @@ export interface RateLimitCheckResult {
  * - Each request costs 1 token
  * - If tokens available, allow and deduct; otherwise return retryAfter
  *
- * PHASE 18 MVP: In-memory token buckets (per-process).
- * Limitation: Does not survive pod restarts; consider distributed state for Phase 19+
+ * PHASE 20: Uses Redis if available (distributed), falls back to in-memory.
  *
  * @param businessId - Business identifier for rate limit bucket
  * @returns { allowed, retryAfterMs?, remainingRequests? }
  */
-export function checkRateLimit(businessId: string): RateLimitCheckResult {
+export async function checkRateLimit(
+  businessId: string
+): Promise<RateLimitCheckResult> {
   const now = Date.now();
 
+  // Try Redis first
+  try {
+    const { getRedisClient } = await import("@/lib/redis");
+    const redis = await getRedisClient();
+
+    if (redis) {
+      return await checkRateLimitRedis(redis, businessId, now);
+    }
+  } catch (err) {
+    console.error("[rate-limit] Redis check failed, falling back to in-memory:", err);
+  }
+
+  // Fallback to in-memory
+  return checkRateLimitInMemory(businessId, now);
+}
+
+/**
+ * In-memory token bucket check (fallback when Redis unavailable)
+ */
+function checkRateLimitInMemory(
+  businessId: string,
+  now: number
+): RateLimitCheckResult {
   // Get or create bucket for this business
   let bucket = TOKEN_BUCKETS.get(businessId);
   if (!bucket) {
@@ -149,9 +173,90 @@ export function checkRateLimit(businessId: string): RateLimitCheckResult {
 }
 
 /**
+ * Redis-backed token bucket check using Lua script for atomicity
+ */
+async function checkRateLimitRedis(
+  redis: any,
+  businessId: string,
+  now: number
+): Promise<RateLimitCheckResult> {
+  const key = `rate_limit:${businessId}`;
+
+  // Lua script for atomic token bucket operation
+  // Returns: [allowed, remainingTokens, retryAfterMs]
+  const luaScript = `
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local tokens_per_minute = tonumber(ARGV[2])
+local refill_rate = tonumber(ARGV[3])
+local max_burst = tonumber(ARGV[4])
+
+-- Get current bucket state
+local bucket = redis.call('HGETALL', key)
+local tokens = tonumber(bucket[2] or max_burst)
+local last_refill = tonumber(bucket[4] or now)
+
+-- Refill tokens
+local elapsed = math.max(0, now - last_refill)
+local tokens_to_add = elapsed * refill_rate
+tokens = math.min(max_burst, tokens + tokens_to_add)
+
+-- Check if allowed
+if tokens >= 1 then
+  tokens = tokens - 1
+  redis.call('HSET', key, 'tokens', tokens, 'lastRefillMs', now)
+  redis.call('EXPIRE', key, 3600)
+  return {1, math.floor(tokens), 0}
+else
+  redis.call('HSET', key, 'tokens', tokens, 'lastRefillMs', now)
+  redis.call('EXPIRE', key, 3600)
+  local tokens_needed = 1 - tokens
+  local retry_after_ms = math.ceil(tokens_needed / refill_rate)
+  return {0, 0, retry_after_ms}
+end
+  `;
+
+  try {
+    const result = await redis.eval(luaScript, {
+      keys: [key],
+      arguments: [
+        now.toString(),
+        TOKENS_PER_MINUTE.toString(),
+        REFILL_RATE_PER_MS.toString(),
+        MAX_BURST.toString(),
+      ],
+    });
+
+    const [allowed, remainingTokens, retryAfterMs] = result;
+
+    return {
+      allowed: allowed === 1,
+      remainingRequests: remainingTokens,
+      retryAfterMs: retryAfterMs > 0 ? retryAfterMs : undefined,
+    };
+  } catch (err) {
+    console.error("[rate-limit] Lua script failed:", err);
+    // Fall back to in-memory on Redis error
+    return checkRateLimitInMemory(businessId, now);
+  }
+}
+
+/**
  * Clear rate limit state for a business (e.g., after quota reset).
  * Useful for testing and emergency resets.
  */
-export function resetRateLimit(businessId: string): void {
+export async function resetRateLimit(businessId: string): Promise<void> {
+  // Clear in-memory
   TOKEN_BUCKETS.delete(businessId);
+
+  // Clear Redis if available
+  try {
+    const { getRedisClient } = await import("@/lib/redis");
+    const redis = await getRedisClient();
+    if (redis) {
+      await redis.del(`rate_limit:${businessId}`);
+    }
+  } catch (err) {
+    console.error("[rate-limit] Failed to clear Redis:", err);
+  }
 }
