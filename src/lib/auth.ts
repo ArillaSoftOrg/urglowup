@@ -292,13 +292,22 @@ export async function requireAdminMfa() {
     redirect("/admin/mfa/setup");
   }
 
-  // Verify session exists: per better-auth's two-factor plugin architecture,
-  // a session is only created AFTER successful TOTP verification during login.
-  // If a session exists and twoFactorEnabled=true, MFA was verified in this login.
-  const session = await getSession();
-  if (!session) {
-    redirect("/admin/login");
+  // Defense-in-depth: confirm a verified TOTP record actually exists in the DB.
+  // This catches the degenerate case where twoFactorEnabled=true on the User row
+  // but no TwoFactor secret was ever enrolled (e.g. a manual DB edit).
+  const tfRecord = await db.twoFactor.findUnique({ where: { userId: user.id } });
+  if (!tfRecord || !tfRecord.verified) {
+    redirect("/admin/mfa/setup");
   }
+
+  // Session-level guarantee: better-auth's two-factor plugin intercepts
+  // /sign-in/email, deletes the session created by the credential check, and
+  // only issues a new session token AFTER the TOTP code is accepted. This means
+  // any live session for an email-password admin necessarily passed TOTP.
+  //
+  // Google OAuth is explicitly disabled on the admin login page to close the
+  // social-sign-in bypass (the 2FA hook only fires for /sign-in/email, not
+  // /sign-in/social). Do not re-enable it without adding social-sign-in 2FA.
 
   return user;
 }
