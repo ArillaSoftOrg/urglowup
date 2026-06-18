@@ -128,7 +128,11 @@
       "Read(//tmp/**)",
       "Bash(pkill -f \"next build\")",
       "Bash(ls src/app/\\\\\\(business\\\\\\)/business/customers/)",
-      "Bash(ls src/app/\\\\\\(admin\\\\\\)/admin/activity/)"
+      "Bash(ls src/app/\\\\\\(admin\\\\\\)/admin/activity/)",
+      "Bash(gh pr create --title 'feat: Phases 18-20 — Full Messaging Platform with Security & Performance' --body ' *)",
+      "PowerShell(choco install *)",
+      "PowerShell(npm install *)",
+      "PowerShell(winget install *)"
     ]
   }
 }

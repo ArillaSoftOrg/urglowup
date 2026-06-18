@@ -5,7 +5,6 @@ import {
   getConversationMessages,
   getBusinessConversationMessages,
 } from "@/lib/queries/messages";
-import { CACHE_PRESETS } from "@/lib/cache-headers";
 
 export async function GET(
   request: Request,
