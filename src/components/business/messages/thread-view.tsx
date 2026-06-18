@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { sendBusinessMessage } from "@/app/(business)/business/messages/actions";
 import { useConversationMessages } from "@/hooks/useConversationMessages";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 
 interface ThreadViewProps {
   conversationId: string;
@@ -26,7 +27,9 @@ export function ThreadView({
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [isUserTyping, setIsUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>();
 
   // Use polling hook for real-time messages
   const {
@@ -41,10 +44,26 @@ export function ThreadView({
     pollIntervalMs: 2000,
   });
 
-  // Auto-scroll to bottom when messages change
+  // Use typing indicator hook
+  const { isOtherTyping, setIsTyping } = useTypingIndicator({
+    conversationId,
+    enabled: true,
+    pollIntervalMs: 500,
+  });
+
+  // Auto-scroll to bottom when messages change or typing indicator shows
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [data?.messages]);
+  }, [data?.messages, isOtherTyping]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (!message.trim() || sending) return;
@@ -190,6 +209,15 @@ export function ThreadView({
           })
         )}
         <div ref={messagesEndRef} />
+
+        {/* Typing indicator */}
+        {isOtherTyping && (
+          <div className="px-4 py-2">
+            <p className="text-xs text-muted-foreground italic">
+              Müşteri yazıyor...
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Input */}
@@ -204,7 +232,25 @@ export function ThreadView({
             placeholder="Yanıt yazın..."
             rows={2}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              setMessage(e.target.value);
+
+              // Send typing indicator
+              const isTyping = e.target.value.length > 0;
+              setIsUserTyping(isTyping);
+              void setIsTyping(isTyping);
+
+              // Reset typing timeout
+              if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+              }
+              if (isTyping) {
+                typingTimeoutRef.current = setTimeout(() => {
+                  setIsUserTyping(false);
+                  void setIsTyping(false);
+                }, 3000);
+              }
+            }}
             disabled={sending}
             onKeyDown={(e) => {
               if (e.key === "Enter" && e.ctrlKey) {

@@ -160,6 +160,15 @@ export default async function BusinessProfilePage({ params }: PageProps) {
 
   return (
     <>
+      <style>{`
+        @media (max-width: 1023px) {
+          [data-navbar],
+          body > footer {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
