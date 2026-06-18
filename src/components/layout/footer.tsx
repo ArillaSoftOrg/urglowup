@@ -1,18 +1,11 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import {
-  BadgeCheck,
-  Building2,
   ChevronDown,
-  ChevronRight,
   Globe2,
-  Headphones,
   Languages,
   LockKeyhole,
-  Search,
-  ShieldCheck,
   Sparkles,
-  UserRound,
 } from "lucide-react";
 import { CookieSettingsButton } from "@/components/layout/cookie-settings-button";
 
@@ -63,7 +56,6 @@ function LinkedInIcon(props: ComponentProps<"svg">) {
 const footerColumns = [
   {
     heading: "Keşfet",
-    icon: Search,
     links: [
       { label: "Tüm Uzmanlar", href: "/explore" },
       { label: "Kategoriler", href: "/explore" },
@@ -75,7 +67,6 @@ const footerColumns = [
   },
   {
     heading: "İşletmeler",
-    icon: Building2,
     links: [
       { label: "İşletmeler İçin", href: "/for-business" },
       { label: "İşletme Kaydı", href: "/business/register" },
@@ -86,72 +77,33 @@ const footerColumns = [
     ],
   },
   {
-    heading: "Hesap",
-    icon: UserRound,
+    heading: "Destek & Yasal",
+    showCookieButton: true as const,
     links: [
-      { label: "Giriş Yap", href: "/login" },
-      { label: "Kayıt Ol", href: "/register" },
-      { label: "Randevularım", href: "/account/appointments" },
-      { label: "Favorilerim", href: "/account/favorites" },
       { label: "Yardım Merkezi", href: "/help" },
       { label: "Bize Ulaşın", href: "/help" },
+      { label: "Gizlilik Politikası", href: "/privacy-policy" },
+      { label: "KVKK Aydınlatma Metni", href: "/kvkk" },
+      { label: "Çerez Politikası", href: "/cookie-policy" },
+      { label: "Kullanım Koşulları", href: "/kullanim-kosullari" },
     ],
   },
 ] as const;
 
-const legalLinks = [
-  { label: "Gizlilik Politikası", href: "/privacy-policy" },
-  { label: "KVKK Aydınlatma Metni", href: "/kvkk" },
-  { label: "Çerez Politikası", href: "/cookie-policy" },
-  { label: "Kullanım Koşulları", href: "/kullanim-kosullari" },
-  { label: "KVKK Başvuru Formu", href: "/kvkk-basvuru" },
-] as const;
-
 const socialLinks = [
   { label: "Instagram", href: "#", icon: InstagramIcon },
-  {
-    label: "TikTok",
-    href: "#",
-    icon: TikTokIcon,
-  },
+  { label: "TikTok", href: "#", icon: TikTokIcon },
   { label: "LinkedIn", href: "#", icon: LinkedInIcon },
   { label: "YouTube", href: "#", icon: YoutubeIcon },
-] as const;
-
-const trustItems = [
-  {
-    title: "Güvenli Altyapı",
-    description: "Verileriniz 256-bit SSL ile korunur.",
-    icon: LockKeyhole,
-  },
-  {
-    title: "Doğrulanmış İşletmeler",
-    description: "Tüm salonlar özenle doğrulanır.",
-    icon: BadgeCheck,
-  },
-  {
-    title: "7/24 Destek",
-    description: "Her zaman yanınızda olmaya hazırız.",
-    icon: Headphones,
-  },
-  {
-    title: "Kolay & Hızlı",
-    description: "Randevunuzu saniyeler içinde oluşturun.",
-    icon: ShieldCheck,
-  },
 ] as const;
 
 function FooterLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="group flex min-h-8 items-center justify-between gap-3 text-[15px] font-medium text-slate-700 transition-colors duration-200 hover:text-violet-700"
+      className="text-[15px] font-medium text-slate-700 transition-colors duration-200 hover:text-violet-700"
     >
-      <span>{label}</span>
-      <ChevronRight
-        aria-hidden="true"
-        className="h-4 w-4 text-violet-600 transition-transform duration-200 group-hover:translate-x-0.5"
-      />
+      {label}
     </Link>
   );
 }
@@ -160,9 +112,10 @@ export function Footer() {
   return (
     <footer className="bg-[oklch(0.985_0.008_300)] px-3 pb-4 pt-10 text-slate-950 md:px-6 md:pt-14">
       <div className="mx-auto max-w-[1800px] overflow-hidden rounded-t-2xl border border-violet-200/80 border-t-4 border-t-violet-600 bg-[oklch(0.992_0.006_300)] shadow-[0_22px_70px_oklch(0.42_0.12_300/0.10)]">
-        <div className="px-6 py-8 sm:px-8 md:px-10 lg:px-16 lg:py-12">
-          <div className="grid gap-9 lg:grid-cols-[1.28fr_3.45fr] lg:gap-14">
-            <div className="space-y-7 lg:pt-1">
+        <div className="px-6 py-5 sm:px-8 md:px-10 lg:px-16 lg:py-8">
+          <div className="grid gap-6 lg:grid-cols-[1fr_2.8fr] lg:gap-10">
+            {/* Brand + social */}
+            <div className="space-y-5 lg:pt-1">
               <div>
                 <Link
                   href="/"
@@ -175,13 +128,13 @@ export function Footer() {
                     Ur<span className="text-violet-700">Glow</span>Up
                   </span>
                 </Link>
-                <p className="mt-6 max-w-xs text-lg leading-8 text-slate-800">
+                <p className="mt-4 max-w-xs text-[15px] leading-7 text-slate-600">
                   Güzellik, bakım ve wellness hizmetlerini keşfet. Yakındaki
                   uzmanlardan kolayca randevu al.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex gap-5">
                 {socialLinks.map((social) => {
                   const Icon = social.icon;
                   return (
@@ -189,107 +142,62 @@ export function Footer() {
                       key={social.label}
                       href={social.href}
                       aria-label={social.label}
-                      className="flex h-14 w-14 items-center justify-center rounded-full border border-violet-200 bg-white/80 text-violet-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-400 hover:bg-violet-50"
+                      className="text-slate-500 transition-colors duration-200 hover:text-violet-700"
                     >
-                      <Icon aria-hidden="true" className="h-6 w-6" />
+                      <Icon aria-hidden="true" className="h-5 w-5" />
                     </Link>
                   );
                 })}
               </div>
-
-
             </div>
 
-            <div className="space-y-7">
-              <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4 xl:gap-11">
-              {footerColumns.map((col) => {
-                const Icon = col.icon;
-                return (
+            {/* Navigation columns + trust row */}
+            <div className="space-y-6">
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
+                {footerColumns.map((col) => (
                   <div key={col.heading}>
-                    <div className="flex items-center gap-4">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-100 text-violet-700">
-                        <Icon aria-hidden="true" className="h-7 w-7" />
-                      </span>
-                      <p className="text-xl font-extrabold text-slate-950">
-                        {col.heading}
-                      </p>
-                    </div>
-                    <ul className="mt-7 space-y-3">
+                    <p className="mb-4 text-base font-extrabold text-slate-950">
+                      {col.heading}
+                    </p>
+                    <ul className="space-y-2">
                       {col.links.map((link) => (
                         <li key={link.label}>
                           <FooterLink href={link.href} label={link.label} />
                         </li>
                       ))}
+                      {"showCookieButton" in col && col.showCookieButton && (
+                        <li>
+                          <CookieSettingsButton label="Çerez Ayarları" />
+                        </li>
+                      )}
                     </ul>
                   </div>
-                );
-              })}
-
-              <div>
-                <div className="flex items-center gap-4">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-100 text-violet-700">
-                    <ShieldCheck aria-hidden="true" className="h-7 w-7" />
-                  </span>
-                  <p className="text-xl font-extrabold text-slate-950">
-                    Yasal
-                  </p>
-                </div>
-                <ul className="mt-7 space-y-3">
-                  {legalLinks.map((link) => (
-                    <li key={link.label}>
-                      <FooterLink href={link.href} label={link.label} />
-                    </li>
-                  ))}
-                  <li>
-                    <div className="flex min-h-8 items-center justify-between gap-3">
-                      <CookieSettingsButton label="Çerez Ayarları" />
-                      <ChevronRight
-                        aria-hidden="true"
-                        className="h-4 w-4 text-violet-600"
-                      />
-                    </div>
-                  </li>
-                </ul>
-              </div>
+                ))}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {trustItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={item.title}
-                      className="flex gap-3 border-violet-200/80 xl:border-l xl:pl-6"
-                    >
-                      <Icon
-                        aria-hidden="true"
-                        className="mt-0.5 h-9 w-9 shrink-0 text-violet-700"
-                      />
-                      <div>
-                        <p className="text-sm font-extrabold leading-6 text-slate-950">
-                          {item.title}
-                        </p>
-                        <p className="mt-1 text-sm leading-6 text-slate-700">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+              {/* Compact trust row */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-violet-100 pt-5 text-sm text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5 text-violet-500" />
+                  Güvenli ödemeler
+                </span>
+                <span aria-hidden="true" className="text-violet-300">·</span>
+                <span>Doğrulanmış işletmeler</span>
+                <span aria-hidden="true" className="text-violet-300">·</span>
+                <span>Hızlı rezervasyon</span>
+                <span aria-hidden="true" className="text-violet-300">·</span>
+                <span>Destek merkezi</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-violet-200/80 px-6 py-7 sm:px-8 md:px-10 lg:px-16">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-            <div className="text-sm leading-7 text-slate-700">
-              <p>
-                © {new Date().getFullYear()} UrGlowUp. Tüm hakları saklıdır.
-              </p>
-              <p>
-                Türkiye&apos;de güzellik ve bakım hizmetleri için randevu platformu.
-              </p>
+        {/* Bottom bar */}
+        <div className="border-t border-violet-200/80 px-6 py-5 sm:px-8 md:px-10 lg:px-16">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="text-sm leading-6 text-slate-600">
+              <p>© {new Date().getFullYear()} UrGlowUp. Tüm hakları saklıdır.</p>
+              <p>Türkiye&apos;de güzellik ve bakım hizmetleri için randevu platformu.</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-700">
