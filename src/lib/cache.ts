@@ -6,7 +6,7 @@
  */
 
 // In-memory cache: key → { value, expiresAt }
-const inMemoryCache = new Map<string, { value: any; expiresAt: number }>();
+const inMemoryCache = new Map<string, { value: unknown; expiresAt: number }>();
 
 export interface CacheOptions {
   ttlSeconds?: number;
@@ -115,7 +115,7 @@ export async function invalidateCache(keyPrefix: string): Promise<void> {
       const keys = await redis.keys(`${keyPrefix}*`);
       if (keys.length > 0) {
         // Delete keys: redis.del accepts array or variadic args
-        await (redis as any).del(keys);
+        await redis.del(keys);
       }
     }
   } catch (err) {

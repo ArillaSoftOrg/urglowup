@@ -1,15 +1,8 @@
 import { db } from "@/lib/db";
-import { getCached, setCached, invalidateCache } from "@/lib/cache";
+import { getCached, setCached } from "@/lib/cache";
 
-export async function getBusinessBySlug(slug: string) {
-  // Check cache first
-  const cacheKey = `business:slug:${slug}`;
-  const cached = await getCached(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
-  const business = await db.business.findUnique({
+async function fetchBusinessBySlug(slug: string) {
+  return db.business.findUnique({
     where: { slug },
     include: {
       categories: {
@@ -44,6 +37,21 @@ export async function getBusinessBySlug(slug: string) {
       },
     },
   });
+}
+
+type BusinessBySlugResult = Awaited<ReturnType<typeof fetchBusinessBySlug>>;
+
+export async function getBusinessBySlug(
+  slug: string
+): Promise<BusinessBySlugResult> {
+  // Check cache first
+  const cacheKey = `business:slug:${slug}`;
+  const cached = await getCached<NonNullable<BusinessBySlugResult>>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const business = await fetchBusinessBySlug(slug);
 
   // Cache for 5 minutes (business profile changes less frequently)
   if (business) {
@@ -90,15 +98,8 @@ export type BusinessForPublicLink = NonNullable<
   Awaited<ReturnType<typeof getBusinessForPublicLink>>
 >;
 
-export async function getGoogleReviewsForBusiness(businessId: string) {
-  // Check cache first
-  const cacheKey = `reviews:google:${businessId}`;
-  const cached = await getCached(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
-  const reviews = await db.externalReviewCache.findMany({
+async function fetchGoogleReviewsForBusiness(businessId: string) {
+  return db.externalReviewCache.findMany({
     where: {
       businessId,
       provider: "GOOGLE_BUSINESS_PROFILE",
@@ -107,6 +108,23 @@ export async function getGoogleReviewsForBusiness(businessId: string) {
     orderBy: { createTime: "desc" },
     take: 10,
   });
+}
+
+export type GoogleReview = Awaited<
+  ReturnType<typeof fetchGoogleReviewsForBusiness>
+>[number];
+
+export async function getGoogleReviewsForBusiness(
+  businessId: string
+): Promise<GoogleReview[]> {
+  // Check cache first
+  const cacheKey = `reviews:google:${businessId}`;
+  const cached = await getCached<GoogleReview[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const reviews = await fetchGoogleReviewsForBusiness(businessId);
 
   // Cache for 1 hour (reviews don't change frequently)
   if (reviews.length > 0) {
@@ -115,23 +133,3 @@ export async function getGoogleReviewsForBusiness(businessId: string) {
 
   return reviews;
 }
-
-export type GoogleReview = {
-  id: string;
-  businessId: string;
-  provider: string;
-  providerReviewId: string;
-  authorName: string;
-  authorAvatarUrl?: string | null;
-  rating: number;
-  comment?: string | null;
-  merchantReply?: string | null;
-  createTime: Date;
-  fetchedAt: Date;
-  expiresAt: Date;
-  visibilityStatus: string;
-  displayOrder: number;
-  isFeaturedByBusiness: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-};
