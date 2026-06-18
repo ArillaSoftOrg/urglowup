@@ -173,17 +173,20 @@ export function ThreadView({
                     </p>
                   )}
                   <p>{msg.content}</p>
-                  <p
+                  <div
                     className={cn(
-                      "mt-1 text-right text-[10px]",
+                      "mt-1 flex items-center justify-end gap-1 text-[10px]",
                       isOwn
                         ? "text-primary-foreground/70"
                         : "text-muted-foreground"
                     )}
                   >
-                    {format(new Date(msg.createdAt), "HH:mm", { locale: tr })}
-                    {isOptimistic && " (gönderiliyor...)"}
-                  </p>
+                    <span>
+                      {format(new Date(msg.createdAt), "HH:mm", { locale: tr })}
+                      {isOptimistic && " (gönderiliyor...)"}
+                    </span>
+                    {isOwn && msg.isRead && <span>✓✓</span>}
+                  </div>
                 </div>
               </div>
             );

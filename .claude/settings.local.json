@@ -125,7 +125,8 @@
       "WebFetch(domain:docs.svix.com)",
       "WebFetch(domain:resend.com)",
       "Bash(cat \"C:/Users/YUSUF/Documents/GitHub/urglowup/src/app/\\(admin\\)/admin/page.tsx\")",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"next build\")"
     ]
   }
 }
