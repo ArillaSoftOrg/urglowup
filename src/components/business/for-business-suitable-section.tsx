@@ -170,7 +170,7 @@ export function ForBusinessSuitableSection() {
             >
               <Image
                 src={type.image}
-                alt=""
+                alt={type.title}
                 fill
                 sizes="(min-width: 768px) 380px, 78vw"
                 className="object-cover transition duration-500 group-hover:scale-105"

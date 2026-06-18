@@ -294,7 +294,7 @@ export function PostCreateDialog({ services, categories, styleTags }: PostCreate
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={m.previewUrl}
-                        alt=""
+                        alt={`Seçilen görsel ${i + 1}`}
                         className="size-full object-cover"
                       />
                     )}

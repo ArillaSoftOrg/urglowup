@@ -148,9 +148,7 @@ function HeroImage({
           />
         )
       ) : (
-        <div className="flex size-full items-center justify-center bg-surface-cream text-sm font-medium text-muted-foreground">
-          Fotoğraflar yakında
-        </div>
+        <div className="size-full bg-surface-cream" />
       )}
 
       {items.length > 1 && (
@@ -433,7 +431,6 @@ export function MobileBusinessProfile({
       <nav className="sticky top-14 z-30 flex gap-6 overflow-x-auto border-b bg-background px-5 text-sm font-bold">
         {[
           ["#services", "Hizmetler"],
-          ["#team", "Ekip"],
           ["#reviews", "Değerlendirmeler"],
           ["#portfolio", "Portföy"],
           ["#hours", "Diğer"],
@@ -517,13 +514,6 @@ export function MobileBusinessProfile({
       )}
 
       <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
-
-      <section id="team" className="border-t px-5 py-8">
-        <h2 className="text-xl font-bold tracking-normal">Ekip</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Ekip bilgileri yakında burada görünecek.
-        </p>
-      </section>
 
       <ReviewsPreview business={business} reviewSummary={reviewSummary} />
       <PortfolioGrid items={galleryItems} />
