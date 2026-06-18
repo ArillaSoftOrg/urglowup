@@ -9,6 +9,7 @@ import {
   BACKOFF_MAX_MS,
   MAX_RETRY_ATTEMPTS,
 } from "@/lib/constants/external";
+import type { RedisClientType } from "redis";
 
 export { MAX_RETRY_ATTEMPTS };
 
@@ -176,7 +177,7 @@ function checkRateLimitInMemory(
  * Redis-backed token bucket check using Lua script for atomicity
  */
 async function checkRateLimitRedis(
-  redis: any,
+  redis: RedisClientType,
   businessId: string,
   now: number
 ): Promise<RateLimitCheckResult> {
@@ -227,7 +228,11 @@ end
       ],
     });
 
-    const [allowed, remainingTokens, retryAfterMs] = result;
+    const [allowed, remainingTokens, retryAfterMs] = result as [
+      number,
+      number,
+      number,
+    ];
 
     return {
       allowed: allowed === 1,

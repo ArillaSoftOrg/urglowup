@@ -126,7 +126,9 @@
       "WebFetch(domain:resend.com)",
       "Bash(cat \"C:/Users/YUSUF/Documents/GitHub/urglowup/src/app/\\(admin\\)/admin/page.tsx\")",
       "Read(//tmp/**)",
-      "Bash(pkill -f \"next build\")"
+      "Bash(pkill -f \"next build\")",
+      "Bash(ls src/app/\\\\\\(business\\\\\\)/business/customers/)",
+      "Bash(ls src/app/\\\\\\(admin\\\\\\)/admin/activity/)"
     ]
   }
 }

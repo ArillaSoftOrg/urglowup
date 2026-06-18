@@ -9,14 +9,16 @@
  * without Redis while supporting it when available.
  */
 
-let redisClient: any = null;
+import type { RedisClientType } from "redis";
+
+let redisClient: RedisClientType | null | undefined;
 
 /**
  * Get or create Redis client.
  * Returns null if REDIS_URL not configured or redis package not available.
  * The caller (rate-limiter) will fall back to in-memory state.
  */
-export async function getRedisClient(): Promise<any> {
+export async function getRedisClient(): Promise<RedisClientType | null> {
   if (redisClient !== undefined) {
     return redisClient;
   }

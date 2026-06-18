@@ -1,7 +1,15 @@
 import { db } from "@/lib/db";
+import { getCached, setCached, invalidateCache } from "@/lib/cache";
 
 export async function getBusinessBySlug(slug: string) {
-  return db.business.findUnique({
+  // Check cache first
+  const cacheKey = `business:slug:${slug}`;
+  const cached = await getCached(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const business = await db.business.findUnique({
     where: { slug },
     include: {
       categories: {
@@ -36,6 +44,13 @@ export async function getBusinessBySlug(slug: string) {
       },
     },
   });
+
+  // Cache for 5 minutes (business profile changes less frequently)
+  if (business) {
+    await setCached(cacheKey, business, { ttlSeconds: 300 });
+  }
+
+  return business;
 }
 
 export type BusinessWithDetails = NonNullable<
@@ -76,7 +91,14 @@ export type BusinessForPublicLink = NonNullable<
 >;
 
 export async function getGoogleReviewsForBusiness(businessId: string) {
-  return db.externalReviewCache.findMany({
+  // Check cache first
+  const cacheKey = `reviews:google:${businessId}`;
+  const cached = await getCached(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const reviews = await db.externalReviewCache.findMany({
     where: {
       businessId,
       provider: "GOOGLE_BUSINESS_PROFILE",
@@ -85,8 +107,31 @@ export async function getGoogleReviewsForBusiness(businessId: string) {
     orderBy: { createTime: "desc" },
     take: 10,
   });
+
+  // Cache for 1 hour (reviews don't change frequently)
+  if (reviews.length > 0) {
+    await setCached(cacheKey, reviews, { ttlSeconds: 3600 });
+  }
+
+  return reviews;
 }
 
-export type GoogleReview = Awaited<
-  ReturnType<typeof getGoogleReviewsForBusiness>
->[number];
+export type GoogleReview = {
+  id: string;
+  businessId: string;
+  provider: string;
+  providerReviewId: string;
+  authorName: string;
+  authorAvatarUrl?: string | null;
+  rating: number;
+  comment?: string | null;
+  merchantReply?: string | null;
+  createTime: Date;
+  fetchedAt: Date;
+  expiresAt: Date;
+  visibilityStatus: string;
+  displayOrder: number;
+  isFeaturedByBusiness: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
