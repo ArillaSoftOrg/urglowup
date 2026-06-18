@@ -45,6 +45,7 @@ export function MessagesClientWrapper({
           <ThreadView
             conversationId={selectedId}
             currentUserId={currentUserId}
+            businessName={conversations.find((c) => c.id === selectedId)?.business.name}
             onBack={() => setSelectedId(null)}
           />
         ) : (

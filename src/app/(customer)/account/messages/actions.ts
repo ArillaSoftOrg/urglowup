@@ -31,12 +31,12 @@ export async function sendCustomerMessage(
   try {
     await sendMessage(conversationId, user.id, content);
     revalidatePath(`/account/messages/${conversationId}`);
-    return { success: true, message: "Message sent" };
+    return { success: true, message: "Mesaj gönderildi" };
   } catch (err) {
     console.error("[messages] Failed to send message:", err);
     return {
       success: false,
-      error: err instanceof Error ? err.message : "Failed to send message",
+      error: err instanceof Error ? err.message : "Mesaj gönderilemedi",
     };
   }
 }

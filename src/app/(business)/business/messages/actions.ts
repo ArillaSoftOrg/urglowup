@@ -12,18 +12,22 @@ const sendSchema = z.object({
 export async function sendBusinessMessage(
   conversationId: string,
   content: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<{ success: boolean; message?: string; error?: string }> {
   const { user } = await requireBusiness();
 
   const parsed = sendSchema.safeParse({ conversationId, content });
   if (!parsed.success) {
-    return { success: false, message: parsed.error.issues[0].message };
+    return { success: false, error: parsed.error.issues[0].message };
   }
 
   try {
     await sendMessage(conversationId, user.id, content.trim());
-    return { success: true };
-  } catch {
-    return { success: false, message: "Mesaj gönderilemedi." };
+    return { success: true, message: "Mesaj gönderildi" };
+  } catch (err) {
+    console.error("[messages] Failed to send business message:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Mesaj gönderilemedi.",
+    };
   }
 }

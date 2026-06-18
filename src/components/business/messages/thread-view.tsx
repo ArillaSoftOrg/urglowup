@@ -7,20 +7,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { sendCustomerMessage } from "@/app/(customer)/account/messages/actions";
+import { sendBusinessMessage } from "@/app/(business)/business/messages/actions";
 import { useConversationMessages } from "@/hooks/useConversationMessages";
 
 interface ThreadViewProps {
   conversationId: string;
   currentUserId: string;
-  businessName?: string;
+  customerName?: string;
   onBack?: () => void;
 }
 
 export function ThreadView({
   conversationId,
   currentUserId,
-  businessName = "Conversation",
+  customerName = "Customer",
   onBack,
 }: ThreadViewProps) {
   const [message, setMessage] = useState("");
@@ -38,7 +38,7 @@ export function ThreadView({
   } = useConversationMessages({
     conversationId,
     enabled: true,
-    pollIntervalMs: 2000, // Poll every 2 seconds
+    pollIntervalMs: 2000,
   });
 
   // Auto-scroll to bottom when messages change
@@ -50,10 +50,10 @@ export function ThreadView({
     if (!message.trim() || sending) return;
 
     const messageContent = message;
-    setMessage(""); // Clear input immediately for better UX
+    setMessage("");
     setSendError(null);
 
-    // Create optimistic message
+    // Optimistic update
     const optimisticMessage = {
       id: `temp-${Date.now()}`,
       conversationId,
@@ -69,22 +69,19 @@ export function ThreadView({
       },
     };
 
-    // Show immediately (optimistic update)
     addOptimisticMessage(optimisticMessage);
 
     setSending(true);
     try {
-      const result = await sendCustomerMessage(conversationId, messageContent);
+      const result = await sendBusinessMessage(conversationId, messageContent);
       if (result.success) {
-        // Refetch to get the real message (with server timestamp, etc.)
         await refetch();
       } else {
         setSendError(result.error || "Failed to send message");
-        // Re-add message to allow retry
         setMessage(messageContent);
       }
     } catch (err) {
-      console.error("[thread-view] Send failed:", err);
+      console.error("[business-thread-view] Send failed:", err);
       setSendError("Network error. Please try again.");
       setMessage(messageContent);
     } finally {
@@ -127,7 +124,7 @@ export function ThreadView({
             <ArrowLeft className="size-4" />
           </Button>
         )}
-        <p className="text-sm font-semibold">{businessName}</p>
+        <p className="text-sm font-semibold">{customerName}</p>
       </div>
 
       {/* Error alert */}
@@ -143,7 +140,7 @@ export function ThreadView({
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {data.messages.length === 0 ? (
           <p className="py-8 text-center text-xs text-muted-foreground">
-            Henüz mesaj yok. İlk mesajı siz gönderin.
+            Henüz mesaj yok. Cevap vererek başlayın.
           </p>
         ) : (
           data.messages.map((msg) => {
@@ -201,7 +198,7 @@ export function ThreadView({
         )}
         <div className="flex items-end gap-2">
           <Textarea
-            placeholder="Mesajınızı yazın..."
+            placeholder="Yanıt yazın..."
             rows={2}
             value={message}
             onChange={(e) => setMessage(e.target.value)}

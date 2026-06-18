@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { BusinessStatus, AppointmentStatus, ReviewStatus } from "@/generated/prisma/enums";
+import { AppointmentStatus, ReviewStatus } from "@/generated/prisma/enums";
 
 async function getTrustStats() {
   try {

@@ -251,8 +251,9 @@ export async function sendCancelledByBusinessEmailToCustomer(
  */
 export async function sendAdminCancelledEmailToBusinessOwner(
   appointmentId: string,
-  adminReason: string
+  _adminReason: string
 ): Promise<void> {
+  void _adminReason;
   const appt = await getAppointmentEmailPayload(appointmentId);
 
   const customerName = fullName(appt.customer.firstName, appt.customer.lastName);

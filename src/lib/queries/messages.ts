@@ -42,6 +42,16 @@ export async function getConversationMessages(
 ) {
   const conversation = await db.conversation.findUnique({
     where: { id: conversationId },
+    include: {
+      business: {
+        select: {
+          id: true,
+          name: true,
+          logoUrl: true,
+          slug: true,
+        },
+      },
+    },
   });
 
   if (!conversation || conversation.customerId !== userId) {

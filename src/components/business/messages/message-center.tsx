@@ -121,9 +121,11 @@ export function BusinessMessageCenter({ conversations, businessUserId }: Props) 
   useEffect(() => {
     if (!selectedId) return;
     let cancelled = false;
+    /* eslint-disable react-hooks/set-state-in-effect */
     setMessages([]);
     setMessagesLoading(true);
     setSendError(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     fetch(`/api/messages/conversations/${selectedId}`)
       .then((res) => (res.ok ? res.json() : Promise.reject(res.statusText)))
