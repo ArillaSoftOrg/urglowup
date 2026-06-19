@@ -5,7 +5,6 @@ import {
   Heart,
   MapPin,
   Navigation,
-  Search,
   Share2,
   Star,
 } from "lucide-react";
@@ -14,6 +13,7 @@ import { BusinessGalleryHero } from "@/components/business-profile/business-gall
 import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
+import { ProfileSearchHeader } from "@/components/business-profile/profile-search-header";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
 import { cn } from "@/lib/utils";
@@ -39,33 +39,7 @@ function DesktopSearchHeader({ locale }: { locale?: string }) {
           <span className="text-[26px] font-bold leading-none tracking-normal">UrGlowUp</span>
         </Link>
 
-        <div className="mx-auto grid h-14 w-full max-w-[900px] grid-cols-[1fr_1fr_1fr_auto] items-center overflow-hidden rounded-full border bg-background shadow-md">
-          <button
-            type="button"
-            className="h-full border-r px-6 text-left text-[15px] font-medium hover:bg-muted/50"
-          >
-            Tüm işlemler
-          </button>
-          <button
-            type="button"
-            className="h-full border-r px-6 text-left text-[15px] font-medium hover:bg-muted/50"
-          >
-            Mevcut konum
-          </button>
-          <button
-            type="button"
-            className="h-full px-6 text-left text-[15px] font-medium hover:bg-muted/50"
-          >
-            Herhangi bir zaman
-          </button>
-          <button
-            type="button"
-            aria-label="Ara"
-            className="mr-1.5 flex size-11 items-center justify-center rounded-full bg-foreground text-background transition hover:opacity-90"
-          >
-            <Search className="size-5" />
-          </button>
-        </div>
+        <ProfileSearchHeader locale={locale} />
 
         <div className="flex w-64 shrink-0 items-center justify-end gap-4">
           <Link
