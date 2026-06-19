@@ -18,6 +18,16 @@ const profileSchema = z.object({
     .max(200)
     .optional()
     .transform((v) => v || null),
+  facebookUrl: z
+    .string()
+    .max(200)
+    .optional()
+    .transform((v) => v || null),
+  tiktokUrl: z
+    .string()
+    .max(200)
+    .optional()
+    .transform((v) => v || null),
   address: z.string().max(300).optional().transform((v) => v || null),
   city: z.string().max(100).optional().transform((v) => v || null),
   district: z.string().max(100).optional().transform((v) => v || null),
@@ -42,6 +52,8 @@ export async function updateBusinessProfile(
     phone: formData.get("phone"),
     whatsapp: formData.get("whatsapp"),
     instagramUrl: formData.get("instagramUrl"),
+    facebookUrl: formData.get("facebookUrl"),
+    tiktokUrl: formData.get("tiktokUrl"),
     address: formData.get("address"),
     city: formData.get("city"),
     district: formData.get("district"),

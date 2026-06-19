@@ -308,6 +308,8 @@ model Business {
   phone                String?
   whatsapp             String?
   instagramUrl         String?
+  facebookUrl          String?
+  tiktokUrl            String?
   address              String?
   city                 String?
   district             String?

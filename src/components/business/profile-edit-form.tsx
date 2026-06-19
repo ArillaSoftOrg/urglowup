@@ -19,6 +19,8 @@ interface BusinessProfileData {
   phone: string | null;
   whatsapp: string | null;
   instagramUrl: string | null;
+  facebookUrl: string | null;
+  tiktokUrl: string | null;
   address: string | null;
   city: string | null;
   district: string | null;
@@ -256,16 +258,40 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
           <CardDescription>Sosyal medya profillerinizi ekleyin.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div>
-            <Label htmlFor="instagramUrl">Instagram Bağlantısı</Label>
-            <Input
-              id="instagramUrl"
-              name="instagramUrl"
-              defaultValue={business.instagramUrl ?? ""}
-              placeholder="https://instagram.com/yourbusiness"
-              className="mt-1.5"
-            />
-            <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="instagramUrl" />
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="instagramUrl">Instagram Bağlantısı</Label>
+              <Input
+                id="instagramUrl"
+                name="instagramUrl"
+                defaultValue={business.instagramUrl ?? ""}
+                placeholder="https://instagram.com/yourbusiness"
+                className="mt-1.5"
+              />
+              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="instagramUrl" />
+            </div>
+            <div>
+              <Label htmlFor="facebookUrl">Facebook Bağlantısı</Label>
+              <Input
+                id="facebookUrl"
+                name="facebookUrl"
+                defaultValue={business.facebookUrl ?? ""}
+                placeholder="https://facebook.com/yourpage"
+                className="mt-1.5"
+              />
+              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="facebookUrl" />
+            </div>
+            <div>
+              <Label htmlFor="tiktokUrl">TikTok Bağlantısı</Label>
+              <Input
+                id="tiktokUrl"
+                name="tiktokUrl"
+                defaultValue={business.tiktokUrl ?? ""}
+                placeholder="https://tiktok.com/@yourbusiness"
+                className="mt-1.5"
+              />
+              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="tiktokUrl" />
+            </div>
           </div>
         </CardContent>
       </Card>
