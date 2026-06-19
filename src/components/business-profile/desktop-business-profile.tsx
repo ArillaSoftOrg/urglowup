@@ -17,7 +17,6 @@ import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails, GoogleReview } from "@/lib/queries/business";
 
@@ -33,15 +32,15 @@ function pathWithLocale(path: string, locale?: string) {
 function DesktopSearchHeader({ locale }: { locale?: string }) {
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-24 max-w-[1728px] items-center gap-8 px-8">
+      <div className="mx-auto flex h-24 max-w-[1740px] items-center gap-8 px-6">
         <Link
           href={pathWithLocale("/", locale)}
-          className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-80"
+          className="flex w-44 shrink-0 items-center gap-3 transition-opacity hover:opacity-80"
         >
-          <span className="flex size-9 items-center justify-center rounded-lg bg-brand-pink/20">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-brand-pink/20">
             <Sparkles className="size-5 text-brand-pink-foreground" />
           </span>
-          <span className="text-2xl font-bold tracking-normal">UrGlowUp</span>
+          <span className="text-[28px] font-bold leading-none tracking-normal">UrGlowUp</span>
         </Link>
 
         <div className="mx-auto grid h-16 w-full max-w-[900px] grid-cols-[1fr_1fr_1fr_auto] items-center overflow-hidden rounded-full border bg-background shadow-md">
@@ -72,26 +71,25 @@ function DesktopSearchHeader({ locale }: { locale?: string }) {
           </button>
         </div>
 
-        <Link
-          href="/business/dashboard"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "lg" }),
-            "h-14 shrink-0 rounded-full px-7 text-base font-bold",
-          )}
-        >
-          İşletme Paneliniz
-        </Link>
+        <div className="flex w-64 shrink-0 items-center justify-end gap-4">
+          <Link
+            href="/business/dashboard"
+            className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+          >
+            İşletme Paneliniz
+          </Link>
 
-        <button
-          type="button"
-          aria-label="Hesap menüsü"
-          className="flex h-14 shrink-0 items-center gap-3 rounded-full border bg-background px-4 shadow-sm"
-        >
-          <span className="flex size-9 items-center justify-center rounded-full bg-muted text-sm font-bold">
-            U
-          </span>
-          <ChevronDown className="size-4" />
-        </button>
+          <button
+            type="button"
+            aria-label="Hesap menüsü"
+            className="flex h-12 items-center gap-3 rounded-full border bg-background px-3 shadow-sm"
+          >
+            <span className="flex size-9 items-center justify-center rounded-full bg-muted text-sm font-bold">
+              U
+            </span>
+            <ChevronDown className="size-4" />
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -157,7 +155,7 @@ function DesktopTitleBlock({
   return (
     <div className="flex items-end justify-between gap-8">
       <div className="min-w-0 space-y-4">
-        <h1 className="text-6xl font-bold leading-none tracking-normal">
+        <h1 className="text-[56px] font-bold leading-none tracking-normal">
           {business.name}
         </h1>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-xl text-muted-foreground">
@@ -200,7 +198,7 @@ function DesktopTitleBlock({
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 font-bold text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 font-bold text-foreground hover:underline"
               >
                 <Navigation className="size-5" />
                 Yol tarifi al
@@ -214,14 +212,14 @@ function DesktopTitleBlock({
         <button
           type="button"
           aria-label="Paylaş"
-          className="flex size-16 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
+          className="flex size-15 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
         >
           <Share2 className="size-6" />
         </button>
         <button
           type="button"
           aria-label="Favorilere ekle"
-          className="flex size-16 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
+          className="flex size-15 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
         >
           <Heart className="size-6" />
         </button>
@@ -240,8 +238,8 @@ function DesktopSectionNav() {
   ] as const;
 
   return (
-    <nav className="sticky top-0 z-20 border-y bg-background/95 px-8 backdrop-blur">
-      <div className="mx-auto flex max-w-[1728px] gap-8 overflow-x-auto text-base font-bold">
+    <nav className="sticky top-0 z-20 border-y bg-background/95 px-6 backdrop-blur">
+      <div className="mx-auto flex max-w-[1740px] gap-8 overflow-x-auto text-base font-bold">
         {items.map(([href, label]) => (
           <a
             key={href}
@@ -275,7 +273,7 @@ export function DesktopBusinessProfile({
     <div className="hidden bg-background lg:block">
       <DesktopSearchHeader locale={locale} />
 
-      <div className="mx-auto max-w-[1728px] space-y-8 px-8 pb-12 pt-10">
+      <div className="mx-auto max-w-[1740px] space-y-8 px-6 pb-10 pt-10">
         <DesktopBreadcrumbs business={business} locale={locale} />
         <DesktopTitleBlock
           business={business}
@@ -288,7 +286,7 @@ export function DesktopBusinessProfile({
 
       <DesktopSectionNav />
 
-      <div className="mx-auto grid max-w-[1728px] grid-cols-[minmax(0,1fr)_380px] gap-10 px-8 py-10">
+      <div className="mx-auto grid max-w-[1740px] grid-cols-[minmax(0,1fr)_380px] gap-10 px-6 py-10">
         <div className="min-w-0 space-y-9">
           <ServicesSection business={business} />
           <section id="about">

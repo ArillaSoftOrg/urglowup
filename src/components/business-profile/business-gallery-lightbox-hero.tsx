@@ -42,7 +42,7 @@ function MediaTile({
     <button
       type="button"
       onClick={() => onOpen(index)}
-      className={`group relative overflow-hidden rounded-lg bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${className}`}
+      className={`group relative overflow-hidden rounded-[18px] bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${className}`}
     >
       {item.isVideo ? (
         <>
@@ -114,7 +114,7 @@ export function BusinessGalleryLightboxHero({
   return (
     <>
       <section className="relative">
-        <div className="grid gap-6 lg:h-[640px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.95fr)]">
+        <div className="grid gap-8 lg:h-[644px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)]">
           <MediaTile
             item={visibleItems[0]}
             index={0}
@@ -123,7 +123,7 @@ export function BusinessGalleryLightboxHero({
             onOpen={setOpenIndex}
           />
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-2 lg:gap-6">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-2 lg:gap-8">
             {visibleItems.slice(1, 3).map((item, i) => (
               <MediaTile
                 key={item.id}
@@ -137,7 +137,7 @@ export function BusinessGalleryLightboxHero({
               <button
                 type="button"
                 onClick={() => setOpenIndex(0)}
-                className="flex aspect-[4/3] items-center justify-center rounded-lg border bg-background text-sm text-muted-foreground lg:aspect-auto"
+                className="flex aspect-[4/3] items-center justify-center rounded-[18px] border bg-background text-sm text-muted-foreground lg:aspect-auto"
               >
                 <ImageIcon className="mr-2 size-4" />
                 Galeri
@@ -150,7 +150,7 @@ export function BusinessGalleryLightboxHero({
           <button
             type="button"
             onClick={() => setOpenIndex(0)}
-            className="absolute bottom-4 right-4 inline-flex h-10 items-center gap-2 rounded-full bg-background px-4 text-sm font-semibold text-foreground shadow-md transition hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="absolute bottom-6 right-6 inline-flex h-11 items-center gap-2 rounded-full bg-background px-5 text-sm font-semibold text-foreground shadow-md transition hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <ImageIcon className="size-4" />
             Tüm resimleri gör
