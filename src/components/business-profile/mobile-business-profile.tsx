@@ -127,35 +127,37 @@ function HeroImage({
   const hero = items[0];
 
   return (
-    <section className="relative aspect-[4/3] overflow-hidden bg-muted">
-      {hero ? (
-        hero.isVideo ? (
-          <video
-            src={hero.thumbnailUrl}
-            className="size-full object-cover"
-            muted
-            playsInline
-            preload="metadata"
-          />
+    <section className="px-4 pt-3">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
+        {hero ? (
+          hero.isVideo ? (
+            <video
+              src={hero.thumbnailUrl}
+              className="size-full object-cover"
+              muted
+              playsInline
+              preload="metadata"
+            />
+          ) : (
+            <Image
+              src={hero.thumbnailUrl}
+              alt={hero.title ?? business.name}
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
+          )
         ) : (
-          <Image
-            src={hero.thumbnailUrl}
-            alt={hero.title ?? business.name}
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority
-          />
-        )
-      ) : (
-        <div className="size-full bg-surface-cream" />
-      )}
+          <div className="size-full bg-surface-cream" />
+        )}
 
-      {items.length > 1 && (
-        <div className="absolute bottom-4 right-4 rounded-full bg-foreground/75 px-3 py-1 text-sm font-bold text-background">
-          1/{items.length}
-        </div>
-      )}
+        {items.length > 1 && (
+          <div className="absolute bottom-3 right-3 rounded-full bg-foreground/75 px-3 py-1 text-sm font-bold text-background">
+            1/{items.length}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -398,7 +400,7 @@ export function MobileBusinessProfile({
     .join(" ");
 
   return (
-    <div className="min-h-screen bg-background pb-28 lg:hidden">
+    <div className="min-h-screen bg-background pb-20 lg:hidden">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Link
           href={hrefPrefix || "/"}
@@ -447,7 +449,7 @@ export function MobileBusinessProfile({
 
       <HeroImage business={business} items={galleryItems} />
 
-      <section className="-mt-8 rounded-t-[28px] bg-background px-5 pb-7 pt-6">
+      <section className="mx-4 -mt-6 rounded-2xl bg-background px-5 pb-6 pt-5 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
         <h1 className="text-3xl font-bold leading-tight tracking-normal">
           {business.name}
         </h1>
@@ -519,17 +521,17 @@ export function MobileBusinessProfile({
       <PortfolioGrid items={galleryItems} />
       <HoursPreview business={business} />
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-5 pb-4 pt-3 shadow-md backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur">
         {business.services.length > 0 && (
-          <p className="mb-2 text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             mevcut {business.services.length} hizmet
           </p>
         )}
         <Link
           href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
-            buttonVariants({ size: "lg" }),
-            "h-14 w-full rounded-full text-base font-bold",
+            buttonVariants({ size: "default" }),
+            "shrink-0 rounded-full px-6 font-bold",
           )}
         >
           <CalendarCheck className="size-4" />
