@@ -179,7 +179,7 @@ export async function addTemplateServices(
     return { success: false, message: "Lütfen en az bir hizmet seçin" };
   }
 
-  const [maxSort, business] = await Promise.all([
+  const [maxSort, business, existingServices] = await Promise.all([
     db.businessService.aggregate({
       where: { businessId },
       _max: { sortOrder: true },
@@ -188,16 +188,45 @@ export async function addTemplateServices(
       where: { id: businessId },
       select: { name: true },
     }),
+    db.businessService.findMany({
+      where: { businessId },
+      select: { name: true },
+    }),
   ]);
 
   let nextSort = (maxSort._max.sortOrder ?? -1) + 1;
+  const existingNames = new Set(
+    existingServices.map((service) => service.name.trim().toLocaleLowerCase("tr"))
+  );
+  let addedCount = 0;
+  let skippedCount = 0;
 
   for (const templateName of validTemplates) {
+    const normalizedName = templateName.trim().toLocaleLowerCase("tr");
+    if (existingNames.has(normalizedName)) {
+      skippedCount++;
+      continue;
+    }
+
     const template = SERVICE_TEMPLATES[templateName];
-    const slug = await generateUniqueServiceSlug(
-      business.name,
-      templateName
+    const durationMinutes = Number(
+      formData.get(`duration-${templateName}`) ?? template.durationMinutes
     );
+    const rawPrice = formData.get(`price-${templateName}`);
+    const parsedPrice =
+      rawPrice === null || rawPrice === "" ? template.price : Number(rawPrice);
+    const priceType = template.priceType ?? "FIXED";
+    const price =
+      priceType === "CONSULTATION_REQUIRED" || priceType === "FREE_CONSULTATION"
+        ? null
+        : Number.isFinite(parsedPrice)
+          ? parsedPrice
+          : null;
+    const safeDuration =
+      Number.isFinite(durationMinutes) && durationMinutes >= 5
+        ? Math.min(durationMinutes, 480)
+        : template.durationMinutes;
+    const slug = await generateUniqueServiceSlug(business.name, templateName);
 
     await db.businessService.create({
       data: {
@@ -205,18 +234,36 @@ export async function addTemplateServices(
         name: templateName,
         slug,
         description: template.description ?? null,
-        durationMinutes: template.durationMinutes,
-        price: null,
-        priceType: template.priceType ?? "FIXED",
+        durationMinutes: safeDuration,
+        price,
+        priceType,
         isActive: true,
         sortOrder: nextSort,
       },
     });
 
     nextSort++;
+    addedCount++;
+    existingNames.add(normalizedName);
+  }
+
+  if (addedCount === 0) {
+    return {
+      success: false,
+      message:
+        skippedCount > 0
+          ? "Seçtiğiniz hizmetler zaten ekli"
+          : "Lütfen en az bir hizmet seçin",
+    };
   }
 
   revalidatePath("/business/services");
   revalidatePath("/business/dashboard");
-  return { success: true, message: "Hizmetler eklendi" };
+  return {
+    success: true,
+    message:
+      skippedCount > 0
+        ? `${addedCount} hizmet eklendi, ${skippedCount} hizmet zaten vardı`
+        : `${addedCount} hizmet eklendi`,
+  };
 }

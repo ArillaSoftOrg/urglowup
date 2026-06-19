@@ -85,16 +85,16 @@ function shiftDate(view: CalendarView, date: Date, direction: 1 | -1): Date {
 }
 
 function getStatusFilterLabel(statusFilter: AppointmentStatus | "all"): string {
-  return statusFilter === "all" ? "Tümü" : STATUS_LABELS[statusFilter];
+  return statusFilter === "all" ? "Durum: Tümü" : `Durum: ${STATUS_LABELS[statusFilter]}`;
 }
 
 function getProfessionalFilterLabel(
   professionalFilter: string | "all",
   professionals: CalendarProfessional[]
 ): string {
-  if (professionalFilter === "all") return "Tümü";
-  if (professionalFilter === CALENDAR_GENERAL_COLUMN_ID) return "Personel atanmadı";
-  return professionals.find((pro) => pro.id === professionalFilter)?.displayName ?? "Personel";
+  if (professionalFilter === "all") return "Personel: Tümü";
+  if (professionalFilter === CALENDAR_GENERAL_COLUMN_ID) return "Personel: Atanmamış";
+  return `Personel: ${professionals.find((pro) => pro.id === professionalFilter)?.displayName ?? "Seçili"}`;
 }
 
 export function CalendarToolbar({
@@ -134,11 +134,11 @@ export function CalendarToolbar({
           value={statusFilter}
           onValueChange={(v) => onStatusFilterChange(v as AppointmentStatus | "all")}
         >
-          <SelectTrigger size="sm">
+          <SelectTrigger size="sm" className="min-w-28">
             <SelectValue placeholder="Durum">{statusFilterLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tümü</SelectItem>
+            <SelectItem value="all">Tüm durumlar</SelectItem>
             {ALL_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
                 {STATUS_LABELS[status]}
@@ -149,12 +149,12 @@ export function CalendarToolbar({
 
         {professionals.length > 0 && view !== "staff" && (
           <Select value={professionalFilter} onValueChange={(v) => onProfessionalFilterChange(v as string)}>
-            <SelectTrigger size="sm">
+            <SelectTrigger size="sm" className="min-w-32">
               <SelectValue placeholder="Personel">{professionalFilterLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value={CALENDAR_GENERAL_COLUMN_ID}>Personel atanmadı</SelectItem>
+              <SelectItem value="all">Tüm personel</SelectItem>
+              <SelectItem value={CALENDAR_GENERAL_COLUMN_ID}>Personel atanmamış</SelectItem>
               {professionals.map((pro) => (
                 <SelectItem key={pro.id} value={pro.id}>
                   {pro.displayName}

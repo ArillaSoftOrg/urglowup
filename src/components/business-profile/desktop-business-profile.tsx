@@ -7,7 +7,6 @@ import {
   Navigation,
   Search,
   Share2,
-  Sparkles,
   Star,
 } from "lucide-react";
 import { AboutSection } from "@/components/business-profile/about-section";
@@ -32,14 +31,11 @@ function pathWithLocale(path: string, locale?: string) {
 function DesktopSearchHeader({ locale }: { locale?: string }) {
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-24 max-w-[1740px] items-center gap-8 px-6">
+      <div className="mx-auto flex h-24 max-w-[1800px] items-center gap-8 px-6">
         <Link
           href={pathWithLocale("/", locale)}
-          className="flex w-44 shrink-0 items-center gap-3 transition-opacity hover:opacity-80"
+          className="flex w-44 shrink-0 items-center transition-opacity hover:opacity-80"
         >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-brand-pink/20">
-            <Sparkles className="size-5 text-brand-pink-foreground" />
-          </span>
           <span className="text-[28px] font-bold leading-none tracking-normal">UrGlowUp</span>
         </Link>
 
@@ -239,7 +235,7 @@ function DesktopSectionNav() {
 
   return (
     <nav className="sticky top-0 z-20 border-y bg-background/95 px-6 backdrop-blur">
-      <div className="mx-auto flex max-w-[1740px] gap-8 overflow-x-auto text-base font-bold">
+      <div className="mx-auto flex max-w-[1800px] gap-8 overflow-x-auto text-base font-bold">
         {items.map(([href, label]) => (
           <a
             key={href}
@@ -273,7 +269,7 @@ export function DesktopBusinessProfile({
     <div className="hidden bg-background lg:block">
       <DesktopSearchHeader locale={locale} />
 
-      <div className="mx-auto max-w-[1740px] space-y-8 px-6 pb-10 pt-10">
+      <div className="mx-auto max-w-[1800px] space-y-8 px-6 pb-10 pt-10">
         <DesktopBreadcrumbs business={business} locale={locale} />
         <DesktopTitleBlock
           business={business}
@@ -286,7 +282,7 @@ export function DesktopBusinessProfile({
 
       <DesktopSectionNav />
 
-      <div className="mx-auto grid max-w-[1740px] grid-cols-[minmax(0,1fr)_380px] gap-10 px-6 py-10">
+      <div className="mx-auto grid max-w-[1800px] grid-cols-[minmax(0,1fr)_380px] gap-10 px-6 py-10">
         <div className="min-w-0 space-y-9">
           <ServicesSection business={business} />
           <section id="about">
