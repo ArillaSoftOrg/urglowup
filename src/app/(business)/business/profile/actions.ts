@@ -4,6 +4,7 @@ import { z } from "zod";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireBusiness } from "@/lib/auth";
+import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { geocodeBusinessAddress } from "@/lib/maps/geocoding";
 
@@ -20,6 +21,9 @@ const profileSchema = z.object({
   address: z.string().max(300).optional().transform((v) => v || null),
   city: z.string().max(100).optional().transform((v) => v || null),
   district: z.string().max(100).optional().transform((v) => v || null),
+  instantConfirmation: z.boolean(),
+  inAppPayment: z.boolean(),
+  petFriendly: z.boolean(),
 });
 
 export type ProfileActionState =
@@ -41,6 +45,9 @@ export async function updateBusinessProfile(
     address: formData.get("address"),
     city: formData.get("city"),
     district: formData.get("district"),
+    instantConfirmation: formData.get("instantConfirmation") === "on",
+    inAppPayment: formData.get("inAppPayment") === "on",
+    petFriendly: formData.get("petFriendly") === "on",
   };
 
   const result = profileSchema.safeParse(raw);
@@ -66,6 +73,7 @@ export async function updateBusinessProfile(
 
   revalidatePath("/business/profile");
   revalidatePath(`/b/${existing.slug}`);
+  await invalidateCache(`business:slug:${existing.slug}`);
 
   // Trigger geocoding if any address field changed
   const addressChanged =

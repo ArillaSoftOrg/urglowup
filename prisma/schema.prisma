@@ -320,6 +320,9 @@ model Business {
   logoUrl              String?
   status               BusinessStatus @default(DRAFT)
   isMarketplaceVisible Boolean        @default(false)
+  instantConfirmation  Boolean        @default(false)
+  inAppPayment         Boolean        @default(false)
+  petFriendly          Boolean        @default(false)
   googlePlaceId        String?
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt

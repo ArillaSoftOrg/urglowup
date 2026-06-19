@@ -31,7 +31,7 @@ function pathWithLocale(path: string, locale?: string) {
 function DesktopSearchHeader({ locale }: { locale?: string }) {
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-20 max-w-6xl items-center gap-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-20 max-w-[1440px] items-center gap-8 px-5 sm:px-6 lg:px-10 xl:px-12">
         <Link
           href={pathWithLocale("/", locale)}
           className="flex w-44 shrink-0 items-center transition-opacity hover:opacity-80"
@@ -208,8 +208,8 @@ function DesktopSectionNav() {
   ] as const;
 
   return (
-    <nav className="sticky top-0 z-20 border-y bg-background/95 px-6 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl gap-8 overflow-x-auto px-4 text-[15px] font-bold sm:px-6 lg:px-8">
+    <nav className="sticky top-0 z-20 border-y bg-background/95 backdrop-blur">
+      <div className="mx-auto flex max-w-[1440px] gap-8 overflow-x-auto px-5 text-[15px] font-bold sm:px-6 lg:px-10 xl:px-12">
         {items.map(([href, label]) => (
           <a
             key={href}
@@ -243,7 +243,7 @@ export function DesktopBusinessProfile({
     <div className="hidden bg-background lg:block">
       <DesktopSearchHeader locale={locale} />
 
-      <div className="mx-auto max-w-6xl space-y-6 px-4 pb-8 pt-7 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1440px] space-y-6 px-5 pb-8 pt-7 sm:px-6 lg:px-10 xl:px-12">
         <DesktopBreadcrumbs business={business} locale={locale} />
         <DesktopTitleBlock
           business={business}
@@ -256,7 +256,7 @@ export function DesktopBusinessProfile({
 
       <DesktopSectionNav />
 
-      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_380px] gap-10 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)_380px] gap-10 px-5 py-10 sm:px-6 lg:px-10 xl:px-12">
         <div className="min-w-0 space-y-9">
           <ServicesSection business={business} />
           <section id="about">

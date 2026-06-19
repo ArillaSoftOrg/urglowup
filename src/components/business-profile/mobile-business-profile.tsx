@@ -430,7 +430,7 @@ export function MobileBusinessProfile({
         </div>
       </header>
 
-      <nav className="sticky top-14 z-30 flex gap-6 overflow-x-auto border-b bg-background px-5 text-sm font-bold">
+      <nav className="sticky top-14 z-30 flex gap-5 overflow-x-auto border-b border-border/60 bg-background px-5 text-sm font-medium text-muted-foreground">
         {[
           ["#services", "Hizmetler"],
           ["#reviews", "Değerlendirmeler"],
@@ -440,7 +440,7 @@ export function MobileBusinessProfile({
           <a
             key={href}
             href={href}
-            className="shrink-0 border-b-2 border-transparent py-4 hover:border-foreground"
+            className="shrink-0 border-b-2 border-transparent py-3 transition-colors hover:border-foreground hover:text-foreground"
           >
             {label}
           </a>
@@ -449,7 +449,7 @@ export function MobileBusinessProfile({
 
       <HeroImage business={business} items={galleryItems} />
 
-      <section className="mx-4 -mt-6 rounded-2xl bg-background px-5 pb-6 pt-5 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
+      <section className="mx-4 -mt-8 rounded-[28px] bg-background px-5 pb-6 pt-5 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
         <h1 className="text-3xl font-bold leading-tight tracking-normal">
           {business.name}
         </h1>
@@ -504,16 +504,16 @@ export function MobileBusinessProfile({
             Yol tarifi
           </a>
         )}
-      </section>
 
-      {business.description && (
-        <section id="about" className="px-5 pb-8">
-          <h2 className="mb-3 text-xl font-bold tracking-normal">Hakkında</h2>
-          <p className="line-clamp-5 whitespace-pre-line text-base leading-relaxed">
-            {business.description}
-          </p>
-        </section>
-      )}
+        {business.description && (
+          <div id="about" className="mt-5 border-t pt-5">
+            <h2 className="mb-2 text-base font-semibold tracking-normal">Hakkında</h2>
+            <p className="line-clamp-5 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              {business.description}
+            </p>
+          </div>
+        )}
+      </section>
 
       <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
@@ -523,7 +523,7 @@ export function MobileBusinessProfile({
 
       <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur">
         {business.services.length > 0 && (
-          <p className="text-sm text-muted-foreground">
+          <p className="whitespace-nowrap text-sm text-muted-foreground">
             mevcut {business.services.length} hizmet
           </p>
         )}
@@ -531,11 +531,11 @@ export function MobileBusinessProfile({
           href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
             buttonVariants({ size: "default" }),
-            "shrink-0 rounded-full px-6 font-bold",
+            "shrink-0 rounded-full px-4 font-bold",
           )}
         >
           <CalendarCheck className="size-4" />
-          Hemen rezervasyon yapın
+          Rezervasyon yap
         </Link>
       </div>
     </div>

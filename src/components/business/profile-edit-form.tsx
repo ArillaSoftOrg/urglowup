@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Link, MapPin, Phone } from "lucide-react";
+import { Check, CircleCheck, CreditCard, Link, MapPin, PawPrint, Phone } from "lucide-react";
 
 interface BusinessProfileData {
   name: string;
@@ -24,6 +24,9 @@ interface BusinessProfileData {
   district: string | null;
   slug: string;
   status: string;
+  instantConfirmation: boolean;
+  inAppPayment: boolean;
+  petFriendly: boolean;
   categoryName?: string | null;
 }
 
@@ -32,6 +35,27 @@ function FieldError({ errors, name }: { errors?: Record<string, string[]>; name:
   if (!msgs?.length) return null;
   return <p className="mt-1 text-xs text-destructive">{msgs[0]}</p>;
 }
+
+const profileFeatureOptions = [
+  {
+    name: "instantConfirmation",
+    label: "Anında onay",
+    description: "Müşteriler uygun saat seçtiğinde randevu otomatik onaylanır.",
+    icon: CircleCheck,
+  },
+  {
+    name: "inAppPayment",
+    label: "Uygulama ile öde",
+    description: "Müşterilere uygulama içinden ödeme alabileceğinizi gösterir.",
+    icon: CreditCard,
+  },
+  {
+    name: "petFriendly",
+    label: "Evcil hayvan uygundur",
+    description: "Mekanın evcil hayvan kabul ettiğini profilinizde belirtir.",
+    icon: PawPrint,
+  },
+] as const;
 
 export function ProfileEditForm({ business }: { business: BusinessProfileData }) {
   const initial: ProfileActionState = { success: false };
@@ -92,6 +116,47 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
                 <span className="text-sm text-muted-foreground">Kategori seçilmedi</span>
               )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Profile Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Ek Bilgiler</CardTitle>
+          <CardDescription>Uygun olan seçenekleri işaretleyin; public işletme sayfanızda açılış saatlerinin yanında görünür.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {profileFeatureOptions.map((option) => {
+              const Icon = option.icon;
+              const defaultChecked = business[option.name];
+
+              return (
+                <label
+                  key={option.name}
+                  htmlFor={option.name}
+                  className="flex cursor-pointer gap-3 rounded-xl border border-border bg-background p-4 transition-colors hover:bg-surface-cream"
+                >
+                  <input
+                    id={option.name}
+                    name={option.name}
+                    type="checkbox"
+                    defaultChecked={defaultChecked}
+                    className="mt-1 size-4 accent-foreground"
+                  />
+                  <span className="space-y-1">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Icon className="size-4" />
+                      {option.label}
+                    </span>
+                    <span className="block text-xs leading-5 text-muted-foreground">
+                      {option.description}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

@@ -114,7 +114,7 @@ export function BusinessGalleryLightboxHero({
   return (
     <>
       <section className="relative">
-        <div className="grid gap-7 lg:h-[420px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)]">
+        <div className="grid gap-7 lg:h-[440px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)] xl:h-[500px]">
           <MediaTile
             item={visibleItems[0]}
             index={0}

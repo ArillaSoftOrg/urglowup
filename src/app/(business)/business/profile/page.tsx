@@ -49,6 +49,9 @@ export default async function ProfilePage() {
       city: true,
       district: true,
       status: true,
+      instantConfirmation: true,
+      inAppPayment: true,
+      petFriendly: true,
       categories: {
         include: { category: { select: { name: true } } },
         take: 1,
@@ -69,6 +72,9 @@ export default async function ProfilePage() {
     city: business.city,
     district: business.district,
     status: business.status,
+    instantConfirmation: business.instantConfirmation,
+    inAppPayment: business.inAppPayment,
+    petFriendly: business.petFriendly,
     categoryName: business.categories[0]?.category.name ?? null,
   };
 

@@ -1,0 +1,4 @@
+ALTER TABLE "Business"
+  ADD COLUMN "instantConfirmation" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "inAppPayment" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "petFriendly" BOOLEAN NOT NULL DEFAULT false;
