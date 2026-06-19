@@ -336,14 +336,14 @@ export function PostCard({
               onClick={handleSave}
               aria-label={savedByCurrentUser ? "Kaydi kaldir" : "Kaydet"}
               className={cn(
-                "group flex items-center gap-1.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:text-rose-500",
-                savedByCurrentUser && "text-rose-500"
+                "group flex items-center gap-1.5 rounded-md p-1.5 text-muted-foreground transition-colors hover:text-brand-pink-foreground",
+                savedByCurrentUser && "text-brand-pink-foreground"
               )}
             >
               <Heart
                 className={cn(
                   "size-4 transition-transform group-hover:scale-110",
-                  savedByCurrentUser && "fill-rose-500"
+                  savedByCurrentUser && "fill-brand-pink"
                 )}
               />
             </button>

@@ -29,7 +29,7 @@ export function BusinessMobileNav({
   );
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/96 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-10px_30px_oklch(0.16_0.09_285_/_0.10)] backdrop-blur md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/96 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-md backdrop-blur md:hidden">
       <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;

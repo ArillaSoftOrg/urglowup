@@ -45,7 +45,7 @@ export function GalleryLightboxOverlay({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-4 top-4 text-white hover:bg-white/20"
+        className="absolute right-4 top-4 text-primary-foreground hover:bg-primary-foreground/20"
         onClick={onClose}
       >
         <X className="size-6" />
@@ -56,7 +56,7 @@ export function GalleryLightboxOverlay({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-foreground hover:bg-primary-foreground/20"
             onClick={(e) => {
               e.stopPropagation();
               onPrev();
@@ -68,7 +68,7 @@ export function GalleryLightboxOverlay({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-foreground hover:bg-primary-foreground/20"
             onClick={(e) => {
               e.stopPropagation();
               onNext();
@@ -120,13 +120,13 @@ export function GalleryLightboxOverlay({
           />
         )}
         {current.title && (
-          <p className="mt-2 text-center text-sm text-white/80">
+          <p className="mt-2 text-center text-sm text-primary-foreground/80">
             {current.title}
           </p>
         )}
       </div>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/60">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-primary-foreground/60">
         {currentIndex + 1} / {total}
       </div>
     </div>

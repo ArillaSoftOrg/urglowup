@@ -188,14 +188,10 @@ export default function CookiePolicyPage() {
 // ── Category badge ────────────────────────────────────────────────────────────
 
 const CATEGORY_COLOURS: Record<CookieCategory, string> = {
-  necessary:
-    "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
-  preference:
-    "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300",
-  analytics:
-    "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
-  marketing:
-    "bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300",
+  necessary: "bg-info/10 text-info-foreground",
+  preference: "bg-brand-purple/10 text-brand-purple-foreground",
+  analytics: "bg-success/10 text-success-foreground",
+  marketing: "bg-warning/10 text-warning-foreground",
 };
 
 function CategoryBadge({ category }: { category: CookieCategory }) {

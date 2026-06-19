@@ -43,19 +43,19 @@ export function HomeFAQ() {
           </p>
         </div>
 
-        <div className="divide-y divide-slate-200 border-y border-slate-200">
+        <div className="divide-y divide-border border-y border-border">
           {faqs.map((faq) => (
             <details key={faq.question} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-left text-lg font-semibold text-slate-950 marker:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-left text-lg font-semibold text-foreground marker:hidden">
                 <span>{faq.question}</span>
                 <span
                   aria-hidden="true"
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl leading-none transition-colors duration-200 group-open:bg-slate-950 group-open:text-white"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border text-xl leading-none transition-colors duration-200 group-open:bg-foreground group-open:text-primary-foreground"
                 >
                   +
                 </span>
               </summary>
-              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">
+              <p className="mt-4 max-w-2xl text-base leading-8 text-muted-foreground">
                 {faq.answer}
               </p>
             </details>

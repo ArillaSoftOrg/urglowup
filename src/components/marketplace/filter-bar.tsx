@@ -91,7 +91,7 @@ function ToggleButton({
         active
           ? fullWidth
             ? "border-foreground/20 bg-foreground text-background"
-            : "bg-brand text-white hover:bg-brand/90"
+            : "bg-brand-pink text-brand-pink-foreground hover:bg-surface-pink-hover"
           : "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
       )}
       onClick={onClick}
@@ -465,7 +465,7 @@ export function FilterBar({
           <SlidersHorizontal className="size-4" />
           Filtreler
           {advancedFilterCount > 0 && (
-            <span className="flex size-4 items-center justify-center rounded-full bg-brand text-[10px] font-medium text-white">
+            <span className="flex size-4 items-center justify-center rounded-full bg-brand-pink text-[10px] font-medium text-brand-pink-foreground">
               {advancedFilterCount}
             </span>
           )}

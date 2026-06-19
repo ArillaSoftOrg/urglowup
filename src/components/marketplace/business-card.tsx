@@ -2,14 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
-// Deterministic gradient based on business name initial — softer tones
+// Deterministic gradient based on business name initial — uses design tokens
 const COVER_GRADIENTS = [
-  "from-rose-200 to-pink-300",
-  "from-purple-200 to-violet-300",
-  "from-sky-200 to-blue-300",
-  "from-amber-200 to-orange-300",
-  "from-teal-200 to-emerald-300",
-  "from-stone-200 to-zinc-300",
+  "from-surface-pink to-brand-pink",
+  "from-surface-purple to-brand-purple",
+  "from-surface-cream to-brand-cream",
+  "from-brand-pink/30 to-brand-purple/40",
+  "from-brand-cream/60 to-surface-pink",
+  "from-surface-purple/60 to-surface-cream",
 ];
 
 function pickGradient(name: string): string {
@@ -49,7 +49,7 @@ export function BusinessCard({
           <div className={`size-full bg-gradient-to-br ${gradient}`} />
         )}
         {reviewCount === 0 && (
-          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
+          <span className="absolute left-2 top-2 rounded-full bg-card/90 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
             Yeni
           </span>
         )}

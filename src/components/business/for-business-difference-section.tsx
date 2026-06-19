@@ -69,10 +69,10 @@ export function ForBusinessDifferenceSection() {
     >
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 md:grid-cols-[1fr_1.1fr] md:items-start">
-          <h2 className="max-w-xl text-4xl font-extrabold leading-[1.08] tracking-normal text-slate-950 md:text-6xl">
+          <h2 className="max-w-xl text-4xl font-extrabold leading-[1.08] tracking-normal text-foreground md:text-6xl">
             UrGlowUp&apos;u özel yapan ne?
           </h2>
-          <p className="max-w-2xl text-lg leading-8 text-slate-800 md:pt-3">
+          <p className="max-w-2xl text-lg leading-8 text-muted-foreground md:pt-3">
             Salon ve spa yazılımlarının çoğu ekiplerin hızını keser. Bizim
             temel inancımız daha temiz, daha anlaşılır ve daha kârlı bir
             işletme deneyimi oluşturmak.
@@ -81,27 +81,27 @@ export function ForBusinessDifferenceSection() {
 
         <div
           id="why-different-panel"
-          className="mt-14 overflow-hidden rounded-[28px] border border-violet-100 bg-white/78 shadow-[0_24px_80px_oklch(0.25_0.05_300/0.10)]"
+          className="mt-14 overflow-hidden rounded-[28px] border border-brand-purple/10 bg-card/80 shadow-lg"
         >
           <div className="grid gap-10 p-6 md:grid-cols-[0.9fr_1fr] md:p-12">
             <div>
               <div className="flex items-center gap-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,oklch(0.84_0.10_265),oklch(0.87_0.12_330))] text-sm font-extrabold text-slate-950">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,oklch(0.84_0.10_265),oklch(0.87_0.12_330))] text-sm font-extrabold text-foreground">
                   {active.number}
                 </span>
-                <h3 className="text-2xl font-extrabold tracking-normal text-slate-950 md:text-3xl">
+                <h3 className="text-2xl font-extrabold tracking-normal text-foreground md:text-3xl">
                   {active.title}
                 </h3>
               </div>
-              <div className="mt-6 space-y-5 text-base leading-8 text-slate-800">
+              <div className="mt-6 space-y-5 text-base leading-8 text-muted-foreground">
                 {active.body.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-[28px] bg-[oklch(0.975_0.01_20)] p-5">
-              <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="rounded-[28px] bg-surface-pink p-5">
+              <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                 <Image
                   key={active.image + active.number}
                   src={active.image}
@@ -115,7 +115,7 @@ export function ForBusinessDifferenceSection() {
           </div>
         </div>
 
-        <div className="divide-y divide-violet-100">
+        <div className="divide-y divide-brand-purple/10">
           {beliefs.map((item, index) => {
             const isActive = index === activeIndex;
 
@@ -128,7 +128,7 @@ export function ForBusinessDifferenceSection() {
                 onClick={() => setActiveIndex(index)}
                 className={cn(
                   "flex w-full items-center justify-between gap-6 px-2 py-6 text-left transition-colors md:px-12",
-                  isActive ? "text-fuchsia-800" : "text-slate-950 hover:text-fuchsia-800"
+                  isActive ? "text-brand-purple-foreground" : "text-foreground hover:text-brand-purple-foreground"
                 )}
               >
                 <span className="flex min-w-0 items-center gap-4">
@@ -136,8 +136,8 @@ export function ForBusinessDifferenceSection() {
                     className={cn(
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold shadow-sm",
                       isActive
-                        ? "bg-fuchsia-100 text-fuchsia-800"
-                        : "bg-white text-slate-950"
+                        ? "bg-brand-purple/15 text-brand-purple-foreground"
+                        : "bg-card text-foreground"
                     )}
                   >
                     {item.number}

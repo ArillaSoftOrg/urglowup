@@ -114,16 +114,16 @@ export function BusinessGalleryLightboxHero({
   return (
     <>
       <section className="relative">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+        <div className="grid gap-6 lg:h-[640px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.95fr)]">
           <MediaTile
             item={visibleItems[0]}
             index={0}
             priority
-            className="aspect-[16/10] lg:aspect-[16/9]"
+            className="aspect-[16/10] lg:aspect-auto"
             onOpen={setOpenIndex}
           />
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-2 lg:gap-6">
             {visibleItems.slice(1, 3).map((item, i) => (
               <MediaTile
                 key={item.id}
@@ -153,7 +153,7 @@ export function BusinessGalleryLightboxHero({
             className="absolute bottom-4 right-4 inline-flex h-10 items-center gap-2 rounded-full bg-background px-4 text-sm font-semibold text-foreground shadow-md transition hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <ImageIcon className="size-4" />
-            Tum fotograflar
+            Tüm resimleri gör
           </button>
         )}
       </section>

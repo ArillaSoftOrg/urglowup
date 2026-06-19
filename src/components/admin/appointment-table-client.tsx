@@ -9,6 +9,7 @@ import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { adminBulkCancelAppointments } from "@/app/(admin)/admin/actions";
 import type { AdminAppointment } from "@/lib/queries/admin";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
+import type { BadgeVariant } from "@/components/ui/badge";
 
 const STATUSES: AppointmentStatus[] = [
   "PENDING",
@@ -30,7 +31,7 @@ interface AppointmentTableClientProps {
   formatDate: (date: Date | string) => string;
   formatAge: (createdAt: Date) => string;
   statusLabels: Record<AppointmentStatus, string>;
-  statusColors: Record<AppointmentStatus, string>;
+  statusVariants: Record<AppointmentStatus, BadgeVariant>;
 }
 
 export function AppointmentTableClient({
@@ -42,7 +43,7 @@ export function AppointmentTableClient({
   formatDate,
   formatAge,
   statusLabels,
-  statusColors,
+  statusVariants,
 }: AppointmentTableClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -133,7 +134,7 @@ export function AppointmentTableClient({
         <CardContent className="p-4">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-900 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Status
               </label>
               <div className="flex flex-wrap gap-2">
@@ -147,8 +148,8 @@ export function AppointmentTableClient({
                       onClick={() => handleStatusFilterChange(status)}
                       className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                         isSelected
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-200 text-slate-800 hover:bg-slate-300"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
                       }`}
                     >
                       {statusLabels[status]}
@@ -159,7 +160,7 @@ export function AppointmentTableClient({
             </div>
 
             <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-slate-900 mb-2">
+              <label htmlFor="businessName" className="block text-sm font-medium text-foreground mb-2">
                 Business Name
               </label>
               <input
@@ -168,7 +169,7 @@ export function AppointmentTableClient({
                 placeholder="Search business..."
                 value={getFilterValue("businessName")}
                 onChange={(e) => handleBusinessNameChange(e.target.value)}
-                className="w-full max-w-sm rounded border border-slate-300 px-3 py-2 text-sm"
+                className="w-full max-w-sm rounded border border-input px-3 py-2 text-sm"
               />
             </div>
           </div>
@@ -177,15 +178,15 @@ export function AppointmentTableClient({
 
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-info/30 bg-info/10">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-blue-900">
+              <p className="text-sm font-medium text-info-foreground">
                 {selectedIds.size} appointment{selectedIds.size !== 1 ? "s" : ""} selected
               </p>
               <button
                 onClick={() => setShowBulkCancel(true)}
-                className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                className="rounded bg-destructive px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-destructive/90"
               >
                 Bulk Cancel
               </button>
@@ -199,14 +200,14 @@ export function AppointmentTableClient({
                   placeholder="Reason for bulk cancellation (required)"
                   maxLength={500}
                   disabled={isPending}
-                  className="w-full rounded border border-slate-300 p-2 text-sm placeholder-slate-500 disabled:bg-slate-100"
+                  className="w-full rounded border border-input p-2 text-sm placeholder:text-muted-foreground disabled:bg-muted"
                   rows={3}
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleBulkCancel}
                     disabled={isPending}
-                    className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-slate-400"
+                    className="rounded bg-destructive px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-destructive/90 disabled:opacity-50"
                   >
                     {isPending ? "Processing..." : "Confirm Bulk Cancel"}
                   </button>
@@ -216,7 +217,7 @@ export function AppointmentTableClient({
                       setBulkReason("");
                     }}
                     disabled={isPending}
-                    className="rounded bg-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-400 disabled:bg-slate-200"
+                    className="rounded bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/80 disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -232,24 +233,24 @@ export function AppointmentTableClient({
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50">
+              <thead className="border-b border-border bg-muted">
                 <tr>
                   <th className="w-10 px-4 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === appointments.length && appointments.length > 0}
                       onChange={handleSelectAll}
-                      className="rounded border-slate-300"
+                      className="rounded border-input"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Business</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Customer</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Service</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Appt Date</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Age</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900">Notes</th>
-                  <th className="px-4 py-3 text-left font-semibold text-slate-900"></th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground">Status</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground">Business</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground">Customer</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground">Service</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground">Appt Date</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground">Age</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground">Notes</th>
+                  <th className="px-4 py-3 text-left font-semibold text-foreground"></th>
                 </tr>
               </thead>
               <tbody>
@@ -257,8 +258,8 @@ export function AppointmentTableClient({
                   <tr>
                     <td colSpan={8} className="py-8 text-center">
                       <div className="flex flex-col items-center">
-                        <Calendar className="size-8 text-slate-400" />
-                        <p className="mt-2 text-slate-600">No appointments found</p>
+                        <Calendar className="size-8 text-muted-foreground" />
+                        <p className="mt-2 text-muted-foreground">No appointments found</p>
                       </div>
                     </td>
                   </tr>
@@ -272,32 +273,32 @@ export function AppointmentTableClient({
                       .join(" ");
 
                     return (
-                      <tr key={appt.id} className="border-b border-slate-100 hover:bg-slate-50">
+                      <tr key={appt.id} className="border-b border-border hover:bg-muted/50">
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
                             checked={selectedIds.has(appt.id)}
                             onChange={() => handleToggleSelect(appt.id)}
-                            className="rounded border-slate-300"
+                            className="rounded border-input"
                           />
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className={`text-xs ${statusColors[appt.status]}`}>
+                          <Badge variant={statusVariants[appt.status]} className="text-xs">
                             {statusLabels[appt.status]}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-slate-900">{appt.business.name}</td>
-                        <td className="px-4 py-3 text-slate-600">
+                        <td className="px-4 py-3 text-foreground">{appt.business.name}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
                           {customerName || appt.customer.email}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">{appt.service.name}</td>
-                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                        <td className="px-4 py-3 text-muted-foreground">{appt.service.name}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                           {formatDate(appt.requestedDate)} at {appt.requestedTime}
                         </td>
-                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                           {formatAge(appt.createdAt)}
                         </td>
-                        <td className="px-4 py-3 text-slate-600 max-w-xs truncate">
+                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
                           {appt.businessNote && (
                             <span className="text-xs italic">{appt.businessNote}</span>
                           )}
@@ -321,7 +322,7 @@ export function AppointmentTableClient({
           {/* Pagination */}
           {pageCount > 1 && (
             <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-muted-foreground">
                 Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
               </p>
 
@@ -329,7 +330,7 @@ export function AppointmentTableClient({
                 <button
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page === 1}
-                  className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded border border-input px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
@@ -340,8 +341,8 @@ export function AppointmentTableClient({
                     onClick={() => handlePageChange(p)}
                     className={`rounded px-3 py-2 text-sm font-medium ${
                       p === page
-                        ? "bg-blue-600 text-white"
-                        : "border border-slate-300 hover:bg-slate-50"
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-input hover:bg-slate-50"
                     }`}
                   >
                     {p}
@@ -351,7 +352,7 @@ export function AppointmentTableClient({
                 <button
                   onClick={() => handlePageChange(page + 1)}
                   disabled={page === pageCount}
-                  className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded border border-input px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
                 >
                   <ChevronRight className="size-4" />
                 </button>

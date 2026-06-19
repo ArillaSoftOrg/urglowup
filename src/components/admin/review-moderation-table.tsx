@@ -23,11 +23,13 @@ import {
 } from "@/app/(admin)/admin/actions";
 import type { AdminReview } from "@/lib/queries/admin";
 
-const REVIEW_STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  APPROVED: "bg-green-100 text-green-800",
-  HIDDEN: "bg-gray-100 text-gray-800",
-  REMOVED: "bg-red-100 text-red-800",
+import type { BadgeVariant } from "@/components/ui/badge";
+
+const REVIEW_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  PENDING: "warning",
+  APPROVED: "success",
+  HIDDEN: "neutral",
+  REMOVED: "destructive",
 };
 
 function formatDate(date: Date): string {
@@ -47,7 +49,7 @@ function StarRating({ rating }: { rating: number }) {
           key={i}
           className={`size-3 ${
             i < filledStars
-              ? "fill-amber-400 text-amber-400"
+              ? "fill-rating text-rating"
               : "text-muted-foreground/30"
           }`}
         />
@@ -126,7 +128,7 @@ function ReviewRow({ review }: { review: AdminReview }) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <StarRating rating={review.rating} />
-          <Badge className={`text-xs ${REVIEW_STATUS_COLORS[review.status]}`}>
+          <Badge variant={REVIEW_STATUS_VARIANT[review.status] ?? "neutral"} className="text-xs">
             {review.status}
           </Badge>
           <span className="text-xs text-muted-foreground">

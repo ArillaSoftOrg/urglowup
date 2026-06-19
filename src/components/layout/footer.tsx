@@ -101,7 +101,7 @@ function FooterLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="text-[15px] font-medium text-slate-700 transition-colors duration-200 hover:text-violet-700"
+      className="text-[15px] font-medium text-foreground/70 transition-colors duration-200 hover:text-brand-purple-foreground"
     >
       {label}
     </Link>
@@ -110,8 +110,8 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 
 export function Footer() {
   return (
-    <footer className="bg-[oklch(0.985_0.008_300)] px-3 pb-4 pt-10 text-slate-950 md:px-6 md:pt-14">
-      <div className="mx-auto max-w-[1800px] overflow-hidden rounded-t-2xl border border-violet-200/80 border-t-4 border-t-violet-600 bg-[oklch(0.992_0.006_300)] shadow-[0_22px_70px_oklch(0.42_0.12_300/0.10)]">
+    <footer className="bg-surface-purple px-3 pb-4 pt-10 md:px-6 md:pt-14">
+      <div className="mx-auto max-w-[1800px] overflow-hidden rounded-t-2xl border border-brand-purple/20 border-t-4 border-t-brand-purple-foreground bg-background shadow-lg">
         <div className="px-6 py-5 sm:px-8 md:px-10 lg:px-16 lg:py-8">
           <div className="grid gap-6 lg:grid-cols-[1fr_2.8fr] lg:gap-10">
             {/* Brand + social */}
@@ -119,16 +119,16 @@ export function Footer() {
               <div>
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-3 text-3xl font-extrabold tracking-normal text-slate-950"
+                  className="inline-flex items-center gap-3 text-3xl font-extrabold tracking-normal text-foreground"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full text-violet-700">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full text-brand-purple-foreground">
                     <Sparkles aria-hidden="true" className="h-10 w-10" />
                   </span>
                   <span>
-                    Ur<span className="text-violet-700">Glow</span>Up
+                    Ur<span className="text-brand-purple-foreground">Glow</span>Up
                   </span>
                 </Link>
-                <p className="mt-4 max-w-xs text-[15px] leading-7 text-slate-600">
+                <p className="mt-4 max-w-xs text-[15px] leading-7 text-muted-foreground">
                   Güzellik, bakım ve wellness hizmetlerini keşfet. Yakındaki
                   uzmanlardan kolayca randevu al.
                 </p>
@@ -142,7 +142,7 @@ export function Footer() {
                       key={social.label}
                       href={social.href}
                       aria-label={social.label}
-                      className="text-slate-500 transition-colors duration-200 hover:text-violet-700"
+                      className="text-muted-foreground transition-colors duration-200 hover:text-brand-purple-foreground"
                     >
                       <Icon aria-hidden="true" className="h-5 w-5" />
                     </Link>
@@ -156,7 +156,7 @@ export function Footer() {
               <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
                 {footerColumns.map((col) => (
                   <div key={col.heading}>
-                    <p className="mb-4 text-base font-extrabold text-slate-950">
+                    <p className="mb-4 text-base font-extrabold text-foreground">
                       {col.heading}
                     </p>
                     <ul className="space-y-2">
@@ -176,16 +176,16 @@ export function Footer() {
               </div>
 
               {/* Compact trust row */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-violet-100 pt-5 text-sm text-slate-500">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-brand-purple/10 pt-5 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5 text-violet-500" />
+                  <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5 text-brand-purple-foreground" />
                   Güvenli ödemeler
                 </span>
-                <span aria-hidden="true" className="text-violet-300">·</span>
+                <span aria-hidden="true" className="text-brand-purple/30">·</span>
                 <span>Doğrulanmış işletmeler</span>
-                <span aria-hidden="true" className="text-violet-300">·</span>
+                <span aria-hidden="true" className="text-brand-purple/30">·</span>
                 <span>Hızlı rezervasyon</span>
-                <span aria-hidden="true" className="text-violet-300">·</span>
+                <span aria-hidden="true" className="text-brand-purple/30">·</span>
                 <span>Destek merkezi</span>
               </div>
             </div>
@@ -193,40 +193,40 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-violet-200/80 px-6 py-5 sm:px-8 md:px-10 lg:px-16">
+        <div className="border-t border-brand-purple/10 px-6 py-5 sm:px-8 md:px-10 lg:px-16">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-            <div className="text-sm leading-6 text-slate-600">
+            <div className="text-sm leading-6 text-muted-foreground">
               <p>© {new Date().getFullYear()} UrGlowUp. Tüm hakları saklıdır.</p>
               <p>Türkiye&apos;de güzellik ve bakım hizmetleri için randevu platformu.</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-700">
+            <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-foreground/70">
               <button
                 type="button"
-                className="inline-flex h-10 items-center gap-2 rounded-md px-2 transition-colors hover:bg-violet-50 hover:text-violet-700"
+                className="inline-flex h-10 items-center gap-2 rounded-md px-2 transition-colors hover:bg-surface-purple hover:text-brand-purple-foreground"
               >
                 <Globe2 aria-hidden="true" className="h-5 w-5" />
                 Türkiye
                 <ChevronDown aria-hidden="true" className="h-4 w-4" />
               </button>
-              <span className="hidden h-10 w-px bg-violet-200 sm:block" />
+              <span className="hidden h-10 w-px bg-brand-purple/20 sm:block" />
               <button
                 type="button"
-                className="inline-flex h-10 items-center gap-2 rounded-md px-2 transition-colors hover:bg-violet-50 hover:text-violet-700"
+                className="inline-flex h-10 items-center gap-2 rounded-md px-2 transition-colors hover:bg-surface-purple hover:text-brand-purple-foreground"
               >
                 <Languages aria-hidden="true" className="h-5 w-5" />
                 Türkçe
                 <ChevronDown aria-hidden="true" className="h-4 w-4" />
               </button>
-              <span className="hidden h-10 w-px bg-violet-200 sm:block" />
+              <span className="hidden h-10 w-px bg-brand-purple/20 sm:block" />
               <div className="flex items-center gap-3">
-                <span className="rounded-md border border-violet-100 bg-white px-3 py-2 text-base font-black italic text-blue-800">
+                <span className="rounded-md border border-border bg-card px-3 py-2 text-base font-black italic text-muted-foreground">
                   VISA
                 </span>
-                <span className="rounded-md border border-violet-100 bg-white px-3 py-2 text-base font-black text-orange-600">
+                <span className="rounded-md border border-border bg-card px-3 py-2 text-base font-black text-muted-foreground">
                   ●●
                 </span>
-                <span className="rounded-md border border-violet-100 bg-white px-3 py-2 text-base font-black text-emerald-700">
+                <span className="rounded-md border border-border bg-card px-3 py-2 text-base font-black text-muted-foreground">
                   troy
                 </span>
               </div>

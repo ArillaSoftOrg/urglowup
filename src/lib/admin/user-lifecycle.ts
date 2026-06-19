@@ -31,18 +31,18 @@ export const LIFECYCLE_LABELS: Record<LifecycleSegment, string> = {
 };
 
 export const LIFECYCLE_COLORS: Record<LifecycleSegment, string> = {
-  UNVERIFIED: "bg-yellow-100 text-yellow-900",
-  SUSPENDED: "bg-red-100 text-red-900",
-  NEW: "bg-green-100 text-green-900",
-  ONBOARDING: "bg-blue-100 text-blue-900",
-  NEVER_BOOKED: "bg-gray-100 text-gray-900",
-  FIRST_BOOKER: "bg-emerald-100 text-emerald-900",
-  ACTIVE: "bg-green-100 text-green-900",
-  RETURNING: "bg-teal-100 text-teal-900",
-  INACTIVE: "bg-orange-100 text-orange-900",
-  CHURNED: "bg-red-100 text-red-900",
-  OWNER_ACTIVE: "bg-indigo-100 text-indigo-900",
-  OWNER_DORMANT: "bg-amber-100 text-amber-900",
+  UNVERIFIED: "bg-warning text-warning-foreground",
+  SUSPENDED: "bg-destructive/10 text-destructive",
+  NEW: "bg-success text-success-foreground",
+  ONBOARDING: "bg-info text-info-foreground",
+  NEVER_BOOKED: "bg-neutral text-neutral-foreground",
+  FIRST_BOOKER: "bg-success text-success-foreground",
+  ACTIVE: "bg-success text-success-foreground",
+  RETURNING: "bg-info text-info-foreground",
+  INACTIVE: "bg-warning text-warning-foreground",
+  CHURNED: "bg-destructive/10 text-destructive",
+  OWNER_ACTIVE: "bg-info text-info-foreground",
+  OWNER_DORMANT: "bg-warning text-warning-foreground",
 };
 
 function getDaysAgo(date: Date | null | undefined): number | null {

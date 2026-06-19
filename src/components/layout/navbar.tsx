@@ -85,7 +85,7 @@ export async function Navbar({ locale = "tr", hideExploreLinks = false }: Navbar
               href={accountHref?.href ?? "/account"}
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-[0_1px_0_oklch(0.145_0_0/0.04)] md:inline-flex"
+                "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-xs md:inline-flex"
               )}
             >
               {accountHref?.label ?? dict.nav.account}
@@ -105,7 +105,7 @@ export async function Navbar({ locale = "tr", hideExploreLinks = false }: Navbar
                 href={businessHref}
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
-                  "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-[0_1px_0_oklch(0.145_0_0/0.04)] sm:inline-flex"
+                  "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-xs sm:inline-flex"
                 )}
               >
                 {dict.nav.listBusiness}

@@ -45,7 +45,7 @@ export function CoverSection({ business }: { business: BusinessWithDetails }) {
             priority
           />
         ) : (
-          <div className="size-full bg-gradient-to-br from-[oklch(0.88_0.06_10)] via-[oklch(0.91_0.04_300)] to-[oklch(0.97_0.01_85)]" />
+          <div className="size-full bg-gradient-to-br from-surface-pink via-surface-purple to-surface-cream" />
         )}
         {/* Gradient overlay anchors the logo and softens the bottom edge */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />

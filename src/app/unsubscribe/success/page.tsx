@@ -1,11 +1,11 @@
 export default function UnsubscribeSuccessPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="max-w-md w-full">
         <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-success/10">
             <svg
-              className="h-6 w-6 text-green-600"
+              className="h-6 w-6 text-success-foreground"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="1.5"
@@ -18,14 +18,14 @@ export default function UnsubscribeSuccessPage() {
               />
             </svg>
           </div>
-          <h1 className="mt-4 text-lg font-medium text-gray-900">
+          <h1 className="mt-4 text-lg font-medium text-foreground">
             Successfully Unsubscribed
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             You have been removed from our marketing communications. You will no longer
             receive promotional emails or messages.
           </p>
-          <p className="mt-4 text-xs text-gray-500">
+          <p className="mt-4 text-xs text-muted-foreground">
             You will continue to receive transactional emails related to your account and bookings.
           </p>
         </div>

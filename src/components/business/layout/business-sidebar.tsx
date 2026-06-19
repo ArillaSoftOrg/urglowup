@@ -42,14 +42,14 @@ export function BusinessSidebar({
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-business-nav text-business-nav-fg shadow-[0_10px_30px_oklch(0.16_0.09_285_/_0.20)]">
+    <header className="sticky top-0 z-50 w-full border-b border-business-nav-fg/10 bg-business-nav text-business-nav-fg shadow-lg">
       <div className="mx-auto flex h-16 max-w-[1680px] items-center gap-5 px-4 md:px-8 lg:px-10">
         <Link
           href="/business/dashboard"
           className="flex shrink-0 items-center gap-2.5"
         >
-          <span className="flex size-8 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/10">
-            <Sparkles className="size-4 text-[oklch(0.88_0.12_345)]" />
+          <span className="flex size-8 items-center justify-center rounded-xl bg-business-nav-fg/[0.12] ring-1 ring-business-nav-fg/10">
+            <Sparkles className="size-4 text-brand-pink" />
           </span>
           <span className="hidden text-base font-bold tracking-tight sm:block">
             UrGlowUp
@@ -68,8 +68,8 @@ export function BusinessSidebar({
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-white/14 text-business-nav-fg shadow-[inset_0_0_0_1px_oklch(1_0_0_/_0.08)]"
-                    : "text-business-nav-muted hover:bg-white/9 hover:text-business-nav-fg"
+                    ? "bg-business-nav-fg/[0.14] text-business-nav-fg ring-1 ring-business-nav-fg/10"
+                    : "text-business-nav-muted hover:bg-business-nav-fg/[0.09] hover:text-business-nav-fg"
                 )}
               >
                 <Icon className="size-4 shrink-0" />

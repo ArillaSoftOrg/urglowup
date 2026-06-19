@@ -1,10 +1,9 @@
 type AuthFeedbackTone = "success" | "error" | "info";
 
 const toneClasses: Record<AuthFeedbackTone, string> = {
-  success:
-    "bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200",
+  success: "bg-success/10 text-success-foreground",
   error: "bg-destructive/10 text-destructive",
-  info: "bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+  info: "bg-warning/10 text-warning-foreground",
 };
 
 export function AuthFormFeedback({

@@ -4,9 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { adminCancelAppointment } from "@/app/(admin)/admin/actions";
 import type { AdminAppointmentDetail } from "@/lib/queries/admin";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
+import type { BadgeVariant } from "@/components/ui/badge";
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   PENDING: "Pending",
@@ -19,15 +21,15 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
   NO_SHOW: "No Show",
 };
 
-const STATUS_BADGE: Record<AppointmentStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  CONFIRMED: "bg-blue-100 text-blue-800",
-  CHECKED_IN: "bg-cyan-100 text-cyan-800",
-  REJECTED: "bg-red-100 text-red-800",
-  CANCELLED_BY_CUSTOMER: "bg-slate-100 text-slate-700",
-  CANCELLED_BY_BUSINESS: "bg-orange-100 text-orange-800",
-  COMPLETED: "bg-green-100 text-green-800",
-  NO_SHOW: "bg-purple-100 text-purple-800",
+const STATUS_BADGE_VARIANT: Record<AppointmentStatus, BadgeVariant> = {
+  PENDING: "warning",
+  CONFIRMED: "info",
+  CHECKED_IN: "info",
+  REJECTED: "destructive",
+  CANCELLED_BY_CUSTOMER: "neutral",
+  CANCELLED_BY_BUSINESS: "neutral",
+  COMPLETED: "success",
+  NO_SHOW: "destructive",
 };
 
 const ALL_STATUSES: AppointmentStatus[] = [
@@ -91,12 +93,12 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-mono text-slate-400">ID: {appointment.id}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs font-mono text-muted-foreground">ID: {appointment.id}</p>
+          <p className="text-xs text-muted-foreground">
             Created {new Date(appointment.createdAt).toLocaleString("en-US")}
           </p>
         </div>
-        <Badge className={`self-start text-sm px-3 py-1 ${STATUS_BADGE[appointment.status]}`}>
+        <Badge variant={STATUS_BADGE_VARIANT[appointment.status]} className="self-start text-sm px-3 py-1">
           {STATUS_LABELS[appointment.status]}
         </Badge>
       </div>
@@ -104,7 +106,7 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
       {/* Status timeline */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-900">Status Timeline</CardTitle>
+          <CardTitle className="text-sm font-semibold">Status Timeline</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-1 flex-wrap">
@@ -122,13 +124,14 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
               return (
                 <span
                   key={s}
-                  className={`px-2 py-1 rounded text-xs font-medium ${
+                  className={cn(
+                    "px-2 py-1 rounded text-xs font-medium",
                     isCurrent
                       ? isCurrentTerminal
-                        ? "bg-red-600 text-white"
-                        : "bg-blue-600 text-white"
-                      : "bg-slate-100 text-slate-400"
-                  }`}
+                        ? "bg-destructive text-primary-foreground"
+                        : "bg-info text-info-foreground"
+                      : "bg-muted text-muted-foreground"
+                  )}
                 >
                   {STATUS_LABELS[s]}
                 </span>
@@ -136,7 +139,7 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
             })}
           </div>
           {appointment.cancelledReason && (
-            <p className="mt-3 rounded bg-red-50 border border-red-100 px-3 py-2 text-sm text-red-800">
+            <p className="mt-3 rounded bg-destructive/5 border border-destructive/20 px-3 py-2 text-sm text-destructive">
               <span className="font-semibold">Cancellation reason:</span>{" "}
               {appointment.cancelledReason}
             </p>
@@ -148,17 +151,17 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
         {/* Customer */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-900">Customer</CardTitle>
+            <CardTitle className="text-sm font-semibold">Customer</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
-            <p className="font-medium text-slate-900">{customerName}</p>
-            <p className="text-slate-600">{appointment.customer.email}</p>
+            <p className="font-medium">{customerName}</p>
+            <p className="text-muted-foreground">{appointment.customer.email}</p>
             {appointment.customer.phone && (
-              <p className="text-slate-600">{appointment.customer.phone}</p>
+              <p className="text-muted-foreground">{appointment.customer.phone}</p>
             )}
             <a
               href={`/admin/users/${appointment.customer.id}`}
-              className="inline-block mt-2 text-xs text-blue-600 hover:underline"
+              className="inline-block mt-2 text-xs text-primary hover:underline"
             >
               View user profile →
             </a>
@@ -168,28 +171,28 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
         {/* Business + Service */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-900">Business & Service</CardTitle>
+            <CardTitle className="text-sm font-semibold">Business & Service</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
-            <p className="font-medium text-slate-900">{appointment.business.name}</p>
+            <p className="font-medium">{appointment.business.name}</p>
             <a
               href={`/admin/businesses/${appointment.business.id}`}
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-primary hover:underline"
             >
               View business →
             </a>
-            <p className="mt-2 text-slate-700">
-              <span className="font-medium">Service:</span> {appointment.service.name}
+            <p className="mt-2 text-muted-foreground">
+              <span className="font-medium text-foreground">Service:</span> {appointment.service.name}
             </p>
-            <p className="text-slate-600">
+            <p className="text-muted-foreground">
               {appointment.service.durationMinutes} min
               {appointment.service.price != null && (
                 <> · {appointment.service.price} TL</>
               )}
             </p>
             {appointment.professional && (
-              <p className="text-slate-600">
-                <span className="font-medium">Professional:</span>{" "}
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Professional:</span>{" "}
                 {appointment.professional.displayName}
                 {appointment.professional.title && ` · ${appointment.professional.title}`}
               </p>
@@ -201,40 +204,40 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
       {/* Appointment Details */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-900">Appointment Details</CardTitle>
+          <CardTitle className="text-sm font-semibold">Appointment Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Date</p>
-              <p className="text-slate-900">{apptDate}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Date</p>
+              <p className="text-foreground">{apptDate}</p>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Time</p>
-              <p className="text-slate-900">{appointment.requestedTime}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Time</p>
+              <p className="text-foreground">{appointment.requestedTime}</p>
             </div>
           </div>
           {appointment.customerNote && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Customer Note</p>
-              <p className="mt-1 rounded bg-slate-50 p-2 text-slate-700">{appointment.customerNote}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Customer Note</p>
+              <p className="mt-1 rounded bg-muted p-2 text-muted-foreground">{appointment.customerNote}</p>
             </div>
           )}
           {appointment.businessNote && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Business Note</p>
-              <p className="mt-1 rounded bg-slate-50 p-2 text-slate-700">{appointment.businessNote}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Business Note</p>
+              <p className="mt-1 rounded bg-muted p-2 text-muted-foreground">{appointment.businessNote}</p>
             </div>
           )}
           {appointment.review && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Review</p>
-              <div className="mt-1 rounded bg-slate-50 p-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Review</p>
+              <div className="mt-1 rounded bg-muted p-2">
                 <p className="font-medium">Rating: {appointment.review.rating}/5</p>
                 {appointment.review.comment && (
-                  <p className="text-slate-700 mt-1">{appointment.review.comment}</p>
+                  <p className="text-muted-foreground mt-1">{appointment.review.comment}</p>
                 )}
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Status: {appointment.review.status} ·{" "}
                   {new Date(appointment.review.createdAt).toLocaleDateString("en-US")}
                 </p>
@@ -246,21 +249,21 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
 
       {/* Cancel Action */}
       {isCancellable && (
-        <Card className="border-red-200">
+        <Card className="border-destructive/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-red-700">Cancel Appointment</CardTitle>
+            <CardTitle className="text-sm font-semibold text-destructive">Cancel Appointment</CardTitle>
           </CardHeader>
           <CardContent>
             {!showCancel ? (
               <button
                 onClick={() => setShowCancel(true)}
-                className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                className="rounded bg-destructive px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-destructive/90"
               >
                 Cancel this appointment
               </button>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   This will set the status to <strong>CANCELLED_BY_BUSINESS</strong> and notify the customer by email.
                 </p>
                 <textarea
@@ -270,20 +273,20 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
                   maxLength={500}
                   disabled={isPending}
                   rows={3}
-                  className="w-full rounded border border-slate-300 p-2 text-sm placeholder-slate-400 disabled:bg-slate-100"
+                  className="w-full rounded border border-input p-2 text-sm placeholder:text-muted-foreground disabled:bg-muted"
                 />
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   {cancelReason.length}/500 characters
                   {cancelReason.length > 0 && cancelReason.length < 10 && (
-                    <span className="text-amber-600"> · {10 - cancelReason.length} more needed</span>
+                    <span className="text-warning-foreground"> · {10 - cancelReason.length} more needed</span>
                   )}
                 </p>
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-sm text-destructive">{error}</p>}
                 <div className="flex gap-2">
                   <button
                     onClick={handleCancel}
                     disabled={isPending}
-                    className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-slate-400"
+                    className="rounded bg-destructive px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-destructive/90 disabled:opacity-50"
                   >
                     {isPending ? "Cancelling…" : "Confirm Cancellation"}
                   </button>
@@ -294,7 +297,7 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
                       setError(null);
                     }}
                     disabled={isPending}
-                    className="rounded border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                   >
                     Back
                   </button>
@@ -309,7 +312,7 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
       {auditLogs.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-slate-900">Admin Audit Log</CardTitle>
+            <CardTitle className="text-sm font-semibold">Admin Audit Log</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -318,15 +321,15 @@ export function AppointmentDetail({ data }: AppointmentDetailProps) {
                   [log.admin.firstName, log.admin.lastName].filter(Boolean).join(" ") ||
                   log.admin.email;
                 return (
-                  <div key={log.id} className="rounded bg-slate-50 p-3 text-xs">
+                  <div key={log.id} className="rounded bg-muted p-3 text-xs">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono font-medium text-slate-700">{log.action}</span>
-                      <span className="text-slate-400">
+                      <span className="font-mono font-medium text-foreground">{log.action}</span>
+                      <span className="text-muted-foreground">
                         {new Date(log.createdAt).toLocaleString("en-US")}
                       </span>
                     </div>
-                    {log.details && <p className="mt-1 text-slate-600">{log.details}</p>}
-                    <p className="mt-1 text-slate-400">by {adminName}</p>
+                    {log.details && <p className="mt-1 text-muted-foreground">{log.details}</p>}
+                    <p className="mt-1 text-muted-foreground">by {adminName}</p>
                   </div>
                 );
               })}

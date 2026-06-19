@@ -176,7 +176,7 @@ export function ForBusinessSuitableSection() {
                 className="object-cover transition duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/5" />
-              <h3 className="absolute bottom-5 left-5 right-5 text-xl font-bold tracking-normal text-white md:text-2xl">
+              <h3 className="absolute bottom-5 left-5 right-5 text-xl font-bold tracking-normal text-primary-foreground md:text-2xl">
                 {type.title}
               </h3>
             </article>

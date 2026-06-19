@@ -1,18 +1,14 @@
 import { notFound } from "next/navigation";
-import { getBusinessBySlug, getGoogleReviewsForBusiness } from "@/lib/queries/business";
+import {
+  getBusinessBySlug,
+  getGoogleReviewsForBusiness,
+} from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
 import { buildAlternates } from "@/lib/i18n-metadata";
 import { absoluteUrl } from "@/lib/seo";
-import { ProfileHeader } from "@/components/business-profile/profile-header";
-import { AboutSection } from "@/components/business-profile/about-section";
-import { ServicesSection } from "@/components/business-profile/services-section";
-import { ReviewsSection } from "@/components/business-profile/reviews-section";
-import { LocationSection } from "@/components/business-profile/location-section";
-import { HoursSection, isBusinessOpen } from "@/components/business-profile/hours-section";
-import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
-import { BusinessGalleryHero } from "@/components/business-profile/business-gallery-hero";
+import { DesktopBusinessProfile } from "@/components/business-profile/desktop-business-profile";
+import { isBusinessOpen } from "@/components/business-profile/hours-section";
 import { MobileBusinessProfile } from "@/components/business-profile/mobile-business-profile";
-import Link from "next/link";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -76,7 +72,6 @@ export default async function BusinessProfilePage({ params }: PageProps) {
     .filter(Boolean)
     .join(", ");
   const location = [business.district, business.city].filter(Boolean).join(", ");
-  const primaryCategory = business.categories[0]?.category;
   const pricedServices = business.services
     .map((service) => Number(service.price))
     .filter((price) => Number.isFinite(price) && price > 0);
@@ -161,11 +156,9 @@ export default async function BusinessProfilePage({ params }: PageProps) {
   return (
     <>
       <style>{`
-        @media (max-width: 1023px) {
-          [data-navbar],
-          body > footer {
-            display: none !important;
-          }
+        [data-navbar],
+        body > footer {
+          display: none !important;
         }
       `}</style>
 
@@ -183,72 +176,14 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           isOpen={isOpen}
           location={location}
         />
-
-        <div className="container mx-auto hidden px-4 py-6 sm:py-8 lg:block">
-          <nav className="mb-7 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground">
-              Ana sayfa
-            </Link>
-            <span aria-hidden>·</span>
-            {primaryCategory && (
-              <>
-                <Link
-                  href={`/category/${primaryCategory.slug}`}
-                  className="hover:text-foreground"
-                >
-                  {primaryCategory.name}
-                </Link>
-                <span aria-hidden>·</span>
-              </>
-            )}
-            {business.city && (
-              <>
-                <Link
-                  href={`/city/${encodeURIComponent(business.city)}`}
-                  className="hover:text-foreground"
-                >
-                  {business.city}
-                </Link>
-                <span aria-hidden>·</span>
-              </>
-            )}
-            <span className="font-medium text-foreground">{business.name}</span>
-          </nav>
-
-          <div className="space-y-7">
-            <ProfileHeader
-              business={business}
-              reviewSummary={reviewSummary}
-              isOpen={isOpen}
-              location={location}
-              locale="tr"
-            />
-            <BusinessGalleryHero business={business} />
-          </div>
-        </div>
-
-        <div className="container mx-auto hidden px-4 pb-8 lg:block">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-            <div className="min-w-0 flex-1 space-y-8">
-              <ServicesSection business={business} />
-              <AboutSection business={business} />
-              <HoursSection business={business} />
-              <ReviewsSection
-                business={business}
-                reviewSummary={reviewSummary}
-                googleReviews={googleReviews}
-              />
-              <LocationSection business={business} />
-              <div className="h-20 lg:hidden" />
-            </div>
-
-            <aside className="hidden w-80 shrink-0 lg:block">
-              <ContactSidebar business={business} reviewSummary={reviewSummary} />
-            </aside>
-          </div>
-        </div>
+        <DesktopBusinessProfile
+          business={business}
+          reviewSummary={reviewSummary}
+          googleReviews={googleReviews}
+          isOpen={isOpen}
+          location={location}
+        />
       </main>
-
     </>
   );
 }

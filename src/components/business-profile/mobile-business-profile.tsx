@@ -237,7 +237,7 @@ function HoursPreview({ business }: { business: BusinessWithDetails }) {
                 <span
                   className={cn(
                     "size-3 shrink-0 rounded-full bg-muted-foreground/35",
-                    hour.isOpen && "bg-green-500",
+                    hour.isOpen && "bg-success-foreground",
                   )}
                 />
                 {DAY_LABELS[hour.dayOfWeek]}
@@ -340,7 +340,7 @@ function ReviewsPreview({
         <h2 className="text-xl font-bold tracking-normal">Değerlendirmeler</h2>
         {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
           <span className="inline-flex items-center gap-1 text-sm font-bold">
-            <Star className="size-4 fill-amber-400 text-amber-400" />
+            <Star className="size-4 fill-rating text-rating" />
             {reviewSummary.averageRating.toFixed(1)}
           </span>
         )}
@@ -458,7 +458,7 @@ export function MobileBusinessProfile({
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
           {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null ? (
             <span className="inline-flex items-center gap-1 font-bold">
-              <Star className="size-4 fill-amber-400 text-amber-400" />
+              <Star className="size-4 fill-rating text-rating" />
               {reviewSummary.averageRating.toFixed(1)}
               <span className="text-primary">({reviewSummary.totalCount})</span>
             </span>
@@ -468,7 +468,7 @@ export function MobileBusinessProfile({
           <span aria-hidden className="text-muted-foreground">
             ·
           </span>
-          <span className={cn("inline-flex items-center gap-1", !isOpen && "text-orange-600")}>
+          <span className={cn("inline-flex items-center gap-1", !isOpen && "text-warning-foreground")}>
             <Clock className="size-4" />
             {isOpen ? "Açık" : "Kapalı"}
           </span>
@@ -519,7 +519,7 @@ export function MobileBusinessProfile({
       <PortfolioGrid items={galleryItems} />
       <HoursPreview business={business} />
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-5 pb-4 pt-3 shadow-[0_-8px_24px_oklch(0.2_0.01_10/0.08)] backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-5 pb-4 pt-3 shadow-md backdrop-blur">
         {business.services.length > 0 && (
           <p className="mb-2 text-sm text-muted-foreground">
             mevcut {business.services.length} hizmet

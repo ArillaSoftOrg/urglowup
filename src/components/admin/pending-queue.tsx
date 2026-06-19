@@ -6,8 +6,8 @@ export async function PendingQueue() {
 
   if (appointments.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
-        <p className="text-slate-600">No pending appointments.</p>
+      <div className="rounded-lg border border-border bg-muted p-8 text-center">
+        <p className="text-muted-foreground">No pending appointments.</p>
       </div>
     );
   }
@@ -35,17 +35,17 @@ export async function PendingQueue() {
 
   // Age color helpers
   function getAgeColor(ageHours: number): string {
-    if (ageHours < 2) return "bg-green-50 border-green-100";
-    if (ageHours < 6) return "bg-yellow-50 border-yellow-100";
-    if (ageHours < 24) return "bg-orange-50 border-orange-100";
-    return "bg-red-50 border-red-100";
+    if (ageHours < 2) return "bg-success/10 border-success/20";
+    if (ageHours < 6) return "bg-warning/10 border-warning/20";
+    if (ageHours < 24) return "bg-warning/20 border-warning/30";
+    return "bg-destructive/10 border-destructive/20";
   }
 
   function getAgeBadgeColor(ageHours: number): string {
-    if (ageHours < 2) return "bg-green-100 text-green-800";
-    if (ageHours < 6) return "bg-yellow-100 text-yellow-800";
-    if (ageHours < 24) return "bg-orange-100 text-orange-800";
-    return "bg-red-100 text-red-800";
+    if (ageHours < 2) return "bg-success text-success-foreground";
+    if (ageHours < 6) return "bg-warning text-warning-foreground";
+    if (ageHours < 24) return "bg-warning text-warning-foreground";
+    return "bg-destructive/10 text-destructive";
   }
 
   function formatAge(ageHours: number): string {

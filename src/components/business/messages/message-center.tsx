@@ -395,7 +395,7 @@ export function BusinessMessageCenter({ conversations, businessUserId }: Props) 
                 ))}
               </div>
               {sendError && (
-                <p className="text-xs text-red-500">{sendError}</p>
+                <p className="text-xs text-destructive">{sendError}</p>
               )}
               <div className="flex items-end gap-2">
                 <Textarea

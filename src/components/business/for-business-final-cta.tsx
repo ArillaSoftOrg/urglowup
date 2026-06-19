@@ -16,13 +16,13 @@ export function ForBusinessFinalCTA({
           <h2 className="text-4xl font-bold leading-tight tracking-normal md:text-6xl">
             Daha fazla müşteri için neyi bekliyorsun?
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-lg font-medium text-white/90 md:text-2xl">
+          <p className="mx-auto mt-5 max-w-2xl text-lg font-medium text-primary-foreground/90 md:text-2xl">
             UrGlowUp&apos;a katıl ve işletmeni bugün büyütmeye başla.
           </p>
           <div className="mt-10 flex justify-center">
             <Link
               href={registerHref}
-              className="inline-flex min-h-14 items-center gap-4 rounded-full bg-white px-8 text-base font-bold text-foreground shadow-lg transition hover:-translate-y-0.5 hover:bg-white/95 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-purple-700 md:px-10 md:text-lg"
+              className="inline-flex min-h-14 items-center gap-4 rounded-full bg-primary-foreground px-8 text-base font-bold text-foreground shadow-lg transition hover:-translate-y-0.5 hover:bg-primary-foreground/95 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 md:px-10 md:text-lg"
             >
               Hemen başlayın
               <ArrowRight className="size-6" aria-hidden="true" />

@@ -20,10 +20,12 @@ import { hideMedia, removeMedia, restoreMedia } from "@/app/(admin)/admin/action
 import { MEDIA_TYPE_LABELS } from "@/lib/constants/media";
 import type { AdminMedia } from "@/lib/queries/admin";
 
-const MEDIA_STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "bg-green-100 text-green-800",
-  HIDDEN: "bg-yellow-100 text-yellow-800",
-  REMOVED: "bg-red-100 text-red-800",
+import type { BadgeVariant } from "@/components/ui/badge";
+
+const MEDIA_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  ACTIVE: "success",
+  HIDDEN: "warning",
+  REMOVED: "destructive",
 };
 
 function formatDate(date: Date): string {
@@ -75,12 +77,12 @@ function MediaRow({ item }: { item: AdminMedia }) {
       <div className="border-b p-3 last:border-0">
         <div className="mb-3 flex items-start justify-between">
           <div>
-            <p className="font-medium text-slate-900">{item.business.name}</p>
-            {item.title && <p className="text-xs text-slate-600">{item.title}</p>}
+            <p className="font-medium text-foreground">{item.business.name}</p>
+            {item.title && <p className="text-xs text-muted-foreground">{item.title}</p>}
           </div>
           <button
             onClick={() => setActionInProgress(null)}
-            className="text-xs text-slate-500 hover:text-slate-700"
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
             Cancel
           </button>
@@ -124,7 +126,7 @@ function MediaRow({ item }: { item: AdminMedia }) {
           <Badge variant="outline" className="text-xs">
             {MEDIA_TYPE_LABELS[item.type] ?? item.type}
           </Badge>
-          <Badge className={`text-xs ${MEDIA_STATUS_COLORS[item.status]}`}>
+          <Badge variant={MEDIA_STATUS_VARIANT[item.status] ?? "neutral"} className="text-xs">
             {item.status}
           </Badge>
         </div>

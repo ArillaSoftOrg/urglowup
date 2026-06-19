@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,17 +23,19 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   PROMOTION: "Kampanya",
 };
 
-const CONTENT_TYPE_COLORS: Record<string, string> = {
-  REAL_WORK: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  INSPIRATION: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  EDUCATIONAL: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  PROMOTION: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+import type { BadgeVariant } from "@/components/ui/badge";
+
+const CONTENT_TYPE_VARIANT: Record<string, BadgeVariant> = {
+  REAL_WORK: "success",
+  INSPIRATION: "purple",
+  EDUCATIONAL: "info",
+  PROMOTION: "warning",
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-  HIDDEN: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  REMOVED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
+  ACTIVE: "success",
+  HIDDEN: "warning",
+  REMOVED: "destructive",
 };
 
 function formatDate(date: Date): string {
@@ -65,17 +68,17 @@ function PostRow({ post }: { post: AdminPost }) {
 
   if (actionInProgress) {
     return (
-      <tr className="border-b bg-slate-50">
+      <tr className="border-b bg-muted/50">
         <td colSpan={7} className="px-4 py-3">
           <div className="max-w-[500px]">
             <div className="mb-3 flex items-start justify-between">
               <div>
-                <p className="font-medium text-slate-900">{post.business.name}</p>
-                {post.description && <p className="text-xs text-slate-600">{post.description}</p>}
+                <p className="font-medium text-foreground">{post.business.name}</p>
+                {post.description && <p className="text-xs text-muted-foreground">{post.description}</p>}
               </div>
               <button
                 onClick={() => setActionInProgress(null)}
-                className="text-xs text-slate-500 hover:text-slate-700"
+                className="text-xs text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -111,14 +114,14 @@ function PostRow({ post }: { post: AdminPost }) {
         </div>
       </td>
       <td className="px-4 py-3">
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${CONTENT_TYPE_COLORS[post.contentType] ?? ""}`}>
+        <Badge variant={CONTENT_TYPE_VARIANT[post.contentType] ?? "neutral"}>
           {CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}
-        </span>
+        </Badge>
       </td>
       <td className="px-4 py-3">
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[post.status] ?? ""}`}>
+        <Badge variant={STATUS_VARIANT[post.status] ?? "neutral"}>
           {post.status}
-        </span>
+        </Badge>
       </td>
       <td className="px-4 py-3 text-sm text-muted-foreground">
         {post._count.media}

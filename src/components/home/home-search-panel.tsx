@@ -45,7 +45,7 @@ export function HomeSearchPanel({
   }
 
   return (
-    <div className="mx-auto mt-8 w-full max-w-[23rem] rounded-[1.75rem] border border-brand-purple/40 bg-background p-3 shadow-[0_18px_55px_oklch(0.25_0.05_300/0.16)] md:mt-10 md:max-w-[31rem] md:p-4">
+    <div className="mx-auto mt-8 w-full max-w-[23rem] rounded-[1.75rem] border border-brand-purple/40 bg-background p-3 shadow-lg md:mt-10 md:max-w-[31rem] md:p-4">
       <div className="grid gap-3">
         <label className="flex min-h-12 items-center gap-3 rounded-xl border border-input bg-background px-4 transition-colors hover:border-foreground/20 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/40 md:min-h-14">
           <Search className="size-5 shrink-0 text-muted-foreground" />
@@ -102,7 +102,7 @@ export function HomeSearchPanel({
         <button
           type="button"
           onClick={submitSearch}
-          className="inline-flex min-h-12 items-center justify-center rounded-3xl bg-brand-pink px-8 text-base font-semibold text-brand-pink-foreground shadow-[0_10px_24px_oklch(0.25_0.05_10/0.12)] transition-colors hover:bg-surface-pink-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-pink/30 md:min-h-14"
+          className="inline-flex min-h-12 items-center justify-center rounded-3xl bg-brand-pink px-8 text-base font-semibold text-brand-pink-foreground shadow-sm transition-colors hover:bg-surface-pink-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-pink/30 md:min-h-14"
         >
           {labels.submit}
         </button>

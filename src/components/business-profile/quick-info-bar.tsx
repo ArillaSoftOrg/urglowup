@@ -30,16 +30,16 @@ export function QuickInfoBar({
     open !== null && (
       <span key="open" className="flex items-center gap-1.5">
         <span
-          className={`inline-block size-2 rounded-full ${open ? "bg-green-500" : "bg-muted-foreground/40"}`}
+          className={`inline-block size-2 rounded-full ${open ? "bg-success-foreground" : "bg-muted-foreground/40"}`}
         />
-        <span className={open ? "font-medium text-green-700" : ""}>
+        <span className={open ? "font-medium text-success-foreground" : ""}>
           {open ? "Şu an açık" : "Kapalı"}
         </span>
       </span>
     ),
     reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
       <span key="rating" className="flex items-center gap-1">
-        <Star className="size-3.5 fill-amber-400 text-amber-400" />
+        <Star className="size-3.5 fill-rating text-rating" />
         <span className="font-medium text-foreground">
           {reviewSummary.averageRating.toFixed(1)}
         </span>

@@ -37,28 +37,28 @@ export default async function AdminAppointmentsPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Appointments Operations Console</h1>
-        <p className="text-slate-600">
+        <p className="text-muted-foreground">
           Monitor pending queues, conversion metrics, and triage stuck appointments.
         </p>
       </div>
 
-      <Suspense fallback={<div className="h-20 bg-slate-100 rounded" />}>
+      <Suspense fallback={<div className="h-20 bg-muted rounded" />}>
         <AppointmentsStatsBar />
       </Suspense>
 
       <AppointmentPageTabs
         pendingQueue={
-          <Suspense fallback={<div className="h-64 bg-slate-100 rounded" />}>
+          <Suspense fallback={<div className="h-64 bg-muted rounded" />}>
             <PendingQueue />
           </Suspense>
         }
         allAppointments={
-          <Suspense fallback={<div className="h-96 bg-slate-100 rounded" />}>
+          <Suspense fallback={<div className="h-96 bg-muted rounded" />}>
             <AppointmentTable filter={filter} />
           </Suspense>
         }
         businessMetrics={
-          <Suspense fallback={<div className="h-96 bg-slate-100 rounded" />}>
+          <Suspense fallback={<div className="h-96 bg-muted rounded" />}>
             <BusinessAppointmentMetrics />
           </Suspense>
         }

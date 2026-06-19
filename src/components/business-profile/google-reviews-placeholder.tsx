@@ -25,8 +25,8 @@ function RatingStars({ rating }: { rating: number }) {
             key={i}
             className={`size-3.5 ${
               isFull || isHalf
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-slate-300"
+                ? "fill-rating text-rating"
+                : "text-muted"
             }`}
           />
         );
@@ -99,11 +99,11 @@ export function GoogleReviewsPlaceholder({
 
             {/* Merchant reply */}
             {review.merchantReply && (
-              <div className="rounded bg-slate-50 p-2 text-xs">
-                <p className="font-medium text-slate-700 mb-1">
+              <div className="rounded bg-muted p-2 text-xs">
+                <p className="font-medium text-foreground mb-1">
                   Response from {businessName}:
                 </p>
-                <p className="text-slate-600 line-clamp-2">
+                <p className="text-muted-foreground line-clamp-2">
                   {review.merchantReply}
                 </p>
               </div>

@@ -17,10 +17,10 @@ export function MobileBookingBar({
   const isEnglish = locale === "en" || locale === "de";
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-4 pb-4 pt-3 shadow-[0_-8px_24px_oklch(0.2_0.01_10/0.08)] backdrop-blur supports-[backdrop-filter]:bg-background/85 lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-4 pb-4 pt-3 shadow-md backdrop-blur supports-[backdrop-filter]:bg-background/85 lg:hidden">
       {isOpen === true && (
         <p className="mb-2 text-center text-xs font-medium text-muted-foreground">
-          <span className="mr-1 inline-block size-1.5 rounded-full bg-green-500 align-middle" />
+          <span className="mr-1 inline-block size-1.5 rounded-full bg-success-foreground align-middle" />
           {isEnglish ? "Open now" : "Su an acik"}
         </p>
       )}

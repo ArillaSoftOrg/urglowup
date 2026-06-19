@@ -30,12 +30,12 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
 
   if (score === 100) {
     return (
-      <Card className="border-green-200 bg-green-50">
+      <Card className="border-success/30 bg-success/20">
         <CardContent className="flex items-center gap-3 py-4">
-          <Sparkles className="size-5 shrink-0 text-green-600" />
+          <Sparkles className="size-5 shrink-0 text-success-foreground" />
           <div>
-            <p className="text-sm font-medium text-green-800">Profil tamamlandı!</p>
-            <p className="text-xs text-green-700">
+            <p className="text-sm font-medium text-success-foreground">Profil tamamlandı!</p>
+            <p className="text-xs text-success-foreground/80">
               Profiliniz eksiksiz ve müşterilere tamamen görünür.
             </p>
           </div>
@@ -56,17 +56,17 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
   const nextMissing = missing[0];
 
   return (
-    <Card className="border-[oklch(0.91_0.02_285)] bg-[oklch(0.995_0.01_285)] shadow-sm">
+    <Card className="border-brand-purple/20 bg-surface-purple shadow-sm">
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start gap-5">
-          <div className="hidden size-12 shrink-0 items-center justify-center rounded-xl bg-[oklch(0.93_0.055_285)] text-[oklch(0.50_0.18_285)] lg:flex">
+          <div className="hidden size-12 shrink-0 items-center justify-center rounded-xl bg-brand-purple/20 text-brand-purple-foreground lg:flex">
             <Store className="size-6" />
           </div>
           <div className="min-w-0 flex-1 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
                 <CardTitle className="text-base">Profil Kurulumu</CardTitle>
-                <span className="shrink-0 text-sm tabular-nums text-[oklch(0.48_0.16_285)]">
+                <span className="shrink-0 text-sm tabular-nums text-brand-purple-foreground/70">
                   {completedCount}/{totalCount}
                 </span>
               </div>
@@ -89,9 +89,9 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
               </div>
             </div>
 
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[oklch(0.94_0.018_285)]">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-brand-purple/10">
               <div
-                className="h-full rounded-full bg-[oklch(0.56_0.20_285)] transition-all"
+                className="h-full rounded-full bg-brand-purple-foreground transition-all"
                 style={{ width: `${score}%` }}
               />
             </div>
@@ -139,7 +139,7 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
                       <ul className="space-y-1.5">
                         {completedItems.map((item) => (
                           <li key={item.key} className="flex items-center gap-2 text-sm">
-                            <CheckCircle2 className="size-4 shrink-0 text-green-500" />
+                            <CheckCircle2 className="size-4 shrink-0 text-success-foreground" />
                             <span className="text-muted-foreground line-through">
                               {item.label}
                             </span>
@@ -156,7 +156,7 @@ export function ProfileCompletionCard({ completion }: ProfileCompletionCardProps
                       href={nextMissing.href}
                       className={cn(
                         buttonVariants({ variant: "outline" }),
-                        "h-9 border-[oklch(0.62_0.18_285)] px-4 text-[oklch(0.52_0.18_285)] hover:bg-[oklch(0.96_0.035_285)]"
+                        "h-9 border-brand-purple-foreground/40 px-4 text-brand-purple-foreground hover:bg-brand-purple/10"
                       )}
                     >
                       Devam Et

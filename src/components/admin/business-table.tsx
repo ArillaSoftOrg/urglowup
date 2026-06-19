@@ -69,24 +69,12 @@ function buildProfileCompletionData(business: AdminBusiness) {
 
 function ProfileBadge({ score }: { score: number }) {
   if (score >= 90) {
-    return (
-      <Badge className="bg-green-100 text-green-800 text-xs">
-        {score}%
-      </Badge>
-    );
+    return <Badge variant="success" className="text-xs">{score}%</Badge>;
   }
   if (score >= 60) {
-    return (
-      <Badge className="bg-amber-100 text-amber-800 text-xs">
-        {score}%
-      </Badge>
-    );
+    return <Badge variant="warning" className="text-xs">{score}%</Badge>;
   }
-  return (
-    <Badge className="bg-red-100 text-red-800 text-xs">
-      {score}%
-    </Badge>
-  );
+  return <Badge variant="destructive" className="text-xs">{score}%</Badge>;
 }
 
 function RatingBadge({
@@ -123,8 +111,8 @@ function RiskBadge({ business }: { business: AdminBusiness }) {
       variant="outline"
       className={
         highRiskCount > 0
-          ? "border-red-300 bg-red-50 text-red-700"
-          : "border-amber-300 bg-amber-50 text-amber-700"
+          ? "border-destructive/30 bg-destructive/10 text-destructive"
+          : "border-warning/30 bg-warning/10 text-warning-foreground"
       }
     >
       <AlertCircle className="size-3 mr-1" />

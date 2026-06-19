@@ -54,11 +54,11 @@ export function BusinessNotificationMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Bildirimler"
-        className="relative flex size-9 items-center justify-center rounded-full text-business-nav-muted transition-colors hover:bg-white/10 hover:text-business-nav-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+        className="relative flex size-9 items-center justify-center rounded-full text-business-nav-muted transition-colors hover:bg-business-nav-fg/10 hover:text-business-nav-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-business-nav-fg/45"
       >
         <Bell className="size-4" />
         {unreadCount > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[oklch(0.68_0.22_345)] px-1 text-[10px] font-bold leading-4 text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-primary-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         ) : null}
@@ -99,7 +99,7 @@ export function BusinessNotificationMenu({
                   href={notification.href}
                   className={cn(
                     "grid w-full grid-cols-[auto_1fr] gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-accent",
-                    !notification.readAt && "bg-[oklch(0.97_0.025_285)]"
+                    !notification.readAt && "bg-surface-purple"
                   )}
                 >
                   <span
@@ -107,7 +107,7 @@ export function BusinessNotificationMenu({
                       "mt-1 size-2 rounded-full",
                       notification.readAt
                         ? "bg-muted-foreground/25"
-                        : "bg-[oklch(0.68_0.22_345)]"
+                        : "bg-brand-pink-foreground"
                     )}
                   />
                   <span className="min-w-0">

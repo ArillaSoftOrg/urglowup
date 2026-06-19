@@ -1,5 +1,5 @@
 import { getAdminAppointments } from "@/lib/queries/admin";
-import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants/booking";
+import { STATUS_LABELS, STATUS_VARIANTS } from "@/lib/constants/booking";
 import { AppointmentTableClient } from "./appointment-table-client";
 import type { AdminAppointmentFilter } from "@/lib/queries/admin";
 
@@ -39,7 +39,7 @@ export async function AppointmentTable({ filter }: AppointmentTableProps) {
       formatDate={formatDate}
       formatAge={formatAge}
       statusLabels={STATUS_LABELS}
-      statusColors={STATUS_COLORS}
+      statusVariants={STATUS_VARIANTS}
     />
   );
 }

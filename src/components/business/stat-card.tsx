@@ -14,9 +14,9 @@ interface StatCardProps {
 }
 
 const TONE_CLASSES: Record<NonNullable<StatCardProps["iconTone"]>, string> = {
-  pink: "bg-[oklch(0.94_0.045_345)] text-[oklch(0.45_0.16_345)]",
-  warning: "bg-[oklch(0.93_0.055_75)] text-[oklch(0.43_0.12_65)]",
-  info: "bg-[oklch(0.93_0.05_235)] text-[oklch(0.42_0.13_240)]",
+  pink: "bg-brand-pink/20 text-brand-pink-foreground",
+  warning: "bg-warning/20 text-warning-foreground",
+  info: "bg-info/20 text-info-foreground",
   muted: "bg-muted text-muted-foreground",
 };
 
@@ -33,9 +33,9 @@ export function StatCard({
   const body = (
     <Card
       className={cn(
-        "h-full border border-[oklch(0.91_0.015_285)] bg-card shadow-sm transition-colors",
+        "h-full border border-brand-purple/20 bg-card shadow-sm transition-colors",
         surface === "cream" && "bg-surface-cream",
-        href && "hover:border-[oklch(0.82_0.045_285)] hover:bg-[oklch(0.995_0.006_285)]"
+        href && "hover:border-brand-purple/40 hover:bg-surface-purple"
       )}
     >
       <CardContent
@@ -69,7 +69,7 @@ export function StatCard({
         </div>
         <div className={cn("min-w-0", size === "sm" ? "space-y-0.5" : "space-y-1")}>
           <p className={cn(
-            "truncate font-semibold text-[oklch(0.24_0.055_285)]",
+            "truncate font-semibold text-brand-purple-foreground",
             size === "compact" ? "text-xs min-[360px]:text-[13px] sm:text-sm" : "text-sm"
           )}>{label}</p>
           <div
@@ -86,7 +86,7 @@ export function StatCard({
           </div>
           {hint && (
             <p className={cn(
-              "truncate text-[oklch(0.48_0.045_285)]",
+              "truncate text-muted-foreground",
               size === "compact" ? "text-xs sm:text-sm" : "text-sm"
             )}>{hint}</p>
           )}

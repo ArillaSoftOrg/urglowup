@@ -144,9 +144,9 @@ function BusinessTestimonialCard({
   text: string;
 }) {
   return (
-    <article className="flex h-60 w-[18rem] shrink-0 cursor-grab select-none flex-col justify-between rounded-lg border border-fuchsia-100 bg-white p-5 shadow-xs active:cursor-grabbing md:h-56 md:w-[20rem]">
+    <article className="flex h-60 w-[18rem] shrink-0 cursor-grab select-none flex-col justify-between rounded-lg border border-brand-purple/15 bg-card p-5 shadow-xs active:cursor-grabbing md:h-56 md:w-[20rem]">
       <div>
-        <div className="flex gap-1 text-fuchsia-700" aria-label="5 yıldız">
+        <div className="flex gap-1 text-rating" aria-label="5 yıldız">
           {Array.from({ length: 5 }).map((_, index) => (
             <Star
               key={index}
@@ -304,7 +304,7 @@ export function ForBusinessTestimonialsMarquee() {
   return (
     <section className="border-t bg-[linear-gradient(180deg,oklch(0.99_0.004_300),oklch(0.97_0.018_315))] py-14 md:py-20">
       <div className="mx-auto mb-8 max-w-6xl px-4 text-center md:mb-10">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-fuchsia-700">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-purple-foreground">
           İşletmelerden gelenler
         </p>
         <h2 className="mx-auto mt-3 max-w-4xl text-3xl font-semibold leading-tight tracking-normal md:text-5xl">

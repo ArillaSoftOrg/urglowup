@@ -41,7 +41,7 @@ export function ProfileHeader({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-base text-muted-foreground">
             {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null ? (
               <span className="flex items-center gap-1 text-foreground">
-                <Star className="size-4 fill-amber-400 text-amber-400" />
+                <Star className="size-4 fill-rating text-rating" />
                 <span className="font-semibold">
                   {reviewSummary.averageRating.toFixed(1)}
                 </span>
@@ -57,8 +57,8 @@ export function ProfileHeader({
             </span>
             <span className="flex items-center gap-1">
               <Clock className="size-4" />
-              <span className={isOpen ? "font-medium text-green-700" : ""}>
-                {isOpen ? "Acik" : "Kapali"}
+              <span className={isOpen ? "font-medium text-success-foreground" : ""}>
+                {isOpen ? "Açık" : "Kapalı"}
               </span>
             </span>
             {location && (

@@ -40,14 +40,14 @@ export default async function AdminDashboardPage() {
           title="Control Tower"
           description="Real-time platform health and pending actions."
         />
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h2 className="text-lg font-semibold text-red-900 mb-2">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
+          <h2 className="text-lg font-semibold text-destructive mb-2">
             Dashboard Unavailable
           </h2>
-          <p className="text-sm text-red-700 mb-4">
+          <p className="text-sm text-destructive/80 mb-4">
             {message}
           </p>
-          <p className="text-xs text-red-600">
+          <p className="text-xs text-destructive/60">
             Try refreshing the page or contact support if this persists.
           </p>
         </div>

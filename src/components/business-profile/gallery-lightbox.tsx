@@ -77,7 +77,7 @@ export function GalleryLightbox({ items }: { items: GalleryItem[] }) {
                   preload="metadata"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-white/90">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-card/90">
                     <svg
                       className="ml-0.5 size-4 text-black"
                       viewBox="0 0 24 24"
@@ -99,7 +99,7 @@ export function GalleryLightbox({ items }: { items: GalleryItem[] }) {
             )}
             {item.title && (
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <p className="truncate text-xs text-white">{item.title}</p>
+                <p className="truncate text-xs text-primary-foreground">{item.title}</p>
               </div>
             )}
           </button>

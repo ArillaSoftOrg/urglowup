@@ -42,11 +42,12 @@ import {
 import { getSuspensionStatus } from "@/lib/admin/user-suspension";
 import { useRouter } from "next/navigation";
 import type { UserRole } from "@/generated/prisma/enums";
+import type { BadgeVariant } from "@/components/ui/badge";
 
-const ROLE_COLORS: Record<string, string> = {
-  CUSTOMER: "bg-gray-100 text-gray-800",
-  BUSINESS_OWNER: "bg-blue-100 text-blue-800",
-  ADMIN: "bg-purple-100 text-purple-800",
+const ROLE_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  CUSTOMER: "secondary",
+  BUSINESS_OWNER: "pink",
+  ADMIN: "purple",
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -55,14 +56,15 @@ const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Admin",
 };
 
-const APPOINTMENT_STATUS_COLORS: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-900",
-  CONFIRMED: "bg-blue-100 text-blue-900",
-  REJECTED: "bg-red-100 text-red-900",
-  CANCELLED_BY_CUSTOMER: "bg-gray-100 text-gray-900",
-  CANCELLED_BY_BUSINESS: "bg-gray-100 text-gray-900",
-  COMPLETED: "bg-green-100 text-green-900",
-  NO_SHOW: "bg-orange-100 text-orange-900",
+const APPOINTMENT_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  PENDING: "warning",
+  CONFIRMED: "info",
+  REJECTED: "destructive",
+  CANCELLED_BY_CUSTOMER: "neutral",
+  CANCELLED_BY_BUSINESS: "neutral",
+  COMPLETED: "success",
+  NO_SHOW: "destructive",
+  CHECKED_IN: "info",
 };
 
 function formatDate(date: Date | null | undefined): string {
@@ -152,9 +154,9 @@ export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
               <div className="flex items-center gap-2">
                 <p className="font-medium text-sm">{user.email}</p>
                 {user.emailVerified ? (
-                  <CheckCircle2 className="size-4 text-green-600" />
+                  <CheckCircle2 className="size-4 text-success-foreground" />
                 ) : (
-                  <Badge variant="outline" className="bg-yellow-50">
+                  <Badge variant="warning">
                     Unverified
                   </Badge>
                 )}
@@ -162,7 +164,7 @@ export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Role</p>
-              <Badge className={`${ROLE_COLORS[user.role]}`}>
+              <Badge variant={ROLE_BADGE_VARIANT[user.role] ?? "secondary"}>
                 {ROLE_LABELS[user.role]}
               </Badge>
             </div>
@@ -356,7 +358,7 @@ export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
                       {formatDate(apt.requestedDate)}
                     </p>
                   </div>
-                  <Badge className={`${APPOINTMENT_STATUS_COLORS[apt.status]}`}>
+                  <Badge variant={APPOINTMENT_STATUS_VARIANT[apt.status] ?? "neutral"}>
                     {apt.status.replace(/_/g, " ")}
                   </Badge>
                 </div>
@@ -490,9 +492,9 @@ function SuspensionPanel({
 
   if (status.isSuspended) {
     return (
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-destructive/30 bg-destructive/5">
         <CardHeader>
-          <CardTitle className="text-red-900">Suspension</CardTitle>
+          <CardTitle className="text-destructive">Suspension</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <SuspensionStatusBadge
@@ -516,7 +518,7 @@ function SuspensionPanel({
             {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
             Unsuspend User
           </Button>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
       </Card>
     );
@@ -580,7 +582,7 @@ function SuspensionPanel({
                 </Select>
               </div>
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
 
             <DialogFooter>
@@ -765,7 +767,7 @@ function AdminActionsPanel({
                 </SelectContent>
               </Select>
 
-              {roleError && <p className="text-sm text-red-600">{roleError}</p>}
+              {roleError && <p className="text-sm text-destructive">{roleError}</p>}
 
               <DialogFooter>
                 <Button
@@ -806,7 +808,7 @@ function AdminActionsPanel({
             <p className="text-sm font-medium mb-2">MFA Status</p>
             {mfaEnabled ? (
               <div className="flex items-center gap-3">
-                <Badge className="bg-green-100 text-green-800">MFA Enabled</Badge>
+                <Badge variant="success">MFA Enabled</Badge>
                 {userId !== currentAdminId && (
                   <Button
                     variant="outline"
@@ -820,7 +822,7 @@ function AdminActionsPanel({
                 )}
               </div>
             ) : (
-              <Badge className="bg-yellow-100 text-yellow-800">MFA Not Enrolled</Badge>
+              <Badge variant="warning">MFA Not Enrolled</Badge>
             )}
           </div>
         )}
@@ -862,7 +864,7 @@ function AdminActionsPanel({
           </div>
         </div>
 
-        {noteError && <p className="text-sm text-red-600">{noteError}</p>}
+        {noteError && <p className="text-sm text-destructive">{noteError}</p>}
       </CardContent>
     </Card>
   );
