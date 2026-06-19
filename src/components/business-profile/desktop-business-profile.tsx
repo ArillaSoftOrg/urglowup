@@ -31,37 +31,37 @@ function pathWithLocale(path: string, locale?: string) {
 function DesktopSearchHeader({ locale }: { locale?: string }) {
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-24 max-w-[1800px] items-center gap-8 px-6">
+      <div className="mx-auto flex h-20 max-w-[1800px] items-center gap-8 px-6">
         <Link
           href={pathWithLocale("/", locale)}
           className="flex w-44 shrink-0 items-center transition-opacity hover:opacity-80"
         >
-          <span className="text-[28px] font-bold leading-none tracking-normal">UrGlowUp</span>
+          <span className="text-[26px] font-bold leading-none tracking-normal">UrGlowUp</span>
         </Link>
 
-        <div className="mx-auto grid h-16 w-full max-w-[900px] grid-cols-[1fr_1fr_1fr_auto] items-center overflow-hidden rounded-full border bg-background shadow-md">
+        <div className="mx-auto grid h-14 w-full max-w-[900px] grid-cols-[1fr_1fr_1fr_auto] items-center overflow-hidden rounded-full border bg-background shadow-md">
           <button
             type="button"
-            className="h-full border-r px-6 text-left text-base font-medium hover:bg-muted/50"
+            className="h-full border-r px-6 text-left text-[15px] font-medium hover:bg-muted/50"
           >
             Tüm işlemler
           </button>
           <button
             type="button"
-            className="h-full border-r px-6 text-left text-base font-medium hover:bg-muted/50"
+            className="h-full border-r px-6 text-left text-[15px] font-medium hover:bg-muted/50"
           >
             Mevcut konum
           </button>
           <button
             type="button"
-            className="h-full px-6 text-left text-base font-medium hover:bg-muted/50"
+            className="h-full px-6 text-left text-[15px] font-medium hover:bg-muted/50"
           >
             Herhangi bir zaman
           </button>
           <button
             type="button"
             aria-label="Ara"
-            className="mr-2 flex size-12 items-center justify-center rounded-full bg-foreground text-background transition hover:opacity-90"
+            className="mr-1.5 flex size-11 items-center justify-center rounded-full bg-foreground text-background transition hover:opacity-90"
           >
             <Search className="size-5" />
           </button>
@@ -78,9 +78,9 @@ function DesktopSearchHeader({ locale }: { locale?: string }) {
           <button
             type="button"
             aria-label="Hesap menüsü"
-            className="flex h-12 items-center gap-3 rounded-full border bg-background px-3 shadow-sm"
+            className="flex h-11 items-center gap-3 rounded-full border bg-background px-3 shadow-sm"
           >
-            <span className="flex size-9 items-center justify-center rounded-full bg-muted text-sm font-bold">
+            <span className="flex size-8 items-center justify-center rounded-full bg-muted text-sm font-bold">
               U
             </span>
             <ChevronDown className="size-4" />
@@ -101,7 +101,7 @@ function DesktopBreadcrumbs({
   const primaryCategory = business.categories[0]?.category;
 
   return (
-    <nav className="flex flex-wrap items-center gap-2 text-base text-muted-foreground">
+    <nav className="flex flex-wrap items-center gap-2 text-[15px] text-muted-foreground">
       <Link href={pathWithLocale("/", locale)} className="hover:text-foreground">
         Ana Sayfa
       </Link>
@@ -150,11 +150,11 @@ function DesktopTitleBlock({
 
   return (
     <div className="flex items-end justify-between gap-8">
-      <div className="min-w-0 space-y-4">
-        <h1 className="text-[56px] font-bold leading-none tracking-normal">
+      <div className="min-w-0 space-y-3">
+        <h1 className="text-[48px] font-bold leading-none tracking-normal">
           {business.name}
         </h1>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-xl text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-lg text-muted-foreground">
           {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null ? (
             <span className="flex items-center gap-1.5 text-foreground">
               <span className="font-bold">{reviewSummary.averageRating.toFixed(1)}</span>
@@ -162,7 +162,7 @@ function DesktopTitleBlock({
                 {Array.from({ length: 5 }).map((_, index) => (
                   <Star
                     key={index}
-                    className="size-5 fill-rating text-rating"
+                    className="size-4 fill-rating text-rating"
                   />
                 ))}
               </span>
@@ -175,14 +175,14 @@ function DesktopTitleBlock({
           )}
           <span aria-hidden>·</span>
           <span className={cn("inline-flex items-center gap-1.5", !isOpen && "text-warning-foreground")}>
-            <Clock className="size-5" />
+            <Clock className="size-4" />
             {isOpen ? "Açık" : "Kapalı"}
           </span>
           {location && (
             <>
               <span aria-hidden>·</span>
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-5" />
+                <MapPin className="size-4" />
                 {location}
               </span>
             </>
@@ -196,7 +196,7 @@ function DesktopTitleBlock({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 font-bold text-foreground hover:underline"
               >
-                <Navigation className="size-5" />
+                <Navigation className="size-4" />
                 Yol tarifi al
               </a>
             </>
@@ -204,20 +204,20 @@ function DesktopTitleBlock({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-4">
+      <div className="flex shrink-0 items-center gap-3">
         <button
           type="button"
           aria-label="Paylaş"
-          className="flex size-15 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
+          className="flex size-13 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
         >
-          <Share2 className="size-6" />
+          <Share2 className="size-5" />
         </button>
         <button
           type="button"
           aria-label="Favorilere ekle"
-          className="flex size-15 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
+          className="flex size-13 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
         >
-          <Heart className="size-6" />
+          <Heart className="size-5" />
         </button>
       </div>
     </div>
@@ -235,12 +235,12 @@ function DesktopSectionNav() {
 
   return (
     <nav className="sticky top-0 z-20 border-y bg-background/95 px-6 backdrop-blur">
-      <div className="mx-auto flex max-w-[1800px] gap-8 overflow-x-auto text-base font-bold">
+      <div className="mx-auto flex max-w-[1800px] gap-8 overflow-x-auto text-[15px] font-bold">
         {items.map(([href, label]) => (
           <a
             key={href}
             href={href}
-            className="shrink-0 border-b-2 border-transparent py-5 hover:border-foreground"
+            className="shrink-0 border-b-2 border-transparent py-4 hover:border-foreground"
           >
             {label}
           </a>
@@ -269,7 +269,7 @@ export function DesktopBusinessProfile({
     <div className="hidden bg-background lg:block">
       <DesktopSearchHeader locale={locale} />
 
-      <div className="mx-auto max-w-[1800px] space-y-8 px-6 pb-10 pt-10">
+      <div className="mx-auto max-w-[1800px] space-y-6 px-6 pb-8 pt-7">
         <DesktopBreadcrumbs business={business} locale={locale} />
         <DesktopTitleBlock
           business={business}

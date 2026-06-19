@@ -114,7 +114,7 @@ export function BusinessGalleryLightboxHero({
   return (
     <>
       <section className="relative">
-        <div className="grid gap-8 lg:h-[644px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)]">
+        <div className="grid gap-7 lg:h-[560px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)]">
           <MediaTile
             item={visibleItems[0]}
             index={0}
@@ -123,7 +123,7 @@ export function BusinessGalleryLightboxHero({
             onOpen={setOpenIndex}
           />
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-2 lg:gap-8">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-2 lg:gap-7">
             {visibleItems.slice(1, 3).map((item, i) => (
               <MediaTile
                 key={item.id}
