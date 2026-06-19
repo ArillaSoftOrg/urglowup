@@ -35,6 +35,7 @@ import {
   Pencil,
   Scissors,
   Power,
+  Sparkles,
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -313,10 +314,10 @@ function ServiceCard({
 
 function TemplateServicesPanel({
   templates,
-  onManual,
+  onClose,
 }: {
   templates: TemplateData[];
-  onManual: () => void;
+  onClose: () => void;
 }) {
   const initial: ServiceActionState = { success: false };
   const [state, formAction, isPending] = useActionState(
@@ -326,6 +327,10 @@ function TemplateServicesPanel({
   const [selected, setSelected] = useState<Set<string>>(
     new Set(templates.map((t) => t.name))
   );
+
+  useEffect(() => {
+    if (state.success) onClose();
+  }, [state.success, onClose]);
 
   const toggleTemplate = (name: string) => {
     const newSelected = new Set(selected);
@@ -397,10 +402,10 @@ function TemplateServicesPanel({
             <Button
               type="button"
               variant="outline"
-              onClick={onManual}
+              onClick={onClose}
               className="flex-1"
             >
-              Kendi hizmetimi ekleyeceğim
+              İptal
             </Button>
           </div>
         </form>
@@ -418,23 +423,28 @@ export function ServiceManager({
   initialServices: ServiceData[];
   availableTemplates?: TemplateData[];
 }) {
-  const [showForm, setShowForm] = useState(false);
+  const hasServices = initialServices.length > 0;
+  const hasTemplates = availableTemplates.length > 0;
+
+  const [mode, setMode] = useState<"list" | "form" | "templates">(
+    !hasServices && hasTemplates ? "templates" : "list"
+  );
   const [editingService, setEditingService] = useState<ServiceData | undefined>(
     undefined
   );
 
   function handleAdd() {
     setEditingService(undefined);
-    setShowForm(true);
+    setMode("form");
   }
 
   function handleEdit(service: ServiceData) {
     setEditingService(service);
-    setShowForm(true);
+    setMode("form");
   }
 
   function handleClose() {
-    setShowForm(false);
+    setMode("list");
     setEditingService(undefined);
   }
 
@@ -444,35 +454,49 @@ export function ServiceManager({
         title="Hizmetler"
         description="İşletmenizin hizmetlerini yönetin"
         action={
-          !showForm ? (
-            <Button onClick={handleAdd} className="gap-1.5">
-              <Plus className="size-4" />
-              Hizmet Ekle
-            </Button>
+          mode === "list" ? (
+            <div className="flex gap-2">
+              {hasTemplates && (
+                <Button
+                  variant="outline"
+                  onClick={() => setMode("templates")}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="size-4" />
+                  Şablondan Ekle
+                </Button>
+              )}
+              <Button onClick={handleAdd} className="gap-1.5">
+                <Plus className="size-4" />
+                Hizmet Ekle
+              </Button>
+            </div>
           ) : undefined
         }
       />
 
-      {showForm && (
+      {mode === "form" && (
         <ServiceForm service={editingService} onClose={handleClose} />
       )}
 
-      {initialServices.length === 0 && !showForm ? (
-        availableTemplates.length > 0 ? (
-          <TemplateServicesPanel
-            templates={availableTemplates}
-            onManual={handleAdd}
-          />
-        ) : (
-          <EmptyState
-            icon={Scissors}
-            headline="Henüz hizmet yok"
-            description="Randevu almaya başlamak için ilk hizmetinizi ekleyin."
-            action={{ label: "Hizmet Ekle", onClick: handleAdd }}
-            surface="pink"
-          />
-        )
-      ) : (
+      {mode === "templates" && hasTemplates && (
+        <TemplateServicesPanel
+          templates={availableTemplates}
+          onClose={handleClose}
+        />
+      )}
+
+      {mode === "list" && !hasServices && (
+        <EmptyState
+          icon={Scissors}
+          headline="Henüz hizmet yok"
+          description="Randevu almaya başlamak için ilk hizmetinizi ekleyin."
+          action={{ label: "Hizmet Ekle", onClick: handleAdd }}
+          surface="pink"
+        />
+      )}
+
+      {mode === "list" && hasServices && (
         <div className="space-y-3">
           {initialServices.map((service) => (
             <ServiceCard
