@@ -86,5 +86,5 @@ export function BusinessGalleryHero({
     );
   }
 
-  return <BusinessGalleryLightboxHero items={items} />;
+  return <BusinessGalleryLightboxHero items={items} business={business} />;
 }

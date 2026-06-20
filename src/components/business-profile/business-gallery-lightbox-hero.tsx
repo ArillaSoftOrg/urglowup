@@ -25,6 +25,20 @@ interface GalleryItem {
   isVideo: boolean;
 }
 
+interface BusinessForLightbox {
+  address: string | null;
+  district: string | null;
+  city: string | null;
+  slug: string;
+  services: Array<{
+    id: string;
+    name: string;
+    price: unknown;
+    priceType: string;
+    durationMinutes: number;
+  }>;
+}
+
 function MediaTile({
   item,
   index,
@@ -69,7 +83,7 @@ function MediaTile({
               ? "(max-width: 1024px) 100vw, 58vw"
               : "(max-width: 1024px) 50vw, 28vw"
           }
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+          className="object-cover"
           priority={priority}
         />
       )}
@@ -79,8 +93,10 @@ function MediaTile({
 
 export function BusinessGalleryLightboxHero({
   items,
+  business,
 }: {
   items: GalleryItem[];
+  business?: BusinessForLightbox;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -168,6 +184,7 @@ export function BusinessGalleryLightboxHero({
           onNext={next}
           hasPrev={items.length > 1}
           hasNext={items.length > 1}
+          business={business}
         />
       )}
     </>

@@ -96,6 +96,36 @@ function formatPrice(service: BusinessWithDetails["services"][number]) {
   return service.priceType === "STARTS_FROM" ? `${amount} itibaren` : amount;
 }
 
+const JS_TO_DAY = [
+  "SUNDAY",
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+] as const;
+
+function getNextOpenLabel(hours: BusinessWithDetails["hours"]): string {
+  const now = new Date();
+  const todayJs = now.getDay();
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  for (let i = 0; i <= 7; i++) {
+    const nextJs = (todayJs + i) % 7;
+    const dayName = JS_TO_DAY[nextJs];
+    const h = hours.find((hr) => hr.dayOfWeek === dayName);
+    if (!h?.isOpen || !h.openTime) continue;
+    if (i === 0 && h.openTime <= currentTime) continue;
+
+    const time = h.openTime.substring(0, 5).replace(":", ".");
+    if (i === 0) return `Kapalı · Bugün ${time}'da açılacak`;
+    if (i === 1) return `Kapalı · Yarın ${time}'da açılacak`;
+    return `Kapalı · ${DAY_LABELS[dayName]} ${time}'da açılacak`;
+  }
+  return "Kapalı";
+}
+
 function buildGalleryItems(business: BusinessWithDetails): MobileGalleryItem[] {
   const items = business.media
     .filter((media) => media.type !== "LOGO")
@@ -358,6 +388,8 @@ function ReviewsPreview({
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
 }) {
+  if (business.reviews.length === 0) return null;
+
   return (
     <section id="reviews" className="border-t px-5 py-8">
       <div className="mb-4 flex items-center justify-between gap-4">
@@ -370,32 +402,28 @@ function ReviewsPreview({
         )}
       </div>
 
-      {business.reviews.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Henüz değerlendirme yok.</p>
-      ) : (
-        <div className="space-y-4">
-          {business.reviews.slice(0, 3).map((review) => {
-            const name = [review.customer.firstName, review.customer.lastName]
-              .filter(Boolean)
-              .join(" ");
-            return (
-              <article key={review.id} className="rounded-lg border p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold">{name || "Müşteri"}</p>
-                  <span className="text-sm font-bold tabular-nums">
-                    {(review.rating as number).toFixed(1)} / 10
-                  </span>
-                </div>
-                {review.comment && (
-                  <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
-                    {review.comment}
-                  </p>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      )}
+      <div className="space-y-4">
+        {business.reviews.slice(0, 3).map((review) => {
+          const name = [review.customer.firstName, review.customer.lastName]
+            .filter(Boolean)
+            .join(" ");
+          return (
+            <article key={review.id} className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold">{name || "Müşteri"}</p>
+                <span className="text-sm font-bold tabular-nums">
+                  {(review.rating as number).toFixed(1)} / 10
+                </span>
+              </div>
+              {review.comment && (
+                <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+                  {review.comment}
+                </p>
+              )}
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -422,7 +450,7 @@ export function MobileBusinessProfile({
     .join(" ");
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:hidden">
+    <div className="min-h-screen bg-background pb-28 lg:hidden">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Link
           href={hrefPrefix || "/"}
@@ -471,7 +499,7 @@ export function MobileBusinessProfile({
 
       <HeroImage business={business} items={galleryItems} />
 
-      <section className="mx-4 -mt-8 rounded-[28px] bg-background px-5 pb-6 pt-5 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
+      <section className="relative z-10 mx-4 -mt-8 rounded-[28px] bg-background px-5 pb-7 pt-8 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
         <h1 className="text-3xl font-bold leading-tight tracking-normal">
           {business.name}
         </h1>
@@ -480,21 +508,19 @@ export function MobileBusinessProfile({
         )}
 
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
-          {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null ? (
-            <span className="inline-flex items-center gap-1 font-bold">
-              <Star className="size-4 fill-rating text-rating" />
-              {reviewSummary.averageRating.toFixed(1)}
-              <span className="text-primary">({reviewSummary.totalCount})</span>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">Henüz yorum yok</span>
+          {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
+            <>
+              <span className="inline-flex items-center gap-1 font-bold">
+                <Star className="size-4 fill-rating text-rating" />
+                {reviewSummary.averageRating.toFixed(1)}
+                <span className="text-primary">({reviewSummary.totalCount})</span>
+              </span>
+              <span aria-hidden className="text-muted-foreground">·</span>
+            </>
           )}
-          <span aria-hidden className="text-muted-foreground">
-            ·
-          </span>
           <span className={cn("inline-flex items-center gap-1", !isOpen && "text-warning-foreground")}>
             <Clock className="size-4" />
-            {isOpen ? "Açık" : "Kapalı"}
+            {isOpen ? "Açık" : getNextOpenLabel(business.hours)}
           </span>
         </div>
 
@@ -523,7 +549,7 @@ export function MobileBusinessProfile({
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-primary"
           >
             <Navigation className="size-4" />
-            Yol tarifi
+            Adres tarifi alın
           </a>
         )}
 
@@ -595,7 +621,7 @@ export function MobileBusinessProfile({
           href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
             buttonVariants({ size: "default" }),
-            "shrink-0 rounded-full px-4 font-bold",
+            "shrink-0 rounded-full px-5 font-bold",
           )}
         >
           <CalendarCheck className="size-4" />

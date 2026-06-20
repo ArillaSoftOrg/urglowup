@@ -38,6 +38,51 @@ function FieldError({ errors, name }: { errors?: Record<string, string[]>; name:
   return <p className="mt-1 text-xs text-destructive">{msgs[0]}</p>;
 }
 
+function extractHandle(url: string | null, base: string): string {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname.replace(/^\/+@?/, "");
+  } catch {
+    return url.replace(/^@/, "");
+  }
+}
+
+function SocialInput({
+  id,
+  name,
+  prefix,
+  defaultValue,
+  placeholder,
+  errors,
+}: {
+  id: string;
+  name: string;
+  prefix: string;
+  defaultValue: string;
+  placeholder: string;
+  errors?: Record<string, string[]>;
+}) {
+  return (
+    <div>
+      <div className="mt-1.5 flex overflow-hidden rounded-md border bg-background focus-within:outline-none focus-within:ring-1 focus-within:ring-ring">
+        <span className="flex shrink-0 items-center border-r bg-muted px-3 py-2 text-sm text-muted-foreground select-none">
+          {prefix}
+        </span>
+        <input
+          id={id}
+          name={name}
+          defaultValue={defaultValue}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/60"
+        />
+      </div>
+      <FieldError errors={errors} name={name} />
+    </div>
+  );
+}
+
 const profileFeatureOptions = [
   {
     name: "instantConfirmation",
@@ -62,6 +107,7 @@ const profileFeatureOptions = [
 export function ProfileEditForm({ business }: { business: BusinessProfileData }) {
   const initial: ProfileActionState = { success: false };
   const [state, formAction, isPending] = useActionState(updateBusinessProfile, initial);
+  const formErrors = state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -258,41 +304,46 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
           <CardDescription>Sosyal medya profillerinizi ekleyin.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="instagramUrl">Instagram Bağlantısı</Label>
-              <Input
-                id="instagramUrl"
-                name="instagramUrl"
-                defaultValue={business.instagramUrl ?? ""}
-                placeholder="https://instagram.com/yourbusiness"
-                className="mt-1.5"
-              />
-              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="instagramUrl" />
-            </div>
-            <div>
-              <Label htmlFor="facebookUrl">Facebook Bağlantısı</Label>
-              <Input
-                id="facebookUrl"
-                name="facebookUrl"
-                defaultValue={business.facebookUrl ?? ""}
-                placeholder="https://facebook.com/yourpage"
-                className="mt-1.5"
-              />
-              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="facebookUrl" />
-            </div>
-            <div>
-              <Label htmlFor="tiktokUrl">TikTok Bağlantısı</Label>
-              <Input
-                id="tiktokUrl"
-                name="tiktokUrl"
-                defaultValue={business.tiktokUrl ?? ""}
-                placeholder="https://tiktok.com/@yourbusiness"
-                className="mt-1.5"
-              />
-              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="tiktokUrl" />
-            </div>
-          </div>
+          {(() => {
+            const formErrors = state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors;
+            return (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="instagramUrl">Instagram</Label>
+                  <SocialInput
+                    id="instagramUrl"
+                    name="instagramUrl"
+                    prefix="instagram.com/"
+                    defaultValue={extractHandle(business.instagramUrl, "https://instagram.com/")}
+                    placeholder="işletmeadı"
+                    errors={formErrors}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="facebookUrl">Facebook</Label>
+                  <SocialInput
+                    id="facebookUrl"
+                    name="facebookUrl"
+                    prefix="facebook.com/"
+                    defaultValue={extractHandle(business.facebookUrl, "https://facebook.com/")}
+                    placeholder="sayfaadı"
+                    errors={formErrors}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="tiktokUrl">TikTok</Label>
+                  <SocialInput
+                    id="tiktokUrl"
+                    name="tiktokUrl"
+                    prefix="tiktok.com/@"
+                    defaultValue={extractHandle(business.tiktokUrl, "https://tiktok.com/@")}
+                    placeholder="işletmeadı"
+                    errors={formErrors}
+                  />
+                </div>
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 

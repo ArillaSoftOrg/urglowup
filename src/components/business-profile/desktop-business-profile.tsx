@@ -19,6 +19,46 @@ import { ServicesSection } from "@/components/business-profile/services-section"
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails, GoogleReview } from "@/lib/queries/business";
 
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: "Pazartesi",
+  TUESDAY: "Salı",
+  WEDNESDAY: "Çarşamba",
+  THURSDAY: "Perşembe",
+  FRIDAY: "Cuma",
+  SATURDAY: "Cumartesi",
+  SUNDAY: "Pazar",
+};
+
+const JS_TO_DAY = [
+  "SUNDAY",
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+] as const;
+
+function getNextOpenLabel(hours: BusinessWithDetails["hours"]): string {
+  const now = new Date();
+  const todayJs = now.getDay();
+  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  for (let i = 0; i <= 7; i++) {
+    const nextJs = (todayJs + i) % 7;
+    const dayName = JS_TO_DAY[nextJs];
+    const h = hours.find((hr) => hr.dayOfWeek === dayName);
+    if (!h?.isOpen || !h.openTime) continue;
+    if (i === 0 && h.openTime <= currentTime) continue;
+
+    const time = h.openTime.substring(0, 5).replace(":", ".");
+    if (i === 0) return `Kapalı · Bugün ${time}'da açılacak`;
+    if (i === 1) return `Kapalı · Yarın ${time}'da açılacak`;
+    return `Kapalı · ${DAY_LABELS[dayName]} ${time}'da açılacak`;
+  }
+  return "Kapalı";
+}
+
 interface ReviewSummary {
   averageRating: number | null;
   totalCount: number;
@@ -129,28 +169,28 @@ function DesktopTitleBlock({
           {business.name}
         </h1>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-lg text-muted-foreground">
-          {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null ? (
-            <span className="flex items-center gap-1.5 text-foreground">
-              <span className="font-bold">{reviewSummary.averageRating.toFixed(1)}</span>
-              <span className="flex text-rating">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Star
-                    key={index}
-                    className="size-4 fill-rating text-rating"
-                  />
-                ))}
+          {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
+            <>
+              <span className="flex items-center gap-1.5 text-foreground">
+                <span className="font-bold">{reviewSummary.averageRating.toFixed(1)}</span>
+                <span className="flex text-rating">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star
+                      key={index}
+                      className="size-4 fill-rating text-rating"
+                    />
+                  ))}
+                </span>
+                <span className="font-medium text-primary">
+                  ({reviewSummary.totalCount})
+                </span>
               </span>
-              <span className="font-medium text-primary">
-                ({reviewSummary.totalCount})
-              </span>
-            </span>
-          ) : (
-            <span>Henüz yorum yok</span>
+              <span aria-hidden>·</span>
+            </>
           )}
-          <span aria-hidden>·</span>
           <span className={cn("inline-flex items-center gap-1.5", !isOpen && "text-warning-foreground")}>
             <Clock className="size-4" />
-            {isOpen ? "Açık" : "Kapalı"}
+            {isOpen ? "Açık" : getNextOpenLabel(business.hours)}
           </span>
           {location && (
             <>
@@ -171,7 +211,7 @@ function DesktopTitleBlock({
                 className="inline-flex items-center gap-1.5 font-bold text-foreground hover:underline"
               >
                 <Navigation className="size-4" />
-                Yol tarifi al
+                Adres tarifi alın
               </a>
             </>
           )}
@@ -253,8 +293,6 @@ export function DesktopBusinessProfile({
         />
         <BusinessGalleryHero business={business} />
       </div>
-
-      <DesktopSectionNav />
 
       <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)_380px] gap-10 px-5 py-10 sm:px-6 lg:px-10 xl:px-12">
         <div className="min-w-0 space-y-9">

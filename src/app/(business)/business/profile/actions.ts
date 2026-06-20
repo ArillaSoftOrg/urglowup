@@ -8,6 +8,13 @@ import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { geocodeBusinessAddress } from "@/lib/maps/geocoding";
 
+function normalizeSocialUrl(value: string | undefined, base: string): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http")) return trimmed;
+  return `${base}${trimmed.replace(/^@/, "")}`;
+}
+
 const profileSchema = z.object({
   name: z.string().min(2, "Business name must be at least 2 characters").max(100),
   description: z.string().max(1000).optional().transform((v) => v || null),
@@ -17,17 +24,17 @@ const profileSchema = z.object({
     .string()
     .max(200)
     .optional()
-    .transform((v) => v || null),
+    .transform((v) => normalizeSocialUrl(v, "https://instagram.com/")),
   facebookUrl: z
     .string()
     .max(200)
     .optional()
-    .transform((v) => v || null),
+    .transform((v) => normalizeSocialUrl(v, "https://facebook.com/")),
   tiktokUrl: z
     .string()
     .max(200)
     .optional()
-    .transform((v) => v || null),
+    .transform((v) => normalizeSocialUrl(v, "https://tiktok.com/@")),
   address: z.string().max(300).optional().transform((v) => v || null),
   city: z.string().max(100).optional().transform((v) => v || null),
   district: z.string().max(100).optional().transform((v) => v || null),
