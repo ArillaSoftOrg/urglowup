@@ -120,6 +120,14 @@ function AppointmentCard({
                 {appointment.businessNote}
               </p>
             )}
+            {appointment.cancelledReason &&
+              (appointment.status === "CANCELLED_BY_CUSTOMER" ||
+                appointment.status === "CANCELLED_BY_BUSINESS") && (
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">İptal sebebi:</span>{" "}
+                  {appointment.cancelledReason}
+                </p>
+              )}
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
             {canReschedule && (

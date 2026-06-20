@@ -117,7 +117,8 @@ export async function rejectAppointment(
 }
 
 export async function cancelAppointmentByBusiness(
-  appointmentId: string
+  appointmentId: string,
+  reason?: string
 ): Promise<AppointmentActionState> {
   const { businessId } = await requireBusiness();
   const err = await verifyOwnershipAndTransition(
@@ -129,7 +130,10 @@ export async function cancelAppointmentByBusiness(
 
   await db.appointment.update({
     where: { id: appointmentId },
-    data: { status: "CANCELLED_BY_BUSINESS" },
+    data: {
+      status: "CANCELLED_BY_BUSINESS",
+      cancelledReason: reason?.trim() || null,
+    },
   });
 
   after(async () => {

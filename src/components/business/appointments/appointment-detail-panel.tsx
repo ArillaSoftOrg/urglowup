@@ -23,7 +23,17 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { STATUS_LABELS } from "@/lib/constants/booking";
 import {
   CALENDAR_STATUS_BADGE_VARIANT,
@@ -98,6 +108,78 @@ export function AppointmentDetailPanel({
       onStatusChange={onAppointmentStatusChange}
       onNoteChange={onAppointmentNoteChange}
     />
+  );
+}
+
+function BusinessCancelDialog({
+  appointmentId,
+  disabled,
+  onSuccess,
+}: {
+  appointmentId: string;
+  disabled: boolean;
+  onSuccess: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [localPending, startLocalTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleCancel() {
+    setError(null);
+    startLocalTransition(async () => {
+      const result = await cancelAppointmentByBusiness(appointmentId, reason.trim() || undefined);
+      if (result.success) {
+        setOpen(false);
+        setReason("");
+        onSuccess();
+      } else {
+        setError(result.message ?? "Bir hata oluştu.");
+      }
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setError(null); setReason(""); } }}>
+      <DialogTrigger
+        render={<Button size="sm" variant="destructive" disabled={disabled || localPending} />}
+      >
+        <Ban className="size-3.5" /> İptal et
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Randevu iptal edilsin mi?</DialogTitle>
+          <DialogDescription>
+            Müşteriye e-posta ile bildirim gönderilecek. İsterseniz iptal sebebini belirtebilirsiniz.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          <Label htmlFor="business-cancel-reason">İptal sebebi (isteğe bağlı)</Label>
+          <Textarea
+            id="business-cancel-reason"
+            placeholder="Örn. Personel hastalığı, teknik arıza..."
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            maxLength={300}
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={localPending}>
+            Vazgeç
+          </Button>
+          <Button variant="destructive" onClick={handleCancel} disabled={localPending}>
+            {localPending ? (
+              <><Loader2 className="size-4 animate-spin" /> İptal ediliyor...</>
+            ) : (
+              "Evet, iptal et"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -218,6 +300,19 @@ function AppointmentDetail({
           </div>
         )}
 
+        {appointment.cancelledReason &&
+          (appointment.status === "CANCELLED_BY_CUSTOMER" ||
+            appointment.status === "CANCELLED_BY_BUSINESS") && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                İptal sebebi
+              </p>
+              <p className="rounded-lg border border-destructive/20 bg-destructive/5 p-2 text-sm text-destructive">
+                {appointment.cancelledReason}
+              </p>
+            </div>
+          )}
+
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             İşletme notu
@@ -289,14 +384,11 @@ function AppointmentDetail({
             >
               <UserX className="size-3.5" /> Gelmedi
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
+            <BusinessCancelDialog
+              appointmentId={appointment.id}
               disabled={isPending}
-              onClick={() => runStatusAction(cancelAppointmentByBusiness, "CANCELLED_BY_BUSINESS")}
-            >
-              <Ban className="size-3.5" /> İptal et
-            </Button>
+              onSuccess={() => onStatusChange(appointment.id, "CANCELLED_BY_BUSINESS")}
+            />
           </>
         )}
 
@@ -317,14 +409,11 @@ function AppointmentDetail({
             >
               <UserX className="size-3.5" /> Gelmedi
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
+            <BusinessCancelDialog
+              appointmentId={appointment.id}
               disabled={isPending}
-              onClick={() => runStatusAction(cancelAppointmentByBusiness, "CANCELLED_BY_BUSINESS")}
-            >
-              <Ban className="size-3.5" /> İptal et
-            </Button>
+              onSuccess={() => onStatusChange(appointment.id, "CANCELLED_BY_BUSINESS")}
+            />
           </>
         )}
 

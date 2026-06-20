@@ -88,14 +88,19 @@ export default async function ProfilePage() {
         title="Profil"
         description="İşletme vitrininizi, hizmetlerinizi ve yönetim ayarlarınızı buradan düzenleyin."
       />
-      <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+
+      <section
+        aria-label="Profil yönetimi kısayolları"
+        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:grid-cols-3"
+      >
         {profileSections.map((item) => {
           const Icon = item.icon;
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-cream"
+              className="flex min-w-[220px] shrink-0 items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold shadow-xs transition-colors hover:bg-surface-cream sm:min-w-0"
             >
               <span className="flex size-9 items-center justify-center rounded-lg bg-brand-pink/12 text-brand-pink-foreground">
                 <Icon className="size-4" />
@@ -105,7 +110,9 @@ export default async function ProfilePage() {
           );
         })}
       </section>
+
       <ProfileEditForm business={profileData} />
+
       <form action={signOutAction}>
         <Button type="submit" variant="destructive">
           <LogOut className="size-4" />

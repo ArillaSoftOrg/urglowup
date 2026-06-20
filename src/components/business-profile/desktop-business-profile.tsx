@@ -9,7 +9,11 @@ import {
   Star,
 } from "lucide-react";
 import { AboutSection } from "@/components/business-profile/about-section";
-import { BusinessGalleryHero } from "@/components/business-profile/business-gallery-hero";
+import {
+  BusinessGalleryHero,
+  buildGalleryItems,
+} from "@/components/business-profile/business-gallery-hero";
+import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
@@ -241,6 +245,7 @@ function DesktopTitleBlock({
 function DesktopSectionNav() {
   const items = [
     ["#services", "Hizmetler"],
+    ["#portfolio", "Portföy"],
     ["#about", "Hakkında"],
     ["#reviews", "Değerlendirmeler"],
     ["#hours", "Açılış saatleri"],
@@ -279,6 +284,8 @@ export function DesktopBusinessProfile({
   location: string;
   locale?: string;
 }) {
+  const galleryItems = buildGalleryItems(business);
+
   return (
     <div className="hidden bg-background md:block">
       <DesktopSearchHeader locale={locale} />
@@ -299,6 +306,7 @@ export function DesktopBusinessProfile({
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
         <div className="min-w-0 space-y-9">
           <ServicesSection business={business} />
+          <BusinessPortfolioSection items={galleryItems} business={business} />
           <section id="about">
             <AboutSection business={business} />
           </section>

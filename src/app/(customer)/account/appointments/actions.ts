@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { CUSTOMER_CANCELLABLE, getDayOfWeek, BLOCKING_STATUSES } from "@/lib/constants/booking";
+import { CUSTOMER_CANCELLABLE, getDayOfWeek, BLOCKING_STATUSES, MIN_ADVANCE_HOURS } from "@/lib/constants/booking";
 import {
   sendCancelledByCustomerEmailToBusiness,
   sendCancellationConfirmationEmailToCustomer,
@@ -21,7 +21,8 @@ export type AppointmentActionState = {
 };
 
 export async function cancelAppointment(
-  appointmentId: string
+  appointmentId: string,
+  reason?: string
 ): Promise<AppointmentActionState> {
   const user = await getCurrentUser();
   if (!user) {
@@ -30,7 +31,7 @@ export async function cancelAppointment(
 
   const appointment = await db.appointment.findUnique({
     where: { id: appointmentId },
-    select: { customerId: true, status: true },
+    select: { customerId: true, status: true, requestedDate: true, requestedTime: true },
   });
 
   if (!appointment || appointment.customerId !== user.id) {
@@ -44,9 +45,26 @@ export async function cancelAppointment(
     };
   }
 
+  // Enforce 2-hour advance cancellation for confirmed appointments
+  if (appointment.status === "CONFIRMED") {
+    const [h, m] = appointment.requestedTime.split(":").map(Number);
+    const appointmentAt = new Date(appointment.requestedDate);
+    appointmentAt.setHours(h, m, 0, 0);
+    const cutoff = new Date(Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000);
+    if (appointmentAt < cutoff) {
+      return {
+        success: false,
+        message: `Onaylanmış randevular en geç ${MIN_ADVANCE_HOURS} saat öncesine kadar iptal edilebilir.`,
+      };
+    }
+  }
+
   await db.appointment.update({
     where: { id: appointmentId },
-    data: { status: "CANCELLED_BY_CUSTOMER" },
+    data: {
+      status: "CANCELLED_BY_CUSTOMER",
+      cancelledReason: reason?.trim() || null,
+    },
   });
 
   after(async () => {

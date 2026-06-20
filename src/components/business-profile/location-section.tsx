@@ -8,8 +8,10 @@ const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 export function LocationSection({
   business,
+  showTitle = true,
 }: {
   business: BusinessWithDetails;
+  showTitle?: boolean;
 }) {
   const hasAddress = business.address || business.city || business.district;
   if (!hasAddress) return null;
@@ -28,9 +30,11 @@ export function LocationSection({
 
   return (
     <section aria-labelledby="location-title" className="space-y-4">
-      <h2 id="location-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
-        Konum
-      </h2>
+      {showTitle && (
+        <h2 id="location-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
+          Konum
+        </h2>
+      )}
 
       {hasCoords && mapsApiKey ? (
         <LazyBusinessMap

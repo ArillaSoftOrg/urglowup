@@ -7,6 +7,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails } from "@/lib/queries/business";
+import { LocationSection } from "./location-section";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -55,8 +56,9 @@ const SOCIAL_LINKS = [
 
 export function AboutSection({ business }: { business: BusinessWithDetails }) {
   const hasSocial = SOCIAL_LINKS.some((s) => !!business[s.key]);
+  const hasAddress = business.address || business.city || business.district;
 
-  if (!business.description && !hasSocial) return null;
+  if (!business.description && !hasSocial && !hasAddress) return null;
 
   return (
     <Card className="bg-surface-cream">
@@ -95,6 +97,7 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
             </div>
           </div>
         )}
+        {hasAddress && <LocationSection business={business} showTitle={false} />}
       </CardContent>
     </Card>
   );

@@ -3,7 +3,7 @@ import type { BusinessWithDetails } from "@/lib/queries/business";
 import { getOptimizedUrl } from "@/lib/cloudinary";
 import { BusinessGalleryLightboxHero } from "./business-gallery-lightbox-hero";
 
-interface GalleryItem {
+export interface GalleryItem {
   id: string;
   url: string;
   thumbnailUrl: string;
@@ -13,7 +13,7 @@ interface GalleryItem {
   isVideo: boolean;
 }
 
-function buildGalleryItems(business: BusinessWithDetails): GalleryItem[] {
+export function buildGalleryItems(business: BusinessWithDetails): GalleryItem[] {
   const portfolioItems = business.media
     .filter((m) => m.type !== "LOGO")
     .map((m) => {
