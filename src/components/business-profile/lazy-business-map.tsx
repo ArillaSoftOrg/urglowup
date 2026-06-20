@@ -22,6 +22,7 @@ interface LazyBusinessMapProps {
   lng: number;
   name: string;
   apiKey: string;
+  className?: string;
 }
 
 export function LazyBusinessMap(props: LazyBusinessMapProps) {
@@ -29,7 +30,7 @@ export function LazyBusinessMap(props: LazyBusinessMapProps) {
 
   if (!showMap) {
     return (
-      <div className="flex h-48 flex-col items-center justify-center rounded-xl bg-surface-cream px-4 text-center">
+      <div className={props.className ?? "flex h-48 flex-col items-center justify-center rounded-xl bg-surface-cream px-4 text-center"}>
         <div className="flex size-10 items-center justify-center rounded-full bg-brand-pink/15">
           <MapPin className="size-5 text-brand-pink-foreground" />
         </div>

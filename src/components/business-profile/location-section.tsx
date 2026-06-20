@@ -1,9 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MapPin, Navigation } from "lucide-react";
@@ -22,6 +16,7 @@ export function LocationSection({
 
   const addressParts = [business.address, business.district, business.city].filter(Boolean);
   const fullAddress = addressParts.join(", ");
+  const mapQuery = [business.name, fullAddress].filter(Boolean).join(" ");
   const hasCoords =
     typeof business.latitude === "number" &&
     typeof business.longitude === "number";
@@ -32,38 +27,47 @@ export function LocationSection({
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Konum</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-start gap-3 rounded-lg bg-muted/30 px-3 py-2.5">
-          <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">{fullAddress}</p>
-        </div>
+    <section aria-labelledby="location-title" className="space-y-4">
+      <h2 id="location-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
+        Konum
+      </h2>
 
-        {hasCoords && mapsApiKey ? (
-          <LazyBusinessMap
-            lat={business.latitude as number}
-            lng={business.longitude as number}
-            name={business.name}
-            apiKey={mapsApiKey}
-          />
-        ) : null}
+      {hasCoords && mapsApiKey ? (
+        <LazyBusinessMap
+          lat={business.latitude as number}
+          lng={business.longitude as number}
+          name={business.name}
+          apiKey={mapsApiKey}
+          className="flex h-[320px] w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-surface-cream px-4 text-center sm:h-[420px]"
+        />
+      ) : (
+        <iframe
+          title={`${business.name} konumu`}
+          src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          className="h-[320px] w-full rounded-xl border border-border/70 bg-surface-cream sm:h-[420px]"
+        />
+      )}
 
+      <div className="flex flex-col gap-3 text-base sm:flex-row sm:items-center sm:justify-between">
+        <p className="flex min-w-0 items-start gap-2 font-medium text-foreground">
+          <MapPin className="mt-1 size-4 shrink-0 text-muted-foreground" />
+          <span>{fullAddress}</span>
+        </p>
         <a
           href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "w-full gap-1.5"
+            buttonVariants({ variant: "link", size: "default" }),
+            "h-auto shrink-0 justify-start gap-1.5 px-0 text-primary sm:justify-center"
           )}
         >
           <Navigation className="size-4" />
           Yol Tarifi Al
         </a>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }

@@ -25,9 +25,10 @@ interface BusinessMapProps {
   lng: number;
   name: string;
   apiKey: string;
+  className?: string;
 }
 
-export function BusinessMap({ lat, lng, name, apiKey }: BusinessMapProps) {
+export function BusinessMap({ lat, lng, name, apiKey, className }: BusinessMapProps) {
   const { isLoaded, loadError: sdkError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
     language: "tr",
@@ -35,7 +36,7 @@ export function BusinessMap({ lat, lng, name, apiKey }: BusinessMapProps) {
 
   if (sdkError) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-xl bg-surface-cream">
+      <div className={className ?? "flex h-48 items-center justify-center rounded-xl bg-surface-cream"}>
         <div className="text-center">
           <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-brand-pink/15">
             <MapPin className="size-5 text-brand-pink-foreground" />
@@ -47,14 +48,14 @@ export function BusinessMap({ lat, lng, name, apiKey }: BusinessMapProps) {
   }
 
   if (!isLoaded) {
-    return <div className="h-48 w-full animate-pulse rounded-xl bg-surface-cream" />;
+    return <div className={className ?? "h-48 w-full animate-pulse rounded-xl bg-surface-cream"} />;
   }
 
   const center = { lat, lng };
 
   return (
     <GoogleMap
-      mapContainerClassName="w-full h-48 rounded-xl overflow-hidden"
+      mapContainerClassName={className ?? "h-48 w-full overflow-hidden rounded-xl"}
       center={center}
       zoom={15}
       options={mapOptions}
