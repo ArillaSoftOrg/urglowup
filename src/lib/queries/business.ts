@@ -66,32 +66,52 @@ export type BusinessWithDetails = NonNullable<
 >;
 
 export async function getBusinessForPublicLink(businessId: string) {
-  return db.business.findUnique({
-    where: { id: businessId },
-    select: {
-      name: true,
-      slug: true,
-      status: true,
-      description: true,
-      phone: true,
-      whatsapp: true,
-      city: true,
-      district: true,
-      address: true,
-      coverImageUrl: true,
-      logoUrl: true,
-      categories: { select: { categoryId: true } },
-      services: { where: { isActive: true }, select: { id: true } },
-      hours: { where: { isOpen: true }, select: { id: true } },
-      media: {
-        where: {
-          status: "ACTIVE",
-          type: { in: ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"] },
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const [business, viewRows] = await Promise.all([
+    db.business.findUnique({
+      where: { id: businessId },
+      select: {
+        name: true,
+        slug: true,
+        status: true,
+        description: true,
+        phone: true,
+        whatsapp: true,
+        city: true,
+        district: true,
+        address: true,
+        coverImageUrl: true,
+        logoUrl: true,
+        categories: { select: { categoryId: true } },
+        services: {
+          where: { isActive: true },
+          select: { id: true, name: true },
+          orderBy: { sortOrder: "asc" },
         },
-        select: { id: true },
+        hours: { where: { isOpen: true }, select: { id: true } },
+        media: {
+          where: {
+            status: "ACTIVE",
+            type: { in: ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"] },
+          },
+          select: { id: true },
+        },
       },
-    },
-  });
+    }),
+    db.businessPageView.groupBy({
+      by: ["source"],
+      where: { businessId, createdAt: { gte: thirtyDaysAgo } },
+      _count: { id: true },
+    }),
+  ]);
+
+  if (!business) return null;
+
+  const bySource = viewRows.map((r) => ({ source: r.source, count: r._count.id }));
+  const total = bySource.reduce((sum, r) => sum + r.count, 0);
+
+  return { ...business, viewStats: { total, bySource } };
 }
 
 export type BusinessForPublicLink = NonNullable<

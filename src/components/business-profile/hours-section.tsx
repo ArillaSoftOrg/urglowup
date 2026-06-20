@@ -83,7 +83,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
   return (
     <div className="grid gap-10 rounded-[2px] bg-background px-2 py-2 md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 lg:max-w-5xl">
       <section aria-labelledby="opening-hours-title" className="space-y-5">
-        <h2 id="opening-hours-title" className="text-[28px] font-bold tracking-normal text-foreground">
+        <h2 id="opening-hours-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
           Açılış saatleri
         </h2>
         <div className="space-y-3">
@@ -96,7 +96,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
             return (
               <div
                 key={hour.dayOfWeek}
-                className="grid grid-cols-[1fr_auto] items-center gap-8 text-[21px] leading-7 text-foreground"
+                className="grid grid-cols-[1fr_auto] items-center gap-4 text-base leading-7 text-foreground lg:gap-8 lg:text-[21px]"
               >
                 <span className="flex min-w-0 items-center gap-4">
                   <span
@@ -122,7 +122,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
 
       {visibleFeatures.length > 0 && (
         <section aria-labelledby="profile-features-title" className="space-y-6">
-          <h2 id="profile-features-title" className="text-[28px] font-bold tracking-normal text-foreground">
+          <h2 id="profile-features-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
             Ek bilgiler
           </h2>
           <div className="space-y-5">
@@ -130,7 +130,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
               const Icon = feature.icon;
 
               return (
-                <div key={feature.key} className="flex items-center gap-3 text-[21px] font-medium leading-7 text-foreground">
+                <div key={feature.key} className="flex items-center gap-3 text-base font-medium leading-7 text-foreground lg:text-[21px]">
                   <Icon className="size-5 shrink-0 stroke-[1.8]" />
                   <span>{feature.label}</span>
                 </div>

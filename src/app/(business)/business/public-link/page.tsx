@@ -2,9 +2,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, ExternalLink, Link2 } from "lucide-react";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
+import { ChannelLinksCard } from "@/components/business/channel-links-card";
 import { CopyButton } from "@/components/business/copy-button";
+import { PosterCard } from "@/components/business/poster-card";
 import { ProfileCompletionCard } from "@/components/business/profile-completion-card";
 import { QRCodeCard } from "@/components/business/qr-code-card";
+import { ServiceLinksCard } from "@/components/business/service-links-card";
+import { SlugEditCard } from "@/components/business/slug-edit-card";
 import {
   InstagramBioText,
   WhatsAppShareText,
@@ -33,6 +37,7 @@ export default async function PublicLinkPage() {
     notFound();
   }
 
+  const appBaseUrl = getAppUrl("");
   const publicUrl = getAppUrl(`/b/${business.slug}`);
   const completion = calculateProfileCompletion(business);
   const isVisible =
@@ -88,7 +93,17 @@ export default async function PublicLinkPage() {
         </CardContent>
       </Card>
 
+      <SlugEditCard currentSlug={business.slug} appUrl={appBaseUrl} />
+
       <QRCodeCard publicUrl={publicUrl} businessSlug={business.slug} />
+
+      <ChannelLinksCard publicUrl={publicUrl} stats={business.viewStats} />
+
+      <PosterCard slug={business.slug} />
+
+      {business.services.length > 0 && (
+        <ServiceLinksCard services={business.services} baseUrl={publicUrl} />
+      )}
 
       <div className="grid gap-6 sm:grid-cols-2">
         <InstagramBioText publicUrl={publicUrl} />

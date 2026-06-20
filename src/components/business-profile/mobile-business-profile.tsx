@@ -221,7 +221,7 @@ function PortfolioGrid({ items }: { items: MobileGalleryItem[] }) {
   const remaining = Math.max(items.length - visible.length, 0);
 
   return (
-    <section id="portfolio" className="border-t px-5 py-8">
+    <section id="portfolio" className="scroll-mt-28 border-t px-5 py-8">
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-xl font-bold tracking-normal">Portföy</h2>
         <span className="rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground">
@@ -273,7 +273,7 @@ function HoursPreview({ business }: { business: BusinessWithDetails }) {
   ).filter(Boolean);
 
   return (
-    <section id="hours" className="border-t px-5 py-8">
+    <section id="hours" className="scroll-mt-28 border-t px-5 py-8">
       <h2 className="mb-4 text-xl font-bold tracking-normal">Açılış saatleri</h2>
       <div className="space-y-1">
         {sorted.map((hour) => {
@@ -319,7 +319,7 @@ function ServicesPreview({
   const categories = business.categories.map((bc) => bc.category);
 
   return (
-    <section id="services" className="border-t px-5 py-8">
+    <section id="services" className="scroll-mt-28 border-t px-5 py-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-normal">Hizmetler</h2>
@@ -391,7 +391,7 @@ function ReviewsPreview({
   if (business.reviews.length === 0) return null;
 
   return (
-    <section id="reviews" className="border-t px-5 py-8">
+    <section id="reviews" className="scroll-mt-28 border-t px-5 py-8">
       <div className="mb-4 flex items-center justify-between gap-4">
         <h2 className="text-xl font-bold tracking-normal">Değerlendirmeler</h2>
         {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
@@ -450,7 +450,7 @@ export function MobileBusinessProfile({
     .join(" ");
 
   return (
-    <div className="min-h-screen bg-background pb-28 lg:hidden">
+    <div className="min-h-screen bg-background pb-24 md:hidden">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Link
           href={hrefPrefix || "/"}
@@ -611,7 +611,7 @@ export function MobileBusinessProfile({
       <PortfolioGrid items={galleryItems} />
       <HoursPreview business={business} />
 
-      <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur md:hidden">
         {business.services.length > 0 && (
           <p className="whitespace-nowrap text-sm text-muted-foreground">
             mevcut {business.services.length} hizmet

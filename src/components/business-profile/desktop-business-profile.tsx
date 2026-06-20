@@ -81,10 +81,10 @@ function DesktopSearchHeader({ locale }: { locale?: string }) {
 
         <ProfileSearchHeader locale={locale} />
 
-        <div className="flex w-64 shrink-0 items-center justify-end gap-4">
+        <div className="flex w-auto shrink-0 items-center justify-end gap-3 lg:w-64 lg:gap-4">
           <Link
             href="/business/dashboard"
-            className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+            className="hidden text-sm font-semibold text-muted-foreground transition hover:text-foreground lg:block"
           >
             İşletme Paneliniz
           </Link>
@@ -92,9 +92,9 @@ function DesktopSearchHeader({ locale }: { locale?: string }) {
           <button
             type="button"
             aria-label="Hesap menüsü"
-            className="flex h-11 items-center gap-3 rounded-full border bg-background px-3 shadow-sm"
+            className="flex h-10 items-center gap-2 rounded-full border bg-background px-2.5 shadow-sm lg:h-11 lg:gap-3 lg:px-3"
           >
-            <span className="flex size-8 items-center justify-center rounded-full bg-muted text-sm font-bold">
+            <span className="flex size-7 items-center justify-center rounded-full bg-muted text-sm font-bold lg:size-8">
               U
             </span>
             <ChevronDown className="size-4" />
@@ -165,10 +165,10 @@ function DesktopTitleBlock({
   return (
     <div className="flex items-end justify-between gap-8">
       <div className="min-w-0 space-y-3">
-        <h1 className="text-[48px] font-bold leading-none tracking-normal">
+        <h1 className="text-[28px] font-bold leading-none tracking-normal lg:text-[44px]">
           {business.name}
         </h1>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-lg text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-base text-muted-foreground lg:text-lg">
           {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
             <>
               <span className="flex items-center gap-1.5 text-foreground">
@@ -280,10 +280,10 @@ export function DesktopBusinessProfile({
   locale?: string;
 }) {
   return (
-    <div className="hidden bg-background lg:block">
+    <div className="hidden bg-background md:block">
       <DesktopSearchHeader locale={locale} />
 
-      <div className="mx-auto max-w-[1440px] space-y-6 px-5 pb-8 pt-7 sm:px-6 lg:px-10 xl:px-12">
+      <div className="mx-auto max-w-[1440px] space-y-5 px-5 pb-8 pt-6 sm:px-6 lg:space-y-6 lg:px-10 lg:pt-7 xl:px-12">
         <DesktopBreadcrumbs business={business} locale={locale} />
         <DesktopTitleBlock
           business={business}
@@ -294,7 +294,9 @@ export function DesktopBusinessProfile({
         <BusinessGalleryHero business={business} />
       </div>
 
-      <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)_380px] gap-10 px-5 py-10 sm:px-6 lg:px-10 xl:px-12">
+      <DesktopSectionNav />
+
+      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
         <div className="min-w-0 space-y-9">
           <ServicesSection business={business} />
           <section id="about">

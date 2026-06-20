@@ -10,12 +10,12 @@ function formatPrice(service: BusinessWithDetails["services"][number]): {
   qualifier: string | null;
 } {
   if (service.priceType === "FREE_CONSULTATION")
-    return { amount: "Ucretsiz danisma", qualifier: null };
+    return { amount: "Ücretsiz danışma", qualifier: null };
   if (service.priceType === "CONSULTATION_REQUIRED")
-    return { amount: "Fiyat icin danisin", qualifier: null };
+    return { amount: "Fiyat için danışın", qualifier: null };
   if (!service.price) return { amount: null, qualifier: null };
 
-  const amount = `TRY ${Number(service.price)}`;
+  const amount = `₺${Number(service.price)}`;
   if (service.priceType === "STARTS_FROM")
     return { amount, qualifier: "itibaren" };
   return { amount, qualifier: null };
@@ -45,7 +45,7 @@ export function ServicesSection({
         {categories.length > 0 && (
           <div className="flex max-w-full gap-2 overflow-x-auto pb-1 sm:justify-end">
             <span className="inline-flex h-10 shrink-0 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
-              One cikan
+              Öne Çıkan
             </span>
             {categories.map((cat) => (
               <span
@@ -63,8 +63,8 @@ export function ServicesSection({
         <div className="rounded-lg border bg-background p-6">
           <EmptyState
             icon={Scissors}
-            headline="Henuz hizmet eklenmedi"
-            description="Bu isletme yakinda hizmetlerini ekleyecek."
+            headline="Henüz hizmet eklenmedi"
+            description="Bu işletme yakında hizmetlerini ekleyecek."
             surface="cream"
             compact
           />
@@ -73,7 +73,7 @@ export function ServicesSection({
         <div className="overflow-hidden rounded-lg border bg-background">
           {featuredServices.length > 0 && (
             <div className="border-b bg-muted/25 px-5 py-3">
-              <p className="text-sm font-semibold">One cikan hizmetler</p>
+              <p className="text-sm font-semibold">Öne çıkan hizmetler</p>
             </div>
           )}
 
@@ -116,8 +116,8 @@ export function ServicesSection({
                   <Link
                     href={`/b/${business.slug}/book?service=${service.id}`}
                     className={cn(
-                      buttonVariants({ variant: "default", size: "lg" }),
-                      "w-full gap-1.5 sm:w-auto",
+                      buttonVariants({ variant: "default", size: "default" }),
+                      "w-full shrink-0 gap-1.5 sm:w-auto",
                     )}
                   >
                     <CalendarCheck className="size-4" />

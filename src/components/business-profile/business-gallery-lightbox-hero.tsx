@@ -130,22 +130,22 @@ export function BusinessGalleryLightboxHero({
   return (
     <>
       <section className="relative">
-        <div className="grid gap-7 lg:h-[440px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)] xl:h-[500px]">
+        <div className="grid gap-3 md:h-[320px] md:grid-cols-[minmax(0,2fr)_minmax(180px,0.75fr)] md:gap-4 lg:h-[440px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)] lg:gap-7 xl:h-[500px]">
           <MediaTile
             item={visibleItems[0]}
             index={0}
             priority
-            className="aspect-[16/10] lg:aspect-auto"
+            className="aspect-[16/10] md:aspect-auto"
             onOpen={setOpenIndex}
           />
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-2 lg:gap-7">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-1 md:grid-rows-2 md:gap-4 lg:gap-7">
             {visibleItems.slice(1, 3).map((item, i) => (
               <MediaTile
                 key={item.id}
                 item={item}
                 index={i + 1}
-                className="aspect-[4/3] lg:aspect-auto lg:min-h-0"
+                className="aspect-[4/3] md:aspect-auto md:min-h-0"
                 onOpen={setOpenIndex}
               />
             ))}
@@ -153,7 +153,7 @@ export function BusinessGalleryLightboxHero({
               <button
                 type="button"
                 onClick={() => setOpenIndex(0)}
-                className="flex aspect-[4/3] items-center justify-center rounded-[18px] border bg-background text-sm text-muted-foreground lg:aspect-auto"
+                className="flex aspect-[4/3] items-center justify-center rounded-[18px] border bg-background text-sm text-muted-foreground md:aspect-auto"
               >
                 <ImageIcon className="mr-2 size-4" />
                 Galeri

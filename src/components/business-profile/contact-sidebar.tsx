@@ -52,7 +52,7 @@ export function ContactSidebar({
   const hrefPrefix = locale && locale !== "tr" ? `/${locale}` : "";
 
   return (
-    <div className="sticky top-28 overflow-hidden rounded-lg border bg-background shadow-lg">
+    <div className="overflow-hidden rounded-lg border bg-background shadow-lg lg:sticky lg:top-[60px]">
       <div className="space-y-5 p-6">
         <div>
           <p className="text-sm font-semibold text-muted-foreground">Randevu</p>

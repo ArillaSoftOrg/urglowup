@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import {
   getBusinessBySlug,
   getGoogleReviewsForBusiness,
@@ -9,6 +10,7 @@ import { absoluteUrl } from "@/lib/seo";
 import { DesktopBusinessProfile } from "@/components/business-profile/desktop-business-profile";
 import { isBusinessOpen } from "@/components/business-profile/hours-section";
 import { MobileBusinessProfile } from "@/components/business-profile/mobile-business-profile";
+import { db } from "@/lib/db";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -22,8 +24,11 @@ const schemaDayOfWeek: Record<string, string> = {
   SUNDAY: "Sunday",
 };
 
+const VALID_SOURCES = new Set(["instagram", "facebook", "tiktok", "whatsapp"]);
+
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ ref?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -54,13 +59,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function BusinessProfilePage({ params }: PageProps) {
-  const { slug } = await params;
+export default async function BusinessProfilePage({ params, searchParams }: PageProps) {
+  const [{ slug }, { ref }] = await Promise.all([params, searchParams]);
   const business = await getBusinessBySlug(slug);
 
   if (!business || HIDDEN_STATUSES.has(business.status)) {
     notFound();
   }
+
+  const source = ref && VALID_SOURCES.has(ref) ? ref : null;
+  after(() =>
+    db.businessPageView.create({
+      data: { businessId: business.id, source },
+    })
+  );
 
   const [reviewSummary, googleReviews] = await Promise.all([
     getBusinessReviewSummary(business.id),
