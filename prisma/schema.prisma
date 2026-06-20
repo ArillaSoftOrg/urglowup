@@ -348,9 +348,20 @@ model Business {
   blockedTimes        BlockedTime[]
   inAppNotifications  InAppNotification[]
   conversations       Conversation[]
+  pageViews           BusinessPageView[]
 
   @@index([city])
   @@index([status])
+}
+
+model BusinessPageView {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  source     String?
+  createdAt  DateTime @default(now())
+
+  @@index([businessId, createdAt(sort: Desc)])
 }
 
 model BusinessCategory {

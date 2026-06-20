@@ -139,7 +139,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
               placeholder="örn. Güzellik Stüdyom"
               className="mt-1.5"
             />
-            <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="name" />
+            <FieldError errors={formErrors} name="name" />
           </div>
 
           <div>
@@ -152,7 +152,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
               className="mt-1.5 min-h-[100px] resize-none"
               maxLength={1000}
             />
-            <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="description" />
+            <FieldError errors={formErrors} name="description" />
           </div>
 
           <div className="rounded-xl bg-surface-cream p-3">
@@ -229,7 +229,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
                 placeholder="+90 555 000 0000"
                 className="mt-1.5"
               />
-              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="phone" />
+              <FieldError errors={formErrors} name="phone" />
             </div>
             <div>
               <Label htmlFor="whatsapp">WhatsApp</Label>
@@ -240,7 +240,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
                 placeholder="+90 555 000 0000"
                 className="mt-1.5"
               />
-              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="whatsapp" />
+              <FieldError errors={formErrors} name="whatsapp" />
             </div>
           </div>
         </CardContent>
@@ -265,7 +265,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
               placeholder="Atatürk Cad. No:1 Kat:3"
               className="mt-1.5"
             />
-            <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="address" />
+            <FieldError errors={formErrors} name="address" />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
@@ -277,7 +277,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
                 placeholder="Istanbul"
                 className="mt-1.5"
               />
-              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="city" />
+              <FieldError errors={formErrors} name="city" />
             </div>
             <div>
               <Label htmlFor="district">İlçe / Semt</Label>
@@ -288,7 +288,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
                 placeholder="Kadıköy"
                 className="mt-1.5"
               />
-              <FieldError errors={state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors} name="district" />
+              <FieldError errors={formErrors} name="district" />
             </div>
           </div>
         </CardContent>
@@ -304,10 +304,7 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
           <CardDescription>Sosyal medya profillerinizi ekleyin.</CardDescription>
         </CardHeader>
         <CardContent>
-          {(() => {
-            const formErrors = state.success ? undefined : (state as { errors?: Record<string, string[]> }).errors;
-            return (
-              <div className="space-y-4">
+          <div className="space-y-4">
                 <div>
                   <Label htmlFor="instagramUrl">Instagram</Label>
                   <SocialInput
@@ -342,8 +339,6 @@ export function ProfileEditForm({ business }: { business: BusinessProfileData })
                   />
                 </div>
               </div>
-            );
-          })()}
         </CardContent>
       </Card>
 
