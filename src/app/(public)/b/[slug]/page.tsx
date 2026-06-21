@@ -10,6 +10,8 @@ import { absoluteUrl } from "@/lib/seo";
 import { DesktopBusinessProfile } from "@/components/business-profile/desktop-business-profile";
 import { isBusinessOpen } from "@/components/business-profile/hours-section";
 import { MobileBusinessProfile } from "@/components/business-profile/mobile-business-profile";
+import { ProfileEndingSection } from "@/components/business-profile/profile-ending-section";
+import { getMarketplaceBusinesses } from "@/lib/queries/marketplace";
 import { db } from "@/lib/db";
 import type { Metadata } from "next";
 
@@ -74,10 +76,20 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
     })
   );
 
-  const [reviewSummary, googleReviews] = await Promise.all([
+  const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw] = await Promise.all([
     getBusinessReviewSummary(business.id),
     getGoogleReviewsForBusiness(business.id),
+    getMarketplaceBusinesses({
+      city: business.city ?? undefined,
+    }),
+    getMarketplaceBusinesses(),
   ]);
+  const nearbyBusinesses = [...cityBusinessesRaw, ...fallbackBusinessesRaw]
+    .filter((item, index, items) =>
+      item.id !== business.id &&
+      items.findIndex((candidate) => candidate.id === item.id) === index
+    )
+    .slice(0, 4);
   const isOpen = isBusinessOpen(business.hours);
   const businessUrl = absoluteUrl(`/b/${business.slug}`);
   const addressText = [business.address, business.district, business.city]
@@ -168,8 +180,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
   return (
     <>
       <style>{`
-        [data-navbar],
-        body > footer {
+        [data-navbar] {
           display: none !important;
         }
       `}</style>
@@ -194,6 +205,10 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
           googleReviews={googleReviews}
           isOpen={isOpen}
           location={location}
+        />
+        <ProfileEndingSection
+          business={business}
+          nearbyBusinesses={nearbyBusinesses}
         />
       </main>
     </>

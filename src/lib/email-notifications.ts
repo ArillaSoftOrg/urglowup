@@ -9,6 +9,7 @@ import { AppointmentCancelledByBusinessEmail } from "@/emails/appointment-cancel
 import { AppointmentCancelledByCustomerEmail } from "@/emails/appointment-cancelled-by-customer";
 import { AppointmentCancellationConfirmationEmail } from "@/emails/appointment-cancellation-confirmation";
 import { AppointmentRescheduleRequestEmail } from "@/emails/appointment-reschedule-request";
+import { AppointmentReviewRequestEmail } from "@/emails/appointment-review-request";
 import React from "react";
 
 // ─── Data Fetcher ────────────────────────────────────────────────
@@ -381,6 +382,32 @@ export async function sendRescheduleRequestEmailToBusiness(
 }
 
 // ─── Moderation Notifications ─────────────────────────────────────
+
+/**
+ * Sent to the customer after their appointment is marked as COMPLETED,
+ * inviting them to leave a review.
+ */
+export async function sendReviewRequestEmailToCustomer(
+  appointmentId: string
+): Promise<void> {
+  const appt = await getAppointmentEmailPayload(appointmentId);
+
+  if (appt.status !== "COMPLETED") return;
+  if (!(await isEmailTransactionalEnabled(appt.customerId))) return;
+
+  const reviewUrl = appUrl(`/account/reviews?write=${appointmentId}`);
+
+  await sendEmail({
+    to: appt.customer.email,
+    subject: `${appt.business.name} deneyiminizi değerlendirin`,
+    react: React.createElement(AppointmentReviewRequestEmail, {
+      customerName: fullName(appt.customer.firstName, appt.customer.lastName),
+      businessName: appt.business.name,
+      serviceName: appt.service.name,
+      reviewUrl,
+    }),
+  });
+}
 
 /**
  * Sent to business owner when a review is hidden or removed by admin.

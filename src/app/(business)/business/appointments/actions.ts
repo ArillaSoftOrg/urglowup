@@ -21,6 +21,7 @@ import {
   sendConfirmedEmailToCustomer,
   sendRejectedEmailToCustomer,
   sendCancelledByBusinessEmailToCustomer,
+  sendReviewRequestEmailToCustomer,
 } from "@/lib/email-notifications";
 import { sendReviewRequestWhatsAppToCustomer } from "@/lib/whatsapp-notifications";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
@@ -165,6 +166,14 @@ export async function completeAppointment(
       await sendReviewRequestWhatsAppToCustomer(appointmentId);
     } catch (err) {
       console.error("[whatsapp] completeAppointment:", err);
+    }
+  });
+
+  after(async () => {
+    try {
+      await sendReviewRequestEmailToCustomer(appointmentId);
+    } catch (err) {
+      console.error("[email] completeAppointment → review request:", err);
     }
   });
 

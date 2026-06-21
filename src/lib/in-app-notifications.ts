@@ -7,6 +7,7 @@ type NotificationPayload = {
   type:
     | "APPOINTMENT_REQUESTED"
     | "APPOINTMENT_CANCELLED_BY_CUSTOMER"
+    | "APPOINTMENT_RESCHEDULED_BY_CUSTOMER"
     | "REVIEW_RECEIVED"
     | "PROFILE_ATTENTION"
     | "INTEGRATION_ALERT"
@@ -130,6 +131,63 @@ export async function notifyBusinessAppointmentCancelledByCustomer(
       appointment.requestedTime
     )}.`,
     href: `/business/appointments?appointmentId=${appointment.id}`,
+  });
+}
+
+export async function notifyBusinessAppointmentRescheduledByCustomer(
+  appointmentId: string
+) {
+  const appointment = await db.appointment.findUnique({
+    where: { id: appointmentId },
+    select: {
+      id: true,
+      businessId: true,
+      requestedDate: true,
+      requestedTime: true,
+      customer: { select: { name: true, firstName: true, lastName: true } },
+      service: { select: { name: true } },
+    },
+  });
+
+  if (!appointment) return { count: 0 };
+
+  const customerName = formatUserName(appointment.customer);
+
+  return createBusinessInAppNotification({
+    businessId: appointment.businessId,
+    appointmentId: appointment.id,
+    type: "APPOINTMENT_RESCHEDULED_BY_CUSTOMER",
+    title: "Randevu yeniden planlandı",
+    body: `${customerName}, ${appointment.service.name} randevusunu ${formatDateTime(
+      appointment.requestedDate,
+      appointment.requestedTime
+    )} olarak güncelledi.`,
+    href: `/business/appointments?appointmentId=${appointment.id}`,
+  });
+}
+
+export async function notifyBusinessReviewReceived(reviewId: string) {
+  const review = await db.review.findUnique({
+    where: { id: reviewId },
+    select: {
+      id: true,
+      businessId: true,
+      rating: true,
+      customer: { select: { name: true, firstName: true, lastName: true } },
+      business: { select: { slug: true } },
+    },
+  });
+
+  if (!review) return { count: 0 };
+
+  const customerName = formatUserName(review.customer);
+
+  return createBusinessInAppNotification({
+    businessId: review.businessId,
+    type: "REVIEW_RECEIVED",
+    title: "Yeni yorum",
+    body: `${customerName} ${review.rating} puan verdi.`,
+    href: `/business/reviews`,
   });
 }
 

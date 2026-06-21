@@ -7,7 +7,9 @@ import { getBusinessReviewSummary } from "@/lib/queries/reviews";
 import { DesktopBusinessProfile } from "@/components/business-profile/desktop-business-profile";
 import { isBusinessOpen } from "@/components/business-profile/hours-section";
 import { MobileBusinessProfile } from "@/components/business-profile/mobile-business-profile";
+import { ProfileEndingSection } from "@/components/business-profile/profile-ending-section";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
+import { getMarketplaceBusinesses } from "@/lib/queries/marketplace";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -53,18 +55,27 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  const [reviewSummary, googleReviews] = await Promise.all([
+  const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw] = await Promise.all([
     getBusinessReviewSummary(business.id),
     getGoogleReviewsForBusiness(business.id),
+    getMarketplaceBusinesses({
+      city: business.city ?? undefined,
+    }),
+    getMarketplaceBusinesses(),
   ]);
+  const nearbyBusinesses = [...cityBusinessesRaw, ...fallbackBusinessesRaw]
+    .filter((item, index, items) =>
+      item.id !== business.id &&
+      items.findIndex((candidate) => candidate.id === item.id) === index
+    )
+    .slice(0, 4);
   const isOpen = isBusinessOpen(business.hours);
   const location = [business.district, business.city].filter(Boolean).join(", ");
 
   return (
     <>
       <style>{`
-        [data-navbar],
-        body > footer {
+        [data-navbar] {
           display: none !important;
         }
       `}</style>
@@ -83,6 +94,11 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           googleReviews={googleReviews}
           isOpen={isOpen}
           location={location}
+          locale={locale}
+        />
+        <ProfileEndingSection
+          business={business}
+          nearbyBusinesses={nearbyBusinesses}
           locale={locale}
         />
       </main>

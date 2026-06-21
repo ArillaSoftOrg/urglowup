@@ -53,10 +53,12 @@ function formatDate(date: Date): string {
 
 function ReviewableAppointmentCard({
   appointment,
+  autoOpen = false,
 }: {
   appointment: ReviewableAppointment;
+  autoOpen?: boolean;
 }) {
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(autoOpen);
 
   if (showForm) {
     return (
@@ -241,9 +243,11 @@ function ReviewCard({ review }: { review: CustomerReview }) {
 export function CustomerReviewList({
   reviews,
   reviewableAppointments,
+  defaultOpenAppointmentId,
 }: {
   reviews: CustomerReview[];
   reviewableAppointments: ReviewableAppointment[];
+  defaultOpenAppointmentId?: string;
 }) {
   const hasContent = reviews.length > 0 || reviewableAppointments.length > 0;
 
@@ -258,7 +262,11 @@ export function CustomerReviewList({
           <h2 className="text-lg font-semibold">Yorum bekleyen</h2>
           <div className="space-y-3">
             {reviewableAppointments.map((apt) => (
-              <ReviewableAppointmentCard key={apt.id} appointment={apt} />
+              <ReviewableAppointmentCard
+                key={apt.id}
+                appointment={apt}
+                autoOpen={apt.id === defaultOpenAppointmentId}
+              />
             ))}
           </div>
         </div>

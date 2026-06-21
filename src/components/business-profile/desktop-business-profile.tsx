@@ -16,7 +16,6 @@ import {
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
 import { HoursSection } from "@/components/business-profile/hours-section";
-import { LocationSection } from "@/components/business-profile/location-section";
 import { ProfileSearchHeader } from "@/components/business-profile/profile-search-header";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
@@ -249,7 +248,6 @@ function DesktopSectionNav() {
     ["#about", "Hakkında"],
     ["#reviews", "Değerlendirmeler"],
     ["#hours", "Açılış saatleri"],
-    ["#location", "Konum"],
   ] as const;
 
   return (
@@ -319,9 +317,6 @@ export function DesktopBusinessProfile({
               reviewSummary={reviewSummary}
               googleReviews={googleReviews}
             />
-          </section>
-          <section id="location">
-            <LocationSection business={business} />
           </section>
         </div>
 

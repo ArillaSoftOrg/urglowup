@@ -17,9 +17,15 @@ import { Star } from "lucide-react";
 
 export const metadata = { title: "Yorumlarım" };
 
-export default async function ReviewsPage() {
+interface PageProps {
+  searchParams: Promise<{ write?: string }>;
+}
+
+export default async function ReviewsPage({ searchParams }: PageProps) {
   const user = await getCurrentUser();
   if (!user) redirect("/");
+
+  const { write } = await searchParams;
 
   const [reviews, reviewableAppointments] = await Promise.all([
     getCustomerReviews(user.id),
@@ -41,6 +47,7 @@ export default async function ReviewsPage() {
         <CustomerReviewList
           reviews={reviews}
           reviewableAppointments={reviewableAppointments}
+          defaultOpenAppointmentId={write}
         />
       ) : (
         <Card>

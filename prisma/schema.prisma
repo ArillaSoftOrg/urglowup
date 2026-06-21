@@ -135,6 +135,7 @@ enum NotificationLogType {
 enum InAppNotificationType {
   APPOINTMENT_REQUESTED
   APPOINTMENT_CANCELLED_BY_CUSTOMER
+  APPOINTMENT_RESCHEDULED_BY_CUSTOMER
   REVIEW_RECEIVED
   PROFILE_ATTENTION
   INTEGRATION_ALERT
@@ -571,11 +572,13 @@ model Review {
   appointment   Appointment? @relation(fields: [appointmentId], references: [id])
   rating        Float
   trustWeight   Float        @default(1.0)
-  comment       String?
-  status        ReviewStatus @default(PENDING)
-  source        ReviewSource @default(URGLOWUP)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  comment         String?
+  businessReply   String?
+  businessReplyAt DateTime?
+  status          ReviewStatus @default(PENDING)
+  source          ReviewSource @default(URGLOWUP)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }
 
 model BusinessRatingStats {

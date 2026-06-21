@@ -163,6 +163,17 @@ export function ReviewsSection({
                           {review.comment}
                         </p>
                       )}
+
+                      {review.businessReply && (
+                        <div className="rounded-lg border-l-2 border-brand-pink/40 bg-muted/40 px-4 py-3">
+                          <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                            İşletme yanıtı
+                          </p>
+                          <p className="text-sm leading-relaxed text-foreground">
+                            {review.businessReply}
+                          </p>
+                        </div>
+                      )}
                     </article>
                   );
                 })}

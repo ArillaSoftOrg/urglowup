@@ -91,6 +91,8 @@ function typeLabel(type: InAppNotificationType) {
       return "Randevu talebi";
     case "APPOINTMENT_CANCELLED_BY_CUSTOMER":
       return "Müşteri iptali";
+    case "APPOINTMENT_RESCHEDULED_BY_CUSTOMER":
+      return "Yeniden planlandı";
     case "REVIEW_RECEIVED":
       return "Yorum";
     case "PROFILE_ATTENTION":

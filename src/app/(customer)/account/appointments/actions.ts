@@ -12,7 +12,10 @@ import {
   sendRescheduleRequestEmailToBusiness,
   sendConfirmedEmailToCustomer,
 } from "@/lib/email-notifications";
-import { notifyBusinessAppointmentCancelledByCustomer } from "@/lib/in-app-notifications";
+import {
+  notifyBusinessAppointmentCancelledByCustomer,
+  notifyBusinessAppointmentRescheduledByCustomer,
+} from "@/lib/in-app-notifications";
 import { hasSchedulingConflict, isWithinWorkingHours, type ConflictAppointment, type ConflictBlockedTime } from "@/lib/calendar";
 
 export type AppointmentActionState = {
@@ -259,6 +262,14 @@ export async function rescheduleAppointment(
       await sendConfirmedEmailToCustomer(appointmentId);
     } catch (err) {
       console.error("[email] rescheduleAppointment → customer:", err);
+    }
+  });
+
+  after(async () => {
+    try {
+      await notifyBusinessAppointmentRescheduledByCustomer(appointmentId);
+    } catch (err) {
+      console.error("[in-app] rescheduleAppointment → business:", err);
     }
   });
 

@@ -4,10 +4,12 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { EDITABLE_STATUSES, MAX_COMMENT_LENGTH } from "@/lib/constants/reviews";
 import { getGlobalAverage, recalculateBusinessStats } from "@/lib/ratings/calculator";
 import { env } from "@/lib/env";
 import { isSuspended } from "@/lib/admin/user-suspension";
+import { notifyBusinessReviewReceived } from "@/lib/in-app-notifications";
 
 export type ReviewActionState = {
   success: boolean;
@@ -131,6 +133,21 @@ export async function submitReview(
 
   const slug = await getBusinessSlug(appointment.businessId);
   revalidateReviewPaths(slug);
+
+  const createdReview = await db.review.findUnique({
+    where: { appointmentId },
+    select: { id: true },
+  });
+
+  if (createdReview) {
+    after(async () => {
+      try {
+        await notifyBusinessReviewReceived(createdReview.id);
+      } catch (err) {
+        console.error("[in-app] submitReview → business:", err);
+      }
+    });
+  }
 
   return { success: true, message: "Review submitted!" };
 }

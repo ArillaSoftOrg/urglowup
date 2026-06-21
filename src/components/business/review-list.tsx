@@ -1,15 +1,20 @@
 "use client";
 
+import { useActionState, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Star, MessageSquare } from "lucide-react";
+import { Star, MessageSquare, Reply, Trash2 } from "lucide-react";
 import {
   REVIEW_STATUS_LABELS,
   REVIEW_STATUS_VARIANTS,
 } from "@/lib/constants/reviews";
+import { replyToReview, deleteReviewReply } from "@/app/(business)/business/reviews/actions";
 import type { BusinessReview } from "@/lib/queries/reviews";
+import type { ReviewReplyState } from "@/app/(business)/business/reviews/actions";
 
 function Stars({ rating }: { rating: number }) {
   const filledStars = Math.round(rating / 2);
@@ -99,6 +104,93 @@ function ReviewStats({
   );
 }
 
+// ─── Reply Form ────────────────────────────────────────────────
+
+function ReplyForm({ review }: { review: BusinessReview }) {
+  const [open, setOpen] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+
+  const boundAction = replyToReview.bind(null, review.id);
+  const initial: ReviewReplyState = { success: false, error: "" };
+  const [state, formAction] = useActionState(boundAction, initial);
+
+  if (state.success && open) setOpen(false);
+
+  async function handleDelete() {
+    setIsPending(true);
+    await deleteReviewReply(review.id);
+    setIsPending(false);
+  }
+
+  if (review.businessReply) {
+    return (
+      <div className="ml-9 space-y-1 rounded-lg border-l-2 border-brand-pink/40 bg-muted/30 px-3 py-2">
+        <p className="text-xs font-semibold text-muted-foreground">İşletme yanıtı</p>
+        {open ? (
+          <form action={formAction} className="space-y-2">
+            <Textarea
+              name="reply"
+              defaultValue={review.businessReply}
+              maxLength={1000}
+              rows={3}
+              className="resize-none text-sm"
+            />
+            {"error" in state && state.error && (
+              <p className="text-xs text-destructive">{state.error}</p>
+            )}
+            <div className="flex gap-2">
+              <Button type="submit" size="sm">Güncelle</Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>İptal</Button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <p className="text-sm text-foreground">{review.businessReply}</p>
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setOpen(true)} className="text-xs text-muted-foreground hover:text-foreground">Düzenle</button>
+              <button onClick={handleDelete} disabled={isPending} className="text-xs text-destructive/70 hover:text-destructive">
+                {isPending ? "Siliniyor..." : "Yanıtı sil"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="ml-9">
+      {open ? (
+        <form action={formAction} className="space-y-2">
+          <Textarea
+            name="reply"
+            placeholder="Müşteriye yanıt yazın..."
+            maxLength={1000}
+            rows={3}
+            className="resize-none text-sm"
+            autoFocus
+          />
+          {"error" in state && state.error && (
+            <p className="text-xs text-destructive">{state.error}</p>
+          )}
+          <div className="flex gap-2">
+            <Button type="submit" size="sm"><Reply className="size-3.5" /> Yanıtla</Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>İptal</Button>
+          </div>
+        </form>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <Reply className="size-3.5" />
+          Yanıtla
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Review Card ───────────────────────────────────────────────
 
 function BusinessReviewCard({ review }: { review: BusinessReview }) {
@@ -146,6 +238,8 @@ function BusinessReviewCard({ review }: { review: BusinessReview }) {
           {review.appointment.requestedTime}
         </p>
       )}
+
+      {review.status === "APPROVED" && <ReplyForm review={review} />}
     </div>
   );
 }
