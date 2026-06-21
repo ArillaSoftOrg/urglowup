@@ -137,13 +137,27 @@ export function DateTimePicker({
           )}
 
           {selectedDate && slotsLoaded && !isPending && slots.length === 0 && (
-            <EmptyState
-              icon={CalendarOff}
-              headline="Uygun saat yok"
-              description="Bu tarihte uygun saat kalmadı. Lütfen başka bir gün deneyin."
-              surface="cream"
-              compact
-            />
+            <div className="space-y-4">
+              <EmptyState
+                icon={CalendarOff}
+                headline="Uygun saat yok"
+                description="Bu tarihte uygun saat kalmadı. Lütfen başka bir gün deneyin veya bekleme listesine girin."
+                surface="cream"
+                compact
+              />
+              {(() => {
+                const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+                return (
+                  <WaitlistButton
+                    businessId={business.id}
+                    serviceId={serviceId}
+                    date={dateStr}
+                    time="any"
+                    isLoggedIn={isLoggedIn ?? false}
+                  />
+                );
+              })()}
+            </div>
           )}
 
           {selectedDate && slotsLoaded && !isPending && slots.length > 0 && (

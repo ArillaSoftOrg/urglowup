@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -14,8 +13,9 @@ import { AboutSection } from "@/components/business-profile/about-section";
 import {
   buildGalleryItems,
   buildPortfolioItems,
-  type GalleryItem,
 } from "@/components/business-profile/business-gallery-hero";
+import { MobileHeroGallery } from "@/components/business-profile/mobile-hero-gallery";
+import { SectionNav, type NavSection } from "@/components/business-profile/section-nav";
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
@@ -78,50 +78,6 @@ function getNextOpenLabel(hours: BusinessWithDetails["hours"]): string {
   return "Kapalı";
 }
 
-function HeroImage({
-  business,
-  items,
-}: {
-  business: BusinessWithDetails;
-  items: GalleryItem[];
-}) {
-  const hero = items[0];
-
-  return (
-    <section className="px-4 pt-3">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
-        {hero ? (
-          hero.isVideo ? (
-            <video
-              src={hero.thumbnailUrl}
-              className="size-full object-cover"
-              muted
-              playsInline
-              preload="metadata"
-            />
-          ) : (
-            <Image
-              src={hero.thumbnailUrl}
-              alt={hero.title ?? business.name}
-              fill
-              sizes="100vw"
-              className="object-cover"
-              priority
-            />
-          )
-        ) : (
-          <div className="size-full bg-surface-cream" />
-        )}
-
-        {items.length > 1 && (
-          <div className="absolute bottom-3 right-3 rounded-full bg-foreground/75 px-3 py-1 text-sm font-bold text-background">
-            1/{items.length}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
 
 function ServicesPreview({
   business,
@@ -133,7 +89,7 @@ function ServicesPreview({
   const categories = business.categories.map((bc) => bc.category);
 
   return (
-    <section id="services" className="scroll-mt-28 border-t px-5 py-8">
+    <section id="services" className="scroll-mt-[106px] border-t px-5 py-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-normal">Hizmetler</h2>
@@ -215,6 +171,18 @@ export function MobileBusinessProfile({
     .filter(Boolean)
     .join(" ");
 
+  const hasSocial = !!(business.instagramUrl || business.facebookUrl || business.tiktokUrl);
+  const hasAbout = !!(business.description || hasSocial || business.address || business.city || business.district);
+
+  const navSections: NavSection[] = [
+    ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
+    { id: "services", label: "Hizmetler" },
+    ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
+    ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
+    ...(business.hours.length > 0 ? [{ id: "hours", label: "Açılış Saatleri" }] : []),
+    { id: "reviews", label: "Değerlendirmeler" },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-24 md:hidden">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
@@ -246,7 +214,19 @@ export function MobileBusinessProfile({
         </div>
       </header>
 
-      <HeroImage business={business} items={galleryItems} />
+      <SectionNav
+        sections={navSections}
+        headerOffset={106}
+        className="sticky top-14"
+      />
+
+      <section id="gallery" className="scroll-mt-[106px]">
+        <MobileHeroGallery
+          items={galleryItems}
+          business={business}
+          businessName={business.name}
+        />
+      </section>
 
       <section className="relative z-10 mx-4 -mt-8 rounded-[28px] bg-background px-5 pb-7 pt-8 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
         <h1 className="text-2xl font-bold leading-tight tracking-normal">
@@ -308,13 +288,13 @@ export function MobileBusinessProfile({
 
       <div className="space-y-8 px-5 py-8">
         <BusinessPortfolioSection items={portfolioItems} business={business} />
-        <section id="about">
+        <section id="about" className="scroll-mt-[106px]">
           <AboutSection business={business} />
         </section>
-        <section id="hours">
+        <section id="hours" className="scroll-mt-[106px]">
           <HoursSection business={business} />
         </section>
-        <section id="reviews">
+        <section id="reviews" className="scroll-mt-[106px]">
           <ReviewsSection business={business} reviewSummary={reviewSummary} />
         </section>
       </div>

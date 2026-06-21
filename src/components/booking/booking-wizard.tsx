@@ -174,6 +174,7 @@ export function BookingWizard({
           serviceId={selectedServiceId}
           selectedDate={selectedDate}
           selectedTime={selectedTime}
+          isLoggedIn={isLoggedIn}
           onSelectDate={handleDateSelect}
           onSelectTime={handleTimeSelect}
         />

@@ -139,7 +139,7 @@ export function BusinessPortfolioSection({
 
   return (
     <>
-      <section id="portfolio" className="scroll-mt-24 border-t pt-8">
+      <section id="portfolio" className="scroll-mt-[106px] border-t pt-8 md:scroll-mt-[130px]">
         <div className="mb-4 flex items-center gap-2.5">
           <h2 className="text-xl font-bold tracking-normal">Portföy</h2>
           <span className="rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground">

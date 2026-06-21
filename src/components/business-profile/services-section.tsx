@@ -31,7 +31,7 @@ export function ServicesSection({
   const remainingServices = business.services.slice(3);
 
   return (
-    <section className="space-y-5" id="services">
+    <section className="scroll-mt-[106px] space-y-5 md:scroll-mt-[130px]" id="services">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-normal">Hizmetler</h2>

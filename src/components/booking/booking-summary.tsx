@@ -18,7 +18,8 @@ import {
   Sparkles,
   Tag,
 } from "lucide-react";
-import { createAppointmentRequest, validateCoupon } from "@/app/(public)/b/[slug]/book/actions";
+import { createAppointmentRequest } from "@/app/(public)/b/[slug]/book/actions";
+import { validateCoupon } from "@/app/(business)/business/coupons/actions";
 import type { BookingActionState } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 import { BotProtectionFields } from "@/components/shared/bot-protection-fields";

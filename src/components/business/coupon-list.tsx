@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tag, Trash2 } from "lucide-react";
 import { toggleCoupon, deleteCoupon } from "@/app/(business)/business/coupons/actions";
-import type { Coupon } from "@/generated/prisma";
+import type { Coupon } from "@/generated/prisma/client";
 
 function formatValue(coupon: Coupon): string {
   return coupon.type === "PERCENTAGE" ? `%${coupon.value}` : `₺${coupon.value}`;
@@ -42,7 +42,7 @@ function CouponRow({ coupon }: { coupon: Coupon }) {
           size="sm"
           variant="outline"
           disabled={isPending}
-          onClick={() => startTransition(() => toggleCoupon(coupon.id))}
+          onClick={() => startTransition(async () => { await toggleCoupon(coupon.id); })}
         >
           {coupon.isActive ? "Pasif yap" : "Aktif et"}
         </Button>
@@ -51,7 +51,7 @@ function CouponRow({ coupon }: { coupon: Coupon }) {
             size="sm"
             variant="ghost"
             disabled={isPending}
-            onClick={() => startTransition(() => deleteCoupon(coupon.id))}
+            onClick={() => startTransition(async () => { await deleteCoupon(coupon.id); })}
           >
             <Trash2 className="size-4 text-destructive" />
           </Button>

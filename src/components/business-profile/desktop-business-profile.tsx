@@ -11,8 +11,10 @@ import {
 import { AboutSection } from "@/components/business-profile/about-section";
 import {
   BusinessGalleryHero,
+  buildGalleryItems,
   buildPortfolioItems,
 } from "@/components/business-profile/business-gallery-hero";
+import { SectionNav, type NavSection } from "@/components/business-profile/section-nav";
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
 import { HoursSection } from "@/components/business-profile/hours-section";
@@ -257,7 +259,23 @@ export function DesktopBusinessProfile({
   location: string;
   locale?: string;
 }) {
+  const galleryItems = buildGalleryItems(business);
   const portfolioItems = buildPortfolioItems(business);
+
+  const hasSocial = !!(business.instagramUrl || business.facebookUrl || business.tiktokUrl);
+  const hasAbout = !!(business.description || hasSocial || business.address || business.city || business.district);
+
+  const navSections: NavSection[] = [
+    ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
+    { id: "services", label: "Hizmetler" },
+    ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
+    ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
+    ...(business.professionals && business.professionals.length > 0
+      ? [{ id: "team", label: "Ekip" }]
+      : []),
+    ...(business.hours.length > 0 ? [{ id: "hours", label: "Açılış Saatleri" }] : []),
+    { id: "reviews", label: "Değerlendirmeler" },
+  ];
 
   return (
     <div className="hidden bg-background md:block">
@@ -271,25 +289,29 @@ export function DesktopBusinessProfile({
           isOpen={isOpen}
           location={location}
         />
-        <BusinessGalleryHero business={business} />
+        <section id="gallery" className="scroll-mt-[130px]">
+          <BusinessGalleryHero business={business} />
+        </section>
       </div>
+
+      <SectionNav
+        sections={navSections}
+        headerOffset={130}
+        className="sticky top-[80px]"
+      />
 
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
         <div className="min-w-0 space-y-9">
           <ServicesSection business={business} />
           <BusinessPortfolioSection items={portfolioItems} business={business} />
-          <section id="about">
+          <section id="about" className="scroll-mt-[130px]">
             <AboutSection business={business} />
           </section>
-          {business.professionals && business.professionals.length > 0 && (
-            <section id="team">
-              <TeamSection business={business} />
-            </section>
-          )}
-          <section id="hours">
+          <TeamSection business={business} />
+          <section id="hours" className="scroll-mt-[130px]">
             <HoursSection business={business} />
           </section>
-          <section id="reviews">
+          <section id="reviews" className="scroll-mt-[130px]">
             <ReviewsSection
               business={business}
               reviewSummary={reviewSummary}

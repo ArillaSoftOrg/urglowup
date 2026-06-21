@@ -277,7 +277,7 @@ function ProfileHighlights({
 
 function AddMediaTile() {
   return (
-    <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/20 p-3 text-center">
+    <div className="flex aspect-square flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/20 p-3 text-center">
       <div className="flex size-12 items-center justify-center rounded-full border bg-background">
         <Plus className="size-6 text-muted-foreground" />
       </div>

@@ -13,7 +13,7 @@ export function TeamSection({ business, hrefPrefix = "" }: TeamSectionProps) {
   if (!professionals || professionals.length === 0) return null;
 
   return (
-    <section id="team" className="space-y-4">
+    <section id="team" className="scroll-mt-[130px] space-y-4">
       <h2 className="text-xl font-bold tracking-normal">Ekip</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {professionals.map((pro) => (
