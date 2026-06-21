@@ -18,6 +18,7 @@ import { ContactSidebar } from "@/components/business-profile/contact-sidebar";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { ProfileSearchHeader } from "@/components/business-profile/profile-search-header";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
+import { TeamSection } from "@/components/business-profile/team-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails, GoogleReview } from "@/lib/queries/business";
@@ -280,6 +281,11 @@ export function DesktopBusinessProfile({
           <section id="about">
             <AboutSection business={business} />
           </section>
+          {business.professionals && business.professionals.length > 0 && (
+            <section id="team">
+              <TeamSection business={business} />
+            </section>
+          )}
           <section id="hours">
             <HoursSection business={business} />
           </section>

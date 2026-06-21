@@ -29,6 +29,18 @@ async function fetchBusinessBySlug(slug: string) {
       hours: {
         orderBy: { dayOfWeek: "asc" },
       },
+      professionals: {
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          slug: true,
+          displayName: true,
+          title: true,
+          bio: true,
+          avatarUrl: true,
+        },
+      },
       _count: {
         select: {
           reviews: { where: { status: "APPROVED" } },

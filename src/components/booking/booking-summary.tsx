@@ -22,6 +22,7 @@ import type { BookingBusiness } from "@/lib/queries/appointments";
 import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 
 type Service = BookingBusiness["services"][number];
+type Professional = BookingBusiness["professionals"][number];
 
 function formatPrice(service: Service): {
   amount: string | null;
@@ -51,6 +52,7 @@ function formatDate(date: Date): string {
 export function BookingSummary({
   business,
   service,
+  professional,
   date,
   time,
   customerNote,
@@ -58,6 +60,7 @@ export function BookingSummary({
 }: {
   business: BookingBusiness;
   service: Service;
+  professional?: Professional;
   date: Date;
   time: string;
   customerNote: string;
@@ -159,6 +162,13 @@ export function BookingSummary({
               <span className="w-14 text-xs text-muted-foreground">Süre</span>
               <span className="font-medium">{service.durationMinutes} dk</span>
             </div>
+            {professional && (
+              <div className="flex items-center gap-3">
+                <div className="size-4 shrink-0 text-muted-foreground text-center text-xs">👤</div>
+                <span className="w-14 text-xs text-muted-foreground">Uzman</span>
+                <span className="font-medium">{professional.displayName}</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -175,6 +185,7 @@ export function BookingSummary({
         <BotProtectionFields />
         <input type="hidden" name="businessId" value={business.id} />
         <input type="hidden" name="serviceId" value={service.id} />
+        {professional && <input type="hidden" name="professionalId" value={professional.id} />}
         <input type="hidden" name="date" value={dateStr} />
         <input type="hidden" name="time" value={time} />
 

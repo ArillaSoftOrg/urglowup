@@ -6,40 +6,67 @@ import { ArrowLeft } from "lucide-react";
 import { BookingHeader } from "./booking-header";
 import { BusinessChip } from "./business-chip";
 import { ServicePicker } from "./service-picker";
+import { ProfessionalPicker } from "./professional-picker";
 import { DateTimePicker } from "./date-time-picker";
 import { BookingSummary } from "./booking-summary";
 import { LoginPrompt } from "./login-prompt";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 
-const STEP_LABELS = ["Hizmet", "Tarih & Saat", "Onayla"];
-const TOTAL_STEPS = STEP_LABELS.length;
-
 export function BookingWizard({
   business,
   isLoggedIn,
   initialServiceId,
+  initialProfessionalId,
 }: {
   business: BookingBusiness;
   isLoggedIn: boolean;
   initialServiceId?: string;
+  initialProfessionalId?: string;
 }) {
-  const [step, setStep] = useState(initialServiceId ? 2 : 1);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
-    initialServiceId ?? null
+  const hasProfessionals = business.professionals.length > 0;
+
+  // Steps: 1=Hizmet, 2=Uzman (optional), 3=Tarih&Saat, 4=Onayla
+  const getInitialStep = () => {
+    if (!initialServiceId) return 1;
+    if (hasProfessionals && !initialProfessionalId) return 2;
+    return 3;
+  };
+
+  const [step, setStep] = useState(getInitialStep);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(initialServiceId ?? null);
+  // null = any professional (assigned by business), undefined = not yet chosen
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(
+    initialProfessionalId ?? null
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [customerNote, setCustomerNote] = useState("");
 
-  const selectedService = business.services.find(
-    (s) => s.id === selectedServiceId
-  );
+  const selectedService = business.services.find((s) => s.id === selectedServiceId);
+  const selectedProfessional = selectedProfessionalId
+    ? business.professionals.find((p) => p.id === selectedProfessionalId)
+    : null;
+
+  // Build dynamic step labels
+  const stepLabels = hasProfessionals
+    ? ["Hizmet", "Uzman", "Tarih & Saat", "Onayla"]
+    : ["Hizmet", "Tarih & Saat", "Onayla"];
+
+  const dateStep = hasProfessionals ? 3 : 2;
+  const confirmStep = hasProfessionals ? 4 : 3;
 
   function handleServiceSelect(id: string) {
     setSelectedServiceId(id);
     setSelectedDate(null);
     setSelectedTime(null);
-    setStep(2);
+    setStep(hasProfessionals ? 2 : dateStep);
+  }
+
+  function handleProfessionalSelect(id: string | null) {
+    setSelectedProfessionalId(id);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setStep(dateStep);
   }
 
   function handleDateSelect(date: Date) {
@@ -49,7 +76,7 @@ export function BookingWizard({
 
   function handleTimeSelect(time: string) {
     setSelectedTime(time);
-    setStep(3);
+    setStep(confirmStep);
   }
 
   function goBack() {
@@ -64,14 +91,14 @@ export function BookingWizard({
         businessName={business.name}
         businessSlug={business.slug}
         currentStep={step}
-        totalSteps={TOTAL_STEPS}
+        totalSteps={stepLabels.length}
       />
 
       <BusinessChip business={business} />
 
       {/* Step indicator */}
       <div className="flex items-center gap-2">
-        {STEP_LABELS.map((label, i) => {
+        {stepLabels.map((label, i) => {
           const stepNum = i + 1;
           const isActive = step === stepNum;
           const isDone = step > stepNum;
@@ -115,19 +142,13 @@ export function BookingWizard({
 
       {/* Back button */}
       {step > 1 && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={goBack}
-          className="gap-1.5"
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={goBack} className="gap-1.5">
           <ArrowLeft className="size-4" />
           Geri
         </Button>
       )}
 
-      {/* Steps */}
+      {/* Step 1: Service */}
       {step === 1 && (
         <ServicePicker
           services={business.services}
@@ -136,7 +157,18 @@ export function BookingWizard({
         />
       )}
 
-      {step === 2 && selectedServiceId && (
+      {/* Step 2: Professional (only when business has professionals) */}
+      {step === 2 && hasProfessionals && selectedServiceId && (
+        <ProfessionalPicker
+          professionals={business.professionals}
+          serviceId={selectedServiceId}
+          selectedId={selectedProfessionalId}
+          onSelect={handleProfessionalSelect}
+        />
+      )}
+
+      {/* Step 3: Date & Time */}
+      {step === dateStep && selectedServiceId && (
         <DateTimePicker
           business={business}
           serviceId={selectedServiceId}
@@ -147,7 +179,8 @@ export function BookingWizard({
         />
       )}
 
-      {step === 3 &&
+      {/* Step 4: Confirm */}
+      {step === confirmStep &&
         selectedService &&
         selectedDate &&
         selectedTime &&
@@ -155,6 +188,7 @@ export function BookingWizard({
           <BookingSummary
             business={business}
             service={selectedService}
+            professional={selectedProfessional ?? undefined}
             date={selectedDate}
             time={selectedTime}
             customerNote={customerNote}

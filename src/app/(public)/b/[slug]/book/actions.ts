@@ -28,6 +28,7 @@ import { validateBotProtection } from "@/lib/bot-protection";
 const bookingRequestSchema = z.object({
   businessId: z.string().min(1, "İşletme bilgisi eksik."),
   serviceId: z.string().min(1, "Hizmet seçimi eksik."),
+  professionalId: z.string().optional().or(z.literal("")),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçersiz tarih biçimi."),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Geçersiz saat biçimi."),
   customerNote: z
@@ -176,7 +177,7 @@ export async function createAppointmentRequest(
     };
   }
 
-  const { businessId, serviceId, date, time, customerNote } = result.data;
+  const { businessId, serviceId, professionalId, date, time, customerNote } = result.data;
 
   try {
     // Verify business exists and is bookable
@@ -241,6 +242,7 @@ export async function createAppointmentRequest(
         businessId,
         customerId: user.id,
         serviceId,
+        professionalId: professionalId || null,
         requestedDate: new Date(date),
         requestedTime: time,
         status: "PENDING",

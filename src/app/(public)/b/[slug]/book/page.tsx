@@ -9,7 +9,7 @@ const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ service?: string }>;
+  searchParams: Promise<{ service?: string; professional?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BookPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { service: serviceParam } = await searchParams;
+  const { service: serviceParam, professional: professionalParam } = await searchParams;
 
   const [business, user] = await Promise.all([
     getBusinessForBooking(slug),
@@ -50,6 +50,11 @@ export default async function BookPage({ params, searchParams }: PageProps) {
       ? serviceParam
       : undefined;
 
+  const initialProfessionalId =
+    professionalParam && business.professionals.some((p) => p.id === professionalParam)
+      ? professionalParam
+      : undefined;
+
   if (!hasServices || !hasHours) {
     return (
       <BookingUnavailable
@@ -65,6 +70,7 @@ export default async function BookPage({ params, searchParams }: PageProps) {
         business={business}
         isLoggedIn={!!user}
         initialServiceId={initialServiceId}
+        initialProfessionalId={initialProfessionalId}
       />
     </div>
   );

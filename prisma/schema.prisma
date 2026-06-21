@@ -350,9 +350,22 @@ model Business {
   inAppNotifications  InAppNotification[]
   conversations       Conversation[]
   pageViews           BusinessPageView[]
+  customerNotes       BusinessCustomerNote[]
 
   @@index([city])
   @@index([status])
+}
+
+model BusinessCustomerNote {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId String
+  note       String
+  updatedAt  DateTime @updatedAt
+
+  @@unique([businessId, customerId])
+  @@index([businessId])
 }
 
 model BusinessPageView {

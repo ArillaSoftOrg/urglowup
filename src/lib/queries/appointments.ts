@@ -71,6 +71,17 @@ export async function getBusinessForBooking(slug: string) {
           priceType: true,
         },
       },
+      professionals: {
+        where: { isActive: true },
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          displayName: true,
+          title: true,
+          avatarUrl: true,
+          services: { select: { serviceId: true } },
+        },
+      },
       hours: true,
       holidaySuggestions: {
         where: { state: "APPLIED" },

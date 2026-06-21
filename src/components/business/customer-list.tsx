@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Users } from "lucide-react";
+import { ChevronRight, Search, Users } from "lucide-react";
 
 export interface CustomerSummary {
   customerId: string;
@@ -106,7 +107,11 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
                 .join("");
 
               return (
-                <li key={customer.customerId} className="flex items-center gap-4 px-6 py-4">
+                <li key={customer.customerId}>
+                <Link
+                  href={`/business/customers/${customer.customerId}`}
+                  className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-muted/50"
+                >
                   <Avatar size="sm">
                     <AvatarFallback>{initials || "?"}</AvatarFallback>
                   </Avatar>
@@ -142,6 +147,8 @@ export function CustomerList({ customers }: { customers: CustomerSummary[] }) {
                   >
                     {STATUS_LABELS[customer.lastAppointmentStatus] ?? customer.lastAppointmentStatus}
                   </Badge>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
                 </li>
               );
             })}
