@@ -92,7 +92,7 @@ export function ProfileEndingSection({
 
   return (
     <section className="border-t border-border/70 bg-background">
-      <div className="mx-auto max-w-[1440px] space-y-16 px-5 py-12 sm:px-6 lg:px-10 lg:py-16 xl:px-12">
+      <div className="mx-auto max-w-[1440px] space-y-14 px-5 py-12 sm:px-6 lg:px-10 lg:py-14 xl:px-12">
         {nearbyBusinesses.length > 0 && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold tracking-normal lg:text-[28px]">

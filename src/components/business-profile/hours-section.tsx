@@ -81,7 +81,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
   const visibleFeatures = FEATURE_OPTIONS.filter((feature) => business[feature.key]);
 
   return (
-    <div className="grid gap-10 rounded-[2px] bg-background px-2 py-2 md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 lg:max-w-5xl">
+    <div className="grid gap-10 border-t border-border/70 pt-10 md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 lg:max-w-5xl">
       <section aria-labelledby="opening-hours-title" className="space-y-5">
         <h2 id="opening-hours-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
           Açılış saatleri
@@ -102,7 +102,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
                   <span
                     aria-hidden="true"
                     className={`size-4 shrink-0 rounded-full ${
-                      hasHours ? "bg-[oklch(0.68_0.17_142)]" : "bg-muted-foreground/35"
+                      hasHours ? "bg-success-foreground" : "bg-muted-foreground/35"
                     }`}
                   />
                   <span className={isToday ? "font-bold" : "font-medium"}>

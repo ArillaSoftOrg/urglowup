@@ -29,7 +29,11 @@ export function LocationSection({
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
   return (
-    <section aria-labelledby="location-title" className="space-y-4">
+    <section
+      aria-label={showTitle ? undefined : "Konum"}
+      aria-labelledby={showTitle ? "location-title" : undefined}
+      className="space-y-4"
+    >
       {showTitle && (
         <h2 id="location-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
           Konum
@@ -42,7 +46,7 @@ export function LocationSection({
           lng={business.longitude as number}
           name={business.name}
           apiKey={mapsApiKey}
-          className="flex h-[320px] w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-surface-cream px-4 text-center sm:h-[420px]"
+          className="flex h-[320px] w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-muted/30 px-4 text-center sm:h-[420px]"
         />
       ) : (
         <iframe
@@ -50,7 +54,7 @@ export function LocationSection({
           src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          className="h-[320px] w-full rounded-xl border border-border/70 bg-surface-cream sm:h-[420px]"
+          className="h-[320px] w-full rounded-xl border border-border/70 bg-muted/30 sm:h-[420px]"
         />
       )}
 

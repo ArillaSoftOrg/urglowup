@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Star, MessageSquare, Reply, Trash2 } from "lucide-react";
+import { Star, MessageSquare, Reply } from "lucide-react";
 import {
   REVIEW_STATUS_LABELS,
   REVIEW_STATUS_VARIANTS,

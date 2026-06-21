@@ -5,12 +5,12 @@ import {
   Clock,
   Heart,
   MapPin,
-  MessageCircle,
   Navigation,
   Phone,
   Share2,
   Star,
 } from "lucide-react";
+import { SocialIcon } from "@/components/shared/social-icons";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 export function ProfileHeader({
@@ -124,7 +124,7 @@ export function ProfileHeader({
                 "gap-1.5",
               )}
             >
-              <MessageCircle className="size-4" />
+              <SocialIcon name="whatsapp" className="size-4 text-[#25D366]" />
               WhatsApp
             </a>
           )}
@@ -138,6 +138,7 @@ export function ProfileHeader({
                 "gap-1.5",
               )}
             >
+              <SocialIcon name="instagram" className="size-4 text-[#E4405F]" />
               Instagram
             </a>
           )}

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { ComponentProps } from "react";
 import {
   ChevronDown,
   Globe2,
@@ -8,50 +7,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { CookieSettingsButton } from "@/components/layout/cookie-settings-button";
-
-function InstagramIcon(props: ComponentProps<"svg">) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-      <path
-        d="M7.8 2.8h8.4c2.8 0 5 2.2 5 5v8.4c0 2.8-2.2 5-5 5H7.8c-2.8 0-5-2.2-5-5V7.8c0-2.8 2.2-5 5-5Zm0 2.2a2.8 2.8 0 0 0-2.8 2.8v8.4A2.8 2.8 0 0 0 7.8 19h8.4a2.8 2.8 0 0 0 2.8-2.8V7.8A2.8 2.8 0 0 0 16.2 5H7.8Zm4.2 3.4a3.6 3.6 0 1 1 0 7.2 3.6 3.6 0 0 1 0-7.2Zm0 2.1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm4.1-2.4a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function TikTokIcon(props: ComponentProps<"svg">) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-      <path
-        d="M15.8 3.2c.3 2.4 1.7 4 4 4.4v3.2a7.4 7.4 0 0 1-4-1.2v5.8c0 3.5-2.4 5.7-5.7 5.7-3.1 0-5.5-2.1-5.5-5.1 0-3.2 2.5-5.2 5.6-5.2.5 0 .9.1 1.3.2v3.3a3 3 0 0 0-1.2-.2c-1.4 0-2.4.8-2.4 1.9s.9 1.9 2.2 1.9c1.4 0 2.3-.8 2.3-2.4V3.2h3.4Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function YoutubeIcon(props: ComponentProps<"svg">) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-      <path
-        d="M21.4 7.2a3 3 0 0 0-2.1-2.1C17.5 4.6 12 4.6 12 4.6s-5.5 0-7.3.5a3 3 0 0 0-2.1 2.1A31.2 31.2 0 0 0 2.1 12c0 1.6.1 3.2.5 4.8a3 3 0 0 0 2.1 2.1c1.8.5 7.3.5 7.3.5s5.5 0 7.3-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-3.2.5-4.8s-.1-3.2-.5-4.8ZM10 15.5v-7l6 3.5-6 3.5Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function LinkedInIcon(props: ComponentProps<"svg">) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
-      <path
-        d="M6.4 8.8H3.2v11.4h3.2V8.8ZM4.8 3.6a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8Zm7.1 5.2H8.8v11.4H12v-5.9c0-1.6.7-2.7 2.1-2.7 1.2 0 1.8.8 1.8 2.5v6.1h3.2v-6.7c0-3.3-1.7-5-4.3-5-1.6 0-2.6.8-3 1.6V8.8Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
+import { SocialIcon } from "@/components/shared/social-icons";
 
 const footerColumns = [
   {
@@ -91,10 +47,10 @@ const footerColumns = [
 ] as const;
 
 const socialLinks = [
-  { label: "Instagram", href: "#", icon: InstagramIcon },
-  { label: "TikTok", href: "#", icon: TikTokIcon },
-  { label: "LinkedIn", href: "#", icon: LinkedInIcon },
-  { label: "YouTube", href: "#", icon: YoutubeIcon },
+  { label: "Instagram", href: "#", icon: "instagram" },
+  { label: "TikTok", href: "#", icon: "tiktok" },
+  { label: "LinkedIn", href: "#", icon: "linkedin" },
+  { label: "YouTube", href: "#", icon: "youtube" },
 ] as const;
 
 function FooterLink({ href, label }: { href: string; label: string }) {
@@ -135,19 +91,16 @@ export function Footer() {
               </div>
 
               <div className="flex gap-5">
-                {socialLinks.map((social) => {
-                  const Icon = social.icon;
-                  return (
-                    <Link
-                      key={social.label}
-                      href={social.href}
-                      aria-label={social.label}
-                      className="text-muted-foreground transition-colors duration-200 hover:text-brand-purple-foreground"
-                    >
-                      <Icon aria-hidden="true" className="h-5 w-5" />
-                    </Link>
-                  );
-                })}
+                {socialLinks.map((social) => (
+                  <Link
+                    key={social.label}
+                    href={social.href}
+                    aria-label={social.label}
+                    className="text-muted-foreground transition-colors duration-200 hover:text-brand-purple-foreground"
+                  >
+                    <SocialIcon name={social.icon} className="h-5 w-5" />
+                  </Link>
+                ))}
               </div>
             </div>
 

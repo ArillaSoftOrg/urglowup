@@ -1,12 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
 import { MessageSquare, Star } from "lucide-react";
 import { GoogleReviewsPlaceholder } from "./google-reviews-placeholder";
 import type { BusinessWithDetails, GoogleReview } from "@/lib/queries/business";
@@ -24,7 +16,7 @@ function RatingStars({
   size?: "sm" | "lg";
 }) {
   const roundedRating = Math.round(rating);
-  const starClass = size === "lg" ? "size-9" : "size-4";
+  const starClass = size === "lg" ? "size-8" : "size-4";
 
   return (
     <div
@@ -55,9 +47,9 @@ function RatingSummary({ summary }: { summary: ReviewSummary }) {
   const fivePointRating = (summary.averageRating ?? 0) / 2;
 
   return (
-    <div className="space-y-3 pb-8">
+    <div className="flex flex-wrap items-center gap-3">
       <RatingStars rating={fivePointRating} size="lg" />
-      <p className="text-lg font-bold leading-none">
+      <p className="text-lg font-bold leading-none text-foreground">
         {fivePointRating.toLocaleString("tr-TR", {
           minimumFractionDigits: 1,
           maximumFractionDigits: 1,
@@ -91,107 +83,102 @@ export function ReviewsSection({
   googleReviews?: GoogleReview[];
 }) {
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Değerlendirmeler</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {business.reviews.length === 0 ? (
-            <EmptyState
-              icon={MessageSquare}
-              headline="Henüz değerlendirme yok"
-              description="Bu işletme için henüz yayınlanmış değerlendirme bulunmuyor."
-              surface="cream"
-              compact
-            />
-          ) : (
+    <div className="space-y-8 border-t border-border/70 pt-10">
+      <div className="space-y-5">
+        <h2 className="text-2xl font-bold tracking-normal lg:text-[30px]">
+          Değerlendirmeler
+        </h2>
+
+        {business.reviews.length === 0 ? (
+          <div className="flex max-w-xl items-start gap-4 rounded-xl border border-border/70 px-5 py-5">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-cream text-muted-foreground">
+              <MessageSquare className="size-5" strokeWidth={1.6} />
+            </span>
             <div>
-              <RatingSummary summary={reviewSummary} />
-
-              <div className="grid gap-x-14 gap-y-12 md:grid-cols-2">
-                {business.reviews.map((review) => {
-                  const name = [
-                    review.customer.firstName,
-                    review.customer.lastName,
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
-                  const initials = [
-                    review.customer.firstName,
-                    review.customer.lastName,
-                  ]
-                    .filter(Boolean)
-                    .map((n) => n!.charAt(0).toUpperCase())
-                    .join("");
-
-                  return (
-                    <article key={review.id} className="min-w-0 space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-20 bg-surface-purple text-brand-purple-foreground after:border-transparent">
-                          {review.customer.avatarUrl && (
-                            <AvatarImage
-                              src={review.customer.avatarUrl}
-                              alt={name}
-                            />
-                          )}
-                          <AvatarFallback className="bg-surface-purple text-2xl font-bold text-brand-purple-foreground">
-                            {initials || "M"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex min-w-0 flex-wrap items-center gap-2">
-                            <p className="min-w-0 truncate text-lg font-semibold leading-tight">
-                              {name || "Müşteri"}
-                            </p>
-                            {review.appointmentId && (
-                              <Badge variant="success" className="shrink-0">
-                                Doğrulanmış randevu
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {formatReviewDate(review.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-
-                      <RatingStars rating={(review.rating as number) / 2} />
-
-                      {review.comment && (
-                        <p className="text-xl leading-snug text-foreground">
-                          {review.comment}
-                        </p>
-                      )}
-
-                      {review.businessReply && (
-                        <div className="rounded-lg border-l-2 border-brand-pink/40 bg-muted/40 px-4 py-3">
-                          <p className="mb-1 text-xs font-semibold text-muted-foreground">
-                            İşletme yanıtı
-                          </p>
-                          <p className="text-sm leading-relaxed text-foreground">
-                            {review.businessReply}
-                          </p>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
+              <h3 className="font-semibold tracking-normal text-foreground">
+                Henüz değerlendirme yok
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Bu işletme için henüz yayınlanmış değerlendirme bulunmuyor.
+              </p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <RatingSummary summary={reviewSummary} />
+
+            <div className="divide-y divide-border/70">
+              {business.reviews.map((review) => {
+                const name = [
+                  review.customer.firstName,
+                  review.customer.lastName,
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                const initials = [
+                  review.customer.firstName,
+                  review.customer.lastName,
+                ]
+                  .filter(Boolean)
+                  .map((n) => n!.charAt(0).toUpperCase())
+                  .join("");
+
+                return (
+                  <article key={review.id} className="min-w-0 space-y-4 py-7 first:pt-0 last:pb-0">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="size-16 bg-surface-purple text-brand-purple-foreground after:border-transparent">
+                        {review.customer.avatarUrl && (
+                          <AvatarImage
+                            src={review.customer.avatarUrl}
+                            alt={name}
+                          />
+                        )}
+                        <AvatarFallback className="bg-surface-purple text-xl font-bold text-brand-purple-foreground">
+                          {initials || "M"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <p className="min-w-0 truncate text-lg font-semibold leading-tight">
+                            {name || "Müşteri"}
+                          </p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {formatReviewDate(review.createdAt)}
+                        </p>
+                        <RatingStars rating={(review.rating as number) / 2} />
+                      </div>
+                    </div>
+
+                    {review.comment && (
+                      <p className="max-w-[72ch] text-lg leading-8 text-foreground">
+                        {review.comment}
+                      </p>
+                    )}
+
+                    {review.businessReply && (
+                      <div className="max-w-[72ch] rounded-lg bg-surface-cream px-4 py-3">
+                        <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                          İşletme yanıtı
+                        </p>
+                        <p className="text-sm leading-relaxed text-foreground">
+                          {review.businessReply}
+                        </p>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
 
       {googleReviews.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <GoogleReviewsPlaceholder
-              reviews={googleReviews}
-              businessName={business.name}
-            />
-          </CardContent>
-        </Card>
+        <GoogleReviewsPlaceholder
+          reviews={googleReviews}
+          businessName={business.name}
+        />
       )}
     </div>
   );

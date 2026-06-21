@@ -246,8 +246,8 @@ function DesktopSectionNav() {
     ["#services", "Hizmetler"],
     ["#portfolio", "Portföy"],
     ["#about", "Hakkında"],
-    ["#reviews", "Değerlendirmeler"],
     ["#hours", "Açılış saatleri"],
+    ["#reviews", "Değerlendirmeler"],
   ] as const;
 
   return (
