@@ -13,13 +13,17 @@ import {
   Hourglass,
   Loader2,
   AlertCircle,
+  CheckCircle2,
   Info,
   Sparkles,
+  Tag,
 } from "lucide-react";
-import { createAppointmentRequest } from "@/app/(public)/b/[slug]/book/actions";
+import { createAppointmentRequest, validateCoupon } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingActionState } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
+import { useState, useTransition } from "react";
+import { Input } from "@/components/ui/input";
 
 type Service = BookingBusiness["services"][number];
 type Professional = BookingBusiness["professionals"][number];
@@ -72,6 +76,24 @@ export function BookingSummary({
     BookingActionState,
     FormData
   >(createAppointmentRequest, { success: false });
+
+  const [couponCode, setCouponCode] = useState("");
+  const [couponState, setCouponState] = useState<
+    | null
+    | { valid: false; error: string }
+    | { valid: true; discountAmount: number; couponId: string }
+  >(null);
+  const [couponPending, startCouponTransition] = useTransition();
+
+  const servicePrice = service.price ? Number(service.price) : 0;
+
+  function handleCouponApply() {
+    if (!couponCode.trim()) return;
+    startCouponTransition(async () => {
+      const result = await validateCoupon(business.id, couponCode.trim(), servicePrice);
+      setCouponState(result);
+    });
+  }
 
   const { amount, qualifier } = formatPrice(service);
   const fieldError = (key: string) => state.errors?.[key];
@@ -181,11 +203,53 @@ export function BookingSummary({
         </p>
       </div>
 
+      {/* Coupon field */}
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Kupon kodu (opsiyonel)"
+            value={couponCode}
+            onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponState(null); }}
+            className="font-mono uppercase"
+            maxLength={20}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleCouponApply}
+            disabled={couponPending || !couponCode.trim()}
+            className="shrink-0"
+          >
+            <Tag className="size-4" />
+            Uygula
+          </Button>
+        </div>
+        {couponState && !couponState.valid && (
+          <p className="flex items-center gap-1.5 text-xs text-destructive">
+            <AlertCircle className="size-3.5" />
+            {couponState.error}
+          </p>
+        )}
+        {couponState?.valid && (
+          <p className="flex items-center gap-1.5 text-xs text-success-foreground">
+            <CheckCircle2 className="size-3.5" />
+            ₺{couponState.discountAmount} indirim uygulandı!
+          </p>
+        )}
+      </div>
+
       <form action={formAction} className="space-y-4">
         <BotProtectionFields />
         <input type="hidden" name="businessId" value={business.id} />
         <input type="hidden" name="serviceId" value={service.id} />
         {professional && <input type="hidden" name="professionalId" value={professional.id} />}
+        {couponState?.valid && (
+          <>
+            <input type="hidden" name="couponId" value={couponState.couponId} />
+            <input type="hidden" name="discountAmount" value={couponState.discountAmount} />
+          </>
+        )}
         <input type="hidden" name="date" value={dateStr} />
         <input type="hidden" name="time" value={time} />
 

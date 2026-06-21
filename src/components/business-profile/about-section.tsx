@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails } from "@/lib/queries/business";
@@ -22,26 +25,48 @@ const SOCIAL_LINKS = [
   },
 ];
 
+function isDescriptionLong(text: string): boolean {
+  return text.length > 280 || text.split("\n").length > 4;
+}
+
 export function AboutSection({ business }: { business: BusinessWithDetails }) {
+  const [expanded, setExpanded] = useState(false);
   const hasSocial = SOCIAL_LINKS.some((s) => !!business[s.key]);
   const hasAddress = business.address || business.city || business.district;
+  const isLong = business.description ? isDescriptionLong(business.description) : false;
 
   if (!business.description && !hasSocial && !hasAddress) return null;
 
   return (
     <div className="space-y-6 border-t border-border/70 pt-10">
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold tracking-normal lg:text-[30px]">
-          Hakkında
-        </h2>
+        <h2 className="text-2xl font-bold tracking-normal">Hakkında</h2>
+
         {business.description && (
-          <p className="max-w-[75ch] whitespace-pre-line text-[17px] leading-8 text-foreground">
-            {business.description}
-          </p>
+          <div>
+            <p
+              className={cn(
+                "max-w-[72ch] whitespace-pre-line text-[15px] leading-[1.8] text-foreground/90",
+                !expanded && isLong && "line-clamp-4",
+              )}
+            >
+              {business.description}
+            </p>
+            {isLong && (
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="mt-2.5 text-sm font-semibold text-primary hover:underline focus:outline-none"
+              >
+                {expanded ? "Daha az göster" : "Devamını oku"}
+              </button>
+            )}
+          </div>
         )}
+
         {hasSocial && (
-          <div className="space-y-2 pt-1">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
+          <div className="space-y-3 pt-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Bizi takip edin
             </p>
             <div className="flex flex-wrap gap-2">
@@ -53,11 +78,11 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn(
-                      buttonVariants({ variant: "outline", size: "sm" }),
-                      "gap-2 bg-background",
+                      buttonVariants({ variant: "outline", size: "default" }),
+                      "h-10 gap-2.5 bg-background font-medium",
                     )}
                   >
-                    <SocialIcon name={icon} className="size-4" />
+                    <SocialIcon name={icon} className="size-4 shrink-0" />
                     {label}
                   </a>
                 ) : null
@@ -66,6 +91,7 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
           </div>
         )}
       </div>
+
       {hasAddress && <LocationSection business={business} showTitle={false} />}
     </div>
   );

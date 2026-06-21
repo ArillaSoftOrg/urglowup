@@ -31,6 +31,11 @@ enum PriceType {
   FREE_CONSULTATION
 }
 
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
 enum AppointmentStatus {
   PENDING
   CONFIRMED
@@ -235,6 +240,7 @@ model User {
   sentInvitations     BusinessInvitation[] @relation("SentInvitations")
   conversations       Conversation[]                // Customer side of conversations
   sentMessages        Message[]                     // Messages sent by this user
+  waitlistEntries     WaitlistEntry[]
 }
 
 model Session {
@@ -351,6 +357,8 @@ model Business {
   conversations       Conversation[]
   pageViews           BusinessPageView[]
   customerNotes       BusinessCustomerNote[]
+  coupons             Coupon[]
+  waitlistEntries     WaitlistEntry[]
 
   @@index([city])
   @@index([status])
@@ -412,15 +420,18 @@ model BusinessService {
   durationMinutes Int
   price           Decimal?  @db.Decimal(10, 2)
   priceType       PriceType @default(FIXED)
+  salePrice       Decimal?  @db.Decimal(10, 2)
+  saleEndsAt      DateTime?
   isActive        Boolean   @default(true)
   sortOrder       Int       @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  appointments Appointment[]
-  media        BusinessMedia[]
-  posts        Post[]
-  professionals ProfessionalService[]
+  appointments    Appointment[]
+  media           BusinessMedia[]
+  posts           Post[]
+  professionals   ProfessionalService[]
+  waitlistEntries WaitlistEntry[]
 }
 
 model BusinessHour {
@@ -492,26 +503,29 @@ model BusinessMedia {
 }
 
 model Appointment {
-  id            String            @id @default(cuid())
-  businessId    String
-  business      Business          @relation(fields: [businessId], references: [id])
-  customerId    String
-  customer      User              @relation(fields: [customerId], references: [id])
-  serviceId     String
-  service       BusinessService   @relation(fields: [serviceId], references: [id])
-  professionalId String?
-  professional  Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
-  requestedDate DateTime          @db.Date
-  requestedTime String
+  id              String            @id @default(cuid())
+  businessId      String
+  business        Business          @relation(fields: [businessId], references: [id])
+  customerId      String
+  customer        User              @relation(fields: [customerId], references: [id])
+  serviceId       String
+  service         BusinessService   @relation(fields: [serviceId], references: [id])
+  professionalId  String?
+  professional    Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  couponId        String?
+  coupon          Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  discountAmount  Decimal?          @db.Decimal(10, 2)
+  requestedDate   DateTime          @db.Date
+  requestedTime   String
   status          AppointmentStatus @default(PENDING)
   customerNote    String?
   businessNote    String?
   cancelledReason String?
   createdAt       DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  updatedAt       DateTime          @updatedAt
 
-  review           Review?
-  notificationLogs NotificationLog[]
+  review             Review?
+  notificationLogs   NotificationLog[]
   inAppNotifications InAppNotification[]
 
   @@index([businessId, status])
@@ -1074,4 +1088,45 @@ model BusinessInvitation {
   @@unique([businessId, email])
   @@index([tokenHash])
   @@index([businessId])
+}
+
+model Coupon {
+  id            String     @id @default(cuid())
+  businessId    String
+  business      Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  code          String
+  type          CouponType
+  value         Float
+  minOrderValue Float?
+  usageLimit    Int?
+  usedCount     Int        @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean    @default(true)
+  isLoyalty     Boolean    @default(false)
+  forCustomerId String?
+  createdAt     DateTime   @default(now())
+
+  appointments Appointment[]
+
+  @@unique([businessId, code])
+  @@index([businessId])
+  @@index([forCustomerId])
+}
+
+model WaitlistEntry {
+  id            String          @id @default(cuid())
+  businessId    String
+  business      Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceId     String
+  service       BusinessService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  date          DateTime        @db.Date
+  time          String
+  notifiedAt    DateTime?
+  createdAt     DateTime        @default(now())
+
+  @@unique([businessId, customerId, serviceId, date, time])
+  @@index([businessId, date, time])
+  @@index([customerId])
 }

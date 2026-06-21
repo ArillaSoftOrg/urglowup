@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants/booking";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 import type { DayOfWeek } from "@/generated/prisma/enums";
+import { WaitlistButton } from "./waitlist-button";
 
 const DAY_INDEX_TO_ENUM: Record<number, DayOfWeek> = {
   0: "SUNDAY",
@@ -30,6 +31,7 @@ export function DateTimePicker({
   serviceId,
   selectedDate,
   selectedTime,
+  isLoggedIn,
   onSelectDate,
   onSelectTime,
 }: {
@@ -37,6 +39,7 @@ export function DateTimePicker({
   serviceId: string;
   selectedDate: Date | null;
   selectedTime: string | null;
+  isLoggedIn?: boolean;
   onSelectDate: (date: Date) => void;
   onSelectTime: (time: string) => void;
 }) {

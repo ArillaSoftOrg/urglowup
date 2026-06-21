@@ -27,7 +27,7 @@ const CropDialogWithLoading = dynamic(() => import("./crop-dialog"), {
 });
 
 const CROP_ASPECTS: Partial<Record<MediaType, number>> = {
-  COVER: 16 / 9,
+  COVER: 2,
 };
 
 type CropPending = {

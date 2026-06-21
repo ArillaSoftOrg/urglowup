@@ -81,13 +81,14 @@ export function ServicesSection({
             {[...featuredServices, ...remainingServices].map((service) => {
               const { amount, qualifier } = formatPrice(service);
               return (
-                <div
+                <Link
                   key={service.id}
-                  className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between"
+                  href={`/b/${business.slug}/book?service=${service.id}`}
+                  className="group flex flex-col gap-4 px-5 py-5 transition-colors hover:bg-muted/40 active:bg-muted/60 sm:flex-row sm:items-start sm:justify-between"
                 >
                   <div className="min-w-0 space-y-2">
                     <div>
-                      <p className="text-base font-semibold">{service.name}</p>
+                      <p className="text-base font-semibold group-hover:text-primary">{service.name}</p>
                       {service.description && (
                         <p className="mt-1 max-w-2xl text-sm text-muted-foreground line-clamp-2">
                           {service.description}
@@ -100,30 +101,35 @@ export function ServicesSection({
                         <Clock className="size-4" />
                         {service.durationMinutes} dk
                       </span>
-                      {amount && (
-                        <span className="font-semibold text-foreground">
-                          {qualifier && (
-                            <span className="mr-1 font-normal text-muted-foreground">
-                              {qualifier}
-                            </span>
-                          )}
-                          {amount}
-                        </span>
-                      )}
+                      {amount && (() => {
+                        const isOnSale = service.salePrice != null &&
+                          (!service.saleEndsAt || new Date(service.saleEndsAt) > new Date());
+                        return isOnSale ? (
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-bold text-destructive">₺{Number(service.salePrice)}</span>
+                            <span className="text-xs text-muted-foreground line-through">{amount}</span>
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-foreground">
+                            {qualifier && <span className="mr-1 font-normal text-muted-foreground">{qualifier}</span>}
+                            {amount}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
 
-                  <Link
-                    href={`/b/${business.slug}/book?service=${service.id}`}
+                  <span
+                    aria-hidden="true"
                     className={cn(
                       buttonVariants({ variant: "default", size: "default" }),
-                      "w-full shrink-0 gap-1.5 sm:w-auto",
+                      "pointer-events-none w-full shrink-0 gap-1.5 sm:w-auto",
                     )}
                   >
                     <CalendarCheck className="size-4" />
                     Randevu al
-                  </Link>
-                </div>
+                  </span>
+                </Link>
               );
             })}
           </div>

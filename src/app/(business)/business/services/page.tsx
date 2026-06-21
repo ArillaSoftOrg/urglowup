@@ -35,6 +35,8 @@ export default async function ServicesPage() {
     durationMinutes: s.durationMinutes,
     price: s.price !== null ? Number(s.price) : null,
     priceType: s.priceType,
+    salePrice: s.salePrice !== null ? Number(s.salePrice) : null,
+    saleEndsAt: s.saleEndsAt,
     isActive: s.isActive,
     sortOrder: s.sortOrder,
   }));

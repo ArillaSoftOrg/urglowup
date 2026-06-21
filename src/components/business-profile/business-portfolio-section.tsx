@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ImageIcon, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { GalleryItem } from "./business-gallery-hero";
 
 const GalleryLightboxOverlay = dynamic(
@@ -30,31 +31,41 @@ interface BusinessForLightbox {
   }>;
 }
 
+const VISIBLE_COUNT = 5;
+
 function PortfolioTile({
   item,
   index,
+  showOverlay,
   remaining,
+  className,
   onOpen,
 }: {
   item: GalleryItem;
   index: number;
+  showOverlay: boolean;
   remaining: number;
+  className?: string;
   onOpen: (index: number) => void;
 }) {
   return (
     <button
       type="button"
       onClick={() => onOpen(index)}
-      className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className={cn(
+        "group relative overflow-hidden rounded-xl bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+        className,
+      )}
     >
       {item.isVideo ? (
         <>
           <video
             src={item.thumbnailUrl}
+            poster={item.posterUrl}
             className="size-full object-cover"
             muted
             playsInline
-            preload="metadata"
+            preload="none"
           />
           <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition group-hover:bg-black/25">
             <span className="flex size-10 items-center justify-center rounded-full bg-background/95 shadow-sm">
@@ -65,15 +76,19 @@ function PortfolioTile({
       ) : (
         <Image
           src={item.thumbnailUrl}
-          alt={item.title ?? "Portfoy gorseli"}
+          alt={item.title ?? "Portföy görseli"}
           fill
-          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 180px"
+          sizes={
+            index === 0
+              ? "(max-width: 768px) 100vw, 50vw"
+              : "(max-width: 768px) 50vw, 25vw"
+          }
           className="object-cover transition duration-300 group-hover:scale-[1.03]"
         />
       )}
 
-      {remaining > 0 && (
-        <span className="absolute inset-0 flex items-center justify-center bg-foreground/55 text-2xl font-bold text-background lg:text-3xl">
+      {showOverlay && remaining > 0 && (
+        <span className="absolute inset-0 flex items-center justify-center bg-foreground/60 text-2xl font-bold text-background lg:text-3xl">
           +{remaining}
         </span>
       )}
@@ -89,8 +104,8 @@ export function BusinessPortfolioSection({
   business: BusinessForLightbox;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const visibleItems = items.slice(0, 10);
-  const remaining = Math.max(items.length - visibleItems.length, 0);
+  const visibleItems = items.slice(0, VISIBLE_COUNT);
+  const remaining = Math.max(items.length - VISIBLE_COUNT, 0);
   const current = openIndex !== null ? items[openIndex] : null;
 
   const close = useCallback(() => setOpenIndex(null), []);
@@ -119,36 +134,65 @@ export function BusinessPortfolioSection({
 
   if (items.length === 0) return null;
 
+  const [featured, ...rest] = visibleItems;
+  const isSingle = visibleItems.length === 1;
+
   return (
     <>
       <section id="portfolio" className="scroll-mt-24 border-t pt-8">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-4 flex items-center gap-2.5">
           <h2 className="text-xl font-bold tracking-normal">Portföy</h2>
           <span className="rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground">
             {items.length}
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-          {visibleItems.map((item, index) => (
+        {/*
+          Mobile  : 2-col grid; featured spans both cols (full-width, 16:9), rest are square cells.
+          Desktop : [2fr 1fr 1fr] mosaic at fixed 380 px height; featured spans 2 rows on the left.
+        */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:h-[380px] md:grid-cols-[2fr_1fr_1fr] md:grid-rows-2">
+          {featured && (
             <PortfolioTile
-              key={item.id}
-              item={item}
-              index={index}
-              remaining={index === visibleItems.length - 1 ? remaining : 0}
+              item={featured}
+              index={0}
+              showOverlay={isSingle}
+              remaining={remaining}
+              className={cn(
+                "col-span-2 aspect-video",
+                isSingle
+                  ? "md:col-span-3 md:row-span-2 md:aspect-auto md:h-full"
+                  : "md:col-auto md:row-span-2 md:aspect-auto md:h-full",
+              )}
               onOpen={setOpenIndex}
             />
-          ))}
+          )}
+
+          {rest.map((item, i) => {
+            const realIndex = i + 1;
+            const isLast = realIndex === visibleItems.length - 1;
+            return (
+              <PortfolioTile
+                key={item.id}
+                item={item}
+                index={realIndex}
+                showOverlay={isLast}
+                remaining={remaining}
+                className="aspect-square md:aspect-auto md:h-full"
+                onOpen={setOpenIndex}
+              />
+            );
+          })}
         </div>
 
-        {items.length > visibleItems.length && (
+        {items.length > VISIBLE_COUNT && (
           <button
             type="button"
-            onClick={() => setOpenIndex(visibleItems.length - 1)}
+            onClick={() => setOpenIndex(VISIBLE_COUNT - 1)}
             className="mt-4 inline-flex h-9 items-center gap-2 rounded-full border bg-background px-4 text-sm font-semibold transition hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <ImageIcon className="size-4" />
-            Tüm resimleri gör
+            Tüm fotoğrafları gör
           </button>
         )}
       </section>

@@ -19,6 +19,7 @@ interface GalleryItem {
   id: string;
   url: string;
   thumbnailUrl: string;
+  posterUrl?: string;
   title: string | null;
   width: number | null;
   height: number | null;
@@ -62,10 +63,11 @@ function MediaTile({
         <>
           <video
             src={item.thumbnailUrl}
+            poster={item.posterUrl}
             className="size-full object-cover"
             muted
             playsInline
-            preload="metadata"
+            preload="none"
           />
           <span className="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors group-hover:bg-black/25">
             <span className="flex size-11 items-center justify-center rounded-full bg-background/95 text-foreground shadow-sm">
@@ -80,7 +82,7 @@ function MediaTile({
           fill
           sizes={
             priority
-              ? "(max-width: 1024px) 100vw, 58vw"
+              ? "(max-width: 1024px) 100vw, 65vw"
               : "(max-width: 1024px) 50vw, 28vw"
           }
           className="object-cover"

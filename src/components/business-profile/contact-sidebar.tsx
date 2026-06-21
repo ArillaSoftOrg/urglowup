@@ -31,8 +31,8 @@ export function ContactSidebar({
     <div className="overflow-hidden rounded-xl border border-border/70 bg-background shadow-sm lg:sticky lg:top-[76px]">
       <div className="space-y-5 p-6">
         <div>
-          <p className="text-sm font-semibold text-muted-foreground">Randevu</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-normal">Planını seç</h2>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Randevu</p>
+          <h2 className="mt-1.5 text-[22px] font-bold leading-snug tracking-normal">Randevunu oluştur</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             Hizmeti seç, uygun zamanı gör ve randevunu birkaç adımda tamamla.
           </p>
@@ -90,83 +90,85 @@ export function ContactSidebar({
           )}
         >
           <CalendarCheck className="size-4" />
-          Hemen rezervasyon yap
+          Hemen randevu al
         </Link>
       </div>
 
       {(business.phone || business.whatsapp || business.instagramUrl || business.facebookUrl || business.tiktokUrl) && (
-        <div className="space-y-2 border-t border-border/70 bg-background p-6">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">
+        <div className="border-t border-border/70 bg-background p-6">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             İletişim
           </p>
-          {business.phone && (
-            <a
-              href={`tel:${business.phone}`}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "w-full justify-start gap-2 bg-background",
-              )}
-            >
-              <Phone className="size-4" />
-              {business.phone}
-            </a>
-          )}
-          {business.whatsapp && (
-            <a
-              href={`https://wa.me/${business.whatsapp.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "w-full justify-start gap-2 bg-background",
-              )}
-            >
-              <SocialIcon name="whatsapp" className="size-4" />
-              WhatsApp
-            </a>
-          )}
-          {business.instagramUrl && (
-            <a
-              href={business.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "w-full justify-start gap-2 bg-background",
-              )}
-            >
-              <SocialIcon name="instagram" className="size-4" />
-              Instagram
-            </a>
-          )}
-          {business.facebookUrl && (
-            <a
-              href={business.facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "w-full justify-start gap-2 bg-background",
-              )}
-            >
-              <SocialIcon name="facebook" className="size-4" />
-              Facebook
-            </a>
-          )}
-          {business.tiktokUrl && (
-            <a
-              href={business.tiktokUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "w-full justify-start gap-2 bg-background",
-              )}
-            >
-              <SocialIcon name="tiktok" className="size-4" />
-              TikTok
-            </a>
-          )}
+          <div className="space-y-2">
+            {business.phone && (
+              <a
+                href={`tel:${business.phone}`}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "h-11 w-full justify-start gap-3 bg-background font-medium",
+                )}
+              >
+                <Phone className="size-4 shrink-0" />
+                <span className="truncate">{business.phone}</span>
+              </a>
+            )}
+            {business.whatsapp && (
+              <a
+                href={`https://wa.me/${business.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "h-11 w-full justify-start gap-3 bg-background font-medium",
+                )}
+              >
+                <SocialIcon name="whatsapp" className="size-4 shrink-0" />
+                WhatsApp
+              </a>
+            )}
+            {business.instagramUrl && (
+              <a
+                href={business.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "h-11 w-full justify-start gap-3 bg-background font-medium",
+                )}
+              >
+                <SocialIcon name="instagram" className="size-4 shrink-0" />
+                Instagram
+              </a>
+            )}
+            {business.facebookUrl && (
+              <a
+                href={business.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "h-11 w-full justify-start gap-3 bg-background font-medium",
+                )}
+              >
+                <SocialIcon name="facebook" className="size-4 shrink-0" />
+                Facebook
+              </a>
+            )}
+            {business.tiktokUrl && (
+              <a
+                href={business.tiktokUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "default" }),
+                  "h-11 w-full justify-start gap-3 bg-background font-medium",
+                )}
+              >
+                <SocialIcon name="tiktok" className="size-4 shrink-0" />
+                TikTok
+              </a>
+            )}
+          </div>
         </div>
       )}
     </div>

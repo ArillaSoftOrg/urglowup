@@ -177,6 +177,47 @@ export async function completeAppointment(
     }
   });
 
+  // Sadakat: 5 tamamlanan randevuda otomatik kupon oluştur
+  after(async () => {
+    try {
+      const appt = await db.appointment.findUnique({
+        where: { id: appointmentId },
+        select: { customerId: true, businessId: true },
+      });
+      if (!appt) return;
+
+      const LOYALTY_THRESHOLD = 5;
+      const completedCount = await db.appointment.count({
+        where: { businessId: appt.businessId, customerId: appt.customerId, status: "COMPLETED" },
+      });
+
+      if (completedCount > 0 && completedCount % LOYALTY_THRESHOLD === 0) {
+        const code = `LOYALTY-${appt.customerId.slice(-6).toUpperCase()}-${completedCount}`;
+        const exists = await db.coupon.findUnique({
+          where: { businessId_code: { businessId: appt.businessId, code } },
+        });
+        if (!exists) {
+          const expiresAt = new Date();
+          expiresAt.setMonth(expiresAt.getMonth() + 3);
+          await db.coupon.create({
+            data: {
+              businessId: appt.businessId,
+              code,
+              type: "PERCENTAGE",
+              value: 15,
+              usageLimit: 1,
+              expiresAt,
+              isLoyalty: true,
+              forCustomerId: appt.customerId,
+            },
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[loyalty] completeAppointment:", err);
+    }
+  });
+
   revalidate();
   return { success: true, message: "Appointment marked as completed." };
 }

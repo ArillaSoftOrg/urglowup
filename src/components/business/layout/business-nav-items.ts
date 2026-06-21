@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CalendarCheck,
   Home,
   Scissors,
@@ -7,6 +8,7 @@ import {
   User,
   Clock,
   Star,
+  Tag,
   Users,
   Users2,
   Link2,
@@ -32,6 +34,8 @@ export const businessNavItems: BusinessNavItem[] = [
   { title: "Profil", href: "/business/profile", icon: User },
   { title: "Çalışma Saatleri", href: "/business/hours", icon: Clock },
   { title: "Değerlendirmeler", href: "/business/reviews", icon: Star },
+  { title: "Analitik", href: "/business/analytics", icon: BarChart3, minRole: BusinessMemberRole.OWNER },
+  { title: "Kuponlar", href: "/business/coupons", icon: Tag, minRole: BusinessMemberRole.MANAGER },
   { title: "Müşteriler", href: "/business/customers", icon: Users },
   { title: "Ekip", href: "/business/team", icon: Users2, minRole: BusinessMemberRole.OWNER },
   { title: "Randevu Linki", href: "/business/public-link", icon: Link2 },

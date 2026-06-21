@@ -48,6 +48,8 @@ export type ServiceData = {
   durationMinutes: number;
   price: number | null;
   priceType: string;
+  salePrice: number | null;
+  saleEndsAt: Date | null;
   isActive: boolean;
   sortOrder: number;
 };
@@ -263,6 +265,31 @@ function ServiceForm({
                 type="number"
                 min={0}
                 defaultValue={service?.sortOrder ?? 0}
+              />
+            </div>
+          </div>
+
+          {/* Sale price */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="salePrice">İndirimli Fiyat (₺)</Label>
+              <Input
+                id="salePrice"
+                name="salePrice"
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="Opsiyonel"
+                defaultValue={service?.salePrice ?? ""}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="saleEndsAt">İndirim Bitiş Tarihi</Label>
+              <Input
+                id="saleEndsAt"
+                name="saleEndsAt"
+                type="date"
+                defaultValue={service?.saleEndsAt ? new Date(service.saleEndsAt).toISOString().slice(0, 10) : ""}
               />
             </div>
           </div>

@@ -21,7 +21,9 @@ const serviceSchema = z
       "CONSULTATION_REQUIRED",
       "FREE_CONSULTATION",
     ]),
-    isActive: z.string().optional(), // "on" or undefined from checkbox
+    salePrice: z.coerce.number().min(0).optional().or(z.literal("")),
+    saleEndsAt: z.string().optional().or(z.literal("")),
+    isActive: z.string().optional(),
     sortOrder: z.coerce.number().int().min(0).default(0),
   })
   .transform((data) => ({
@@ -33,6 +35,8 @@ const serviceSchema = z
       data.priceType === "FREE_CONSULTATION"
         ? null
         : data.price ?? null,
+    salePrice: data.salePrice ? Number(data.salePrice) : null,
+    saleEndsAt: data.saleEndsAt ? new Date(data.saleEndsAt) : null,
   }));
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -135,6 +139,8 @@ export async function updateService(
       durationMinutes: data.durationMinutes,
       price: data.price,
       priceType: data.priceType,
+      salePrice: data.salePrice,
+      saleEndsAt: data.saleEndsAt,
       isActive: data.isActive,
       sortOrder: data.sortOrder,
     },

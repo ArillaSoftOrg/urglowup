@@ -13,6 +13,7 @@ import {
 import { AboutSection } from "@/components/business-profile/about-section";
 import {
   buildGalleryItems,
+  buildPortfolioItems,
   type GalleryItem,
 } from "@/components/business-profile/business-gallery-hero";
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
@@ -137,8 +138,8 @@ function ServicesPreview({
         <div>
           <h2 className="text-xl font-bold tracking-normal">Hizmetler</h2>
           {business.services.length > 0 && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              mevcut {business.services.length} hizmet
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {business.services.length} hizmet mevcut
             </p>
           )}
         </div>
@@ -160,32 +161,30 @@ function ServicesPreview({
         </div>
       )}
 
-      <div className="divide-y rounded-lg border bg-background">
+      <div className="divide-y rounded-xl border bg-background shadow-sm">
         {business.services.slice(0, 5).map((service) => {
           const price = formatPrice(service);
           return (
             <Link
               key={service.id}
               href={`${hrefPrefix}/b/${business.slug}/book?service=${service.id}`}
-              className="block px-4 py-4"
+              className="group flex items-start justify-between gap-4 px-4 py-4 transition-colors hover:bg-muted/40 active:bg-muted/60"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-semibold">{service.name}</p>
-                  {service.description && (
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                      {service.description}
-                    </p>
-                  )}
-                  <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Clock className="size-4" />
-                    {service.durationMinutes} dk
+              <div className="min-w-0">
+                <p className="text-sm font-semibold group-hover:text-primary">{service.name}</p>
+                {service.description && (
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    {service.description}
                   </p>
-                </div>
-                {price && (
-                  <span className="shrink-0 text-sm font-bold">{price}</span>
                 )}
+                <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="size-3.5" />
+                  {service.durationMinutes} dk
+                </p>
               </div>
+              {price && (
+                <span className="shrink-0 text-sm font-bold">{price}</span>
+              )}
             </Link>
           );
         })}
@@ -208,6 +207,7 @@ export function MobileBusinessProfile({
   locale?: string;
 }) {
   const galleryItems = buildGalleryItems(business);
+  const portfolioItems = buildPortfolioItems(business);
   const categories = business.categories.map((bc) => bc.category);
   const primaryCategory = categories[0]?.name;
   const hrefPrefix = locale && locale !== "tr" ? `/${locale}` : "";
@@ -249,39 +249,39 @@ export function MobileBusinessProfile({
       <HeroImage business={business} items={galleryItems} />
 
       <section className="relative z-10 mx-4 -mt-8 rounded-[28px] bg-background px-5 pb-7 pt-8 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
-        <h1 className="text-3xl font-bold leading-tight tracking-normal">
+        <h1 className="text-2xl font-bold leading-tight tracking-normal">
           {business.name}
         </h1>
         {primaryCategory && (
-          <p className="mt-1 text-base text-muted-foreground">{primaryCategory}</p>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">{primaryCategory}</p>
         )}
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm">
           {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
             <>
-              <span className="inline-flex items-center gap-1 font-bold">
-                <Star className="size-4 fill-rating text-rating" />
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <Star className="size-3.5 fill-rating text-rating" />
                 {reviewSummary.averageRating.toFixed(1)}
-                <span className="text-primary">({reviewSummary.totalCount})</span>
+                <span className="font-normal text-muted-foreground">({reviewSummary.totalCount})</span>
               </span>
-              <span aria-hidden className="text-muted-foreground">·</span>
+              <span aria-hidden className="text-muted-foreground/50">·</span>
             </>
           )}
-          <span className={cn("inline-flex items-center gap-1", !isOpen && "text-warning-foreground")}>
-            <Clock className="size-4" />
+          <span className={cn("inline-flex items-center gap-1 text-sm", !isOpen && "text-warning-foreground")}>
+            <Clock className="size-3.5" />
             {isOpen ? "Açık" : getNextOpenLabel(business.hours)}
           </span>
         </div>
 
         {location && (
-          <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted px-4 py-3 text-sm font-medium">
-            <MapPin className="size-4 shrink-0" />
-            <span className="min-w-0 flex-1 truncate">{location}</span>
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2.5 text-sm">
+            <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate font-medium">{location}</span>
           </div>
         )}
 
         {categories.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {categories.map((category) => (
               <Badge key={category.id} variant="neutral">
                 {category.name}
@@ -295,9 +295,9 @@ export function MobileBusinessProfile({
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-primary"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
           >
-            <Navigation className="size-4" />
+            <Navigation className="size-3.5" />
             Adres tarifi alın
           </a>
         )}
@@ -307,7 +307,7 @@ export function MobileBusinessProfile({
       <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
       <div className="space-y-8 px-5 py-8">
-        <BusinessPortfolioSection items={galleryItems} business={business} />
+        <BusinessPortfolioSection items={portfolioItems} business={business} />
         <section id="about">
           <AboutSection business={business} />
         </section>
@@ -319,21 +319,21 @@ export function MobileBusinessProfile({
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/90 md:hidden">
         {business.services.length > 0 && (
           <p className="whitespace-nowrap text-sm text-muted-foreground">
-            mevcut {business.services.length} hizmet
+            {business.services.length} hizmet mevcut
           </p>
         )}
         <Link
           href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
-            buttonVariants({ size: "default" }),
-            "shrink-0 rounded-full px-5 font-bold",
+            buttonVariants({ size: "lg" }),
+            "h-11 shrink-0 rounded-full px-6 text-sm font-bold",
           )}
         >
           <CalendarCheck className="size-4" />
-          Rezervasyon yap
+          Hemen randevu al
         </Link>
       </div>
     </div>

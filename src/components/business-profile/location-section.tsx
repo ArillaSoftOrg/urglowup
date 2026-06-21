@@ -35,44 +35,55 @@ export function LocationSection({
       className="space-y-4"
     >
       {showTitle && (
-        <h2 id="location-title" className="text-xl font-bold tracking-normal text-foreground lg:text-[28px]">
+        <h2 id="location-title" className="text-2xl font-bold tracking-normal text-foreground">
           Konum
         </h2>
       )}
 
-      {hasCoords && mapsApiKey ? (
-        <LazyBusinessMap
-          lat={business.latitude as number}
-          lng={business.longitude as number}
-          name={business.name}
-          apiKey={mapsApiKey}
-          className="flex h-[320px] w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-muted/30 px-4 text-center sm:h-[420px]"
-        />
-      ) : (
-        <iframe
-          title={`${business.name} konumu`}
-          src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="h-[320px] w-full rounded-xl border border-border/70 bg-muted/30 sm:h-[420px]"
-        />
-      )}
+      <div className="overflow-hidden rounded-2xl border border-border/70 shadow-sm">
+        {hasCoords && mapsApiKey ? (
+          <LazyBusinessMap
+            lat={business.latitude as number}
+            lng={business.longitude as number}
+            name={business.name}
+            apiKey={mapsApiKey}
+            className="flex h-[380px] w-full flex-col items-center justify-center overflow-hidden bg-muted/30 px-4 text-center sm:h-[480px]"
+          />
+        ) : (
+          <iframe
+            title={`${business.name} konumu`}
+            src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="h-[380px] w-full bg-muted/30 sm:h-[480px]"
+          />
+        )}
+      </div>
 
-      <div className="flex flex-col gap-3 text-base sm:flex-row sm:items-center sm:justify-between">
-        <p className="flex min-w-0 items-start gap-2 font-medium text-foreground">
-          <MapPin className="mt-1 size-4 shrink-0 text-muted-foreground" />
-          <span>{fullAddress}</span>
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-2.5">
+          <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div className="space-y-0.5 text-sm">
+            {business.address && (
+              <p className="font-medium text-foreground">{business.address}</p>
+            )}
+            {(business.district || business.city) && (
+              <p className="text-muted-foreground">
+                {[business.district, business.city].filter(Boolean).join(", ")}
+              </p>
+            )}
+          </div>
+        </div>
         <a
           href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            buttonVariants({ variant: "link", size: "default" }),
-            "h-auto shrink-0 justify-start gap-1.5 px-0 text-primary sm:justify-center"
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "shrink-0 gap-1.5"
           )}
         >
-          <Navigation className="size-4" />
+          <Navigation className="size-3.5" />
           Yol Tarifi Al
         </a>
       </div>

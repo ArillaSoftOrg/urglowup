@@ -16,6 +16,7 @@ import {
   notifyBusinessAppointmentCancelledByCustomer,
   notifyBusinessAppointmentRescheduledByCustomer,
 } from "@/lib/in-app-notifications";
+import { notifyWaitlist } from "@/app/(public)/b/[slug]/book/waitlist-actions";
 import { hasSchedulingConflict, isWithinWorkingHours, type ConflictAppointment, type ConflictBlockedTime } from "@/lib/calendar";
 
 export type AppointmentActionState = {
@@ -34,7 +35,7 @@ export async function cancelAppointment(
 
   const appointment = await db.appointment.findUnique({
     where: { id: appointmentId },
-    select: { customerId: true, status: true, requestedDate: true, requestedTime: true },
+    select: { customerId: true, status: true, requestedDate: true, requestedTime: true, businessId: true, serviceId: true },
   });
 
   if (!appointment || appointment.customerId !== user.id) {
@@ -83,6 +84,15 @@ export async function cancelAppointment(
       await sendCancellationConfirmationEmailToCustomer(appointmentId);
     } catch (err) {
       console.error("[email] cancelAppointment → customer:", err);
+    }
+  });
+
+  after(async () => {
+    try {
+      const dateStr = appointment.requestedDate.toISOString().slice(0, 10);
+      await notifyWaitlist(appointment.businessId, appointment.serviceId, dateStr, appointment.requestedTime);
+    } catch (err) {
+      console.error("[waitlist] cancelAppointment:", err);
     }
   });
 
