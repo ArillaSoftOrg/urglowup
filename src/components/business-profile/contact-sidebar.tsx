@@ -121,7 +121,7 @@ export function ContactSidebar({
                 "w-full justify-start gap-2 bg-background",
               )}
             >
-              <SocialIcon name="whatsapp" className="size-4 text-[#25D366]" />
+              <SocialIcon name="whatsapp" className="size-4" />
               WhatsApp
             </a>
           )}
@@ -135,7 +135,7 @@ export function ContactSidebar({
                 "w-full justify-start gap-2 bg-background",
               )}
             >
-              <SocialIcon name="instagram" className="size-4 text-[#E4405F]" />
+              <SocialIcon name="instagram" className="size-4" />
               Instagram
             </a>
           )}
@@ -149,7 +149,7 @@ export function ContactSidebar({
                 "w-full justify-start gap-2 bg-background",
               )}
             >
-              <SocialIcon name="facebook" className="size-4 text-[#0866FF]" />
+              <SocialIcon name="facebook" className="size-4" />
               Facebook
             </a>
           )}

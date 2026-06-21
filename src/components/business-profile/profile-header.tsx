@@ -124,7 +124,7 @@ export function ProfileHeader({
                 "gap-1.5",
               )}
             >
-              <SocialIcon name="whatsapp" className="size-4 text-[#25D366]" />
+              <SocialIcon name="whatsapp" className="size-4" />
               WhatsApp
             </a>
           )}
@@ -138,7 +138,7 @@ export function ProfileHeader({
                 "gap-1.5",
               )}
             >
-              <SocialIcon name="instagram" className="size-4 text-[#E4405F]" />
+              <SocialIcon name="instagram" className="size-4" />
               Instagram
             </a>
           )}

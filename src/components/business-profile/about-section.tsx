@@ -9,19 +9,16 @@ const SOCIAL_LINKS = [
     key: "instagramUrl" as const,
     label: "Instagram",
     icon: "instagram" as SocialIconName,
-    colorClass: "text-[#E4405F]",
   },
   {
     key: "facebookUrl" as const,
     label: "Facebook",
     icon: "facebook" as SocialIconName,
-    colorClass: "text-[#0866FF]",
   },
   {
     key: "tiktokUrl" as const,
     label: "TikTok",
     icon: "tiktok" as SocialIconName,
-    colorClass: "text-foreground",
   },
 ];
 
@@ -48,7 +45,7 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
               Bizi takip edin
             </p>
             <div className="flex flex-wrap gap-2">
-              {SOCIAL_LINKS.map(({ key, label, icon, colorClass }) =>
+              {SOCIAL_LINKS.map(({ key, label, icon }) =>
                 business[key] ? (
                   <a
                     key={key}
@@ -60,7 +57,7 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
                       "gap-2 bg-background",
                     )}
                   >
-                    <SocialIcon name={icon} className={cn("size-4", colorClass)} />
+                    <SocialIcon name={icon} className="size-4" />
                     {label}
                   </a>
                 ) : null
