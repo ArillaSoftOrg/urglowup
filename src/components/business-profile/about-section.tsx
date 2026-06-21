@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import { SocialIcon, type SocialIconName } from "@/components/shared/social-icons";
 import { LocationSection } from "./location-section";
@@ -31,6 +37,7 @@ function isDescriptionLong(text: string): boolean {
 
 export function AboutSection({ business }: { business: BusinessWithDetails }) {
   const [expanded, setExpanded] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const hasSocial = SOCIAL_LINKS.some((s) => !!business[s.key]);
   const hasAddress = business.address || business.city || business.district;
   const isLong = business.description ? isDescriptionLong(business.description) : false;
@@ -47,19 +54,48 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
             <p
               className={cn(
                 "max-w-[72ch] whitespace-pre-line text-[15px] leading-[1.8] text-foreground/90",
-                !expanded && isLong && "line-clamp-4",
+                isLong && !expanded && "line-clamp-4",
               )}
             >
               {business.description}
             </p>
+
             {isLong && (
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => !v)}
-                className="mt-2.5 text-sm font-semibold text-primary hover:underline focus:outline-none"
-              >
-                {expanded ? "Daha az göster" : "Devamını oku"}
-              </button>
+              <>
+                {/* Mobile: opens bottom sheet so text never competes with sticky CTA */}
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(true)}
+                  className="mt-2.5 text-sm font-semibold text-primary hover:underline focus:outline-none md:hidden"
+                >
+                  Devamını oku
+                </button>
+
+                {/* Desktop: expand in-place */}
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="mt-2.5 hidden text-sm font-semibold text-primary hover:underline focus:outline-none md:inline"
+                >
+                  {expanded ? "Daha az göster" : "Devamını oku"}
+                </button>
+
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                  <SheetContent
+                    side="bottom"
+                    className="max-h-[78dvh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,24px)]"
+                  >
+                    <SheetHeader className="px-5 pb-3 pt-1">
+                      <SheetTitle className="text-base font-bold">Hakkında</SheetTitle>
+                    </SheetHeader>
+                    <div className="px-5 pb-6">
+                      <p className="whitespace-pre-line text-[15px] leading-[1.8] text-foreground/90">
+                        {business.description}
+                      </p>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </>
             )}
           </div>
         )}
