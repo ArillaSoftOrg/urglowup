@@ -241,32 +241,6 @@ function DesktopTitleBlock({
   );
 }
 
-function DesktopSectionNav() {
-  const items = [
-    ["#services", "Hizmetler"],
-    ["#portfolio", "Portföy"],
-    ["#about", "Hakkında"],
-    ["#hours", "Açılış saatleri"],
-    ["#reviews", "Değerlendirmeler"],
-  ] as const;
-
-  return (
-    <nav className="sticky top-0 z-20 border-y bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1440px] gap-8 overflow-x-auto px-5 text-[15px] font-bold sm:px-6 lg:px-10 xl:px-12">
-        {items.map(([href, label]) => (
-          <a
-            key={href}
-            href={href}
-            className="shrink-0 border-b-2 border-transparent py-4 hover:border-foreground"
-          >
-            {label}
-          </a>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
 export function DesktopBusinessProfile({
   business,
   reviewSummary,
@@ -298,8 +272,6 @@ export function DesktopBusinessProfile({
         />
         <BusinessGalleryHero business={business} />
       </div>
-
-      <DesktopSectionNav />
 
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
         <div className="min-w-0 space-y-9">

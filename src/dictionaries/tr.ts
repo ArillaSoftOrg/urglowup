@@ -66,6 +66,18 @@ const tr = {
     // Footer link
     cookieSettings: 'Çerez Ayarları',
   },
+  service: {
+    bookNow: 'Randevu Al',
+    aboutThisService: 'Hizmet Hakkında',
+    gallery: 'Görseller',
+    minutesSuffix: 'dk',
+    notFound: 'Hizmet Bulunamadı',
+    backToHome: 'Ana Sayfa',
+    ratingLabel: (n: number) => `${n} değerlendirme`,
+    startingFrom: 'itibaren',
+    freeConsultation: 'Ücretsiz danışma',
+    contactForPricing: 'Fiyat için danışın',
+  },
 }
 
 export default tr

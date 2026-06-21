@@ -64,6 +64,18 @@ const es: Dictionary = {
     policyUpdatedDesc: 'Hemos realizado cambios en nuestra política de cookies y privacidad. Revisa tus preferencias para continuar.',
     cookieSettings: 'Configuración de cookies',
   },
+  service: {
+    bookNow: 'Reservar ahora',
+    aboutThisService: 'Sobre este servicio',
+    gallery: 'Galería',
+    minutesSuffix: 'min',
+    notFound: 'Servicio no encontrado',
+    backToHome: 'Inicio',
+    ratingLabel: (n: number) => `${n} reseña${n !== 1 ? 's' : ''}`,
+    startingFrom: 'desde',
+    freeConsultation: 'Consulta gratuita',
+    contactForPricing: 'Consultar precio',
+  },
 }
 
 export default es

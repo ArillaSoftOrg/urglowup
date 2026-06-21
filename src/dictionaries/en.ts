@@ -64,6 +64,18 @@ const en: Dictionary = {
     policyUpdatedDesc: 'We made changes to our cookie and privacy policy. Please review your preferences to continue.',
     cookieSettings: 'Cookie Settings',
   },
+  service: {
+    bookNow: 'Book Now',
+    aboutThisService: 'About this service',
+    gallery: 'Gallery',
+    minutesSuffix: 'min',
+    notFound: 'Service Not Found',
+    backToHome: 'Home',
+    ratingLabel: (n: number) => `${n} review${n !== 1 ? 's' : ''}`,
+    startingFrom: 'starting from',
+    freeConsultation: 'Free consultation',
+    contactForPricing: 'Contact for pricing',
+  },
 }
 
 export default en

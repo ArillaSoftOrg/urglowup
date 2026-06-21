@@ -64,6 +64,18 @@ const fa: Dictionary = {
     policyUpdatedDesc: 'ما تغییرات در سیاست کوکی و حریم خصوصی خود ایجاد کردیم. لطفاً ترجیحات خود را بررسی کنید تا ادامه دهید.',
     cookieSettings: 'تنظیمات کوکی',
   },
+  service: {
+    bookNow: 'رزرو کنید',
+    aboutThisService: 'درباره این سرویس',
+    gallery: 'گالری',
+    minutesSuffix: 'دقیقه',
+    notFound: 'سرویس یافت نشد',
+    backToHome: 'خانه',
+    ratingLabel: (n: number) => `${n} نظر`,
+    startingFrom: 'از',
+    freeConsultation: 'مشاوره رایگان',
+    contactForPricing: 'برای قیمت تماس بگیرید',
+  },
 }
 
 export default fa

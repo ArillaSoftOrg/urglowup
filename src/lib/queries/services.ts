@@ -29,6 +29,9 @@ export async function getServiceBySlug(slug: string) {
               cropHeight: true,
             },
           },
+          ratingStats: {
+            select: { bayesianScore: true, rawReviewCount: true },
+          },
         },
       },
       media: {

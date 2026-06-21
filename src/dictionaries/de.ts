@@ -64,6 +64,18 @@ const de: Dictionary = {
     policyUpdatedDesc: 'Wir haben Änderungen an unserer Cookie- und Datenschutzrichtlinie vorgenommen. Bitte überprüfe deine Einstellungen, um fortzufahren.',
     cookieSettings: 'Cookie-Einstellungen',
   },
+  service: {
+    bookNow: 'Jetzt buchen',
+    aboutThisService: 'Über diese Dienstleistung',
+    gallery: 'Galerie',
+    minutesSuffix: 'Min.',
+    notFound: 'Dienst nicht gefunden',
+    backToHome: 'Startseite',
+    ratingLabel: (n: number) => `${n} Bewertung${n !== 1 ? 'en' : ''}`,
+    startingFrom: 'ab',
+    freeConsultation: 'Kostenlose Beratung',
+    contactForPricing: 'Preis auf Anfrage',
+  },
 }
 
 export default de

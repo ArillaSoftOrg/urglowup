@@ -64,6 +64,18 @@ const ru: Dictionary = {
     policyUpdatedDesc: 'Мы внесли изменения в политику использования файлов cookie и конфиденциальности. Проверьте настройки, чтобы продолжить.',
     cookieSettings: 'Настройки файлов cookie',
   },
+  service: {
+    bookNow: 'Записаться',
+    aboutThisService: 'Об услуге',
+    gallery: 'Галерея',
+    minutesSuffix: 'мин',
+    notFound: 'Услуга не найдена',
+    backToHome: 'Главная',
+    ratingLabel: (n: number) => `${n} отзыв`,
+    startingFrom: 'от',
+    freeConsultation: 'Бесплатная консультация',
+    contactForPricing: 'Уточнить цену',
+  },
 }
 
 export default ru

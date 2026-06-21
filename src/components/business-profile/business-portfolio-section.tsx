@@ -67,7 +67,7 @@ function PortfolioTile({
           src={item.thumbnailUrl}
           alt={item.title ?? "Portfoy gorseli"}
           fill
-          sizes="(max-width: 1024px) 25vw, 180px"
+          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 180px"
           className="object-cover transition duration-300 group-hover:scale-[1.03]"
         />
       )}
@@ -129,7 +129,7 @@ export function BusinessPortfolioSection({
           </span>
         </div>
 
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
           {visibleItems.map((item, index) => (
             <PortfolioTile
               key={item.id}

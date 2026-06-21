@@ -12,6 +12,9 @@ import { SlugEditCard } from "@/components/business/slug-edit-card";
 import {
   InstagramBioText,
   WhatsAppShareText,
+  FacebookShareText,
+  TikTokBioText,
+  EmailSignatureSnippet,
 } from "@/components/business/sharing-texts";
 import {
   Card,
@@ -108,7 +111,11 @@ export default async function PublicLinkPage() {
       <div className="grid gap-6 sm:grid-cols-2">
         <InstagramBioText publicUrl={publicUrl} />
         <WhatsAppShareText publicUrl={publicUrl} />
+        <FacebookShareText publicUrl={publicUrl} />
+        <TikTokBioText publicUrl={publicUrl} />
       </div>
+
+      <EmailSignatureSnippet businessName={business.name} publicUrl={publicUrl} />
 
       <ProfileCompletionCard completion={completion} />
     </div>

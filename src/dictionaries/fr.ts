@@ -64,6 +64,18 @@ const fr: Dictionary = {
     policyUpdatedDesc: 'Nous avons apporté des modifications à notre politique relative aux cookies et à la confidentialité. Veuillez examiner vos préférences pour continuer.',
     cookieSettings: 'Paramètres des cookies',
   },
+  service: {
+    bookNow: 'Réserver',
+    aboutThisService: 'À propos de ce service',
+    gallery: 'Galerie',
+    minutesSuffix: 'min',
+    notFound: 'Service introuvable',
+    backToHome: 'Accueil',
+    ratingLabel: (n: number) => `${n} avis`,
+    startingFrom: 'à partir de',
+    freeConsultation: 'Consultation gratuite',
+    contactForPricing: 'Contacter pour le prix',
+  },
 }
 
 export default fr

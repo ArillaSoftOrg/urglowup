@@ -64,6 +64,18 @@ const ar: Dictionary = {
     policyUpdatedDesc: 'أجرينا تغييرات على سياسة ملفات تعريف الارتباط والخصوصية الخاصة بنا. يرجى مراجعة التفضيلات الخاصة بك للمتابعة.',
     cookieSettings: 'إعدادات ملفات تعريف الارتباط',
   },
+  service: {
+    bookNow: 'احجز الآن',
+    aboutThisService: 'عن هذه الخدمة',
+    gallery: 'معرض الصور',
+    minutesSuffix: 'دقيقة',
+    notFound: 'الخدمة غير موجودة',
+    backToHome: 'الرئيسية',
+    ratingLabel: (n: number) => `${n} تقييم`,
+    startingFrom: 'ابتداءً من',
+    freeConsultation: 'استشارة مجانية',
+    contactForPricing: 'تواصل للسعر',
+  },
 }
 
 export default ar

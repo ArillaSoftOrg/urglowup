@@ -1,9 +1,10 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { Mail, MessageCircle } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { updateSingleNotificationPreference } from "@/app/(customer)/account/preferences/actions";
+import { SocialIcon } from "@/components/shared/social-icons";
 import type { UserPreferencesModel as UserPreferences } from "@/generated/prisma/models";
 
 interface NotificationPreferencesFormProps {
@@ -53,7 +54,7 @@ export function NotificationPreferencesForm({
           onToggle={() => toggle("emailTransactional")}
         />
         <ToggleRow
-          icon={<MessageCircle className="size-4 shrink-0 text-muted-foreground" />}
+          icon={<SocialIcon name="whatsapp" className="size-4 shrink-0" />}
           label="WhatsApp bildirimleri"
           description="Randevu onaylarını WhatsApp üzerinden al."
           active={values.whatsappTransactional}

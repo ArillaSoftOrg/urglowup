@@ -64,6 +64,18 @@ const nl: Dictionary = {
     policyUpdatedDesc: 'We hebben wijzigingen aangebracht in ons cookie- en privacybeleid. Controleer uw voorkeuren om door te gaan.',
     cookieSettings: 'Cookie-instellingen',
   },
+  service: {
+    bookNow: 'Nu boeken',
+    aboutThisService: 'Over deze dienst',
+    gallery: 'Galerij',
+    minutesSuffix: 'min',
+    notFound: 'Dienst niet gevonden',
+    backToHome: 'Home',
+    ratingLabel: (n: number) => `${n} beoordeling${n !== 1 ? 'en' : ''}`,
+    startingFrom: 'vanaf',
+    freeConsultation: 'Gratis consult',
+    contactForPricing: 'Neem contact op voor prijs',
+  },
 }
 
 export default nl

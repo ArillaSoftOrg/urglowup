@@ -7,6 +7,7 @@ import { optimizeBusinessCoverUrl } from "@/lib/optimized-media";
 import { getOptimizedUrl } from "@/lib/cloudinary";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { absoluteUrl } from "@/lib/seo";
+import { getDictionary } from "@/lib/get-dictionary";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight, Clock, MapPin, CalendarCheck, Store } from "lucide-react";
@@ -16,30 +17,36 @@ interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
 
-function formatPrice(service: ServiceWithDetails): {
-  amount: string | null;
-  qualifier: string | null;
-} {
+function formatPrice(
+  service: ServiceWithDetails,
+  dict: { freeConsultation: string; contactForPricing: string; startingFrom: string }
+): { amount: string | null; qualifier: string | null } {
   if (service.priceType === "FREE_CONSULTATION")
-    return { amount: "Free consultation", qualifier: null };
+    return { amount: dict.freeConsultation, qualifier: null };
   if (service.priceType === "CONSULTATION_REQUIRED")
-    return { amount: "Contact for pricing", qualifier: null };
+    return { amount: dict.contactForPricing, qualifier: null };
   if (!service.price) return { amount: null, qualifier: null };
 
   const amount = `₺${Number(service.price)}`;
-  if (service.priceType === "STARTS_FROM") return { amount, qualifier: "starting from" };
+  if (service.priceType === "STARTS_FROM") return { amount, qualifier: dict.startingFrom };
   return { amount, qualifier: null };
+}
+
+function isoDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? (m > 0 ? `PT${h}H${m}M` : `PT${h}H`) : `PT${m}M`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale, slug } = await params;
-  const service = await getServiceBySlug(slug);
-  if (!service) return { title: "Service Not Found" };
+  const [service, dict] = await Promise.all([getServiceBySlug(slug), getDictionary(locale)]);
+  if (!service) return { title: dict.service.notFound };
 
   const title = `${service.name} — ${service.business.name}`;
   const description =
     service.description ??
-    `Discover ${service.name} offered by ${service.business.name} on UrGlowUp.`;
+    `${service.name} — ${service.business.name}`;
   const ogImage =
     service.media[0]?.publicId
       ? getOptimizedUrl(service.media[0].publicId, { width: 1200, crop: "limit", quality: "auto:good" })
@@ -64,11 +71,16 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
   const { locale, slug } = await params;
   const p = (path: string) => `/${locale}${path}`;
 
-  const service = await getServiceBySlug(slug);
+  const [service, dict] = await Promise.all([
+    getServiceBySlug(slug),
+    getDictionary(locale),
+  ]);
+
   if (!service) notFound();
 
   const { business } = service;
-  const { amount, qualifier } = formatPrice(service);
+  const d = dict.service;
+  const { amount, qualifier } = formatPrice(service, d);
   const serviceUrl = absoluteUrl(`/${locale}/services/${service.slug}`);
   const businessUrl = absoluteUrl(`/${locale}/b/${business.slug}`);
   const primaryCategory = business.categories[0]?.category;
@@ -78,15 +90,22 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
     business.coverImageUrl,
     400
   );
+  const ogImage =
+    service.media[0]?.publicId
+      ? getOptimizedUrl(service.media[0].publicId, { width: 1200, crop: "limit", quality: "auto:good" })
+      : (business.coverImageUrl ?? undefined);
+
+  const rating = business.ratingStats;
+  const fiveStarRating = rating?.bayesianScore != null ? rating.bayesianScore / 2 : null;
 
   const serviceJsonLd = {
     "@context": "https://schema.org",
     "@type": "Service",
     name: service.name,
-    description:
-      service.description ??
-      `${service.name} offered by ${business.name}.`,
+    description: service.description ?? `${service.name} — ${business.name}`,
     url: serviceUrl,
+    ...(ogImage && { image: ogImage }),
+    estimatedDuration: isoDuration(service.durationMinutes),
     provider: {
       "@type": "LocalBusiness",
       name: business.name,
@@ -99,6 +118,15 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
           addressCountry: "TR",
         },
       }),
+      ...(fiveStarRating !== null && rating && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: fiveStarRating.toFixed(1),
+          bestRating: 5,
+          worstRating: 0,
+          reviewCount: rating.rawReviewCount,
+        },
+      }),
     },
     offers: {
       "@type": "Offer",
@@ -106,24 +134,40 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
       priceCurrency: service.price != null ? "TRY" : undefined,
       url: absoluteUrl(`/${locale}/b/${business.slug}/book?service=${service.id}`),
     },
-    isRelatedTo: {
-      "@type": "LocalBusiness",
-      name: business.name,
-      url: businessUrl,
+    potentialAction: {
+      "@type": "ReserveAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: absoluteUrl(`/${locale}/b/${business.slug}/book?service=${service.id}`),
+        inLanguage: locale,
+        actionPlatform: [
+          "http://schema.org/DesktopWebPlatform",
+          "http://schema.org/MobileWebPlatform",
+        ],
+      },
+      result: { "@type": "Reservation", name: service.name },
     },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: d.backToHome, item: absoluteUrl(`/${locale}`) },
+      { "@type": "ListItem", position: 2, name: business.name, item: businessUrl },
+      { "@type": "ListItem", position: 3, name: service.name },
+    ],
   };
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <div className="container mx-auto max-w-4xl space-y-8 px-4 py-6 sm:py-10">
         {/* Breadcrumb */}
         <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
-          <Link href={p("/")} className="hover:underline">Home</Link>
+          <Link href={p("/")} className="hover:underline">{d.backToHome}</Link>
           <ChevronRight className="size-3.5 text-border" />
           <Link href={p(`/b/${business.slug}`)} className="hover:underline">{business.name}</Link>
           <ChevronRight className="size-3.5 text-border" />
@@ -142,7 +186,7 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Clock className="size-4" />
-              {service.durationMinutes} min
+              {service.durationMinutes} {d.minutesSuffix}
             </div>
             {locationText && (
               <div className="flex items-center gap-1.5">
@@ -156,6 +200,12 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
                 <span className="text-base font-bold text-foreground">{amount}</span>
               </div>
             )}
+            {fiveStarRating !== null && rating && (
+              <div className="flex items-center gap-1.5">
+                <span>★ {fiveStarRating.toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">({d.ratingLabel(rating.rawReviewCount)})</span>
+              </div>
+            )}
           </div>
 
           <Link
@@ -163,14 +213,14 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
             className={cn(buttonVariants({ variant: "brand", size: "lg" }), "gap-2")}
           >
             <CalendarCheck className="size-4" />
-            Book Now
+            {d.bookNow}
           </Link>
         </div>
 
         {/* Description */}
         {service.description && (
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold tracking-[-0.01em]">About this service</h2>
+            <h2 className="text-lg font-semibold tracking-[-0.01em]">{d.aboutThisService}</h2>
             <p className="whitespace-pre-line text-sm leading-6 text-muted-foreground">
               {service.description}
             </p>
@@ -180,7 +230,7 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
         {/* Media gallery */}
         {service.media.length > 0 && (
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold tracking-[-0.01em]">Gallery</h2>
+            <h2 className="text-lg font-semibold tracking-[-0.01em]">{d.gallery}</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {service.media.map((item) => {
                 const url = getOptimizedUrl(item.publicId, {
@@ -236,7 +286,7 @@ export default async function LocaleServiceDetailPage({ params }: PageProps) {
                   </Badge>
                 ))}
               </div>
-            )}
+        )}
           </div>
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
         </Link>

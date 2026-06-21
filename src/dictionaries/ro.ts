@@ -64,6 +64,18 @@ const ro: Dictionary = {
     policyUpdatedDesc: 'Am făcut modificări la politica noastră de cookie și confidențialitate. Te rugăm să-ți revizuiești preferințele pentru a continua.',
     cookieSettings: 'Setările cookie-urilor',
   },
+  service: {
+    bookNow: 'Rezervă acum',
+    aboutThisService: 'Despre acest serviciu',
+    gallery: 'Galerie',
+    minutesSuffix: 'min',
+    notFound: 'Serviciu negăsit',
+    backToHome: 'Acasă',
+    ratingLabel: (n: number) => `${n} recenzii`,
+    startingFrom: 'de la',
+    freeConsultation: 'Consultație gratuită',
+    contactForPricing: 'Contactați pentru preț',
+  },
 }
 
 export default ro

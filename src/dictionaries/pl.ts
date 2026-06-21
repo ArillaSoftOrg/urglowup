@@ -64,6 +64,18 @@ const pl: Dictionary = {
     policyUpdatedDesc: 'Wprowadziliśmy zmiany w naszej polityce plików cookie i prywatności. Aby kontynuować, przejrzyj swoje preferencje.',
     cookieSettings: 'Ustawienia plików cookie',
   },
+  service: {
+    bookNow: 'Umów wizytę',
+    aboutThisService: 'O usłudze',
+    gallery: 'Galeria',
+    minutesSuffix: 'min',
+    notFound: 'Usługa nie znaleziona',
+    backToHome: 'Strona główna',
+    ratingLabel: (n: number) => `${n} opinii`,
+    startingFrom: 'od',
+    freeConsultation: 'Bezpłatna konsultacja',
+    contactForPricing: 'Skontaktuj się w sprawie ceny',
+  },
 }
 
 export default pl

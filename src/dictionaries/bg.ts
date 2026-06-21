@@ -64,6 +64,18 @@ const bg: Dictionary = {
     policyUpdatedDesc: 'Направихме промени в политиката ни за бисквитки и поверителност. Прегледай предпочитанията си, за да продължиш.',
     cookieSettings: 'Настройки на бисквитките',
   },
+  service: {
+    bookNow: 'Запишете се',
+    aboutThisService: 'За услугата',
+    gallery: 'Галерия',
+    minutesSuffix: 'мин',
+    notFound: 'Услугата не е намерена',
+    backToHome: 'Начало',
+    ratingLabel: (n: number) => `${n} отзива`,
+    startingFrom: 'от',
+    freeConsultation: 'Безплатна консултация',
+    contactForPricing: 'Свържете се за цена',
+  },
 }
 
 export default bg
