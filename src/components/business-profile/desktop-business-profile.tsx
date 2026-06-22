@@ -76,7 +76,7 @@ function pathWithLocale(path: string, locale?: string) {
 
 function DesktopSearchHeader({ locale }: { locale?: string }) {
   return (
-    <header className="border-b bg-background">
+    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
       <div className="mx-auto flex h-20 max-w-[1440px] items-center gap-8 px-5 sm:px-6 lg:px-10 xl:px-12">
         <Link
           href={pathWithLocale("/", locale)}
@@ -297,7 +297,7 @@ export function DesktopBusinessProfile({
       <SectionNav
         sections={navSections}
         headerOffset={130}
-        className="sticky top-[80px]"
+        className="sticky top-20"
       />
 
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
