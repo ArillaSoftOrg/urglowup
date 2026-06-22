@@ -271,11 +271,7 @@ export function DesktopBusinessProfile({
     ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     { id: "services", label: "Hizmetler" },
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
-    ...(business.professionals && business.professionals.length > 0
-      ? [{ id: "team", label: "Ekip" }]
-      : []),
-    ...(business.hours.length > 0 ? [{ id: "hours", label: "Açılış Saatleri" }] : []),
-    { id: "reviews", label: "Değerlendirmeler" },
+    { id: "other", label: "Diğer" },
   ];
 
   return (
@@ -309,11 +305,9 @@ export function DesktopBusinessProfile({
         <div className="min-w-0 space-y-9">
           <ServicesSection business={business} />
           <BusinessPortfolioSection items={portfolioItems} business={business} />
-          <TeamSection business={business} />
-          <section id="hours" className="scroll-mt-[130px]">
+          <section id="other" className="scroll-mt-[130px] space-y-9">
+            <TeamSection business={business} />
             <HoursSection business={business} />
-          </section>
-          <section id="reviews" className="scroll-mt-[130px]">
             <ReviewsSection
               business={business}
               reviewSummary={reviewSummary}

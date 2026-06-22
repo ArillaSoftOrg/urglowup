@@ -180,8 +180,7 @@ export function MobileBusinessProfile({
     ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     { id: "services", label: "Hizmetler" },
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
-    ...(business.hours.length > 0 ? [{ id: "hours", label: "Açılış Saatleri" }] : []),
-    { id: "reviews", label: "Değerlendirmeler" },
+    { id: "other", label: "Diğer" },
   ];
 
   return (
@@ -291,10 +290,8 @@ export function MobileBusinessProfile({
 
       <div className="space-y-8 px-5 py-8">
         <BusinessPortfolioSection items={portfolioItems} business={business} />
-        <section id="hours" className="scroll-mt-[106px]">
+        <section id="other" className="scroll-mt-[106px] space-y-8">
           <HoursSection business={business} />
-        </section>
-        <section id="reviews" className="scroll-mt-[106px]">
           <ReviewsSection business={business} reviewSummary={reviewSummary} />
         </section>
       </div>
