@@ -40,12 +40,12 @@ export const IMAGE_MEDIA_TYPES: MediaType[] = [
 export const VIDEO_MEDIA_TYPES: MediaType[] = ["PORTFOLIO_VIDEO"];
 
 export const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
-  COVER: "Cover",
+  COVER: "Kapak fotoğrafı",
   LOGO: "Logo",
-  PORTFOLIO_IMAGE: "Portfolio image",
-  PORTFOLIO_VIDEO: "Portfolio video",
-  SERVICE_IMAGE: "Service image",
-  BEFORE_AFTER: "Before / After",
+  PORTFOLIO_IMAGE: "Portfolyo görseli",
+  PORTFOLIO_VIDEO: "Portfolyo videosu",
+  SERVICE_IMAGE: "Hizmet görseli",
+  BEFORE_AFTER: "Önce / Sonra",
 };
 
 /** Resource type for Cloudinary upload */

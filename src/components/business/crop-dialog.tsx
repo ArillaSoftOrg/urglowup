@@ -19,6 +19,7 @@ interface CropDialogProps {
   onOpenChange: (open: boolean) => void;
   imageUrl: string;
   aspect?: number;
+  hint?: string;
   initialCrop?: { x: number; y: number; width: number; height: number };
   onConfirm: (crop: { x: number; y: number; width: number; height: number }) => void;
   onSkip: () => void;
@@ -30,6 +31,7 @@ export default function CropDialog({
   onOpenChange,
   imageUrl,
   aspect,
+  hint,
   initialCrop,
   onConfirm,
   onSkip,
@@ -66,6 +68,7 @@ export default function CropDialog({
           <DialogTitle>Görüntüyü Kırp</DialogTitle>
           <DialogDescription>
             Yeniden konumlandırmak için sürükleyin. Yakınlaştırmak için kaydırıcıyı veya kaydırmayı kullanın.
+            {hint && <span className="mt-1 block text-xs">{hint}</span>}
           </DialogDescription>
         </DialogHeader>
 

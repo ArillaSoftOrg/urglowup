@@ -214,11 +214,7 @@ export function MobileBusinessProfile({
         </div>
       </header>
 
-      <SectionNav
-        sections={navSections}
-        headerOffset={106}
-        className="sticky top-14"
-      />
+      <SectionNav sections={navSections} />
 
       <section id="gallery" className="scroll-mt-[106px]">
         <MobileHeroGallery

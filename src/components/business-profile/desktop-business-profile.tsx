@@ -294,11 +294,7 @@ export function DesktopBusinessProfile({
         </section>
       </div>
 
-      <SectionNav
-        sections={navSections}
-        headerOffset={130}
-        className="sticky top-20"
-      />
+      <SectionNav sections={navSections} />
 
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
         <div className="min-w-0 space-y-9">

@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { MediaUploadButton } from "./media-upload-button";
 import { MediaEditDialog } from "./media-edit-dialog";
+import { DiscoverCardPreview } from "./discover-card-preview";
 import { setAsCover, setAsLogo, saveCropMeta } from "@/app/(business)/business/media/actions";
 import {
   MEDIA_TYPE_LABELS,
@@ -117,8 +118,9 @@ function ProfileHero({
             className="object-cover"
           />
         ) : (
-          <div className="flex size-full items-center justify-center bg-surface-cream text-muted-foreground">
+          <div className="flex size-full flex-col items-center justify-center gap-2 bg-surface-cream text-muted-foreground">
             <ImageIcon className="size-8" />
+            <p className="text-xs">Profil sayfanızda ve Keşfet kartında görünür</p>
           </div>
         )}
         <div className="absolute right-3 top-3 flex flex-wrap gap-2">
@@ -161,6 +163,9 @@ function ProfileHero({
                   variant="outline"
                 />
               </div>
+              <p className="mt-1 max-w-[112px] text-[10px] leading-tight text-muted-foreground">
+                Rezervasyon ve kartlarda görünür
+              </p>
             </div>
 
             <div className="min-w-0 pt-4">
@@ -203,21 +208,33 @@ function ProfileHero({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 sm:pb-1">
-            <Link
-              href="/business/profile"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              Profili düzenle
-            </Link>
-            <Link
-              href={`/b/${business.slug}`}
-              target="_blank"
-              className={cn(buttonVariants({ variant: "default", size: "sm" }))}
-            >
-              <Eye className="size-3.5" />
-              Canlı profili gör
-            </Link>
+          <div className="flex flex-col items-end gap-3 sm:pb-1">
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/business/profile"
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                Profili düzenle
+              </Link>
+              <Link
+                href={`/b/${business.slug}`}
+                target="_blank"
+                className={cn(buttonVariants({ variant: "default", size: "sm" }))}
+              >
+                <Eye className="size-3.5" />
+                Canlı profili gör
+              </Link>
+            </div>
+            <DiscoverCardPreview
+              name={business.name}
+              coverUrl={coverUrl}
+              logoUrl={logoUrl}
+              city={business.city}
+              district={business.district}
+              categories={business.categories}
+              rating={business.rating}
+              reviewCount={business.reviewCount}
+            />
           </div>
         </div>
       </div>
@@ -435,10 +452,10 @@ function MediaItemCard({
               {isImage && (
                 <>
                   <DropdownMenuItem onClick={handleSetAsCover}>
-                    Kapak yap
+                    Kapak yap — Keşfet kartı ve profil hero'su
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSetAsLogo}>
-                    Logo yap
+                    Logo yap — Rezervasyonlarda ve kartlarda görünür
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -499,9 +516,14 @@ function MediaItemCard({
           onOpenChange={(v) => { if (!v && !cropSaving) setCropOpen(false); }}
           imageUrl={media.url}
           aspect={CROP_ASPECTS[media.type]}
+          hint={
+            media.type === "COVER"
+              ? "Yatay (2:1) oran keşfet kartına ve profil hero'suna en uygun görünümü sağlar."
+              : undefined
+          }
           initialCrop={
-            media.cropX != null
-              ? { x: media.cropX, y: media.cropY!, width: media.cropWidth!, height: media.cropHeight! }
+            media.cropX != null && media.cropY != null && media.cropWidth != null && media.cropHeight != null
+              ? { x: media.cropX, y: media.cropY, width: media.cropWidth, height: media.cropHeight }
               : undefined
           }
           onConfirm={handleCropConfirm}
@@ -666,7 +688,7 @@ export function MediaGrid({
               services={services}
               showAddTile
               emptyHeadline="Fotoğraflar paylaş"
-              emptyDescription="Paylaştığın fotoğraf ve videolar profilinde görünür."
+              emptyDescription="Fotoğraf ve videolar profil portföy bölümünde görünür. Keşfet kartında ise kapak fotoğrafın kullanılır."
             />
           </TabsContent>
           <TabsContent value="images" className="m-0 p-4 sm:p-6">
@@ -675,7 +697,7 @@ export function MediaGrid({
               services={services}
               showAddTile
               emptyHeadline="İlk fotoğrafını paylaş"
-              emptyDescription="Çalışmalarını müşterilerin gördüğü profil grid'inde sergile."
+              emptyDescription="Çalışmalarını müşterilerin gördüğü profil portföy bölümünde sergile."
             />
           </TabsContent>
           <TabsContent value="videos" className="m-0 p-4 sm:p-6">
@@ -684,7 +706,7 @@ export function MediaGrid({
               services={services}
               showAddTile
               emptyHeadline="İlk videonu paylaş"
-              emptyDescription="Kısa videolar profilini daha canlı gösterir."
+              emptyDescription="Kısa videolar profil portföy bölümünde görünür; Keşfet kartını etkilemez."
             />
           </TabsContent>
         </Tabs>

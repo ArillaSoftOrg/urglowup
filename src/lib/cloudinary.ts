@@ -80,7 +80,7 @@ export function getOptimizedUrl(
   if (transforms?.width) resizeStep.width = transforms.width;
   if (transforms?.height) resizeStep.height = transforms.height;
   if (transforms?.crop) resizeStep.crop = transforms.crop;
-  resizeStep.quality = transforms?.quality ?? "auto";
+  resizeStep.quality = transforms?.quality ?? "auto:good";
   resizeStep.fetch_format = transforms?.format ?? "auto";
 
   const transformation = cropMeta
