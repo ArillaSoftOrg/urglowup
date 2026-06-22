@@ -15,15 +15,15 @@ function buildGalleryItems(media: BusinessWithDetails["media"]) {
     .filter((m) => m.type !== "COVER" && m.type !== "LOGO")
     .map((m) => {
       const isVideo = m.type === "PORTFOLIO_VIDEO";
-      const cropMeta = (!isVideo && m.cropX != null)
-        ? { x: m.cropX, y: m.cropY!, width: m.cropWidth!, height: m.cropHeight! }
-        : undefined;
+      const cropMeta =
+        !isVideo && m.cropX != null && m.cropY != null && m.cropWidth != null && m.cropHeight != null
+          ? { x: m.cropX, y: m.cropY, width: m.cropWidth, height: m.cropHeight }
+          : undefined;
       const thumbnailUrl = !isVideo && m.publicId
         ? getOptimizedUrl(m.publicId, { width: 400, crop: "limit" }, cropMeta)
         : m.url;
-      // fullUrl stays uncropped — lightbox uses object-contain and shows the full original
       const fullUrl = !isVideo && m.publicId
-        ? getOptimizedUrl(m.publicId, { width: 1200, crop: "limit" })
+        ? getOptimizedUrl(m.publicId, { width: 1200, crop: "limit" }, cropMeta)
         : m.url;
 
       return {

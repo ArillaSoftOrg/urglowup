@@ -66,11 +66,7 @@ function MediaRow({ item }: { item: AdminMedia }) {
     });
   }
 
-  const isVideo =
-    item.type === "PORTFOLIO_VIDEO" ||
-    (item.url.includes(".mp4") ||
-      item.url.includes(".mov") ||
-      item.url.includes(".webm"));
+  const isVideo = item.type === "PORTFOLIO_VIDEO";
 
   if (actionInProgress) {
     return (

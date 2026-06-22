@@ -17,12 +17,12 @@ export interface GalleryItem {
 function mediaToGalleryItem(m: BusinessWithDetails["media"][number]): GalleryItem {
   const isVideo = m.type === "PORTFOLIO_VIDEO";
   const cropMeta =
-    !isVideo && m.cropX != null
+    !isVideo && m.cropX != null && m.cropY != null && m.cropWidth != null && m.cropHeight != null
       ? {
           x: m.cropX,
-          y: m.cropY!,
-          width: m.cropWidth!,
-          height: m.cropHeight!,
+          y: m.cropY,
+          width: m.cropWidth,
+          height: m.cropHeight,
         }
       : undefined;
   const thumbnailUrl =
