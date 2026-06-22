@@ -1,7 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Clock, Check } from "lucide-react";
+import { Check, Clock, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 
@@ -33,14 +32,25 @@ export function ServicePicker({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Hizmet seçin</h2>
-        <p className="text-sm text-muted-foreground">
-          Hangi hizmet için randevu almak istiyorsunuz?
-        </p>
+    <div className="space-y-6">
+      <div className="space-y-5">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button
+            type="button"
+            className="min-h-[44px] shrink-0 rounded-full bg-foreground px-5 text-sm font-semibold text-background shadow-sm"
+          >
+            Öne Çıkanlar
+          </button>
+          <button
+            type="button"
+            className="min-h-[44px] shrink-0 rounded-full border border-border bg-background px-5 text-sm font-medium text-foreground shadow-xs"
+          >
+            Tüm hizmetler
+          </button>
+        </div>
+        <h2 className="text-xl font-semibold">Öne Çıkanlar</h2>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-3 pb-28 lg:pb-0">
         {services.map((service) => {
           const { amount, qualifier } = formatPrice(service);
           const isSelected = selectedId === service.id;
@@ -49,47 +59,44 @@ export function ServicePicker({
               key={service.id}
               type="button"
               onClick={() => onSelect(service.id)}
-              className="w-full text-left"
+              aria-pressed={isSelected}
+              className={cn(
+                "group relative flex min-h-32 w-full items-start rounded-xl border bg-card p-5 text-left shadow-xs transition-all hover:border-foreground/20 hover:shadow-sm sm:min-h-36 sm:p-6",
+                isSelected
+                  ? "border-brand-purple-foreground/70 ring-2 ring-brand-purple-foreground/80"
+                  : "border-border"
+              )}
             >
-              <Card
+              <div className="min-w-0 pr-14">
+                <p className="text-base font-semibold sm:text-lg">{service.name}</p>
+                {service.description && (
+                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                    {service.description}
+                  </p>
+                )}
+                <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Clock className="size-4" />
+                  {service.durationMinutes} dk
+                </div>
+                {amount && (
+                  <div className="mt-6 flex items-baseline gap-1.5">
+                    {qualifier && (
+                      <span className="text-sm text-muted-foreground">{qualifier}</span>
+                    )}
+                    <span className="text-lg font-bold text-foreground">{amount}</span>
+                  </div>
+                )}
+              </div>
+              <span
                 className={cn(
-                  "cursor-pointer transition-colors hover:bg-surface-cream",
-                  isSelected &&
-                    "bg-surface-pink ring-1 ring-brand-pink-foreground/20 hover:bg-surface-pink"
+                  "absolute bottom-5 right-5 flex size-11 items-center justify-center rounded-full border shadow-sm transition-colors",
+                  isSelected
+                    ? "border-brand-purple-foreground bg-brand-purple-foreground text-background"
+                    : "border-border bg-background text-foreground group-hover:bg-surface-cream"
                 )}
               >
-                <CardContent className="flex items-start justify-between gap-4 p-4">
-                  <div className="min-w-0 space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-semibold">{service.name}</p>
-                      {isSelected && (
-                        <Check className="size-4 text-brand-pink-foreground" />
-                      )}
-                    </div>
-                    {service.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {service.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="size-3.5" />
-                      {service.durationMinutes} dk
-                    </div>
-                    {amount && (
-                      <div className="flex items-baseline gap-1.5 pt-0.5">
-                        {qualifier && (
-                          <span className="text-xs text-muted-foreground">
-                            {qualifier}
-                          </span>
-                        )}
-                        <span className="text-base font-bold text-foreground">
-                          {amount}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                {isSelected ? <Check className="size-5" /> : <Plus className="size-5" />}
+              </span>
             </button>
           );
         })}

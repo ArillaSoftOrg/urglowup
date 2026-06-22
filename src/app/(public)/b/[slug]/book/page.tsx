@@ -65,7 +65,7 @@ export default async function BookPage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-6 pb-10 sm:py-8">
+    <div className="mx-auto max-w-[1560px] px-5 py-6 pb-10 sm:px-8 lg:px-12 lg:py-8">
       <BookingWizard
         business={business}
         isLoggedIn={!!user}

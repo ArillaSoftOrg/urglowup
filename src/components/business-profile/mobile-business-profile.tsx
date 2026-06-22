@@ -172,7 +172,8 @@ export function MobileBusinessProfile({
     .join(" ");
 
   const hasSocial = !!(business.instagramUrl || business.facebookUrl || business.tiktokUrl);
-  const hasAbout = !!(business.description || hasSocial || business.address || business.city || business.district);
+  const hasContact = !!(business.phone || business.whatsapp);
+  const hasAbout = !!(business.description || hasContact || hasSocial || business.address || business.city || business.district);
 
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),

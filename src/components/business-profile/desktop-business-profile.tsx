@@ -263,13 +263,14 @@ export function DesktopBusinessProfile({
   const portfolioItems = buildPortfolioItems(business);
 
   const hasSocial = !!(business.instagramUrl || business.facebookUrl || business.tiktokUrl);
-  const hasAbout = !!(business.description || hasSocial || business.address || business.city || business.district);
+  const hasContact = !!(business.phone || business.whatsapp);
+  const hasAbout = !!(business.description || hasContact || hasSocial || business.address || business.city || business.district);
 
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
+    ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     { id: "services", label: "Hizmetler" },
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
-    ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     ...(business.professionals && business.professionals.length > 0
       ? [{ id: "team", label: "Ekip" }]
       : []),
@@ -296,13 +297,18 @@ export function DesktopBusinessProfile({
 
       <SectionNav sections={navSections} />
 
-      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
-        <div className="min-w-0 space-y-9">
-          <ServicesSection business={business} />
-          <BusinessPortfolioSection items={portfolioItems} business={business} />
+      {hasAbout && (
+        <div className="mx-auto max-w-[1440px] px-5 pb-2 sm:px-6 lg:px-10 xl:px-12">
           <section id="about" className="scroll-mt-[130px]">
             <AboutSection business={business} />
           </section>
+        </div>
+      )}
+
+      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
+        <div className="min-w-0 space-y-9">
+          <ServicesSection business={business} />
+          <BusinessPortfolioSection items={portfolioItems} business={business} />
           <TeamSection business={business} />
           <section id="hours" className="scroll-mt-[130px]">
             <HoursSection business={business} />

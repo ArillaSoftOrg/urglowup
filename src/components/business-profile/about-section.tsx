@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -12,6 +12,7 @@ import {
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import { SocialIcon, type SocialIconName } from "@/components/shared/social-icons";
 import { LocationSection } from "./location-section";
+import { Phone } from "lucide-react";
 
 const SOCIAL_LINKS = [
   {
@@ -31,18 +32,23 @@ const SOCIAL_LINKS = [
   },
 ];
 
-function isDescriptionLong(text: string): boolean {
-  return text.length > 280 || text.split("\n").length > 4;
-}
-
 export function AboutSection({ business }: { business: BusinessWithDetails }) {
   const [expanded, setExpanded] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const hasSocial = SOCIAL_LINKS.some((s) => !!business[s.key]);
-  const hasAddress = business.address || business.city || business.district;
-  const isLong = business.description ? isDescriptionLong(business.description) : false;
+  const [overflows, setOverflows] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
 
-  if (!business.description && !hasSocial && !hasAddress) return null;
+  const hasSocial = SOCIAL_LINKS.some((s) => !!business[s.key]);
+  const hasContact = !!(business.phone || business.whatsapp);
+  const hasAddress = business.address || business.city || business.district;
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    setOverflows(el.scrollHeight > el.clientHeight);
+  }, []);
+
+  if (!business.description && !hasContact && !hasSocial && !hasAddress) return null;
 
   return (
     <div className="space-y-6 border-t border-border/70 pt-10">
@@ -52,15 +58,16 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
         {business.description && (
           <div>
             <p
+              ref={textRef}
               className={cn(
-                "max-w-[72ch] whitespace-pre-line text-[15px] leading-[1.8] text-foreground/90",
-                isLong && !expanded && "line-clamp-4",
+                "whitespace-pre-line text-[15px] leading-[1.8] text-foreground/90",
+                !expanded && "line-clamp-4",
               )}
             >
               {business.description}
             </p>
 
-            {isLong && (
+            {overflows && (
               <>
                 {/* Mobile: opens bottom sheet so text never competes with sticky CTA */}
                 <button
@@ -97,6 +104,42 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
                 </Sheet>
               </>
             )}
+          </div>
+        )}
+
+        {hasContact && (
+          <div className="space-y-3 pt-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              İletişime geçin
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {business.phone && (
+                <a
+                  href={`tel:${business.phone}`}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "default" }),
+                    "h-10 gap-2.5 bg-background font-medium",
+                  )}
+                >
+                  <Phone className="size-4 shrink-0" />
+                  <span className="truncate">{business.phone}</span>
+                </a>
+              )}
+              {business.whatsapp && (
+                <a
+                  href={`https://wa.me/${business.whatsapp.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "default" }),
+                    "h-10 gap-2.5 bg-background font-medium",
+                  )}
+                >
+                  <SocialIcon name="whatsapp" className="size-4 shrink-0" />
+                  WhatsApp
+                </a>
+              )}
+            </div>
           </div>
         )}
 
