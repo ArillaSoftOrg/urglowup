@@ -292,6 +292,13 @@ export async function setAsCover(
     data: { type: "COVER" },
   });
 
+  if (coverCount === 0) {
+    await db.business.update({
+      where: { id: businessId },
+      data: { coverImageUrl: media.url },
+    });
+  }
+
   revalidate();
   return { success: true, message: "Kapak koleksiyonuna eklendi." };
 }

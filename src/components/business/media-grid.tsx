@@ -35,7 +35,6 @@ import {
   Grid3X3,
   Plus,
   UserRound,
-  Star,
 } from "lucide-react";
 import { MediaUploadButton } from "./media-upload-button";
 import { MediaEditDialog } from "./media-edit-dialog";
@@ -359,7 +358,7 @@ function CoverSection({
               <div className="space-y-1">
                 <p className="font-medium">Henüz kapak fotoğrafı yok</p>
                 <p className="text-sm text-muted-foreground">
-                  İlk fotoğraf hem profil hero'sunda hem Keşfet kartında görünür
+                  İlk fotoğraf hem profil hero&apos;sunda hem Keşfet kartında görünür
                 </p>
               </div>
               <MediaUploadButton
@@ -371,14 +370,18 @@ function CoverSection({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
                 {covers.map((cover, index) => (
-                  <CoverItemCard
+                  <div
                     key={cover.id}
-                    media={cover}
-                    isPrimary={index === 0}
-                    services={services}
-                  />
+                    className="w-[82vw] max-w-[360px] shrink-0 snap-start sm:w-auto sm:max-w-none"
+                  >
+                    <CoverItemCard
+                      media={cover}
+                      isPrimary={index === 0}
+                      services={services}
+                    />
+                  </div>
                 ))}
               </div>
               {!atLimit && (

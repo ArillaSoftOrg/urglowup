@@ -132,7 +132,29 @@ export function BusinessGalleryLightboxHero({
   return (
     <>
       <section className="relative">
-        <div className="grid gap-3 md:h-[320px] md:grid-cols-[minmax(0,2fr)_minmax(180px,0.75fr)] md:gap-4 lg:h-[440px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)] lg:gap-7 xl:h-[500px]">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:hidden">
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className="relative w-[88vw] max-w-[420px] shrink-0 snap-center"
+            >
+              <MediaTile
+                item={item}
+                index={index}
+                priority={index === 0}
+                className="aspect-[4/3]"
+                onOpen={setOpenIndex}
+              />
+              {items.length > 1 && (
+                <span className="absolute bottom-3 right-3 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-white">
+                  {index + 1}/{items.length}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden gap-3 md:grid md:h-[320px] md:grid-cols-[minmax(0,2fr)_minmax(180px,0.75fr)] md:gap-4 lg:h-[440px] lg:grid-cols-[minmax(0,2fr)_minmax(360px,0.96fr)] lg:gap-7 xl:h-[500px]">
           <MediaTile
             item={visibleItems[0]}
             index={0}
@@ -168,7 +190,7 @@ export function BusinessGalleryLightboxHero({
           <button
             type="button"
             onClick={() => setOpenIndex(0)}
-            className="absolute bottom-6 right-6 inline-flex h-11 items-center gap-2 rounded-full bg-background px-5 text-sm font-semibold text-foreground shadow-md transition hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="absolute bottom-6 right-6 hidden h-11 items-center gap-2 rounded-full bg-background px-5 text-sm font-semibold text-foreground shadow-md transition hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 md:inline-flex"
           >
             <ImageIcon className="size-4" />
             Tüm resimleri gör

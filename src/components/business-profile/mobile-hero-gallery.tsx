@@ -38,7 +38,6 @@ export function MobileHeroGallery({
   businessName: string;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const hero = items[0];
 
   const close = useCallback(() => setOpenIndex(null), []);
   const prev = useCallback(
@@ -68,51 +67,57 @@ export function MobileHeroGallery({
   const current = openIndex !== null ? items[openIndex] : null;
 
   return (
-    <section className="px-4 pt-3">
-      <button
-        type="button"
-        onClick={() => hero && setOpenIndex(0)}
-        disabled={!hero}
-        aria-label="Görselleri görüntüle"
-        className="relative block w-full aspect-[4/3] overflow-hidden rounded-2xl bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-default"
-      >
-        {hero ? (
-          hero.isVideo ? (
-            <>
-              <video
-                src={hero.thumbnailUrl}
-                poster={hero.posterUrl}
-                className="size-full object-cover"
-                muted
-                playsInline
-                preload="none"
-              />
-              <span className="absolute inset-0 flex items-center justify-center bg-black/15">
-                <span className="flex size-11 items-center justify-center rounded-full bg-background/95 shadow-sm">
-                  <Play className="ml-0.5 size-4 fill-current" />
-                </span>
-              </span>
-            </>
-          ) : (
-            <Image
-              src={hero.thumbnailUrl}
-              alt={hero.title ?? businessName}
-              fill
-              sizes="100vw"
-              className="object-cover"
-              priority
-            />
-          )
-        ) : (
-          <div className="size-full bg-surface-cream" />
-        )}
+    <section className="pt-3">
+      {items.length > 0 ? (
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2">
+          {items.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setOpenIndex(index)}
+              aria-label="Görselleri görüntüle"
+              className="relative block aspect-[4/3] w-[88vw] max-w-[420px] shrink-0 snap-center overflow-hidden rounded-2xl bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              {item.isVideo ? (
+                <>
+                  <video
+                    src={item.thumbnailUrl}
+                    poster={item.posterUrl}
+                    className="size-full object-cover"
+                    muted
+                    playsInline
+                    preload="none"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/15">
+                    <span className="flex size-11 items-center justify-center rounded-full bg-background/95 shadow-sm">
+                      <Play className="ml-0.5 size-4 fill-current" />
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <Image
+                  src={item.thumbnailUrl}
+                  alt={item.title ?? businessName}
+                  fill
+                  sizes="88vw"
+                  className="object-cover"
+                  priority={index === 0}
+                />
+              )}
 
-        {items.length > 1 && (
-          <div className="absolute bottom-3 right-3 rounded-full bg-foreground/75 px-3 py-1 text-sm font-bold text-background">
-            1/{items.length}
-          </div>
-        )}
-      </button>
+              {items.length > 1 && (
+                <div className="absolute bottom-3 right-3 rounded-full bg-foreground/75 px-3 py-1 text-sm font-bold text-background">
+                  {index + 1}/{items.length}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="px-4">
+          <div className="aspect-[4/3] rounded-2xl bg-surface-cream" />
+        </div>
+      )}
 
       {current && (
         <GalleryLightboxOverlay
