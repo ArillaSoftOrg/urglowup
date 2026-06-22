@@ -10,6 +10,7 @@ import {
   VIDEO_MEDIA_TYPES,
   MAX_IMAGES_PER_BUSINESS,
   MAX_VIDEOS_PER_BUSINESS,
+  MAX_COVER_IMAGES,
   MAX_VIDEO_DURATION_SECONDS,
   getResourceType,
 } from "@/lib/constants/media";
@@ -103,6 +104,16 @@ export async function saveMediaRecord(
   }
 
   // Re-check limits (race condition guard)
+  if (mediaType === "COVER") {
+    const coverCount = await db.businessMedia.count({
+      where: { businessId, type: "COVER" },
+    });
+    if (coverCount >= MAX_COVER_IMAGES) {
+      try { await deleteFromCloudinary(publicId, "image"); } catch { /* best effort */ }
+      return { success: false, message: `Kapak fotoğrafı limiti aşıldı (${MAX_COVER_IMAGES}).` };
+    }
+  }
+
   if (IMAGE_MEDIA_TYPES.includes(mediaType) && mediaType !== "COVER" && mediaType !== "LOGO") {
     const count = await db.businessMedia.count({
       where: { businessId, type: { in: IMAGE_MEDIA_TYPES } },
@@ -123,10 +134,10 @@ export async function saveMediaRecord(
     }
   }
 
-  // Handle cover/logo replacement
-  if (mediaType === "COVER" || mediaType === "LOGO") {
+  // LOGO is singleton — replace existing
+  if (mediaType === "LOGO") {
     const existing = await db.businessMedia.findFirst({
-      where: { businessId, type: mediaType },
+      where: { businessId, type: "LOGO" },
     });
     if (existing) {
       try {
@@ -135,6 +146,12 @@ export async function saveMediaRecord(
       await db.businessMedia.delete({ where: { id: existing.id } });
     }
   }
+
+  // Track whether this is the very first cover (for coverImageUrl fallback)
+  const isFirstCover =
+    mediaType === "COVER"
+      ? (await db.businessMedia.count({ where: { businessId, type: "COVER" } })) === 0
+      : false;
 
   // Auto sortOrder
   const maxSort = await db.businessMedia.aggregate({
@@ -159,7 +176,10 @@ export async function saveMediaRecord(
   });
 
   // Update business cover/logo URL
-  if (mediaType === "COVER") {
+  // COVER: only set coverImageUrl when this is the very first cover record,
+  // so it remains a valid fallback for queries that rely on the field.
+  // Primary cover changes are handled by setPrimaryCover().
+  if (mediaType === "COVER" && isFirstCover) {
     await db.business.update({
       where: { id: businessId },
       data: { coverImageUrl: url },
@@ -244,6 +264,9 @@ export async function reorderMedia(
 
 // ─── Set as Cover / Logo ────────────────────────────────────────
 
+// Adds a portfolio image to the cover/place photos collection.
+// Does NOT delete existing covers — use setPrimaryCover() to change which
+// cover appears on the Discover card.
 export async function setAsCover(
   mediaId: string
 ): Promise<MediaActionState> {
@@ -256,31 +279,70 @@ export async function setAsCover(
     return { success: false, message: "Media not found." };
   }
 
-  // Remove existing cover media record
-  const existingCover = await db.businessMedia.findFirst({
+  // Check cover limit before converting
+  const coverCount = await db.businessMedia.count({
     where: { businessId, type: "COVER" },
   });
-  if (existingCover) {
-    try {
-      await deleteFromCloudinary(existingCover.publicId, "image");
-    } catch { /* best effort */ }
-    await db.businessMedia.delete({ where: { id: existingCover.id } });
+  if (coverCount >= MAX_COVER_IMAGES) {
+    return { success: false, message: `Kapak fotoğrafı limiti aşıldı (${MAX_COVER_IMAGES}).` };
   }
 
-  // Update this media to COVER type
   await db.businessMedia.update({
     where: { id: mediaId },
     data: { type: "COVER" },
   });
 
-  // Update business coverImageUrl
+  revalidate();
+  return { success: true, message: "Kapak koleksiyonuna eklendi." };
+}
+
+// Sets the selected COVER item as primary (first by sortOrder).
+// Primary cover appears on the Discover/search card.
+export async function setPrimaryCover(
+  mediaId: string
+): Promise<MediaActionState> {
+  const { businessId } = await requireBusiness("MANAGER");
+
+  const media = await db.businessMedia.findUnique({
+    where: { id: mediaId },
+  });
+  if (!media || media.businessId !== businessId || media.type !== "COVER") {
+    return { success: false, message: "Media not found." };
+  }
+
+  const allCovers = await db.businessMedia.findMany({
+    where: { businessId, type: "COVER" },
+    orderBy: { sortOrder: "asc" },
+  });
+
+  if (allCovers.length <= 1) {
+    return { success: true, message: "Already primary." };
+  }
+
+  // Put selected first, preserve relative order of the rest
+  const reordered = [
+    media,
+    ...allCovers.filter((c) => c.id !== mediaId),
+  ];
+  const baseSort = allCovers[0].sortOrder;
+
+  await db.$transaction(
+    reordered.map((cover, i) =>
+      db.businessMedia.update({
+        where: { id: cover.id },
+        data: { sortOrder: baseSort + i },
+      })
+    )
+  );
+
+  // Keep Business.coverImageUrl in sync with primary
   await db.business.update({
     where: { id: businessId },
     data: { coverImageUrl: media.url },
   });
 
   revalidate();
-  return { success: true, message: "Cover image updated." };
+  return { success: true, message: "Keşfet kartı güncellendi." };
 }
 
 export async function setAsLogo(

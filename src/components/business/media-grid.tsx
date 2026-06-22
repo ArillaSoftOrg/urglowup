@@ -33,20 +33,24 @@ import {
   Camera,
   Eye,
   Grid3X3,
-  MapPin,
   Plus,
-  Scissors,
-  Star,
   UserRound,
+  Star,
 } from "lucide-react";
 import { MediaUploadButton } from "./media-upload-button";
 import { MediaEditDialog } from "./media-edit-dialog";
 import { DiscoverCardPreview } from "./discover-card-preview";
-import { setAsCover, setAsLogo, saveCropMeta } from "@/app/(business)/business/media/actions";
+import {
+  setAsCover,
+  setAsLogo,
+  saveCropMeta,
+  setPrimaryCover,
+} from "@/app/(business)/business/media/actions";
 import {
   MEDIA_TYPE_LABELS,
   MAX_IMAGES_PER_BUSINESS,
   MAX_VIDEOS_PER_BUSINESS,
+  MAX_COVER_IMAGES,
 } from "@/lib/constants/media";
 import { cn } from "@/lib/utils";
 import type { BusinessMediaItem } from "@/lib/queries/media";
@@ -56,7 +60,7 @@ const CropDialog = dynamic(() => import("./crop-dialog"), {
   loading: () => (
     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
       <Loader2 className="size-3 animate-spin" />
-      Kirpma araci yukleniyor...
+      Kırpma aracı yükleniyor...
     </div>
   ),
 });
@@ -84,213 +88,386 @@ interface BusinessProfileSummary {
   rating: number | null;
 }
 
-function formatRating(rating: number | null) {
-  if (rating == null) return "-";
-  return rating.toFixed(1);
+// ─── Page Header ────────────────────────────────────────────────
+
+function MediaPageHeader({ business }: { business: BusinessProfileSummary }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-normal">Görseller</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Kapak fotoğrafları, portföy ve logo yönetimi
+        </p>
+      </div>
+      <Link
+        href={`/b/${business.slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
+      >
+        <Eye className="size-3.5" />
+        Canlı profili gör
+      </Link>
+    </div>
+  );
 }
 
-function ProfileHero({
-  business,
-  cover,
-  logo,
-  portfolioCount,
+// ─── Cover Item Card ─────────────────────────────────────────────
+
+function CoverItemCard({
+  media,
+  isPrimary,
+  services,
 }: {
-  business: BusinessProfileSummary;
-  cover: BusinessMediaItem | undefined;
-  logo: BusinessMediaItem | undefined;
-  portfolioCount: number;
+  media: BusinessMediaItem;
+  isPrimary: boolean;
+  services: ServiceOption[];
 }) {
-  const coverUrl = cover?.url ?? business.coverImageUrl;
-  const logoUrl = logo?.url ?? business.logoUrl;
-  const location = [business.district, business.city].filter(Boolean).join(", ");
-  const categoryLine = business.categories.join(" / ");
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSaving, setCropSaving] = useState(false);
+
+  async function handleCropConfirm(crop: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) {
+    setCropSaving(true);
+    await saveCropMeta(media.id, crop);
+    setCropSaving(false);
+    setCropOpen(false);
+    router.refresh();
+  }
+
+  function handleSetPrimary() {
+    startTransition(async () => {
+      await setPrimaryCover(media.id);
+      router.refresh();
+    });
+  }
+
+  function handleDelete() {
+    setDeleteError(null);
+    startTransition(async () => {
+      const res = await fetch("/api/media/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mediaId: media.id }),
+      });
+      if (res.ok) {
+        setDeleteOpen(false);
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setDeleteError(data.error || "Silinemedi.");
+      }
+    });
+  }
 
   return (
-    <section className="overflow-hidden rounded-lg border bg-card">
-      <div className="relative h-36 bg-muted sm:h-44 lg:h-52">
-        {coverUrl ? (
-          <Image
-            src={coverUrl}
-            alt={`${business.name} kapak görseli`}
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 1100px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2 bg-surface-cream text-muted-foreground">
-            <ImageIcon className="size-8" />
-            <p className="text-xs">Profil sayfanızda ve Keşfet kartında görünür</p>
-          </div>
-        )}
-        <div className="absolute right-3 top-3 flex flex-wrap gap-2">
-          <MediaUploadButton
-            mediaType="COVER"
-            label={coverUrl ? "Kapak değiştir" : "Kapak ekle"}
-            size="sm"
-            variant="outline"
-          />
-          {cover && (
-            <DeleteMediaButton mediaId={cover.id} label="Kaldır" size="sm" />
+    <div className="group relative overflow-hidden rounded-lg border bg-card transition-colors hover:border-primary/30">
+      <div className="relative aspect-video">
+        <Image
+          src={media.url}
+          alt={media.title ?? "Kapak fotoğrafı"}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+          className="object-cover"
+        />
+
+        {/* Badges */}
+        <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+          {isPrimary && (
+            <Badge variant="default" className="text-[10px]">
+              Keşfet kartı
+            </Badge>
           )}
+          <Badge variant="secondary" className="text-[10px]">
+            Profil galerisi
+          </Badge>
         </div>
       </div>
 
-      <div className="px-4 pb-5 pt-0 sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex min-w-0 gap-4">
-            <div className="-mt-10 shrink-0">
-              <div className="relative size-24 overflow-hidden rounded-full border-4 border-card bg-muted sm:size-28">
-                {logoUrl ? (
-                  <Image
-                    src={logoUrl}
-                    alt={`${business.name} logosu`}
-                    fill
-                    sizes="112px"
-                    className="object-cover"
+      <div className="flex min-h-10 items-center justify-between gap-2 p-2">
+        <div className="min-w-0">
+          {media.title && (
+            <p className="truncate text-xs font-medium">{media.title}</p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1">
+          <MediaEditDialog media={media} services={services} />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon" className="size-7" />
+              }
+            >
+              {isPending ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <MoreVertical className="size-3" />
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setCropOpen(true)}>
+                <Crop className="size-4" />
+                Kırpmayı Düzenle
+              </DropdownMenuItem>
+              {!isPrimary && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSetPrimary}>
+                    Keşfet kartı yap
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  setDeleteOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="size-4" />
+                Sil
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Kapak fotoğrafı silinsin mi?</DialogTitle>
+            <DialogDescription>
+              Bu fotoğraf kalıcı olarak silinecek. Bu işlem geri alınamaz.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && (
+            <p className="text-sm text-destructive">{deleteError}</p>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={isPending}
+            >
+              İptal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Siliniyor...
+                </>
+              ) : (
+                "Sil"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {cropOpen && (
+        <CropDialog
+          open={cropOpen}
+          onOpenChange={(v) => {
+            if (!v && !cropSaving) setCropOpen(false);
+          }}
+          imageUrl={media.url}
+          aspect={CROP_ASPECTS["COVER"]}
+          hint="Yatay (2:1) oran keşfet kartına ve profil hero'suna en uygun görünümü sağlar."
+          initialCrop={
+            media.cropX != null &&
+            media.cropY != null &&
+            media.cropWidth != null &&
+            media.cropHeight != null
+              ? {
+                  x: media.cropX,
+                  y: media.cropY,
+                  width: media.cropWidth,
+                  height: media.cropHeight,
+                }
+              : undefined
+          }
+          onConfirm={handleCropConfirm}
+          onSkip={() => setCropOpen(false)}
+          isPending={cropSaving}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Cover Section ───────────────────────────────────────────────
+
+function CoverSection({
+  covers,
+  business,
+  logoUrl,
+  services,
+}: {
+  covers: BusinessMediaItem[];
+  business: BusinessProfileSummary;
+  logoUrl: string | null;
+  services: ServiceOption[];
+}) {
+  const primaryCoverUrl = covers[0]?.url ?? business.coverImageUrl;
+  const atLimit = covers.length >= MAX_COVER_IMAGES;
+
+  return (
+    <section className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold tracking-normal">
+            Kapak ve yer fotoğrafları
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Profilinizin üst galerisinde görünür. Birden fazla fotoğraf
+            ekleyebilirsiniz.{" "}
+            <span className="font-medium text-foreground">
+              İlk fotoğraf Keşfet kartında kullanılır.
+            </span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <ImageIcon className="size-3.5" />
+          {covers.length}/{MAX_COVER_IMAGES}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        {/* Cover grid + CTA */}
+        <div className="min-w-0 flex-1 space-y-3">
+          {covers.length === 0 ? (
+            <div className="flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/20 text-center">
+              <div className="flex size-14 items-center justify-center rounded-full border bg-background">
+                <Camera className="size-6 text-muted-foreground" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">Henüz kapak fotoğrafı yok</p>
+                <p className="text-sm text-muted-foreground">
+                  İlk fotoğraf hem profil hero'sunda hem Keşfet kartında görünür
+                </p>
+              </div>
+              <MediaUploadButton
+                mediaType="COVER"
+                label="Yer fotoğrafı ekle"
+                variant="default"
+                size="sm"
+              />
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {covers.map((cover, index) => (
+                  <CoverItemCard
+                    key={cover.id}
+                    media={cover}
+                    isPrimary={index === 0}
+                    services={services}
                   />
-                ) : (
-                  <div className="flex size-full items-center justify-center">
-                    <UserRound className="size-9 text-muted-foreground" />
-                  </div>
-                )}
+                ))}
               </div>
-              <div className="mt-2">
+              {!atLimit && (
                 <MediaUploadButton
-                  mediaType="LOGO"
-                  label={logoUrl ? "Logo değiştir" : "Logo ekle"}
-                  size="sm"
+                  mediaType="COVER"
+                  label="Yer fotoğrafı ekle"
                   variant="outline"
+                  size="sm"
                 />
-              </div>
-              <p className="mt-1 max-w-[112px] text-[10px] leading-tight text-muted-foreground">
-                Rezervasyon ve kartlarda görünür
-              </p>
-            </div>
-
-            <div className="min-w-0 pt-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-2xl font-semibold tracking-normal">
-                  {business.name}
-                </h1>
-                {categoryLine && (
-                  <Badge variant="secondary" className="max-w-full truncate">
-                    {categoryLine}
-                  </Badge>
-                )}
-              </div>
-              {location && (
-                <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                  <MapPin className="size-3.5" />
-                  {location}
+              )}
+              {atLimit && (
+                <p className="text-xs text-muted-foreground">
+                  Maksimum {MAX_COVER_IMAGES} kapak fotoğrafına ulaşıldı.
                 </p>
               )}
-              {business.description && (
-                <p className="mt-2 line-clamp-2 max-w-2xl text-sm text-muted-foreground">
-                  {business.description}
-                </p>
-              )}
-              <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                <span>
-                  <strong>{portfolioCount}</strong> paylaşım
-                </span>
-                <span>
-                  <strong>{business.serviceCount}</strong> hizmet
-                </span>
-                <span>
-                  <strong>{business.reviewCount}</strong> yorum
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Star className="size-3.5 fill-current" />
-                  <strong>{formatRating(business.rating)}</strong>
-                </span>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
+        </div>
 
-          <div className="flex flex-col items-end gap-3 sm:pb-1">
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href="/business/profile"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-              >
-                Profili düzenle
-              </Link>
-              <Link
-                href={`/b/${business.slug}`}
-                target="_blank"
-                className={cn(buttonVariants({ variant: "default", size: "sm" }))}
-              >
-                <Eye className="size-3.5" />
-                Canlı profili gör
-              </Link>
-            </div>
-            <DiscoverCardPreview
-              name={business.name}
-              coverUrl={coverUrl}
-              logoUrl={logoUrl}
-              city={business.city}
-              district={business.district}
-              categories={business.categories}
-              rating={business.rating}
-              reviewCount={business.reviewCount}
-            />
-          </div>
+        {/* Discover card preview */}
+        <div className="shrink-0">
+          <DiscoverCardPreview
+            name={business.name}
+            coverUrl={primaryCoverUrl}
+            logoUrl={logoUrl}
+            city={business.city}
+            district={business.district}
+            categories={business.categories}
+            rating={business.rating}
+            reviewCount={business.reviewCount}
+          />
         </div>
       </div>
     </section>
   );
 }
 
-function ProfileHighlights({
-  services,
+// ─── Logo Card ───────────────────────────────────────────────────
+
+function LogoCard({
+  logo,
+  business,
 }: {
-  services: ServiceOption[];
+  logo: BusinessMediaItem | undefined;
+  business: BusinessProfileSummary;
 }) {
-  const highlights = [
-    ...services.slice(0, 4).map((service) => ({
-      id: service.id,
-      label: service.name,
-      icon: Scissors,
-      mediaType: "SERVICE_IMAGE" as const,
-    })),
-    {
-      id: "before-after",
-      label: "Önce/Sonra",
-      icon: ImageIcon,
-      mediaType: "BEFORE_AFTER" as const,
-    },
-  ];
+  const logoUrl = logo?.url ?? business.logoUrl;
 
   return (
-    <div className="flex gap-4 overflow-x-auto rounded-lg border bg-card px-4 py-4 sm:px-6">
-      {highlights.map((item) => {
-        const Icon = item.icon;
-        return (
-          <div key={item.id} className="flex w-20 shrink-0 flex-col items-center gap-2">
-            <div className="flex size-16 items-center justify-center rounded-full border bg-muted/30">
-              <Icon className="size-6 text-muted-foreground" />
-            </div>
-            <span className="line-clamp-2 text-center text-xs font-medium">
-              {item.label}
-            </span>
-          </div>
-        );
-      })}
-      <div className="flex w-20 shrink-0 flex-col items-center gap-2">
-        <div className="flex size-16 items-center justify-center rounded-full border border-dashed bg-muted/30">
-          <MediaUploadButton
-            mediaType="PORTFOLIO_IMAGE"
-            label=""
-            size="icon"
-            variant="ghost"
+    <section className="flex items-center gap-4 rounded-lg border bg-card p-4 sm:p-6">
+      <div className="relative size-14 shrink-0 overflow-hidden rounded-full border-2 border-muted bg-muted">
+        {logoUrl ? (
+          <Image
+            src={logoUrl}
+            alt={`${business.name} logosu`}
+            fill
+            sizes="56px"
+            className="object-cover"
           />
-        </div>
-        <span className="text-center text-xs font-medium">Yeni</span>
+        ) : (
+          <div className="flex size-full items-center justify-center">
+            <UserRound className="size-6 text-muted-foreground" />
+          </div>
+        )}
       </div>
-    </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="font-medium">Logo</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Rezervasyon ve kart önizlemelerinde görünür
+        </p>
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <MediaUploadButton
+          mediaType="LOGO"
+          label={logoUrl ? "Logo değiştir" : "Logo ekle"}
+          size="sm"
+          variant="outline"
+        />
+        {logo && (
+          <DeleteMediaButton mediaId={logo.id} label="Kaldır" size="sm" />
+        )}
+      </div>
+    </section>
   );
 }
+
+// ─── Portfolio Section ───────────────────────────────────────────
 
 function AddMediaTile() {
   return (
@@ -316,8 +493,6 @@ function AddMediaTile() {
   );
 }
 
-// ─── Media Item Card ────────────────────────────────────────────
-
 function MediaItemCard({
   media,
   services,
@@ -336,9 +511,14 @@ function MediaItemCard({
     media.type !== "PORTFOLIO_VIDEO" &&
     media.type !== "COVER" &&
     media.type !== "LOGO";
-  const supportsCrop = media.type === "COVER" || media.type === "PORTFOLIO_IMAGE";
+  const supportsCrop = media.type === "PORTFOLIO_IMAGE";
 
-  async function handleCropConfirm(crop: { x: number; y: number; width: number; height: number }) {
+  async function handleCropConfirm(crop: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) {
     setCropSaving(true);
     await saveCropMeta(media.id, crop);
     setCropSaving(false);
@@ -349,6 +529,7 @@ function MediaItemCard({
   function handleSetAsCover() {
     startTransition(async () => {
       await setAsCover(media.id);
+      router.refresh();
     });
   }
 
@@ -402,7 +583,6 @@ function MediaItemCard({
           />
         )}
 
-        {/* Type badge */}
         <Badge
           variant="secondary"
           className="absolute left-1.5 top-1.5 text-[10px]"
@@ -411,7 +591,6 @@ function MediaItemCard({
         </Badge>
       </div>
 
-      {/* Actions overlay */}
       <div className="flex min-h-12 items-center justify-between gap-2 p-2">
         <div className="min-w-0">
           {media.title && (
@@ -452,7 +631,7 @@ function MediaItemCard({
               {isImage && (
                 <>
                   <DropdownMenuItem onClick={handleSetAsCover}>
-                    Kapak yap — Keşfet kartı ve profil hero'su
+                    Kapak koleksiyonuna ekle
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSetAsLogo}>
                     Logo yap — Rezervasyonlarda ve kartlarda görünür
@@ -483,7 +662,9 @@ function MediaItemCard({
               Bu medya kalıcı olarak silinecek. Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
-          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          {deleteError && (
+            <p className="text-sm text-destructive">{deleteError}</p>
+          )}
           <DialogFooter>
             <Button
               variant="outline"
@@ -513,17 +694,22 @@ function MediaItemCard({
       {cropOpen && (
         <CropDialog
           open={cropOpen}
-          onOpenChange={(v) => { if (!v && !cropSaving) setCropOpen(false); }}
+          onOpenChange={(v) => {
+            if (!v && !cropSaving) setCropOpen(false);
+          }}
           imageUrl={media.url}
           aspect={CROP_ASPECTS[media.type]}
-          hint={
-            media.type === "COVER"
-              ? "Yatay (2:1) oran keşfet kartına ve profil hero'suna en uygun görünümü sağlar."
-              : undefined
-          }
           initialCrop={
-            media.cropX != null && media.cropY != null && media.cropWidth != null && media.cropHeight != null
-              ? { x: media.cropX, y: media.cropY, width: media.cropWidth, height: media.cropHeight }
+            media.cropX != null &&
+            media.cropY != null &&
+            media.cropWidth != null &&
+            media.cropHeight != null
+              ? {
+                  x: media.cropX,
+                  y: media.cropY,
+                  width: media.cropWidth,
+                  height: media.cropHeight,
+                }
               : undefined
           }
           onConfirm={handleCropConfirm}
@@ -535,7 +721,137 @@ function MediaItemCard({
   );
 }
 
-// ─── Delete Helpers ─────────────────────────────────────────────
+function PortfolioGrid({
+  items,
+  services,
+  showAddTile = false,
+  emptyHeadline,
+  emptyDescription,
+}: {
+  items: BusinessMediaItem[];
+  services: ServiceOption[];
+  showAddTile?: boolean;
+  emptyHeadline: string;
+  emptyDescription: string;
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="flex min-h-64 flex-col items-center justify-center gap-4 text-center">
+        <div className="flex size-20 items-center justify-center rounded-full border">
+          <Camera className="size-9" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold">{emptyHeadline}</h3>
+          <p className="text-sm text-muted-foreground">{emptyDescription}</p>
+        </div>
+        <MediaUploadButton
+          mediaType="PORTFOLIO_IMAGE"
+          label="İlk fotoğrafını paylaş"
+          variant="ghost"
+          size="sm"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {showAddTile && <AddMediaTile />}
+      {items.map((item) => (
+        <MediaItemCard key={item.id} media={item} services={services} />
+      ))}
+    </div>
+  );
+}
+
+function PortfolioSection({
+  portfolioMedia,
+  images,
+  videos,
+  services,
+  imageCount,
+  videoCount,
+}: {
+  portfolioMedia: BusinessMediaItem[];
+  images: BusinessMediaItem[];
+  videos: BusinessMediaItem[];
+  services: ServiceOption[];
+  imageCount: number;
+  videoCount: number;
+}) {
+  return (
+    <section className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
+      <div>
+        <h2 className="text-base font-semibold tracking-normal">
+          Portföy görselleri
+        </h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Profil portföy bölümünde görünür. Keşfet kartını etkilemez.
+        </p>
+      </div>
+
+      <Tabs defaultValue="all">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="all">
+              <Grid3X3 className="size-4" />
+              Tümü
+            </TabsTrigger>
+            <TabsTrigger value="images">
+              <ImageIcon className="size-4" />
+              Fotoğraflar
+            </TabsTrigger>
+            <TabsTrigger value="videos">
+              <Film className="size-4" />
+              Videolar
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex items-center gap-3 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <ImageIcon className="size-3" />
+              {imageCount}/{MAX_IMAGES_PER_BUSINESS}
+            </span>
+            <span className="flex items-center gap-1">
+              <Film className="size-3" />
+              {videoCount}/{MAX_VIDEOS_PER_BUSINESS}
+            </span>
+          </div>
+        </div>
+
+        <TabsContent value="all" className="m-0 mt-4">
+          <PortfolioGrid
+            items={portfolioMedia}
+            services={services}
+            showAddTile
+            emptyHeadline="Fotoğraflar paylaş"
+            emptyDescription="Fotoğraf ve videolar profil portföy bölümünde görünür. Keşfet kartında ise kapak fotoğrafın kullanılır."
+          />
+        </TabsContent>
+        <TabsContent value="images" className="m-0 mt-4">
+          <PortfolioGrid
+            items={images}
+            services={services}
+            showAddTile
+            emptyHeadline="İlk fotoğrafını paylaş"
+            emptyDescription="Çalışmalarını müşterilerin gördüğü profil portföy bölümünde sergile."
+          />
+        </TabsContent>
+        <TabsContent value="videos" className="m-0 mt-4">
+          <PortfolioGrid
+            items={videos}
+            services={services}
+            showAddTile
+            emptyHeadline="İlk videonu paylaş"
+            emptyDescription="Kısa videolar profil portföy bölümünde görünür; Keşfet kartını etkilemez."
+          />
+        </TabsContent>
+      </Tabs>
+    </section>
+  );
+}
+
+// ─── Delete Button Helper ────────────────────────────────────────
 
 function DeleteMediaButton({
   mediaId,
@@ -584,7 +900,8 @@ function DeleteMediaButton({
           <DialogHeader>
             <DialogTitle>Medya silinsin mi?</DialogTitle>
             <DialogDescription>
-              Bu medya galeriden ve Cloudinary&apos;den kalıcı olarak silinecek. Bu işlem geri alınamaz.
+              Bu medya galeriden ve Cloudinary&apos;den kalıcı olarak
+              silinecek. Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -617,7 +934,7 @@ function DeleteMediaButton({
   );
 }
 
-// ─── Main Grid ──────────────────────────────────────────────────
+// ─── Main Grid ───────────────────────────────────────────────────
 
 export function MediaGrid({
   business,
@@ -632,128 +949,35 @@ export function MediaGrid({
   videoCount: number;
   services: ServiceOption[];
 }) {
-  const cover = media.find((m) => m.type === "COVER");
+  // media arrives ordered by [type asc, sortOrder asc] from getBusinessMedia()
+  const covers = media.filter((m) => m.type === "COVER");
   const logo = media.find((m) => m.type === "LOGO");
-
   const portfolioMedia = media.filter(
     (m) => m.type !== "COVER" && m.type !== "LOGO"
   );
   const images = portfolioMedia.filter((m) => m.type !== "PORTFOLIO_VIDEO");
   const videos = portfolioMedia.filter((m) => m.type === "PORTFOLIO_VIDEO");
 
+  const logoUrl = logo?.url ?? business.logoUrl;
+
   return (
     <div className="space-y-4">
-      <ProfileHero
+      <MediaPageHeader business={business} />
+      <CoverSection
+        covers={covers}
         business={business}
-        cover={cover}
-        logo={logo}
-        portfolioCount={portfolioMedia.length}
+        logoUrl={logoUrl}
+        services={services}
       />
-
-      <ProfileHighlights services={services} />
-
-      <section className="rounded-lg border bg-card">
-        <Tabs defaultValue="all">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
-            <TabsList>
-              <TabsTrigger value="all">
-                <Grid3X3 className="size-4" />
-                Tümü
-              </TabsTrigger>
-              <TabsTrigger value="images">
-                <ImageIcon className="size-4" />
-                Fotoğraflar
-              </TabsTrigger>
-              <TabsTrigger value="videos">
-                <Film className="size-4" />
-                Videolar
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="flex items-center gap-3 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <ImageIcon className="size-3" />
-                {imageCount}/{MAX_IMAGES_PER_BUSINESS}
-              </span>
-              <span className="flex items-center gap-1">
-                <Film className="size-3" />
-                {videoCount}/{MAX_VIDEOS_PER_BUSINESS}
-              </span>
-            </div>
-          </div>
-
-          <TabsContent value="all" className="m-0 p-4 sm:p-6">
-            <PortfolioGrid
-              items={portfolioMedia}
-              services={services}
-              showAddTile
-              emptyHeadline="Fotoğraflar paylaş"
-              emptyDescription="Fotoğraf ve videolar profil portföy bölümünde görünür. Keşfet kartında ise kapak fotoğrafın kullanılır."
-            />
-          </TabsContent>
-          <TabsContent value="images" className="m-0 p-4 sm:p-6">
-            <PortfolioGrid
-              items={images}
-              services={services}
-              showAddTile
-              emptyHeadline="İlk fotoğrafını paylaş"
-              emptyDescription="Çalışmalarını müşterilerin gördüğü profil portföy bölümünde sergile."
-            />
-          </TabsContent>
-          <TabsContent value="videos" className="m-0 p-4 sm:p-6">
-            <PortfolioGrid
-              items={videos}
-              services={services}
-              showAddTile
-              emptyHeadline="İlk videonu paylaş"
-              emptyDescription="Kısa videolar profil portföy bölümünde görünür; Keşfet kartını etkilemez."
-            />
-          </TabsContent>
-        </Tabs>
-      </section>
-    </div>
-  );
-}
-
-function PortfolioGrid({
-  items,
-  services,
-  showAddTile = false,
-  emptyHeadline,
-  emptyDescription,
-}: {
-  items: BusinessMediaItem[];
-  services: ServiceOption[];
-  showAddTile?: boolean;
-  emptyHeadline: string;
-  emptyDescription: string;
-}) {
-  if (items.length === 0) {
-    return (
-      <div className="flex min-h-72 flex-col items-center justify-center gap-4 text-center">
-        <div className="flex size-20 items-center justify-center rounded-full border">
-          <Camera className="size-9" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold">{emptyHeadline}</h2>
-          <p className="text-sm text-muted-foreground">{emptyDescription}</p>
-        </div>
-        <MediaUploadButton
-          mediaType="PORTFOLIO_IMAGE"
-          label="İlk fotoğrafını paylaş"
-          variant="ghost"
-          size="sm"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {showAddTile && <AddMediaTile />}
-      {items.map((item) => (
-        <MediaItemCard key={item.id} media={item} services={services} />
-      ))}
+      <LogoCard logo={logo} business={business} />
+      <PortfolioSection
+        portfolioMedia={portfolioMedia}
+        images={images}
+        videos={videos}
+        services={services}
+        imageCount={imageCount}
+        videoCount={videoCount}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { MediaType } from "@/generated/prisma/enums";
 
 export const MAX_IMAGES_PER_BUSINESS = 100;
 export const MAX_VIDEOS_PER_BUSINESS = 20;
+export const MAX_COVER_IMAGES = 20;
 
 export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 export const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB

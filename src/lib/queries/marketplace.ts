@@ -278,6 +278,7 @@ export async function getMarketplaceBusinesses(
           status: "ACTIVE",
           type: { in: ["COVER", "LOGO"] },
         },
+        orderBy: [{ sortOrder: "asc" }],
         select: {
           type: true,
           publicId: true,

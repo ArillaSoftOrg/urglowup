@@ -68,11 +68,16 @@ export async function DELETE(request: Request) {
   // Delete DB record
   await db.businessMedia.delete({ where: { id: media.id } });
 
-  // Clear cover/logo reference if applicable
+  // Update cover/logo reference after deletion
   if (media.type === "COVER") {
+    // Point to the next remaining cover (by sortOrder), or clear if none left
+    const nextCover = await db.businessMedia.findFirst({
+      where: { businessId: business.id, type: "COVER" },
+      orderBy: { sortOrder: "asc" },
+    });
     await db.business.update({
       where: { id: business.id },
-      data: { coverImageUrl: null },
+      data: { coverImageUrl: nextCover?.url ?? null },
     });
   } else if (media.type === "LOGO") {
     await db.business.update({
