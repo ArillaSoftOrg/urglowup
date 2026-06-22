@@ -177,9 +177,9 @@ export function MobileBusinessProfile({
 
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
+    ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     { id: "services", label: "Hizmetler" },
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
-    ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     ...(business.hours.length > 0 ? [{ id: "hours", label: "Açılış Saatleri" }] : []),
     { id: "reviews", label: "Değerlendirmeler" },
   ];
@@ -281,13 +281,16 @@ export function MobileBusinessProfile({
 
       </section>
 
+      {hasAbout && (
+        <section id="about" className="scroll-mt-[106px] px-5 pt-6">
+          <AboutSection business={business} />
+        </section>
+      )}
+
       <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
       <div className="space-y-8 px-5 py-8">
         <BusinessPortfolioSection items={portfolioItems} business={business} />
-        <section id="about" className="scroll-mt-[106px]">
-          <AboutSection business={business} />
-        </section>
         <section id="hours" className="scroll-mt-[106px]">
           <HoursSection business={business} />
         </section>
