@@ -342,7 +342,6 @@ model Business {
   hours               BusinessHour[]
   media               BusinessMedia[]
   appointments        Appointment[]
-  appointmentItems    AppointmentItem[]
   reviews             Review[]
   favorites           Favorite[]
   externalConnections BusinessExternalConnection[]
