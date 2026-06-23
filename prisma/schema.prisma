@@ -332,6 +332,7 @@ model Business {
   instantConfirmation  Boolean        @default(false)
   inAppPayment         Boolean        @default(false)
   petFriendly          Boolean        @default(false)
+  maxGroupBookingGuests Int           @default(4)
   googlePlaceId        String?
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
@@ -341,6 +342,7 @@ model Business {
   hours               BusinessHour[]
   media               BusinessMedia[]
   appointments        Appointment[]
+  appointmentItems    AppointmentItem[]
   reviews             Review[]
   favorites           Favorite[]
   externalConnections BusinessExternalConnection[]
@@ -428,6 +430,7 @@ model BusinessService {
   updatedAt       DateTime  @updatedAt
 
   appointments    Appointment[]
+  appointmentItems AppointmentItem[]
   media           BusinessMedia[]
   posts           Post[]
   professionals   ProfessionalService[]
@@ -517,6 +520,11 @@ model Appointment {
   discountAmount  Decimal?          @db.Decimal(10, 2)
   requestedDate   DateTime          @db.Date
   requestedTime   String
+  isGroup          Boolean           @default(false)
+  guestCount       Int               @default(1)
+  totalDurationMinutes Int?
+  totalPrice       Decimal?          @db.Decimal(10, 2)
+  firstVisit       Boolean?
   status          AppointmentStatus @default(PENDING)
   customerNote    String?
   businessNote    String?
@@ -525,11 +533,32 @@ model Appointment {
   updatedAt       DateTime          @updatedAt
 
   review             Review?
+  items              AppointmentItem[]
   notificationLogs   NotificationLog[]
   inAppNotifications InAppNotification[]
 
   @@index([businessId, status])
   @@index([customerId])
+}
+
+model AppointmentItem {
+  id              String          @id @default(cuid())
+  appointmentId   String
+  appointment     Appointment     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  guestName       String
+  guestIndex      Int
+  serviceId       String
+  service         BusinessService @relation(fields: [serviceId], references: [id])
+  professionalId  String?
+  professional    Professional?   @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  durationMinutes Int
+  priceSnapshot   Decimal?        @db.Decimal(10, 2)
+  sortOrder       Int             @default(0)
+  createdAt       DateTime        @default(now())
+
+  @@index([appointmentId])
+  @@index([serviceId])
+  @@index([professionalId])
 }
 
 model BlockedTime {
@@ -861,6 +890,7 @@ model Professional {
   services     ProfessionalService[]
   posts        Post[]
   appointments Appointment[]
+  appointmentItems AppointmentItem[]
   blockedTimes BlockedTime[]
 
   @@index([businessId, isActive])

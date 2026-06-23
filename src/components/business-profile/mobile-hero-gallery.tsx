@@ -69,14 +69,14 @@ export function MobileHeroGallery({
   return (
     <section className="pt-3">
       {items.length > 0 ? (
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2">
+        <div className="business-panel-mask flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {items.map((item, index) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setOpenIndex(index)}
               aria-label="Görselleri görüntüle"
-              className="relative block aspect-[4/3] w-[88vw] max-w-[420px] shrink-0 snap-center overflow-hidden rounded-2xl bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="relative block aspect-[4/3] w-[86vw] max-w-[420px] shrink-0 snap-start overflow-hidden rounded-2xl bg-muted shadow-sm ring-1 ring-foreground/5 transition-transform active:scale-[0.99] focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {item.isVideo ? (
                 <>
@@ -99,14 +99,14 @@ export function MobileHeroGallery({
                   src={item.thumbnailUrl}
                   alt={item.title ?? businessName}
                   fill
-                  sizes="88vw"
+                  sizes="86vw"
                   className="object-cover"
                   priority={index === 0}
                 />
               )}
 
               {items.length > 1 && (
-                <div className="absolute bottom-3 right-3 rounded-full bg-foreground/75 px-3 py-1 text-sm font-bold text-background">
+                <div className="absolute bottom-3 right-3 rounded-full bg-foreground/80 px-3 py-1 text-sm font-bold text-background shadow-sm">
                   {index + 1}/{items.length}
                 </div>
               )}

@@ -89,7 +89,7 @@ function ServicesPreview({
   const categories = business.categories.map((bc) => bc.category);
 
   return (
-    <section id="services" className="scroll-mt-[106px] border-t px-5 py-8">
+    <section id="services" className="scroll-mt-[106px] border-t bg-background px-5 py-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-normal">Hizmetler</h2>
@@ -184,7 +184,7 @@ export function MobileBusinessProfile({
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24 md:hidden">
+    <div className="min-h-screen bg-surface-cream pb-24 md:hidden">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Link
           href={hrefPrefix || "/"}
@@ -214,7 +214,7 @@ export function MobileBusinessProfile({
         </div>
       </header>
 
-      <SectionNav sections={navSections} />
+      <SectionNav sections={navSections} className="bg-background/95" />
 
       <section id="gallery" className="scroll-mt-[106px]">
         <MobileHeroGallery
@@ -224,7 +224,7 @@ export function MobileBusinessProfile({
         />
       </section>
 
-      <section className="relative z-10 mx-4 -mt-8 rounded-[28px] bg-background px-5 pb-7 pt-8 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
+      <section className="relative z-10 mx-4 -mt-9 rounded-[28px] border border-border/40 bg-background px-5 pb-7 pt-8 shadow-lg">
         <h1 className="text-2xl font-bold leading-tight tracking-normal">
           {business.name}
         </h1>
@@ -250,7 +250,7 @@ export function MobileBusinessProfile({
         </div>
 
         {location && (
-          <div className="mt-3 flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2.5 text-sm">
+          <div className="mt-3 flex min-h-11 items-center gap-2 rounded-xl bg-surface-cream px-3 py-2.5 text-sm shadow-xs">
             <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
             <span className="min-w-0 flex-1 truncate font-medium">{location}</span>
           </div>
@@ -271,7 +271,7 @@ export function MobileBusinessProfile({
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+            className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full px-0 text-sm font-semibold text-foreground transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <Navigation className="size-3.5" />
             Adres tarifi alın
@@ -281,14 +281,14 @@ export function MobileBusinessProfile({
       </section>
 
       {hasAbout && (
-        <section id="about" className="scroll-mt-[106px] px-5 pt-6">
+        <section id="about" className="scroll-mt-[106px] bg-background px-5 pt-7">
           <AboutSection business={business} />
         </section>
       )}
 
       <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
-      <div className="space-y-8 px-5 py-8">
+      <div className="space-y-8 bg-background px-5 py-8">
         <BusinessPortfolioSection items={portfolioItems} business={business} />
         <section id="other" className="scroll-mt-[106px] space-y-8">
           <HoursSection business={business} />
@@ -305,7 +305,7 @@ export function MobileBusinessProfile({
         <Link
           href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
-            buttonVariants({ size: "lg" }),
+            buttonVariants({ variant: "brand", size: "lg" }),
             "h-11 shrink-0 rounded-full px-6 text-sm font-bold",
           )}
         >

@@ -20,6 +20,50 @@ export async function getCustomerAppointments(userId: string) {
           priceType: true,
         },
       },
+      items: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          guestName: true,
+          guestIndex: true,
+          durationMinutes: true,
+          priceSnapshot: true,
+          service: {
+            select: {
+              id: true,
+              name: true,
+              durationMinutes: true,
+              price: true,
+              priceType: true,
+            },
+          },
+          professional: {
+            select: { id: true, displayName: true, avatarUrl: true },
+          },
+          items: {
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              guestName: true,
+              guestIndex: true,
+              durationMinutes: true,
+              priceSnapshot: true,
+              service: {
+                select: {
+                  id: true,
+                  name: true,
+                  durationMinutes: true,
+                  price: true,
+                  priceType: true,
+                },
+              },
+              professional: {
+                select: { id: true, displayName: true, avatarUrl: true },
+              },
+            },
+          },
+        },
+      },
       business: {
         select: { id: true, name: true, slug: true, logoUrl: true },
       },
@@ -44,6 +88,7 @@ export async function getBusinessForBooking(slug: string) {
       slug: true,
       status: true,
       logoUrl: true,
+      maxGroupBookingGuests: true,
       media: {
         where: {
           status: "ACTIVE",
