@@ -29,6 +29,11 @@ const bookingRequestSchema = z.object({
   businessId: z.string().min(1, "İşletme bilgisi eksik."),
   serviceId: z.string().min(1, "Hizmet seçimi eksik."),
   professionalId: z.string().optional().or(z.literal("")),
+  itemsJson: z.string().optional().or(z.literal("")),
+  firstVisit: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === "true")),
   couponId: z.string().optional().or(z.literal("")),
   discountAmount: z.coerce.number().nonnegative().optional().or(z.literal("")),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Geçersiz tarih biçimi."),
@@ -39,6 +44,15 @@ const bookingRequestSchema = z.object({
     .optional()
     .or(z.literal("")),
 });
+
+const bookingItemSchema = z.object({
+  guestName: z.string().min(1).max(80),
+  guestIndex: z.number().int().min(0).max(20),
+  serviceId: z.string().min(1),
+  professionalId: z.string().nullable().optional(),
+});
+
+const bookingItemsSchema = z.array(bookingItemSchema).min(1).max(50);
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -62,7 +76,8 @@ function parseTimeBlocks(value: unknown): TimeBlock[] {
 export async function getAvailableSlots(
   businessId: string,
   serviceId: string,
-  dateString: string
+  dateString: string,
+  durationOverrideMinutes?: number
 ): Promise<string[]> {
   // Validate date format
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return [];
@@ -104,6 +119,11 @@ export async function getAvailableSlots(
   if (!hour || !hour.isOpen || !hour.openTime || !hour.closeTime) return [];
   if (!service) return [];
 
+  const requestedDuration = durationOverrideMinutes ?? service.durationMinutes;
+  if (!Number.isInteger(requestedDuration) || requestedDuration < 5 || requestedDuration > 24 * 60) {
+    return [];
+  }
+
   // Get existing blocking appointments for this date
   const existingAppointments = await db.appointment.findMany({
     where: {
@@ -113,13 +133,14 @@ export async function getAvailableSlots(
     },
     select: {
       requestedTime: true,
+      totalDurationMinutes: true,
       service: { select: { durationMinutes: true } },
     },
   });
 
   const occupied = existingAppointments.map((a) => ({
     requestedTime: a.requestedTime,
-    durationMinutes: a.service.durationMinutes,
+    durationMinutes: a.totalDurationMinutes ?? a.service.durationMinutes,
   }));
 
   // Calculate minTimeMinutes for today
@@ -132,7 +153,7 @@ export async function getAvailableSlots(
     hour.openTime,
     hour.closeTime,
     hour.slotIntervalMinutes,
-    service.durationMinutes,
+    requestedDuration,
     occupied,
     minTimeMinutes,
     {
