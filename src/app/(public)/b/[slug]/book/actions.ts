@@ -71,6 +71,29 @@ function parseTimeBlocks(value: unknown): TimeBlock[] {
   });
 }
 
+function parseBookingItems(
+  raw: string | undefined,
+  fallback: { serviceId: string; professionalId?: string | null }
+) {
+  if (!raw) {
+    return [
+      {
+        guestName: "Ben",
+        guestIndex: 0,
+        serviceId: fallback.serviceId,
+        professionalId: fallback.professionalId || null,
+      },
+    ];
+  }
+
+  try {
+    const parsed = bookingItemsSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Get Available Slots ────────────────────────────────────────
 
 export async function getAvailableSlots(
@@ -200,13 +223,24 @@ export async function createAppointmentRequest(
     };
   }
 
-  const { businessId, serviceId, professionalId, couponId, discountAmount, date, time, customerNote } = result.data;
+  const {
+    businessId,
+    serviceId,
+    professionalId,
+    itemsJson,
+    firstVisit,
+    couponId,
+    discountAmount,
+    date,
+    time,
+    customerNote,
+  } = result.data;
 
   try {
     // Verify business exists and is bookable
     const business = await db.business.findUnique({
       where: { id: businessId },
-      select: { status: true },
+      select: { status: true, maxGroupBookingGuests: true },
     });
     if (
       !business ||
@@ -216,13 +250,66 @@ export async function createAppointmentRequest(
       return { success: false, message: "Bu işletme şu anda randevu almıyor." };
     }
 
-    // Verify service exists and is active
-    const service = await db.businessService.findFirst({
-      where: { id: serviceId, businessId, isActive: true },
-      select: { id: true, durationMinutes: true },
+    const parsedItems = parseBookingItems(itemsJson || undefined, {
+      serviceId,
+      professionalId: professionalId || null,
     });
-    if (!service) {
-      return { success: false, message: "Bu hizmet artık sunulmuyor." };
+    if (!parsedItems) {
+      return { success: false, message: "Hizmet seçimlerinizi kontrol edip tekrar deneyin." };
+    }
+
+    const guestIndexes = new Set(parsedItems.map((item) => item.guestIndex));
+    if (guestIndexes.size > business.maxGroupBookingGuests) {
+      return {
+        success: false,
+        message: `Bu işletme en fazla ${business.maxGroupBookingGuests} kişilik grup randevusu alıyor.`,
+      };
+    }
+
+    const serviceIds = Array.from(new Set(parsedItems.map((item) => item.serviceId)));
+    const services = await db.businessService.findMany({
+      where: { id: { in: serviceIds }, businessId, isActive: true },
+      select: { id: true, durationMinutes: true, price: true },
+    });
+    const servicesById = new Map(services.map((item) => [item.id, item]));
+    if (services.length !== serviceIds.length) {
+      return { success: false, message: "Seçili hizmetlerden biri artık sunulmuyor." };
+    }
+
+    const professionalIds = Array.from(
+      new Set(parsedItems.map((item) => item.professionalId).filter((id): id is string => Boolean(id)))
+    );
+    if (professionalIds.length > 0) {
+      const professionalServices = await db.professionalService.findMany({
+        where: {
+          professionalId: { in: professionalIds },
+          serviceId: { in: serviceIds },
+          professional: { businessId, isActive: true },
+        },
+        select: { professionalId: true, serviceId: true },
+      });
+      const allowed = new Set(
+        professionalServices.map((item) => `${item.professionalId}:${item.serviceId}`)
+      );
+      const invalidProfessional = parsedItems.some(
+        (item) => item.professionalId && !allowed.has(`${item.professionalId}:${item.serviceId}`)
+      );
+      if (invalidProfessional) {
+        return { success: false, message: "Seçili uzmanlardan biri bu hizmeti sunmuyor." };
+      }
+    }
+
+    const totalDurationMinutes = parsedItems.reduce((sum, item) => {
+      return sum + (servicesById.get(item.serviceId)?.durationMinutes ?? 0);
+    }, 0);
+    const totalPrice = parsedItems.reduce((sum, item) => {
+      const price = servicesById.get(item.serviceId)?.price;
+      return sum + (price ? Number(price) : 0);
+    }, 0);
+    const primaryItem = parsedItems[0];
+    const primaryService = servicesById.get(primaryItem.serviceId);
+    if (!primaryService || totalDurationMinutes <= 0) {
+      return { success: false, message: "Hizmet seçimi eksik." };
     }
 
     // Verify date is valid
@@ -240,7 +327,12 @@ export async function createAppointmentRequest(
     }
 
     // Verify slot is still available
-    const availableSlots = await getAvailableSlots(businessId, serviceId, date);
+    const availableSlots = await getAvailableSlots(
+      businessId,
+      primaryItem.serviceId,
+      date,
+      totalDurationMinutes
+    );
     if (!availableSlots.includes(time)) {
       return { success: false, message: "Bu saat artık dolu. Lütfen başka bir saat seçin." };
     }
@@ -264,14 +356,33 @@ export async function createAppointmentRequest(
       data: {
         businessId,
         customerId: user.id,
-        serviceId,
-        professionalId: professionalId || null,
+        serviceId: primaryItem.serviceId,
+        professionalId: primaryItem.professionalId || null,
         couponId: couponId || null,
         discountAmount: discountAmount ? discountAmount : null,
         requestedDate: new Date(date),
         requestedTime: time,
+        isGroup: guestIndexes.size > 1,
+        guestCount: guestIndexes.size,
+        totalDurationMinutes,
+        totalPrice: totalPrice || null,
+        firstVisit: firstVisit ?? null,
         status: "PENDING",
         customerNote: customerNote || null,
+        items: {
+          create: parsedItems.map((item, index) => {
+            const itemService = servicesById.get(item.serviceId)!;
+            return {
+              guestName: item.guestName,
+              guestIndex: item.guestIndex,
+              serviceId: item.serviceId,
+              professionalId: item.professionalId || null,
+              durationMinutes: itemService.durationMinutes,
+              priceSnapshot: itemService.price,
+              sortOrder: index,
+            };
+          }),
+        },
       },
     });
 

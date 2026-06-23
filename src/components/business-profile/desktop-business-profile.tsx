@@ -293,16 +293,13 @@ export function DesktopBusinessProfile({
 
       <SectionNav sections={navSections} />
 
-      {hasAbout && (
-        <div className="mx-auto max-w-[1440px] px-5 pb-2 sm:px-6 lg:px-10 xl:px-12">
-          <section id="about" className="scroll-mt-[130px]">
-            <AboutSection business={business} />
-          </section>
-        </div>
-      )}
-
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
         <div className="min-w-0 space-y-9">
+          {hasAbout && (
+            <section id="about" className="scroll-mt-[130px]">
+              <AboutSection business={business} />
+            </section>
+          )}
           <ServicesSection business={business} />
           <BusinessPortfolioSection items={portfolioItems} business={business} />
           <section id="other" className="scroll-mt-[130px] space-y-9">

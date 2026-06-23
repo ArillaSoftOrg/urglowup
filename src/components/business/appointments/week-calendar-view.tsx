@@ -58,7 +58,7 @@ export function WeekCalendarView({
       ...dayAppointments.map((a) => ({
         id: `appt:${a.id}`,
         startTime: a.requestedTime,
-        durationMinutes: a.service.durationMinutes,
+        durationMinutes: a.totalDurationMinutes ?? a.service.durationMinutes,
       })),
       ...dayBlocked.map((b) => ({
         id: `blocked:${b.id}`,
@@ -72,7 +72,7 @@ export function WeekCalendarView({
     const cards = [
       ...dayAppointments.map((a) => {
         const key = `appt:${a.id}`;
-        const pos = getCardPosition(a.requestedTime, a.service.durationMinutes, CALENDAR_DEFAULT_START_HOUR, CALENDAR_HOUR_HEIGHT_PX);
+        const pos = getCardPosition(a.requestedTime, a.totalDurationMinutes ?? a.service.durationMinutes, CALENDAR_DEFAULT_START_HOUR, CALENDAR_HOUR_HEIGHT_PX);
         const l = layoutMap.get(key);
         const widthPct = l ? 100 / l.columnCount : 100;
         const leftPct = l ? widthPct * l.column : 0;

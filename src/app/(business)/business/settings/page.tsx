@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, ExternalLink, Globe } from "lucide-react";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
+import { GroupBookingSettingsForm } from "@/components/business/group-booking-settings-form";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants, Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,7 @@ export default async function SettingsPage() {
       slug: true,
       status: true,
       isMarketplaceVisible: true,
+      maxGroupBookingGuests: true,
       createdAt: true,
     },
   });
@@ -129,6 +131,20 @@ export default async function SettingsPage() {
             </a>{" "}
             ile iletişime geçin.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Randevu AkÄ±ÅŸÄ±</CardTitle>
+          <CardDescription>
+            Grup randevularÄ±nda kapasite ve rezervasyon davranÄ±ÅŸÄ±.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <GroupBookingSettingsForm
+            maxGroupBookingGuests={business.maxGroupBookingGuests}
+          />
         </CardContent>
       </Card>
 

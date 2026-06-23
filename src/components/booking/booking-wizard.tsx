@@ -1,155 +1,163 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  MoreVertical,
+  Plus,
+  Shuffle,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Check, Clock, Sparkles, X } from "lucide-react";
-import { BookingHeader } from "./booking-header";
-import { BusinessChip } from "./business-chip";
-import { ServicePicker } from "./service-picker";
-import { ProfessionalPicker } from "./professional-picker";
+import { cn } from "@/lib/utils";
 import { DateTimePicker } from "./date-time-picker";
-import { BookingSummary } from "./booking-summary";
+import { BookingSummary, type BookingSummaryItem } from "./booking-summary";
 import { LoginPrompt } from "./login-prompt";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 
 type Service = BookingBusiness["services"][number];
+type Professional = BookingBusiness["professionals"][number];
+type BookingKind = "single" | "group";
+type Step = "kind" | "services" | "guests" | "experts" | "datetime" | "firstVisit" | "summary";
 
-function formatPrice(service: Service): {
-  amount: string | null;
-  qualifier: string | null;
-} {
-  if (service.priceType === "FREE_CONSULTATION")
-    return { amount: "Ücretsiz danışma", qualifier: null };
-  if (service.priceType === "CONSULTATION_REQUIRED")
-    return { amount: "Fiyat için danışın", qualifier: null };
-  if (!service.price) return { amount: null, qualifier: null };
-
-  const amount = `₺${Number(service.price)}`;
-  if (service.priceType === "STARTS_FROM")
-    return { amount, qualifier: "itibaren" };
-  return { amount, qualifier: null };
+interface GuestDraft {
+  id: string;
+  name: string;
+  index: number;
+  serviceIds: string[];
 }
 
-function BookingServiceSummary({
-  business,
+function formatCurrency(value: number) {
+  return `${value} â‚º`;
+}
+
+function servicePrice(service: Service) {
+  return service.price ? Number(service.price) : 0;
+}
+
+function serviceSubtitle(service: Service) {
+  return service.description || `${service.durationMinutes} dk`;
+}
+
+function guestServiceKey(guestId: string, serviceId: string) {
+  return `${guestId}:${serviceId}`;
+}
+
+function ServiceCard({
   service,
-  onContinue,
+  selected,
+  onToggle,
 }: {
-  business: BookingBusiness;
-  service: Service | undefined;
-  onContinue: () => void;
+  service: Service;
+  selected: boolean;
+  onToggle: () => void;
 }) {
-  const price = service ? formatPrice(service) : { amount: null, qualifier: null };
-
   return (
-    <aside className="hidden lg:block">
-      <div className="sticky top-8 rounded-xl border border-border bg-card p-10 shadow-sm">
-        <div className="flex items-center gap-4">
-          {business.logoUrl ? (
-            <Image
-              src={business.logoUrl}
-              alt={business.name}
-              width={80}
-              height={80}
-              sizes="80px"
-              className="size-20 rounded-lg object-cover"
-            />
-          ) : (
-            <div className="flex size-20 items-center justify-center rounded-lg bg-brand-pink/20">
-              <Sparkles className="size-7 text-brand-pink-foreground" />
-            </div>
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-lg font-semibold">{business.name}</p>
-            <p className="text-sm text-muted-foreground">Randevu özeti</p>
-          </div>
-        </div>
-
-        <div className="my-8 border-t border-border" />
-
-        {service ? (
-          <div className="space-y-7">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="font-semibold">{service.name}</p>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Clock className="size-4" />
-                  {service.durationMinutes} dk
-                </p>
-              </div>
-              {price.amount && (
-                <div className="shrink-0 text-right font-semibold">
-                  {price.qualifier && (
-                    <p className="text-xs font-normal text-muted-foreground">{price.qualifier}</p>
-                  )}
-                  {price.amount}
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-border" />
-
-            <div className="flex items-center justify-between text-lg font-semibold">
-              <span>Toplam</span>
-              <span>{price.amount ?? "Seçildi"}</span>
-            </div>
-
-            <Button
-              type="button"
-              variant="default"
-              size="lg"
-              onClick={onContinue}
-              className="mt-80 w-full rounded-full bg-foreground text-background hover:bg-foreground/90"
-            >
-              Devam et
-              <ArrowRight className="size-4" />
-            </Button>
-          </div>
-        ) : (
-          <div className="rounded-lg bg-surface-cream p-4 text-sm text-muted-foreground">
-            Devam etmek için bir hizmet seçin.
-          </div>
-        )}
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={selected}
+      className={cn(
+        "relative flex min-h-32 w-full items-start rounded-xl border bg-card p-4 text-left shadow-xs transition-all hover:border-foreground/20 hover:shadow-sm",
+        selected
+          ? "border-brand-purple-foreground ring-2 ring-brand-purple-foreground/80"
+          : "border-border"
+      )}
+    >
+      <div className="min-w-0 pr-14">
+        <p className="font-semibold">{service.name}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+          {serviceSubtitle(service)}
+        </p>
+        <p className="mt-6 text-base font-bold">{formatCurrency(servicePrice(service))}</p>
       </div>
-    </aside>
+      <span
+        className={cn(
+          "absolute bottom-4 right-4 flex size-10 items-center justify-center rounded-full border shadow-sm",
+          selected
+            ? "border-brand-purple-foreground bg-brand-purple-foreground text-background"
+            : "border-border bg-background text-foreground"
+        )}
+      >
+        {selected ? <Check className="size-5" /> : <Plus className="size-5" />}
+      </span>
+    </button>
   );
 }
 
-function MobileServiceBar({
-  service,
+function BottomBar({
+  totalPrice,
+  itemCount,
+  duration,
+  disabled,
   onContinue,
+  label = "Devam et",
 }: {
-  service: Service | undefined;
+  totalPrice: number;
+  itemCount: number;
+  duration: number;
+  disabled?: boolean;
   onContinue: () => void;
+  label?: string;
 }) {
-  const price = service ? formatPrice(service) : { amount: null, qualifier: null };
-
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-4 shadow-lg backdrop-blur lg:hidden">
-      <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-4 shadow-lg backdrop-blur">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-lg font-bold">{price.amount ?? "Hizmet seçin"}</p>
-          {service && (
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {service.name} · {service.durationMinutes} dk
-            </p>
-          )}
+          <p className="text-xl font-bold">{formatCurrency(totalPrice)}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {itemCount} Ã¶ÄŸe · {duration} dk
+          </p>
         </div>
         <Button
           type="button"
-          variant="default"
           size="lg"
           onClick={onContinue}
-          disabled={!service}
+          disabled={disabled}
           className="rounded-full bg-foreground px-6 text-background hover:bg-foreground/90"
         >
-          Devam et
+          {label}
           <ArrowRight className="size-4" />
         </Button>
       </div>
     </div>
+  );
+}
+
+function GuestHeader({
+  guest,
+  active,
+  onClick,
+}: {
+  guest: GuestDraft;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-4 rounded-xl border bg-card p-4 text-left shadow-xs",
+        active ? "border-brand-purple-foreground ring-2 ring-brand-purple-foreground/70" : "border-border"
+      )}
+    >
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-purple text-brand-purple-foreground">
+        <UserRound className="size-6" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold">{guest.name}</p>
+        <p className="text-sm text-muted-foreground">
+          {guest.serviceIds.length} hizmet
+        </p>
+      </div>
+      <MoreVertical className="size-5 text-muted-foreground" />
+    </button>
   );
 }
 
@@ -164,212 +172,432 @@ export function BookingWizard({
   initialServiceId?: string;
   initialProfessionalId?: string;
 }) {
-  const hasProfessionals = business.professionals.length > 0;
-
-  // Steps: 1=Hizmet, 2=Uzman (optional), 3=Tarih&Saat, 4=Onayla
-  const getInitialStep = () => 1;
-
-  const [step, setStep] = useState(getInitialStep);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(initialServiceId ?? null);
-  // null = any professional (assigned by business), undefined = not yet chosen
-  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(
-    initialProfessionalId ?? null
+  const [step, setStep] = useState<Step>("kind");
+  const [kind, setKind] = useState<BookingKind>("single");
+  const [activeGuestId, setActiveGuestId] = useState("me");
+  const [guests, setGuests] = useState<GuestDraft[]>([
+    {
+      id: "me",
+      name: "Ben",
+      index: 0,
+      serviceIds: initialServiceId ? [initialServiceId] : [],
+    },
+  ]);
+  const [professionalByItem, setProfessionalByItem] = useState<Record<string, string | null>>(
+    initialServiceId && initialProfessionalId
+      ? { [guestServiceKey("me", initialServiceId)]: initialProfessionalId }
+      : {}
   );
+  const [expertMode, setExpertMode] = useState<"any" | "custom">("any");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [customerNote, setCustomerNote] = useState("");
+  const [firstVisit, setFirstVisit] = useState<boolean | null>(null);
 
-  const selectedService = business.services.find((s) => s.id === selectedServiceId);
-  const selectedProfessional = selectedProfessionalId
-    ? business.professionals.find((p) => p.id === selectedProfessionalId)
-    : null;
+  const servicesById = useMemo(
+    () => new Map(business.services.map((service) => [service.id, service])),
+    [business.services]
+  );
+  const professionalsById = useMemo(
+    () => new Map(business.professionals.map((professional) => [professional.id, professional])),
+    [business.professionals]
+  );
+  const selectedItems = useMemo<BookingSummaryItem[]>(() => {
+    return guests.flatMap((guest) =>
+      guest.serviceIds.flatMap((serviceId) => {
+        const service = servicesById.get(serviceId);
+        if (!service) return [];
+        const professionalId = professionalByItem[guestServiceKey(guest.id, serviceId)];
+        return [
+          {
+            guestName: guest.name,
+            guestIndex: guest.index,
+            service,
+            professional: professionalId ? professionalsById.get(professionalId) ?? null : null,
+          },
+        ];
+      })
+    );
+  }, [guests, professionalByItem, professionalsById, servicesById]);
 
-  // Build dynamic step labels
-  const stepLabels = hasProfessionals
-    ? ["Hizmet", "Uzman", "Tarih & Saat", "Onayla"]
-    : ["Hizmet", "Tarih & Saat", "Onayla"];
-
-  const dateStep = hasProfessionals ? 3 : 2;
-  const confirmStep = hasProfessionals ? 4 : 3;
-
-  function handleServiceSelect(id: string) {
-    setSelectedServiceId(id);
-    setSelectedDate(null);
-    setSelectedTime(null);
-  }
-
-  function continueFromService() {
-    if (!selectedServiceId) return;
-    setStep(hasProfessionals ? 2 : dateStep);
-  }
-
-  function handleProfessionalSelect(id: string | null) {
-    setSelectedProfessionalId(id);
-    setSelectedDate(null);
-    setSelectedTime(null);
-    setStep(dateStep);
-  }
-
-  function handleDateSelect(date: Date) {
-    setSelectedDate(date);
-    setSelectedTime(null);
-  }
-
-  function handleTimeSelect(time: string) {
-    setSelectedTime(time);
-    setStep(confirmStep);
-  }
+  const totalPrice = selectedItems.reduce((sum, item) => sum + servicePrice(item.service), 0);
+  const totalDuration = selectedItems.reduce((sum, item) => sum + item.service.durationMinutes, 0);
+  const activeGuest = guests.find((guest) => guest.id === activeGuestId) ?? guests[0];
+  const primaryService = selectedItems[0]?.service;
+  const hasProfessionals = business.professionals.length > 0;
+  const redirectUrl = `/b/${business.slug}/book${primaryService ? `?service=${primaryService.id}` : ""}`;
 
   function goBack() {
-    if (step > 1) setStep(step - 1);
+    if (step === "kind") return;
+    if (step === "services") setStep("kind");
+    if (step === "guests") setStep("services");
+    if (step === "experts") setStep(kind === "group" ? "guests" : "services");
+    if (step === "datetime") setStep(hasProfessionals ? "experts" : kind === "group" ? "guests" : "services");
+    if (step === "firstVisit") setStep("datetime");
+    if (step === "summary") setStep("firstVisit");
   }
 
-  const redirectUrl = `/b/${business.slug}/book${selectedServiceId ? `?service=${selectedServiceId}` : ""}`;
+  function toggleService(serviceId: string) {
+    setGuests((current) =>
+      current.map((guest) => {
+        if (guest.id !== activeGuest.id) return guest;
+        const hasService = guest.serviceIds.includes(serviceId);
+        return {
+          ...guest,
+          serviceIds: hasService
+            ? guest.serviceIds.filter((id) => id !== serviceId)
+            : [...guest.serviceIds, serviceId],
+        };
+      })
+    );
+    setSelectedDate(null);
+    setSelectedTime(null);
+  }
+
+  function addGuest() {
+    if (guests.length >= business.maxGroupBookingGuests) return;
+    const index = guests.length;
+    const id = `guest-${index}`;
+    setGuests((current) => [
+      ...current,
+      { id, name: `Misafir ${index + 1}`, index, serviceIds: [] },
+    ]);
+    setActiveGuestId(id);
+    setStep("services");
+  }
+
+  function setAllExpertsToAny() {
+    setExpertMode("any");
+    setProfessionalByItem({});
+    setSelectedDate(null);
+    setSelectedTime(null);
+  }
+
+  function setItemProfessional(guestId: string, serviceId: string, professionalId: string | null) {
+    setProfessionalByItem((current) => ({
+      ...current,
+      [guestServiceKey(guestId, serviceId)]: professionalId,
+    }));
+    setSelectedDate(null);
+    setSelectedTime(null);
+  }
+
+  function availableProfessionals(serviceId: string) {
+    return business.professionals.filter((professional) =>
+      professional.services.some((service) => service.serviceId === serviceId)
+    );
+  }
+
+  function continueFromServices() {
+    if (activeGuest.serviceIds.length === 0) return;
+    setStep(kind === "group" ? "guests" : hasProfessionals ? "experts" : "datetime");
+  }
 
   return (
-    <div className="space-y-6">
-      {step === 1 ? (
-        <div className="flex items-center justify-between">
+    <div className="mx-auto min-h-[calc(100vh-8rem)] max-w-3xl bg-background px-4 pb-8 pt-4">
+      <div className="mb-8 flex items-center justify-between">
+        {step === "kind" ? (
           <Link
             href={`/b/${business.slug}`}
-            className="flex size-12 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-xs transition-colors hover:bg-surface-cream"
-            aria-label={`${business.name} profiline dön`}
+            className="flex size-11 items-center justify-center rounded-full text-foreground hover:bg-surface-cream"
+            aria-label={`${business.name} profiline dÃ¶n`}
           >
-            <ArrowLeft className="size-5" />
+            <ArrowLeft className="size-6" />
           </Link>
-          <Link
-            href={`/b/${business.slug}`}
-            className="hidden size-12 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-xs transition-colors hover:bg-surface-cream lg:flex"
-            aria-label="Randevu akışını kapat"
+        ) : (
+          <button
+            type="button"
+            onClick={goBack}
+            className="flex size-11 items-center justify-center rounded-full text-foreground hover:bg-surface-cream"
+            aria-label="Geri"
           >
-            <X className="size-5" />
-          </Link>
-        </div>
-      ) : (
-        <>
-          <BookingHeader
-            businessName={business.name}
-            businessSlug={business.slug}
-            currentStep={step}
-            totalSteps={stepLabels.length}
-          />
-          <BusinessChip business={business} />
-        </>
-      )}
-
-      {/* Step indicator */}
-      <div className={step === 1 ? "hidden lg:flex items-center gap-3 text-sm" : "flex items-center gap-2"}>
-        {stepLabels.map((label, i) => {
-          const stepNum = i + 1;
-          const isActive = step === stepNum;
-          const isDone = step > stepNum;
-          return (
-            <div key={label} className={step === 1 ? "flex items-center gap-3" : "flex items-center gap-2"}>
-              {i > 0 && (
-                <div
-                  className={step === 1 ? "text-muted-foreground" : `h-px w-4 sm:w-8 ${
-                    isDone || isActive ? "bg-brand-pink-foreground/40" : "bg-border"
-                  }`}
-                >
-                  {step === 1 ? "›" : null}
-                </div>
-              )}
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={step === 1 ? "hidden" : `flex size-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
-                    isActive
-                      ? "bg-brand-pink text-brand-pink-foreground ring-2 ring-brand-pink-foreground/20"
-                      : isDone
-                        ? "bg-surface-pink text-brand-pink-foreground"
-                        : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {isDone ? <Check className="size-3.5" /> : stepNum}
-                </div>
-                <span
-                  className={`${step === 1 ? "inline text-base" : "hidden text-sm sm:inline"} ${
-                    isActive
-                      ? "font-semibold text-foreground"
-                      : isDone
-                        ? "text-foreground/70"
-                        : "text-muted-foreground"
-                  }`}
-                >
-                  {label}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            <ArrowLeft className="size-6" />
+          </button>
+        )}
+        <Link
+          href={`/b/${business.slug}`}
+          className="flex size-11 items-center justify-center rounded-full text-foreground hover:bg-surface-cream"
+          aria-label="Randevu akÄ±ÅŸÄ±nÄ± kapat"
+        >
+          <X className="size-6" />
+        </Link>
       </div>
 
-      {step === 1 && (
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(340px,555px)] lg:items-start">
-          <main>
-            <h1 className="mb-10 text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-              Hizmetleri seçin
-            </h1>
-            <ServicePicker
-              services={business.services}
-              selectedId={selectedServiceId}
-              onSelect={handleServiceSelect}
-            />
-          </main>
-          <BookingServiceSummary
-            business={business}
-            service={selectedService}
-            onContinue={continueFromService}
-          />
-          <MobileServiceBar service={selectedService} onContinue={continueFromService} />
+      {step === "kind" && (
+        <div className="space-y-8">
+          <h1 className="text-3xl font-bold tracking-tight">Bir seÃ§enek belirleyin</h1>
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => {
+                setKind("single");
+                setActiveGuestId("me");
+                setStep("services");
+              }}
+              className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left shadow-xs hover:bg-surface-cream"
+            >
+              <span>
+                <span className="block font-semibold">Randevu alÄ±n</span>
+                <span className="text-sm text-muted-foreground">Kendiniz iÃ§in hizmet planlamasÄ± yapÄ±n</span>
+              </span>
+              <UserRound className="size-6" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setKind("group");
+                setStep("services");
+              }}
+              className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left shadow-xs hover:bg-surface-cream"
+            >
+              <span>
+                <span className="block font-semibold">Grup randevusu alÄ±n</span>
+                <span className="text-sm text-muted-foreground">Kendiniz ve baÅŸkalarÄ± iÃ§in</span>
+              </span>
+              <UsersRound className="size-6" />
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Back button */}
-      {step > 1 && (
-        <Button type="button" variant="ghost" size="sm" onClick={goBack} className="gap-1.5">
-          <ArrowLeft className="size-4" />
-          Geri
-        </Button>
+      {step === "services" && (
+        <div className="space-y-6 pb-28">
+          <h1 className="text-3xl font-bold tracking-tight">Hizmetleri seÃ§in</h1>
+          <GuestHeader
+            guest={activeGuest}
+            active
+            onClick={() => {
+              if (kind === "group") setStep("guests");
+            }}
+          />
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold">Berberlik</h2>
+            {business.services.map((service) => (
+              <ServiceCard
+                key={service.id}
+                service={service}
+                selected={activeGuest.serviceIds.includes(service.id)}
+                onToggle={() => toggleService(service.id)}
+              />
+            ))}
+          </div>
+          <BottomBar
+            totalPrice={totalPrice}
+            itemCount={selectedItems.length}
+            duration={totalDuration}
+            disabled={activeGuest.serviceIds.length === 0}
+            onContinue={continueFromServices}
+          />
+        </div>
       )}
 
-      {/* Step 1: Service */}
-      {/* Step 2: Professional (only when business has professionals) */}
-      {step === 2 && hasProfessionals && selectedServiceId && (
-        <ProfessionalPicker
-          professionals={business.professionals}
-          serviceId={selectedServiceId}
-          selectedId={selectedProfessionalId}
-          onSelect={handleProfessionalSelect}
-        />
+      {step === "guests" && (
+        <div className="space-y-6 pb-28">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Misafir ve hizmet ekleyin</h1>
+            <p className="text-muted-foreground">
+              En fazla {business.maxGroupBookingGuests} misafir iÃ§in grup randevusu alÄ±n
+            </p>
+          </div>
+          <div className="space-y-3">
+            {guests.map((guest) => (
+              <GuestHeader
+                key={guest.id}
+                guest={guest}
+                active={guest.id === activeGuestId}
+                onClick={() => {
+                  setActiveGuestId(guest.id);
+                  setStep("services");
+                }}
+              />
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addGuest}
+            disabled={guests.length >= business.maxGroupBookingGuests}
+            className="rounded-full"
+          >
+            <Plus className="size-4" />
+            Misafir ekle
+          </Button>
+          <BottomBar
+            totalPrice={totalPrice}
+            itemCount={selectedItems.length}
+            duration={totalDuration}
+            disabled={selectedItems.length === 0}
+            onContinue={() => setStep(hasProfessionals ? "experts" : "datetime")}
+          />
+        </div>
       )}
 
-      {/* Step 3: Date & Time */}
-      {step === dateStep && selectedServiceId && (
-        <DateTimePicker
-          business={business}
-          serviceId={selectedServiceId}
-          selectedDate={selectedDate}
-          selectedTime={selectedTime}
-          isLoggedIn={isLoggedIn}
-          onSelectDate={handleDateSelect}
-          onSelectTime={handleTimeSelect}
-        />
+      {step === "experts" && (
+        <div className="space-y-6 pb-28">
+          <h1 className="text-3xl font-bold tracking-tight">Uzman seÃ§in</h1>
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={setAllExpertsToAny}
+              className={cn(
+                "flex w-full items-center gap-4 rounded-xl border bg-card p-4 text-left shadow-xs",
+                expertMode === "any"
+                  ? "border-brand-purple-foreground ring-2 ring-brand-purple-foreground/70"
+                  : "border-border"
+              )}
+            >
+              <span className="flex size-16 items-center justify-center rounded-full bg-surface-purple text-brand-purple-foreground">
+                <Shuffle className="size-7" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">Tercih yok</span>
+                <span className="text-sm text-muted-foreground">Maksimum mÃ¼saitlik</span>
+              </span>
+              {expertMode === "any" ? (
+                <span className="flex size-10 items-center justify-center rounded-full bg-brand-purple-foreground text-background">
+                  <Check className="size-5" />
+                </span>
+              ) : null}
+            </button>
+            <button
+              type="button"
+              onClick={() => setExpertMode("custom")}
+              className={cn(
+                "flex w-full items-center gap-4 rounded-xl border bg-card p-4 text-left shadow-xs",
+                expertMode === "custom"
+                  ? "border-brand-purple-foreground ring-2 ring-brand-purple-foreground/70"
+                  : "border-border"
+              )}
+            >
+              <span className="flex size-16 items-center justify-center rounded-full bg-surface-purple text-brand-purple-foreground">
+                <UsersRound className="size-7" />
+              </span>
+              <span className="min-w-0 flex-1 font-semibold">Hizmete Ã¶zel uzman seÃ§in</span>
+              <span className="rounded-full border border-border px-4 py-2 text-sm font-medium">SeÃ§</span>
+            </button>
+          </div>
+
+          {expertMode === "custom" && (
+            <div className="space-y-6">
+              {guests
+                .filter((guest) => guest.serviceIds.length > 0)
+                .map((guest) => (
+                  <div key={guest.id} className="space-y-3">
+                    <h2 className="text-xl font-semibold">{guest.name}</h2>
+                    {guest.serviceIds.map((serviceId) => {
+                      const service = servicesById.get(serviceId);
+                      if (!service) return null;
+                      const key = guestServiceKey(guest.id, serviceId);
+                      return (
+                        <div key={key} className="rounded-xl border border-border bg-card p-4 shadow-xs">
+                          <p className="font-medium">{service.name}</p>
+                          <p className="text-sm text-muted-foreground">{service.durationMinutes} dk</p>
+                          <select
+                            value={professionalByItem[key] ?? ""}
+                            onChange={(event) =>
+                              setItemProfessional(guest.id, serviceId, event.target.value || null)
+                            }
+                            className="mt-4 min-h-[44px] rounded-full border border-input bg-background px-4 text-sm"
+                            aria-label={`${service.name} iÃ§in uzman`}
+                          >
+                            <option value="">Tercih yok</option>
+                            {availableProfessionals(serviceId).map((professional) => (
+                              <option key={professional.id} value={professional.id}>
+                                {professional.displayName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+            </div>
+          )}
+
+          <BottomBar
+            totalPrice={totalPrice}
+            itemCount={selectedItems.length}
+            duration={totalDuration}
+            disabled={selectedItems.length === 0}
+            onContinue={() => setStep("datetime")}
+          />
+        </div>
       )}
 
-      {/* Step 4: Confirm */}
-      {step === confirmStep &&
-        selectedService &&
+      {step === "datetime" && primaryService && (
+        <div className="pb-28">
+          <DateTimePicker
+            business={business}
+            serviceId={primaryService.id}
+            durationMinutes={totalDuration}
+            selectedDate={selectedDate}
+            selectedTime={selectedTime}
+            isLoggedIn={isLoggedIn}
+            onSelectDate={(date) => {
+              setSelectedDate(date);
+              setSelectedTime(null);
+            }}
+            onSelectTime={(time) => {
+              setSelectedTime(time);
+              setStep("firstVisit");
+            }}
+          />
+          <BottomBar
+            totalPrice={totalPrice}
+            itemCount={selectedItems.length}
+            duration={totalDuration}
+            disabled={!selectedDate || !selectedTime}
+            onContinue={() => {
+              if (selectedDate && selectedTime) setStep("firstVisit");
+            }}
+          />
+        </div>
+      )}
+
+      {step === "firstVisit" && (
+        <div className="space-y-8">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Bu sizin ilk {business.name} ziyaretiniz mi?
+          </h1>
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => {
+                setFirstVisit(true);
+                setStep("summary");
+              }}
+              className="w-full rounded-xl border border-border bg-card p-4 text-left shadow-xs hover:bg-surface-cream"
+            >
+              <span className="block font-semibold">Evet</span>
+              <span className="text-sm text-muted-foreground">Bu benim ilk ziyaretim</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFirstVisit(false);
+                setStep("summary");
+              }}
+              className="w-full rounded-xl border border-border bg-card p-4 text-left shadow-xs hover:bg-surface-cream"
+            >
+              <span className="block font-semibold">HayÄ±r</span>
+              <span className="text-sm text-muted-foreground">Daha Ã¶nce ziyaret ettim</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === "summary" &&
         selectedDate &&
         selectedTime &&
+        firstVisit !== null &&
         (isLoggedIn ? (
           <BookingSummary
             business={business}
-            service={selectedService}
-            professional={selectedProfessional ?? undefined}
+            items={selectedItems}
             date={selectedDate}
             time={selectedTime}
-            customerNote={customerNote}
-            onNoteChange={setCustomerNote}
+            firstVisit={firstVisit}
           />
         ) : (
           <LoginPrompt redirectUrl={redirectUrl} />

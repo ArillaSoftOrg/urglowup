@@ -202,7 +202,8 @@ function AppointmentDetail({
   const [noteDirty, setNoteDirty] = useState(false);
 
   const customerName = getAppointmentCustomerName(appointment);
-  const timeRange = formatTimeRange(appointment.requestedTime, appointment.service.durationMinutes);
+  const effectiveDuration = appointment.totalDurationMinutes ?? appointment.service.durationMinutes;
+  const timeRange = formatTimeRange(appointment.requestedTime, effectiveDuration);
   const dateLabel = format(new Date(appointment.requestedDate), "d MMMM yyyy, EEEE", { locale: tr });
   const price = formatServicePrice(appointment.service);
 
@@ -282,7 +283,7 @@ function AppointmentDetail({
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="size-4" />
             <span>
-              {timeRange} ({appointment.service.durationMinutes} dk)
+              {timeRange} ({effectiveDuration} dk)
             </span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -290,6 +291,39 @@ function AppointmentDetail({
             <span>{appointment.professional?.displayName ?? "Genel"}</span>
           </div>
         </div>
+
+        {appointment.items.length > 0 && (
+          <div className="space-y-3 rounded-xl bg-surface-cream p-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold">
+                {appointment.isGroup ? "Grup randevusu" : "Randevu detayÄ±"}
+              </p>
+              {appointment.firstVisit !== null && (
+                <Badge variant="neutral">
+                  {appointment.firstVisit ? "Ä°lk ziyaret" : "Tekrar ziyaret"}
+                </Badge>
+              )}
+            </div>
+            <div className="space-y-3">
+              {appointment.items.map((item) => (
+                <div key={item.id} className="border-t border-border/50 pt-3 first:border-t-0 first:pt-0">
+                  <p className="text-sm font-medium">{item.guestName}</p>
+                  <div className="mt-1 flex items-start justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <p>{item.service.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.durationMinutes} dk · {item.professional?.displayName ?? "Tercih yok"}
+                      </p>
+                    </div>
+                    {item.priceSnapshot !== null && (
+                      <p className="shrink-0 font-medium">â‚º{item.priceSnapshot}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {appointment.customerNote && (
           <div className="space-y-1">

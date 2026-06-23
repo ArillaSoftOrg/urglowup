@@ -82,7 +82,8 @@ function AppointmentItemCard({
   style?: CSSProperties;
   className?: string;
 }) {
-  const timeRange = formatTimeRange(item.requestedTime, item.service.durationMinutes);
+  const duration = item.totalDurationMinutes ?? item.service.durationMinutes;
+  const timeRange = formatTimeRange(item.requestedTime, duration);
   const customerName = getAppointmentCustomerName(item);
   const statusClasses = CALENDAR_STATUS_CARD_CLASSES[item.status];
 
@@ -129,7 +130,9 @@ function AppointmentItemCard({
             {STATUS_LABELS[item.status]}
           </Badge>
         </div>
-        <p className="truncate text-sm text-muted-foreground">{item.service.name}</p>
+        <p className="truncate text-sm text-muted-foreground">
+          {item.isGroup ? `${item.guestCount} kiÅŸilik grup randevusu` : item.service.name}
+        </p>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span>{timeRange}</span>
           {item.professional && <span>{item.professional.displayName}</span>}

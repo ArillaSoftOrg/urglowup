@@ -24,8 +24,17 @@ export interface SerializedCalendarService extends Omit<CalendarService, "price"
 }
 
 /** Client-safe appointment shape (Decimal service price converted to number). */
-export interface SerializedCalendarAppointment extends Omit<CalendarAppointment, "service"> {
+export interface SerializedCalendarAppointment extends Omit<CalendarAppointment, "service" | "items" | "totalPrice"> {
   service: Omit<CalendarAppointment["service"], "price"> & { price: number | null };
+  totalPrice: number | null;
+  items: Array<
+    Omit<CalendarAppointment["items"][number], "priceSnapshot" | "service"> & {
+      priceSnapshot: number | null;
+      service: Omit<CalendarAppointment["items"][number]["service"], "price"> & {
+        price: number | null;
+      };
+    }
+  >;
 }
 
 export type CalendarSelection =
@@ -55,7 +64,13 @@ export function serializeCalendarAppointment(
 ): SerializedCalendarAppointment {
   return {
     ...appointment,
+    totalPrice: appointment.totalPrice !== null ? Number(appointment.totalPrice) : null,
     service: { ...appointment.service, price: serializePrice(appointment.service.price) },
+    items: appointment.items.map((item) => ({
+      ...item,
+      priceSnapshot: item.priceSnapshot !== null ? Number(item.priceSnapshot) : null,
+      service: { ...item.service, price: serializePrice(item.service.price) },
+    })),
   };
 }
 

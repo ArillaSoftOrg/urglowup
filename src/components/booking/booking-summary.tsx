@@ -1,48 +1,39 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
-  CalendarCheck,
-  Clock,
-  Hourglass,
-  Loader2,
   AlertCircle,
+  CalendarCheck,
   CheckCircle2,
-  Info,
+  Clock,
+  Loader2,
+  MapPin,
   Sparkles,
+  Star,
   Tag,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 import { createAppointmentRequest } from "@/app/(public)/b/[slug]/book/actions";
 import { validateCoupon } from "@/app/(business)/business/coupons/actions";
 import type { BookingActionState } from "@/app/(public)/b/[slug]/book/actions";
 import type { BookingBusiness } from "@/lib/queries/appointments";
-import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
-import { useState, useTransition } from "react";
-import { Input } from "@/components/ui/input";
 
 type Service = BookingBusiness["services"][number];
 type Professional = BookingBusiness["professionals"][number];
 
-function formatPrice(service: Service): {
-  amount: string | null;
-  qualifier: string | null;
-} {
-  if (service.priceType === "FREE_CONSULTATION")
-    return { amount: "Ücretsiz danışma", qualifier: null };
-  if (service.priceType === "CONSULTATION_REQUIRED")
-    return { amount: "Fiyat için danışın", qualifier: null };
-  if (!service.price) return { amount: null, qualifier: null };
+export interface BookingSummaryItem {
+  guestName: string;
+  guestIndex: number;
+  service: Service;
+  professional?: Professional | null;
+}
 
-  const amount = `₺${Number(service.price)}`;
-  if (service.priceType === "STARTS_FROM")
-    return { amount, qualifier: "itibaren" };
-  return { amount, qualifier: null };
+function formatCurrency(value: number) {
+  return `${value} â‚º`;
 }
 
 function formatDate(date: Date): string {
@@ -50,34 +41,30 @@ function formatDate(date: Date): string {
     weekday: "long",
     day: "numeric",
     month: "long",
-    year: "numeric",
   }).format(date);
+}
+
+function getPrice(service: Service) {
+  return service.price ? Number(service.price) : 0;
 }
 
 export function BookingSummary({
   business,
-  service,
-  professional,
+  items,
   date,
   time,
-  customerNote,
-  onNoteChange,
+  firstVisit,
 }: {
   business: BookingBusiness;
-  service: Service;
-  professional?: Professional;
+  items: BookingSummaryItem[];
   date: Date;
   time: string;
-  customerNote: string;
-  onNoteChange: (note: string) => void;
+  firstVisit: boolean;
 }) {
-  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
   const [state, formAction, isPending] = useActionState<
     BookingActionState,
     FormData
   >(createAppointmentRequest, { success: false });
-
   const [couponCode, setCouponCode] = useState("");
   const [couponState, setCouponState] = useState<
     | null
@@ -86,33 +73,39 @@ export function BookingSummary({
   >(null);
   const [couponPending, startCouponTransition] = useTransition();
 
-  const servicePrice = service.price ? Number(service.price) : 0;
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const totalPrice = items.reduce((sum, item) => sum + getPrice(item.service), 0);
+  const totalDuration = items.reduce((sum, item) => sum + item.service.durationMinutes, 0);
+  const primary = items[0];
+  const grouped = items.reduce<Map<number, BookingSummaryItem[]>>((map, item) => {
+    const current = map.get(item.guestIndex) ?? [];
+    current.push(item);
+    map.set(item.guestIndex, current);
+    return map;
+  }, new Map());
 
   function handleCouponApply() {
     if (!couponCode.trim()) return;
     startCouponTransition(async () => {
-      const result = await validateCoupon(business.id, couponCode.trim(), servicePrice);
+      const result = await validateCoupon(business.id, couponCode.trim(), totalPrice);
       setCouponState(result);
     });
   }
-
-  const { amount, qualifier } = formatPrice(service);
-  const fieldError = (key: string) => state.errors?.[key];
 
   if (state.success) {
     return (
       <EmptyState
         icon={CalendarCheck}
-        headline="Randevu talebiniz alındı!"
-        description="İşletme talebinizi inceleyecek ve onaylandığında bilgilendirileceksiniz."
+        headline="Randevu talebiniz alÄ±ndÄ±!"
+        description="Ä°ÅŸletme talebinizi inceleyecek ve onaylandÄ±ÄŸÄ±nda bilgilendirileceksiniz."
         surface="pink"
         action={{
-          label: "Randevularım",
+          label: "RandevularÄ±m",
           href: "/account/appointments",
           variant: "brand",
         }}
         secondaryAction={{
-          label: "İşletme profiline dön",
+          label: "Ä°ÅŸletme profiline dÃ¶n",
           href: `/b/${business.slug}`,
         }}
       />
@@ -120,97 +113,98 @@ export function BookingSummary({
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">
-          Randevu özetinizi onaylayın
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Detayları kontrol edin ve talebinizi gönderin
-        </p>
-      </div>
+    <div className="space-y-5 pb-28">
+      <h2 className="text-3xl font-bold tracking-tight">Ä°nceleyin ve onaylayÄ±n</h2>
 
-      <Card className="bg-surface-cream">
-        <CardContent className="space-y-4 p-4">
-          {/* Header strip: logo + name + service + price */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              {business.logoUrl ? (
-                <Image
-                  src={business.logoUrl}
-                  alt={business.name}
-                  width={48}
-                  height={48}
-                  sizes="48px"
-                  className="size-12 shrink-0 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-pink/20">
-                  <Sparkles className="size-5 text-brand-pink-foreground" />
+      <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex items-start gap-3">
+          {business.logoUrl ? (
+            <Image
+              src={business.logoUrl}
+              alt={business.name}
+              width={64}
+              height={64}
+              sizes="64px"
+              className="size-16 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-brand-pink/20">
+              <Sparkles className="size-6 text-brand-pink-foreground" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="font-semibold">{business.name}</p>
+            <p className="flex items-center gap-1 text-sm font-semibold">
+              5,0 <Star className="size-4 fill-warning-foreground text-warning-foreground" /> <span className="text-muted-foreground">(146)</span>
+            </p>
+            <p className="mt-1 flex items-start gap-1 text-sm text-muted-foreground">
+              <MapPin className="mt-0.5 size-4 shrink-0" />
+              {business.district || business.city || "Ä°ÅŸletme adresi"}
+            </p>
+          </div>
+        </div>
+
+        <div className="my-5 border-t border-border/50" />
+
+        <div className="space-y-3 text-sm">
+          <div className="flex items-center gap-3">
+            <CalendarCheck className="size-4 text-muted-foreground" />
+            <span>{formatDate(date)}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Clock className="size-4 text-muted-foreground" />
+            <span>
+              {time} ({totalDuration} dk sÃ¼re)
+            </span>
+          </div>
+        </div>
+
+        <div className="my-5 border-t border-border/50" />
+
+        <div className="space-y-6">
+          {Array.from(grouped.entries()).map(([guestIndex, guestItems]) => (
+            <div key={guestIndex} className="space-y-3">
+              <p className="font-semibold">{guestItems[0].guestName}</p>
+              {guestItems.map((item) => (
+                <div key={`${guestIndex}-${item.service.id}`} className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-medium">{item.service.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {item.service.durationMinutes} dk. ile {item.professional?.displayName ?? "herhangi bir uzman"}
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-semibold">{formatCurrency(getPrice(item.service))}</p>
                 </div>
-              )}
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{business.name}</p>
-                <p className="truncate text-sm text-muted-foreground">
-                  {service.name}
-                </p>
-              </div>
+              ))}
             </div>
-            {amount && (
-              <div className="shrink-0 text-right">
-                {qualifier && (
-                  <p className="text-xs text-muted-foreground">{qualifier}</p>
-                )}
-                <p className="text-base font-bold">{amount}</p>
-              </div>
-            )}
-          </div>
+          ))}
+        </div>
 
-          <div className="border-t border-border/50" />
+        <div className="my-5 border-t border-border/50" />
 
-          {/* Detail rows */}
-          <div className="space-y-2.5 text-sm">
-            <div className="flex items-center gap-3">
-              <CalendarCheck className="size-4 shrink-0 text-muted-foreground" />
-              <span className="w-14 text-xs text-muted-foreground">Tarih</span>
-              <span className="font-medium">{formatDate(date)}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Clock className="size-4 shrink-0 text-muted-foreground" />
-              <span className="w-14 text-xs text-muted-foreground">Saat</span>
-              <span className="font-medium">{time}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Hourglass className="size-4 shrink-0 text-muted-foreground" />
-              <span className="w-14 text-xs text-muted-foreground">Süre</span>
-              <span className="font-medium">{service.durationMinutes} dk</span>
-            </div>
-            {professional && (
-              <div className="flex items-center gap-3">
-                <div className="size-4 shrink-0 text-muted-foreground text-center text-xs">👤</div>
-                <span className="w-14 text-xs text-muted-foreground">Uzman</span>
-                <span className="font-medium">{professional.displayName}</span>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        <div className="flex items-center justify-between font-semibold">
+          <span>Toplam</span>
+          <span>{formatCurrency(totalPrice)}</span>
+        </div>
+      </div>
 
-      {/* Trust callout */}
-      <div className="flex items-start gap-2.5 rounded-lg bg-surface-pink/60 p-3">
-        <Info className="mt-0.5 size-4 shrink-0 text-brand-pink-foreground" />
-        <p className="text-xs text-foreground/80">
-          Talebiniz işletmeye iletilir. Onaylandığında size bildirilir.
+      <div className="rounded-xl border border-border bg-card p-4">
+        <p className="font-medium">Ä°lk ziyaret</p>
+        <p className="text-sm text-muted-foreground">
+          {firstVisit ? "Evet, bu benim ilk ziyaretim." : "HayÄ±r, daha Ã¶nce ziyaret ettim."}
         </p>
       </div>
 
-      {/* Coupon field */}
       <div className="space-y-2">
         <div className="flex gap-2">
           <Input
-            placeholder="Kupon kodu (opsiyonel)"
+            aria-label="Kupon kodu"
+            placeholder="Kupon kodu"
             value={couponCode}
-            onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponState(null); }}
+            onChange={(event) => {
+              setCouponCode(event.target.value.toUpperCase());
+              setCouponState(null);
+            }}
             className="font-mono uppercase"
             maxLength={20}
           />
@@ -223,7 +217,7 @@ export function BookingSummary({
             className="shrink-0"
           >
             <Tag className="size-4" />
-            Uygula
+            Ekle
           </Button>
         </div>
         {couponState && !couponState.valid && (
@@ -235,16 +229,29 @@ export function BookingSummary({
         {couponState?.valid && (
           <p className="flex items-center gap-1.5 text-xs text-success-foreground">
             <CheckCircle2 className="size-3.5" />
-            ₺{couponState.discountAmount} indirim uygulandı!
+            {formatCurrency(couponState.discountAmount)} indirim uygulandÄ±.
           </p>
         )}
       </div>
 
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <BotProtectionFields />
         <input type="hidden" name="businessId" value={business.id} />
-        <input type="hidden" name="serviceId" value={service.id} />
-        {professional && <input type="hidden" name="professionalId" value={professional.id} />}
+        <input type="hidden" name="serviceId" value={primary.service.id} />
+        <input type="hidden" name="professionalId" value={primary.professional?.id ?? ""} />
+        <input
+          type="hidden"
+          name="itemsJson"
+          value={JSON.stringify(
+            items.map((item) => ({
+              guestName: item.guestName,
+              guestIndex: item.guestIndex,
+              serviceId: item.service.id,
+              professionalId: item.professional?.id ?? null,
+            }))
+          )}
+        />
+        <input type="hidden" name="firstVisit" value={String(firstVisit)} />
         {couponState?.valid && (
           <>
             <input type="hidden" name="couponId" value={couponState.couponId} />
@@ -254,61 +261,34 @@ export function BookingSummary({
         <input type="hidden" name="date" value={dateStr} />
         <input type="hidden" name="time" value={time} />
 
-        <div className="space-y-2">
-          <Label htmlFor="customerNote">Not (isteğe bağlı)</Label>
-          <Textarea
-            id="customerNote"
-            name="customerNote"
-            placeholder="Tercihleriniz veya özel istekleriniz..."
-            maxLength={500}
-            value={customerNote}
-            onChange={(e) => onNoteChange(e.target.value)}
-            disabled={isPending}
-          />
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              {customerNote.length}/500 karakter
-            </p>
-            {fieldError("customerNote") && (
-              <p className="text-xs text-destructive">
-                {fieldError("customerNote")}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {(fieldError("serviceId") || fieldError("date") || fieldError("time") || fieldError("businessId")) && (
-          <p className="text-xs text-destructive">
-            {fieldError("serviceId") ?? fieldError("date") ?? fieldError("time") ?? fieldError("businessId")}
-          </p>
-        )}
-
         {state.message && !state.success && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+          <div className="mb-3 flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
             <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
             <p className="text-sm text-destructive">{state.message}</p>
           </div>
         )}
 
-        <Button
-          type="submit"
-          variant="brand"
-          className="w-full"
-          size="lg"
-          disabled={isPending}
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Gönderiliyor…
-            </>
-          ) : (
-            <>
-              <CalendarCheck className="size-4" />
-              Randevu Talep Et
-            </>
-          )}
-        </Button>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xl font-bold">{formatCurrency(totalPrice)}</p>
+            <p className="text-xs text-muted-foreground">MaÄŸazada Ã¶deme yapmak iÃ§in</p>
+          </div>
+          <Button
+            type="submit"
+            className="rounded-full bg-foreground px-7 text-background hover:bg-foreground/90"
+            size="lg"
+            disabled={isPending}
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                GÃ¶nderiliyor
+              </>
+            ) : (
+              "Onayla"
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   );

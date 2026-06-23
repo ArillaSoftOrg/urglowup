@@ -71,6 +71,8 @@ function AppointmentCard({
   const [refreshKey, setRefreshKey] = useState(0);
   const canCancel = CUSTOMER_CANCELLABLE.includes(appointment.status);
   const canReschedule = CUSTOMER_CANCELLABLE.includes(appointment.status);
+  const effectiveDuration =
+    appointment.totalDurationMinutes ?? appointment.service.durationMinutes;
 
   return (
     <Card key={refreshKey}>
@@ -92,7 +94,9 @@ function AppointmentCard({
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {appointment.service.name}
+              {appointment.isGroup
+                ? `${appointment.guestCount} kiÅŸilik grup randevusu`
+                : appointment.service.name}
             </p>
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -105,9 +109,28 @@ function AppointmentCard({
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="size-3" />
-                {appointment.service.durationMinutes} min
+                {effectiveDuration} min
               </span>
             </div>
+            {appointment.items.length > 0 && (
+              <div className="mt-3 space-y-2 rounded-lg bg-surface-cream p-3">
+                {appointment.items.map((item) => (
+                  <div key={item.id} className="flex items-start justify-between gap-3 text-xs">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">{item.guestName}</p>
+                      <p className="text-muted-foreground">
+                        {item.service.name} · {item.durationMinutes} dk
+                      </p>
+                    </div>
+                    {item.priceSnapshot !== null && (
+                      <span className="shrink-0 font-medium text-foreground">
+                        â‚º{Number(item.priceSnapshot)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
             {appointment.customerNote && (
               <p className="text-xs text-muted-foreground">
                 <span className="font-medium">Notunuz:</span>{" "}

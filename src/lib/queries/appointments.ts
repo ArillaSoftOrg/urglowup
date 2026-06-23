@@ -40,28 +40,6 @@ export async function getCustomerAppointments(userId: string) {
           professional: {
             select: { id: true, displayName: true, avatarUrl: true },
           },
-          items: {
-            orderBy: { sortOrder: "asc" },
-            select: {
-              id: true,
-              guestName: true,
-              guestIndex: true,
-              durationMinutes: true,
-              priceSnapshot: true,
-              service: {
-                select: {
-                  id: true,
-                  name: true,
-                  durationMinutes: true,
-                  price: true,
-                  priceType: true,
-                },
-              },
-              professional: {
-                select: { id: true, displayName: true, avatarUrl: true },
-              },
-            },
-          },
         },
       },
       business: {
@@ -88,6 +66,9 @@ export async function getBusinessForBooking(slug: string) {
       slug: true,
       status: true,
       logoUrl: true,
+      city: true,
+      district: true,
+      address: true,
       maxGroupBookingGuests: true,
       media: {
         where: {
@@ -207,6 +188,28 @@ export async function getBusinessCalendarData(
           },
           professional: {
             select: { id: true, displayName: true, avatarUrl: true },
+          },
+          items: {
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              guestName: true,
+              guestIndex: true,
+              durationMinutes: true,
+              priceSnapshot: true,
+              service: {
+                select: {
+                  id: true,
+                  name: true,
+                  durationMinutes: true,
+                  price: true,
+                  priceType: true,
+                },
+              },
+              professional: {
+                select: { id: true, displayName: true, avatarUrl: true },
+              },
+            },
           },
         },
         orderBy: { requestedTime: "asc" },
