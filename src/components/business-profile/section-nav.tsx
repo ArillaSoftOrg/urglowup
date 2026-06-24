@@ -76,20 +76,22 @@ export function SectionNav({
 
   useEffect(() => {
     if (!revealAfterId) {
-      setRevealed(true);
       return;
     }
 
     const syncReveal = () => {
       const el = getVisibleSection(revealAfterId);
       if (!el) return;
-      setRevealed(el.getBoundingClientRect().top <= getStickyOffset() + 4);
+      const revealThreshold = Math.max(getStickyOffset() + 4, window.innerHeight * 0.28);
+      setRevealed(el.getBoundingClientRect().top <= revealThreshold);
     };
 
     window.addEventListener("scroll", syncReveal, { passive: true });
     window.addEventListener("resize", syncReveal);
+    const intervalId = window.setInterval(syncReveal, 150);
     syncReveal();
     return () => {
+      window.clearInterval(intervalId);
       window.removeEventListener("scroll", syncReveal);
       window.removeEventListener("resize", syncReveal);
     };

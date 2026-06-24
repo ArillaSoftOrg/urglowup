@@ -175,7 +175,7 @@ export function MobileBusinessProfile({
 
   return (
     <div className="min-h-screen bg-surface-cream pb-24 md:hidden">
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Link
           href={hrefPrefix || "/"}
           aria-label="Geri dön"
@@ -197,6 +197,8 @@ export function MobileBusinessProfile({
           />
         </div>
       </header>
+      {/* Spacer to push content below the fixed header */}
+      <div aria-hidden className="h-14" />
 
       <SectionNav
         sections={navSections}
