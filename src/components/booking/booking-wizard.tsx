@@ -33,7 +33,7 @@ interface GuestDraft {
 }
 
 function formatCurrency(value: number) {
-  return `${value} â‚º`;
+  return `${value} ₺`;
 }
 
 function servicePrice(service: Service) {
@@ -111,7 +111,7 @@ function BottomBar({
         <div className="min-w-0">
           <p className="text-xl font-bold">{formatCurrency(totalPrice)}</p>
           <p className="truncate text-xs text-muted-foreground">
-            {itemCount} Ã¶ÄŸe · {duration} dk
+            {itemCount} öğe · {duration} dk
           </p>
         </div>
         <Button
@@ -299,7 +299,7 @@ export function BookingWizard({
           <Link
             href={`/b/${business.slug}`}
             className="flex size-11 items-center justify-center rounded-full text-foreground hover:bg-surface-cream"
-            aria-label={`${business.name} profiline dÃ¶n`}
+            aria-label={`${business.name} profiline dön`}
           >
             <ArrowLeft className="size-6" />
           </Link>
@@ -316,7 +316,7 @@ export function BookingWizard({
         <Link
           href={`/b/${business.slug}`}
           className="flex size-11 items-center justify-center rounded-full text-foreground hover:bg-surface-cream"
-          aria-label="Randevu akÄ±ÅŸÄ±nÄ± kapat"
+          aria-label="Randevu akışını kapat"
         >
           <X className="size-6" />
         </Link>
@@ -324,7 +324,7 @@ export function BookingWizard({
 
       {step === "kind" && (
         <div className="space-y-8">
-          <h1 className="text-3xl font-bold tracking-tight">Bir seÃ§enek belirleyin</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Bir seçenek belirleyin</h1>
           <div className="space-y-4">
             <button
               type="button"
@@ -336,8 +336,8 @@ export function BookingWizard({
               className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left shadow-xs hover:bg-surface-cream"
             >
               <span>
-                <span className="block font-semibold">Randevu alÄ±n</span>
-                <span className="text-sm text-muted-foreground">Kendiniz iÃ§in hizmet planlamasÄ± yapÄ±n</span>
+                <span className="block font-semibold">Randevu alın</span>
+                <span className="text-sm text-muted-foreground">Kendiniz için hizmet planlaması yapın</span>
               </span>
               <UserRound className="size-6" />
             </button>
@@ -350,8 +350,8 @@ export function BookingWizard({
               className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left shadow-xs hover:bg-surface-cream"
             >
               <span>
-                <span className="block font-semibold">Grup randevusu alÄ±n</span>
-                <span className="text-sm text-muted-foreground">Kendiniz ve baÅŸkalarÄ± iÃ§in</span>
+                <span className="block font-semibold">Grup randevusu alın</span>
+                <span className="text-sm text-muted-foreground">Kendiniz ve başkaları için</span>
               </span>
               <UsersRound className="size-6" />
             </button>
@@ -361,7 +361,7 @@ export function BookingWizard({
 
       {step === "services" && (
         <div className="space-y-6 pb-28">
-          <h1 className="text-3xl font-bold tracking-tight">Hizmetleri seÃ§in</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Hizmetleri seçin</h1>
           <GuestHeader
             guest={activeGuest}
             active
@@ -395,7 +395,7 @@ export function BookingWizard({
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Misafir ve hizmet ekleyin</h1>
             <p className="text-muted-foreground">
-              En fazla {business.maxGroupBookingGuests} misafir iÃ§in grup randevusu alÄ±n
+              En fazla {business.maxGroupBookingGuests} misafir için grup randevusu alın
             </p>
           </div>
           <div className="space-y-3">
@@ -434,7 +434,7 @@ export function BookingWizard({
 
       {step === "experts" && (
         <div className="space-y-6 pb-28">
-          <h1 className="text-3xl font-bold tracking-tight">Uzman seÃ§in</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Uzman seçin</h1>
           <div className="space-y-4">
             <button
               type="button"
@@ -451,7 +451,7 @@ export function BookingWizard({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold">Tercih yok</span>
-                <span className="text-sm text-muted-foreground">Maksimum mÃ¼saitlik</span>
+                <span className="text-sm text-muted-foreground">Maksimum müsaitlik</span>
               </span>
               {expertMode === "any" ? (
                 <span className="flex size-10 items-center justify-center rounded-full bg-brand-purple-foreground text-background">
@@ -472,8 +472,8 @@ export function BookingWizard({
               <span className="flex size-16 items-center justify-center rounded-full bg-surface-purple text-brand-purple-foreground">
                 <UsersRound className="size-7" />
               </span>
-              <span className="min-w-0 flex-1 font-semibold">Hizmete Ã¶zel uzman seÃ§in</span>
-              <span className="rounded-full border border-border px-4 py-2 text-sm font-medium">SeÃ§</span>
+              <span className="min-w-0 flex-1 font-semibold">Hizmete özel uzman seçin</span>
+              <span className="rounded-full border border-border px-4 py-2 text-sm font-medium">Seç</span>
             </button>
           </div>
 
@@ -498,7 +498,7 @@ export function BookingWizard({
                               setItemProfessional(guest.id, serviceId, event.target.value || null)
                             }
                             className="mt-4 min-h-[44px] rounded-full border border-input bg-background px-4 text-sm"
-                            aria-label={`${service.name} iÃ§in uzman`}
+                            aria-label={`${service.name} için uzman`}
                           >
                             <option value="">Tercih yok</option>
                             {availableProfessionals(serviceId).map((professional) => (
@@ -580,8 +580,8 @@ export function BookingWizard({
               }}
               className="w-full rounded-xl border border-border bg-card p-4 text-left shadow-xs hover:bg-surface-cream"
             >
-              <span className="block font-semibold">HayÄ±r</span>
-              <span className="text-sm text-muted-foreground">Daha Ã¶nce ziyaret ettim</span>
+              <span className="block font-semibold">Hayır</span>
+              <span className="text-sm text-muted-foreground">Daha önce ziyaret ettim</span>
             </button>
           </div>
         </div>

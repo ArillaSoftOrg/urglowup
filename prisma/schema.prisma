@@ -507,11 +507,11 @@ model BusinessMedia {
 model Appointment {
   id              String            @id @default(cuid())
   businessId      String
-  business        Business          @relation(fields: [businessId], references: [id])
+  business        Business          @relation(fields: [businessId], references: [id], onDelete: Restrict)
   customerId      String
-  customer        User              @relation(fields: [customerId], references: [id])
+  customer        User              @relation(fields: [customerId], references: [id], onDelete: Restrict)
   serviceId       String
-  service         BusinessService   @relation(fields: [serviceId], references: [id])
+  service         BusinessService   @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   professionalId  String?
   professional    Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
   couponId        String?
@@ -538,6 +538,9 @@ model Appointment {
 
   @@index([businessId, status])
   @@index([customerId])
+  @@index([businessId, requestedDate])
+  @@index([customerId, requestedDate])
+  @@index([createdAt(sort: Desc)])
 }
 
 model AppointmentItem {

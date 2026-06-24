@@ -37,6 +37,7 @@ async function getAppointmentEmailPayload(appointmentId: string) {
   });
 
   if (!appt) throw new Error(`Appointment ${appointmentId} not found for email`);
+  if (!appt.business.owner?.email) throw new Error(`Business owner email missing for appointment ${appointmentId}`);
   return appt;
 }
 

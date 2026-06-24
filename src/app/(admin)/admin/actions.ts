@@ -2244,7 +2244,7 @@ export async function sendMarketingEmailCampaign(
     }
 
     // Check for dry-run mode (defaults to true/safe when unset)
-    const isDryRun = process.env.CAMPAIGN_DRY_RUN !== "false";
+    const isDryRun = env.CAMPAIGN_DRY_RUN !== "false";
 
     const recipients = campaign.recipients;
 

@@ -131,7 +131,7 @@ function AppointmentItemCard({
           </Badge>
         </div>
         <p className="truncate text-sm text-muted-foreground">
-          {item.isGroup ? `${item.guestCount} kiÅŸilik grup randevusu` : item.service.name}
+          {item.isGroup ? `${item.guestCount} kişilik grup randevusu` : item.service.name}
         </p>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span>{timeRange}</span>

@@ -296,11 +296,11 @@ function AppointmentDetail({
           <div className="space-y-3 rounded-xl bg-surface-cream p-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold">
-                {appointment.isGroup ? "Grup randevusu" : "Randevu detayÄ±"}
+                {appointment.isGroup ? "Grup randevusu" : "Randevu detayı"}
               </p>
               {appointment.firstVisit !== null && (
                 <Badge variant="neutral">
-                  {appointment.firstVisit ? "Ä°lk ziyaret" : "Tekrar ziyaret"}
+                  {appointment.firstVisit ? "İlk ziyaret" : "Tekrar ziyaret"}
                 </Badge>
               )}
             </div>
@@ -316,7 +316,7 @@ function AppointmentDetail({
                       </p>
                     </div>
                     {item.priceSnapshot !== null && (
-                      <p className="shrink-0 font-medium">â‚º{item.priceSnapshot}</p>
+                      <p className="shrink-0 font-medium">₺{item.priceSnapshot}</p>
                     )}
                   </div>
                 </div>

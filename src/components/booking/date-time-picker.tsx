@@ -101,7 +101,7 @@ export function DateTimePicker({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl font-bold tracking-tight">Tarih ve saati seÃ§in</h2>
+      <h2 className="text-3xl font-bold tracking-tight">Tarih ve saati seçin</h2>
 
       <div className="flex items-center justify-between gap-3">
         <div className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium shadow-xs">
@@ -116,7 +116,7 @@ export function DateTimePicker({
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold">Tarih seÃ§in</h3>
+        <h3 className="text-lg font-semibold">Tarih seçin</h3>
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
           {Array.from({ length: 14 }).map((_, index) => {
             const date = new Date(today);
@@ -162,12 +162,12 @@ export function DateTimePicker({
         </div>
 
         <div className="flex-1 space-y-3">
-          <h3 className="text-lg font-semibold">Saat seÃ§in</h3>
+          <h3 className="text-lg font-semibold">Saat seçin</h3>
 
           {!selectedDate && (
             <div className="flex min-h-44 items-center justify-center rounded-xl bg-surface-cream px-4 py-10 text-center">
               <p className="text-sm text-muted-foreground">
-                Tarih seÃ§ildikten sonra uygun saatler burada gÃ¶rÃ¼nÃ¼r.
+                Tarih seçildikten sonra uygun saatler burada görünür.
               </p>
             </div>
           )}
@@ -185,7 +185,7 @@ export function DateTimePicker({
               <EmptyState
                 icon={CalendarOff}
                 headline="Uygun saat yok"
-                description="Bu tarihte uygun saat kalmadÄ±. LÃ¼tfen baÅŸka bir gÃ¼n deneyin veya bekleme listesine girin."
+                description="Bu tarihte uygun saat kalmadı. Lütfen başka bir gün deneyin veya bekleme listesine girin."
                 surface="cream"
                 compact
               />

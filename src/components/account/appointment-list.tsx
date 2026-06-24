@@ -95,7 +95,7 @@ function AppointmentCard({
             </div>
             <p className="text-sm text-muted-foreground">
               {appointment.isGroup
-                ? `${appointment.guestCount} kiÅŸilik grup randevusu`
+                ? `${appointment.guestCount} kişilik grup randevusu`
                 : appointment.service.name}
             </p>
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -124,7 +124,7 @@ function AppointmentCard({
                     </div>
                     {item.priceSnapshot !== null && (
                       <span className="shrink-0 font-medium text-foreground">
-                        â‚º{Number(item.priceSnapshot)}
+                        ₺{Number(item.priceSnapshot)}
                       </span>
                     )}
                   </div>

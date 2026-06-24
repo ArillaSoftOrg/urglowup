@@ -136,9 +136,9 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Randevu AkÄ±ÅŸÄ±</CardTitle>
+          <CardTitle className="text-base">Randevu Akışı</CardTitle>
           <CardDescription>
-            Grup randevularÄ±nda kapasite ve rezervasyon davranÄ±ÅŸÄ±.
+            Grup randevularında kapasite ve rezervasyon davranışı.
           </CardDescription>
         </CardHeader>
         <CardContent>

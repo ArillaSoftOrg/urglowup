@@ -72,6 +72,8 @@ const envSchema = z.object({
   WHATSAPP_TEMPLATE_REVIEW_REQUEST: z.string().optional(),
   WHATSAPP_TEMPLATE_LANGUAGE: z.string().optional(),
   WHATSAPP_API_VERSION: z.string().optional(),
+  WHATSAPP_MARKETING_TEMPLATES: z.string().optional(),
+  CAMPAIGN_DRY_RUN: z.string().optional(),
 });
 
 // During `next build`, secrets are not available — skip strict validation.

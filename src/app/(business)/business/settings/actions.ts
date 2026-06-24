@@ -15,8 +15,8 @@ const groupBookingSettingsSchema = z.object({
   maxGroupBookingGuests: z.coerce
     .number()
     .int()
-    .min(1, "En az 1 kiÅŸi olabilir.")
-    .max(10, "En fazla 10 kiÅŸi olabilir."),
+    .min(1, "En az 1 kişi olabilir.")
+    .max(10, "En fazla 10 kişi olabilir."),
 });
 
 export async function updateGroupBookingSettings(
@@ -44,5 +44,5 @@ export async function updateGroupBookingSettings(
   });
 
   revalidatePath("/business/settings");
-  return { success: true, message: "Grup randevu ayarlarÄ± gÃ¼ncellendi." };
+  return { success: true, message: "Grup randevu ayarları güncellendi." };
 }

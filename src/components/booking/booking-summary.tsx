@@ -33,7 +33,7 @@ export interface BookingSummaryItem {
 }
 
 function formatCurrency(value: number) {
-  return `${value} â‚º`;
+  return `${value} ₺`;
 }
 
 function formatDate(date: Date): string {
@@ -96,16 +96,16 @@ export function BookingSummary({
     return (
       <EmptyState
         icon={CalendarCheck}
-        headline="Randevu talebiniz alÄ±ndÄ±!"
-        description="Ä°ÅŸletme talebinizi inceleyecek ve onaylandÄ±ÄŸÄ±nda bilgilendirileceksiniz."
+        headline="Randevu talebiniz alındı!"
+        description="İşletme talebinizi inceleyecek ve onaylandığında bilgilendirileceksiniz."
         surface="pink"
         action={{
-          label: "RandevularÄ±m",
+          label: "Randevularım",
           href: "/account/appointments",
           variant: "brand",
         }}
         secondaryAction={{
-          label: "Ä°ÅŸletme profiline dÃ¶n",
+          label: "İşletme profiline dön",
           href: `/b/${business.slug}`,
         }}
       />
@@ -114,7 +114,7 @@ export function BookingSummary({
 
   return (
     <div className="space-y-5 pb-28">
-      <h2 className="text-3xl font-bold tracking-tight">Ä°nceleyin ve onaylayÄ±n</h2>
+      <h2 className="text-3xl font-bold tracking-tight">İnceleyin ve onaylayın</h2>
 
       <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
         <div className="flex items-start gap-3">
@@ -139,7 +139,7 @@ export function BookingSummary({
             </p>
             <p className="mt-1 flex items-start gap-1 text-sm text-muted-foreground">
               <MapPin className="mt-0.5 size-4 shrink-0" />
-              {business.district || business.city || "Ä°ÅŸletme adresi"}
+              {business.district || business.city || "İşletme adresi"}
             </p>
           </div>
         </div>
@@ -154,7 +154,7 @@ export function BookingSummary({
           <div className="flex items-center gap-3">
             <Clock className="size-4 text-muted-foreground" />
             <span>
-              {time} ({totalDuration} dk sÃ¼re)
+              {time} ({totalDuration} dk süre)
             </span>
           </div>
         </div>
@@ -189,9 +189,9 @@ export function BookingSummary({
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4">
-        <p className="font-medium">Ä°lk ziyaret</p>
+        <p className="font-medium">İlk ziyaret</p>
         <p className="text-sm text-muted-foreground">
-          {firstVisit ? "Evet, bu benim ilk ziyaretim." : "HayÄ±r, daha Ã¶nce ziyaret ettim."}
+          {firstVisit ? "Evet, bu benim ilk ziyaretim." : "Hayır, daha önce ziyaret ettim."}
         </p>
       </div>
 
@@ -229,7 +229,7 @@ export function BookingSummary({
         {couponState?.valid && (
           <p className="flex items-center gap-1.5 text-xs text-success-foreground">
             <CheckCircle2 className="size-3.5" />
-            {formatCurrency(couponState.discountAmount)} indirim uygulandÄ±.
+            {formatCurrency(couponState.discountAmount)} indirim uygulandı.
           </p>
         )}
       </div>
@@ -271,7 +271,7 @@ export function BookingSummary({
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xl font-bold">{formatCurrency(totalPrice)}</p>
-            <p className="text-xs text-muted-foreground">MaÄŸazada Ã¶deme yapmak iÃ§in</p>
+            <p className="text-xs text-muted-foreground">Mağazada ödeme yapmak için</p>
           </div>
           <Button
             type="submit"
@@ -282,7 +282,7 @@ export function BookingSummary({
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                GÃ¶nderiliyor
+                Gönderiliyor
               </>
             ) : (
               "Onayla"

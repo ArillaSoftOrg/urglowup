@@ -371,7 +371,7 @@ export async function createAppointment(
 
   const service = await db.businessService.findFirst({
     where: { id: serviceId, businessId, isActive: true },
-    select: { durationMinutes: true },
+    select: { durationMinutes: true, price: true },
   });
   if (!service) {
     return { success: false, message: "Hizmet bulunamadı." };
@@ -414,6 +414,21 @@ export async function createAppointment(
       requestedTime: startTime,
       status: "CONFIRMED",
       businessNote: notes || null,
+      totalDurationMinutes: service.durationMinutes,
+      totalPrice: service.price ?? null,
+      items: {
+        create: [
+          {
+            guestName: "Müşteri",
+            guestIndex: 0,
+            serviceId,
+            professionalId: professionalId ?? null,
+            durationMinutes: service.durationMinutes,
+            priceSnapshot: service.price ?? null,
+            sortOrder: 0,
+          },
+        ],
+      },
     },
     select: { id: true },
   });

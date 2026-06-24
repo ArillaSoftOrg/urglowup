@@ -4,6 +4,8 @@
  * Safe mode: WHATSAPP_DRY_RUN=true by default.
  */
 
+import { env } from "@/lib/env";
+
 export interface WhatsAppMarketingTemplate {
   name: string;
   language: string;
@@ -16,7 +18,7 @@ export interface WhatsAppMarketingTemplate {
  * Returns empty array if not configured (safe default for Phase 4 pre-approval).
  */
 export function getApprovedWhatsAppMarketingTemplates(): WhatsAppMarketingTemplate[] {
-  const configJson = process.env.WHATSAPP_MARKETING_TEMPLATES || "";
+  const configJson = env.WHATSAPP_MARKETING_TEMPLATES || "";
 
   if (!configJson.trim()) {
     return [];

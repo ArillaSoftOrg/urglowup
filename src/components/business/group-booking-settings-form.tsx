@@ -27,15 +27,15 @@ export function GroupBookingSettingsForm({
           <UsersRound className="size-5" />
         </div>
         <div>
-          <p className="text-sm font-medium">Grup randevularÄ±</p>
+          <p className="text-sm font-medium">Grup randevuları</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            MÃ¼ÅŸterilerin kendileriyle birlikte kaÃ§ misafir iÃ§in hizmet seÃ§ebileceÄŸini belirleyin.
+            Müşterilerin kendileriyle birlikte kaç misafir için hizmet seçebileceğini belirleyin.
           </p>
         </div>
       </div>
 
       <div className="max-w-xs space-y-2">
-        <Label htmlFor="maxGroupBookingGuests">Maksimum kiÅŸi sayÄ±sÄ±</Label>
+        <Label htmlFor="maxGroupBookingGuests">Maksimum kişi sayısı</Label>
         <Input
           id="maxGroupBookingGuests"
           name="maxGroupBookingGuests"
@@ -48,7 +48,7 @@ export function GroupBookingSettingsForm({
         {state.errors?.maxGroupBookingGuests ? (
           <p className="text-xs text-destructive">{state.errors.maxGroupBookingGuests}</p>
         ) : (
-          <p className="text-xs text-muted-foreground">1 ile 10 arasÄ±nda bir deÄŸer seÃ§in.</p>
+          <p className="text-xs text-muted-foreground">1 ile 10 arasında bir değer seçin.</p>
         )}
       </div>
 
