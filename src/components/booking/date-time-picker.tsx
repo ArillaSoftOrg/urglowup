@@ -37,6 +37,7 @@ export function DateTimePicker({
   selectedDate,
   selectedTime,
   isLoggedIn,
+  professionalName,
   onSelectDate,
   onSelectTime,
 }: {
@@ -46,6 +47,7 @@ export function DateTimePicker({
   selectedDate: Date | null;
   selectedTime: string | null;
   isLoggedIn?: boolean;
+  professionalName?: string;
   onSelectDate: (date: Date) => void;
   onSelectTime: (time: string) => void;
 }) {
@@ -108,7 +110,7 @@ export function DateTimePicker({
           <span className="flex size-6 items-center justify-center rounded-full bg-surface-purple text-brand-purple-foreground">
             <UserRound className="size-3.5" />
           </span>
-          Tercih yok
+          {professionalName ?? "Tercih yok"}
         </div>
         <div className="rounded-full border border-border bg-card p-2 shadow-xs">
           <CalendarDays className="size-5" />
@@ -184,11 +186,42 @@ export function DateTimePicker({
             <div className="space-y-4">
               <EmptyState
                 icon={CalendarOff}
-                headline="Uygun saat yok"
-                description="Bu tarihte uygun saat kalmadı. Lütfen başka bir gün deneyin veya bekleme listesine girin."
+                headline={
+                  professionalName
+                    ? `${professionalName} bu tarihte tamamen dolu.`
+                    : "Uygun saat yok"
+                }
+                description={
+                  professionalName
+                    ? "Başka bir tarih deneyin veya bekleme listesine girin."
+                    : "Bu tarihte uygun saat kalmadı. Lütfen başka bir gün deneyin veya bekleme listesine girin."
+                }
                 surface="cream"
                 compact
               />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-xl"
+                onClick={() => {
+                  const next = new Date(selectedDate);
+                  next.setDate(next.getDate() + 1);
+                  if (!isDateDisabled(next)) {
+                    handleDateSelect(next);
+                  } else {
+                    let candidate = new Date(next);
+                    for (let i = 0; i < 60; i++) {
+                      candidate.setDate(candidate.getDate() + 1);
+                      if (!isDateDisabled(candidate)) {
+                        handleDateSelect(candidate);
+                        break;
+                      }
+                    }
+                  }
+                }}
+              >
+                Sonraki uygun güne git
+              </Button>
               <WaitlistButton
                 businessId={business.id}
                 serviceId={serviceId}

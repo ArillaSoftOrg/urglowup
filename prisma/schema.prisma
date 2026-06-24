@@ -332,8 +332,9 @@ model Business {
   instantConfirmation  Boolean        @default(false)
   inAppPayment         Boolean        @default(false)
   petFriendly          Boolean        @default(false)
-  maxGroupBookingGuests Int           @default(4)
-  googlePlaceId        String?
+  maxGroupBookingGuests    Int           @default(4)
+  cancellationWindowHours  Int           @default(2)
+  googlePlaceId            String?
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
 

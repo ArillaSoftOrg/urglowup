@@ -6,7 +6,10 @@ import {
   AlertCircle,
   CalendarCheck,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
+  Info,
   Loader2,
   MapPin,
   Sparkles,
@@ -15,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BotProtectionFields } from "@/components/shared/bot-protection-fields";
 import { createAppointmentRequest } from "@/app/(public)/b/[slug]/book/actions";
@@ -72,6 +76,9 @@ export function BookingSummary({
     | { valid: true; discountAmount: number; couponId: string }
   >(null);
   const [couponPending, startCouponTransition] = useTransition();
+  const [couponOpen, setCouponOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [customerNote, setCustomerNote] = useState("");
 
   const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const totalPrice = items.reduce((sum, item) => sum + getPrice(item.service), 0);
@@ -195,43 +202,109 @@ export function BookingSummary({
         </p>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          <Input
-            aria-label="Kupon kodu"
-            placeholder="Kupon kodu"
-            value={couponCode}
-            onChange={(event) => {
-              setCouponCode(event.target.value.toUpperCase());
-              setCouponState(null);
-            }}
-            className="font-mono uppercase"
-            maxLength={20}
-          />
-          <Button
+      <div className="rounded-xl border border-border bg-card p-4">
+        {!noteOpen ? (
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleCouponApply}
-            disabled={couponPending || !couponCode.trim()}
-            className="shrink-0"
+            onClick={() => setNoteOpen(true)}
+            className="flex w-full items-center justify-between text-sm"
           >
-            <Tag className="size-4" />
-            Ekle
-          </Button>
-        </div>
-        {couponState && !couponState.valid && (
-          <p className="flex items-center gap-1.5 text-xs text-destructive">
-            <AlertCircle className="size-3.5" />
-            {couponState.error}
-          </p>
+            <span className="font-medium">Bilmemizi istediğiniz bir şey var mı?</span>
+            <ChevronDown className="size-4 text-muted-foreground" />
+          </button>
+        ) : (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setNoteOpen(false)}
+              className="flex w-full items-center justify-between text-sm"
+            >
+              <span className="font-medium">Notunuz</span>
+              <ChevronUp className="size-4 text-muted-foreground" />
+            </button>
+            <Textarea
+              value={customerNote}
+              onChange={(e) => setCustomerNote(e.target.value)}
+              placeholder="Özel isteklerinizi veya notlarınızı buraya yazın..."
+              maxLength={500}
+              rows={3}
+            />
+            <p className="text-right text-xs text-muted-foreground">{customerNote.length}/500</p>
+          </div>
         )}
-        {couponState?.valid && (
-          <p className="flex items-center gap-1.5 text-xs text-success-foreground">
-            <CheckCircle2 className="size-3.5" />
-            {formatCurrency(couponState.discountAmount)} indirim uygulandı.
-          </p>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        {!couponOpen ? (
+          <button
+            type="button"
+            onClick={() => setCouponOpen(true)}
+            className="flex w-full items-center justify-between text-sm"
+          >
+            <span className="font-medium">
+              Kupon kodunuz var mı?{" "}
+              <span className="text-brand-purple-foreground">Ekle</span>
+            </span>
+            <ChevronDown className="size-4 text-muted-foreground" />
+          </button>
+        ) : (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setCouponOpen(false)}
+              className="flex w-full items-center justify-between text-sm"
+            >
+              <span className="font-medium">Kupon kodu</span>
+              <ChevronUp className="size-4 text-muted-foreground" />
+            </button>
+            <div className="flex gap-2">
+              <Input
+                aria-label="Kupon kodu"
+                placeholder="Kupon kodu"
+                value={couponCode}
+                onChange={(event) => {
+                  setCouponCode(event.target.value.toUpperCase());
+                  setCouponState(null);
+                }}
+                className="font-mono uppercase"
+                maxLength={20}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCouponApply}
+                disabled={couponPending || !couponCode.trim()}
+                className="shrink-0"
+              >
+                <Tag className="size-4" />
+                Uygula
+              </Button>
+            </div>
+            {couponState && !couponState.valid && (
+              <p className="flex items-center gap-1.5 text-xs text-destructive">
+                <AlertCircle className="size-3.5" />
+                {couponState.error}
+              </p>
+            )}
+            {couponState?.valid && (
+              <p className="flex items-center gap-1.5 text-xs text-success-foreground">
+                <CheckCircle2 className="size-3.5" />
+                {formatCurrency(couponState.discountAmount)} indirim uygulandı.
+              </p>
+            )}
+          </div>
         )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4 space-y-1">
+        <p className="flex items-center gap-1.5 text-sm font-medium">
+          <Info className="size-4 text-muted-foreground" />
+          İptal politikası
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Randevu başlangıcından 2 saat öncesine kadar ücretsiz iptal edebilirsiniz.
+        </p>
       </div>
 
       <form action={formAction} className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
@@ -260,6 +333,9 @@ export function BookingSummary({
         )}
         <input type="hidden" name="date" value={dateStr} />
         <input type="hidden" name="time" value={time} />
+        {customerNote.trim() && (
+          <input type="hidden" name="customerNote" value={customerNote.trim()} />
+        )}
 
         {state.message && !state.success && (
           <div className="mb-3 flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3">

@@ -226,12 +226,29 @@ export function BookingWizard({
   const hasProfessionals = business.professionals.length > 0;
   const redirectUrl = `/b/${business.slug}/book${primaryService ? `?service=${primaryService.id}` : ""}`;
 
+  const singleEligibleProfessional = useMemo(() => {
+    if (kind !== "single") return undefined;
+    const meGuest = guests.find((g) => g.id === "me");
+    const serviceIds = meGuest?.serviceIds ?? [];
+    if (serviceIds.length === 0) return undefined;
+    const eligible = business.professionals.filter((p) =>
+      serviceIds.every((sid) => p.services.some((s) => s.serviceId === sid))
+    );
+    return eligible.length === 1 ? eligible[0] : undefined;
+  }, [kind, guests, business.professionals]);
+
   function goBack() {
     if (step === "kind") return;
     if (step === "services") setStep("kind");
     if (step === "guests") setStep("services");
     if (step === "experts") setStep(kind === "group" ? "guests" : "services");
-    if (step === "datetime") setStep(hasProfessionals ? "experts" : kind === "group" ? "guests" : "services");
+    if (step === "datetime") {
+      if (singleEligibleProfessional) {
+        setStep(kind === "group" ? "guests" : "services");
+      } else {
+        setStep(hasProfessionals ? "experts" : kind === "group" ? "guests" : "services");
+      }
+    }
     if (step === "firstVisit") setStep("datetime");
     if (step === "summary") setStep("firstVisit");
   }
@@ -289,7 +306,21 @@ export function BookingWizard({
 
   function continueFromServices() {
     if (activeGuest.serviceIds.length === 0) return;
-    setStep(kind === "group" ? "guests" : hasProfessionals ? "experts" : "datetime");
+    if (kind === "group") {
+      setStep("guests");
+      return;
+    }
+    if (singleEligibleProfessional) {
+      const next: Record<string, string | null> = {};
+      activeGuest.serviceIds.forEach((sid) => {
+        next[guestServiceKey(activeGuest.id, sid)] = singleEligibleProfessional.id;
+      });
+      setProfessionalByItem(next);
+      setExpertMode("custom");
+      setStep("datetime");
+      return;
+    }
+    setStep(hasProfessionals ? "experts" : "datetime");
   }
 
   return (
@@ -534,6 +565,7 @@ export function BookingWizard({
             selectedDate={selectedDate}
             selectedTime={selectedTime}
             isLoggedIn={isLoggedIn}
+            professionalName={selectedItems[0]?.professional?.displayName ?? undefined}
             onSelectDate={(date) => {
               setSelectedDate(date);
               setSelectedTime(null);

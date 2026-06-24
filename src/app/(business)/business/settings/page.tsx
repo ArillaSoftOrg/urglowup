@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, ExternalLink, Globe } from "lucide-react";
 import { BusinessPageHeader } from "@/components/business/business-page-header";
 import { GroupBookingSettingsForm } from "@/components/business/group-booking-settings-form";
+import { CancellationSettingsForm } from "@/components/business/cancellation-settings-form";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants, Button } from "@/components/ui/button";
 import {
@@ -63,6 +64,7 @@ export default async function SettingsPage() {
       status: true,
       isMarketplaceVisible: true,
       maxGroupBookingGuests: true,
+      cancellationWindowHours: true,
       createdAt: true,
     },
   });
@@ -144,6 +146,20 @@ export default async function SettingsPage() {
         <CardContent>
           <GroupBookingSettingsForm
             maxGroupBookingGuests={business.maxGroupBookingGuests}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">İptal Politikası</CardTitle>
+          <CardDescription>
+            Müşterilerin randevularını ücretsiz iptal edebileceği minimum süre.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CancellationSettingsForm
+            cancellationWindowHours={business.cancellationWindowHours}
           />
         </CardContent>
       </Card>
