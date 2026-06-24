@@ -17,8 +17,8 @@ import { MobileHeroGallery } from "@/components/business-profile/mobile-hero-gal
 import { SectionNav, type NavSection } from "@/components/business-profile/section-nav";
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { HoursSection } from "@/components/business-profile/hours-section";
+import { LocationSection } from "@/components/business-profile/location-section";
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails } from "@/lib/queries/business";
@@ -85,20 +85,11 @@ function ServicesPreview({
   business: BusinessWithDetails;
   hrefPrefix?: string;
 }) {
-  const categories = business.categories.map((bc) => bc.category);
+  const categories: Array<{ id: string; name: string }> = [];
 
   return (
     <section id="services" className="scroll-mt-[106px] border-t border-border/70 px-5 py-8">
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold tracking-normal">Hizmetler</h2>
-          {business.services.length > 0 && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {business.services.length} hizmet mevcut
-            </p>
-          )}
-        </div>
-      </div>
+      <h2 className="mb-4 text-xl font-bold tracking-normal">Hizmetler</h2>
 
       {categories.length > 0 && (
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
@@ -116,30 +107,26 @@ function ServicesPreview({
         </div>
       )}
 
-      <div className="divide-y rounded-xl border bg-background shadow-sm">
+      <div className="space-y-3">
         {business.services.slice(0, 5).map((service) => {
           const price = formatPrice(service);
           return (
             <Link
               key={service.id}
               href={`${hrefPrefix}/b/${business.slug}/book?service=${service.id}`}
-              className="group flex items-start justify-between gap-4 px-4 py-4 transition-colors hover:bg-muted/40 active:bg-muted/60"
+              className="group flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-background px-4 py-4 shadow-xs transition-colors hover:bg-muted/30 active:bg-muted/50"
             >
               <div className="min-w-0">
-                <p className="text-sm font-semibold group-hover:text-primary">{service.name}</p>
-                {service.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    {service.description}
-                  </p>
-                )}
-                <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <p className="text-sm font-semibold text-foreground group-hover:text-primary">{service.name}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Clock className="size-3.5" />
                   {service.durationMinutes} dk
                 </p>
+                {price && <p className="mt-2 text-sm font-bold text-foreground">{price}</p>}
               </div>
-              {price && (
-                <span className="shrink-0 text-sm font-bold">{price}</span>
-              )}
+              <span className="shrink-0 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-xs">
+                Rezervasyon
+              </span>
             </Link>
           );
         })}
@@ -211,6 +198,12 @@ export function MobileBusinessProfile({
         </div>
       </header>
 
+      <SectionNav
+        sections={navSections}
+        revealAfterId="about"
+        className="bg-background/95 md:hidden"
+      />
+
       <section id="gallery" className="scroll-mt-[106px]">
         <MobileHeroGallery
           items={galleryItems}
@@ -252,16 +245,6 @@ export function MobileBusinessProfile({
             </div>
           )}
 
-          {categories.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {categories.map((category) => (
-                <Badge key={category.id} variant="neutral">
-                  {category.name}
-                </Badge>
-              ))}
-            </div>
-          )}
-
           {addressQuery && (
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
@@ -276,14 +259,9 @@ export function MobileBusinessProfile({
 
         </section>
 
-        <SectionNav
-          sections={navSections}
-          className="top-14 border-t bg-background/95 md:hidden"
-        />
-
         {hasAbout && (
           <section id="about" className="scroll-mt-[106px] px-5 pt-4">
-            <AboutSection business={business} />
+            <AboutSection business={business} showLocation={false} />
           </section>
         )}
 
@@ -293,6 +271,7 @@ export function MobileBusinessProfile({
           <BusinessPortfolioSection items={portfolioItems} business={business} />
           <section id="other" className="scroll-mt-[106px] space-y-8">
             <ReviewsSection business={business} reviewSummary={reviewSummary} />
+            <LocationSection business={business} />
             <HoursSection business={business} />
           </section>
         </div>

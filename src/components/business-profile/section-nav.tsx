@@ -11,11 +11,14 @@ export interface NavSection {
 export function SectionNav({
   sections,
   className,
+  revealAfterId,
 }: {
   sections: NavSection[];
   className?: string;
+  revealAfterId?: string;
 }) {
   const [activeId, setActiveId] = useState<string>(sections[0]?.id ?? "");
+  const [revealed, setRevealed] = useState(!revealAfterId);
   const shellRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -71,6 +74,27 @@ export function SectionNav({
     };
   }, [sections, getStickyOffset, getVisibleSection]);
 
+  useEffect(() => {
+    if (!revealAfterId) {
+      setRevealed(true);
+      return;
+    }
+
+    const syncReveal = () => {
+      const el = getVisibleSection(revealAfterId);
+      if (!el) return;
+      setRevealed(el.getBoundingClientRect().top <= getStickyOffset() + 4);
+    };
+
+    window.addEventListener("scroll", syncReveal, { passive: true });
+    window.addEventListener("resize", syncReveal);
+    syncReveal();
+    return () => {
+      window.removeEventListener("scroll", syncReveal);
+      window.removeEventListener("resize", syncReveal);
+    };
+  }, [getStickyOffset, getVisibleSection, revealAfterId]);
+
   const handleClick = (id: string) => {
     const el = getVisibleSection(id);
     if (!el) return;
@@ -90,8 +114,11 @@ export function SectionNav({
       ref={shellRef}
       aria-label="Sayfa bölümleri"
       className={cn(
-        "sticky top-14 z-30 border-b bg-background/95 backdrop-blur-sm md:top-20",
+        revealAfterId
+          ? "fixed inset-x-0 top-14 z-30 border-b bg-background/95 backdrop-blur-sm transition-all duration-200 ease-out md:sticky md:top-20"
+          : "sticky top-14 z-30 border-b bg-background/95 backdrop-blur-sm md:top-20",
         "supports-[backdrop-filter]:bg-background/90",
+        revealAfterId && !revealed && "pointer-events-none -translate-y-full opacity-0",
         className,
       )}
     >

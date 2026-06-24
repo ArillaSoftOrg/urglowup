@@ -69,7 +69,7 @@ export function MobileHeroGallery({
   return (
     <section className="pt-3">
       {items.length > 0 ? (
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-3 scroll-pl-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {items.map((item, index) => (
             <button
               key={item.id}
@@ -106,7 +106,7 @@ export function MobileHeroGallery({
               )}
 
               {items.length > 1 && (
-                <div className="absolute bottom-3 right-3 rounded-full bg-foreground/80 px-3 py-1 text-sm font-bold text-background shadow-sm">
+                <div className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white shadow-sm">
                   {index + 1}/{items.length}
                 </div>
               )}

@@ -32,7 +32,13 @@ const SOCIAL_LINKS = [
   },
 ];
 
-export function AboutSection({ business }: { business: BusinessWithDetails }) {
+export function AboutSection({
+  business,
+  showLocation = true,
+}: {
+  business: BusinessWithDetails;
+  showLocation?: boolean;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [overflows, setOverflows] = useState(false);
@@ -171,7 +177,7 @@ export function AboutSection({ business }: { business: BusinessWithDetails }) {
         )}
       </div>
 
-      {hasAddress && <LocationSection business={business} showTitle={false} />}
+      {showLocation && hasAddress && <LocationSection business={business} showTitle={false} />}
     </div>
   );
 }
