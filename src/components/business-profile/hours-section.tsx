@@ -81,12 +81,12 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
   const visibleFeatures = FEATURE_OPTIONS.filter((feature) => business[feature.key]);
 
   return (
-    <div className="grid gap-10 border-t border-border/70 pt-10 md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 lg:max-w-5xl">
+    <div className="space-y-9 border-t border-border/70 pt-9 md:grid md:max-w-5xl md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 md:space-y-0 md:pt-10">
       <section aria-labelledby="opening-hours-title" className="space-y-5">
-        <h2 id="opening-hours-title" className="text-2xl font-bold tracking-normal text-foreground">
+        <h2 id="opening-hours-title" className="text-[22px] font-bold leading-tight tracking-normal text-foreground md:text-2xl">
           Açılış saatleri
         </h2>
-        <div className="space-y-3">
+        <div className="space-y-2.5 md:space-y-3">
           {sorted.map((hour) => {
             if (!hour) return null;
 
@@ -96,12 +96,12 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
             return (
               <div
                 key={hour.dayOfWeek}
-                className="grid grid-cols-[1fr_auto] items-center gap-4 text-[15px] leading-6 text-foreground"
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 text-base leading-6 text-foreground md:text-[15px]"
               >
-                <span className="flex min-w-0 items-center gap-4">
+                <span className="flex min-w-0 items-center gap-3 md:gap-4">
                   <span
                     aria-hidden="true"
-                    className={`size-4 shrink-0 rounded-full ${
+                    className={`size-3.5 shrink-0 rounded-full md:size-4 ${
                       hasHours ? "bg-success-foreground" : "bg-muted-foreground/35"
                     }`}
                   />
@@ -109,7 +109,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
                     {DAY_LABELS[hour.dayOfWeek]}
                   </span>
                 </span>
-                <span className={isToday ? "font-bold" : "font-medium"}>
+                <span className={isToday ? "font-bold" : "font-medium text-muted-foreground md:text-foreground"}>
                   {hasHours
                     ? `${formatTime(hour.openTime!)} – ${formatTime(hour.closeTime!)}`
                     : "Kapalı"}
@@ -121,18 +121,18 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
       </section>
 
       {visibleFeatures.length > 0 && (
-        <section aria-labelledby="profile-features-title" className="space-y-5">
-          <h2 id="profile-features-title" className="text-2xl font-bold tracking-normal text-foreground">
+        <section aria-labelledby="profile-features-title" className="space-y-5 border-t border-border/70 pt-9 md:border-t-0 md:pt-0">
+          <h2 id="profile-features-title" className="text-[22px] font-bold leading-tight tracking-normal text-foreground md:text-2xl">
             Ek bilgiler
           </h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-3 md:flex md:flex-wrap md:gap-2 md:space-y-0">
             {visibleFeatures.map((feature) => {
               const Icon = feature.icon;
 
               return (
                 <span
                   key={feature.key}
-                  className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-muted/40 px-4 py-2 text-sm font-medium text-foreground"
+                  className="flex items-center gap-3 text-base font-medium text-foreground md:inline-flex md:gap-2 md:rounded-full md:border md:border-border/80 md:bg-muted/40 md:px-4 md:py-2 md:text-sm"
                 >
                   <Icon className="size-4 shrink-0 stroke-[1.75]" />
                   {feature.label}

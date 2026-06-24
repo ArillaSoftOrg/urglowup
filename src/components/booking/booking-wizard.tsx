@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -172,6 +173,7 @@ export function BookingWizard({
   initialServiceId?: string;
   initialProfessionalId?: string;
 }) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("kind");
   const [kind, setKind] = useState<BookingKind>("single");
   const [activeGuestId, setActiveGuestId] = useState("me");
@@ -192,6 +194,8 @@ export function BookingWizard({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [firstVisit, setFirstVisit] = useState<boolean | null>(null);
+  const [exitPending, setExitPending] = useState(false);
+  const [bookingCompleted, setBookingCompleted] = useState(false);
 
   const servicesById = useMemo(
     () => new Map(business.services.map((service) => [service.id, service])),
@@ -236,6 +240,34 @@ export function BookingWizard({
     );
     return eligible.length === 1 ? eligible[0] : undefined;
   }, [kind, guests, business.professionals]);
+
+  const hasProgress = step !== "kind" && !bookingCompleted;
+
+  function handleExit() {
+    if (hasProgress) {
+      setExitPending(true);
+    } else {
+      router.push(`/b/${business.slug}`);
+    }
+  }
+
+  function confirmExit() {
+    router.push(`/b/${business.slug}`);
+  }
+
+  useEffect(() => {
+    if (!hasProgress) return;
+
+    history.pushState(null, "", location.href);
+
+    function handlePopState() {
+      history.pushState(null, "", location.href);
+      setExitPending(true);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [hasProgress]);
 
   function goBack() {
     if (step === "kind") return;
@@ -344,13 +376,14 @@ export function BookingWizard({
             <ArrowLeft className="size-6" />
           </button>
         )}
-        <Link
-          href={`/b/${business.slug}`}
+        <button
+          type="button"
+          onClick={handleExit}
           className="flex size-11 items-center justify-center rounded-full text-foreground hover:bg-surface-cream"
           aria-label="Randevu akışını kapat"
         >
           <X className="size-6" />
-        </Link>
+        </button>
       </div>
 
       {step === "kind" && (
@@ -630,10 +663,63 @@ export function BookingWizard({
             date={selectedDate}
             time={selectedTime}
             firstVisit={firstVisit}
+            onComplete={() => setBookingCompleted(true)}
           />
         ) : (
           <LoginPrompt redirectUrl={redirectUrl} />
         ))}
+
+      {exitPending && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/60"
+            onClick={() => setExitPending(false)}
+            aria-hidden="true"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exit-modal-title"
+            className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-background px-6 pb-10 pt-6 shadow-xl lg:inset-auto lg:left-1/2 lg:top-1/2 lg:w-full lg:max-w-md lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-2xl"
+          >
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <h2 id="exit-modal-title" className="text-lg font-bold leading-snug">
+                Çıkmak istediğinizden emin misiniz?
+              </h2>
+              <button
+                type="button"
+                onClick={() => setExitPending(false)}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-surface-cream"
+                aria-label="Kapat"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Rezervasyonunuz tamamlanmadı ve ilerlemeniz kaybolacak.
+            </p>
+            <div className="mt-6 flex flex-col gap-3">
+              <Button
+                type="button"
+                size="lg"
+                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/90"
+                onClick={confirmExit}
+              >
+                Evet, çık
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full rounded-full"
+                onClick={() => setExitPending(false)}
+              >
+                Kapat
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

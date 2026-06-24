@@ -88,7 +88,7 @@ function ServicesPreview({
   const categories = business.categories.map((bc) => bc.category);
 
   return (
-    <section id="services" className="scroll-mt-[106px] border-t bg-background px-5 py-8">
+    <section id="services" className="scroll-mt-[106px] border-t border-border/70 px-5 py-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-normal">Hizmetler</h2>
@@ -211,8 +211,6 @@ export function MobileBusinessProfile({
         </div>
       </header>
 
-      <SectionNav sections={navSections} className="bg-background/95" />
-
       <section id="gallery" className="scroll-mt-[106px]">
         <MobileHeroGallery
           items={galleryItems}
@@ -221,8 +219,8 @@ export function MobileBusinessProfile({
         />
       </section>
 
-      <div className="bg-background">
-        <section className="relative z-10 mx-3 -mt-9 rounded-[28px] border border-border/40 bg-background px-5 pb-5 pt-7 shadow-lg">
+      <main className="relative z-10 -mt-10 overflow-hidden rounded-t-[30px] bg-background shadow-lg">
+        <section className="px-5 pb-5 pt-7">
           <h1 className="text-2xl font-bold leading-tight tracking-normal">
             {business.name}
           </h1>
@@ -278,22 +276,27 @@ export function MobileBusinessProfile({
 
         </section>
 
+        <SectionNav
+          sections={navSections}
+          className="top-14 border-t bg-background/95 md:hidden"
+        />
+
         {hasAbout && (
           <section id="about" className="scroll-mt-[106px] px-5 pt-4">
             <AboutSection business={business} />
           </section>
         )}
-      </div>
 
-      <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
+        <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
-      <div className="space-y-8 bg-background px-5 py-8">
-        <BusinessPortfolioSection items={portfolioItems} business={business} />
-        <section id="other" className="scroll-mt-[106px] space-y-8">
-          <HoursSection business={business} />
-          <ReviewsSection business={business} reviewSummary={reviewSummary} />
-        </section>
-      </div>
+        <div className="space-y-8 px-5 py-8">
+          <BusinessPortfolioSection items={portfolioItems} business={business} />
+          <section id="other" className="scroll-mt-[106px] space-y-8">
+            <ReviewsSection business={business} reviewSummary={reviewSummary} />
+            <HoursSection business={business} />
+          </section>
+        </div>
+      </main>
 
       <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/90 md:hidden">
         {business.services.length > 0 && (

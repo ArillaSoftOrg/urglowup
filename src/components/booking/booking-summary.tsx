@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import {
   AlertCircle,
@@ -58,17 +58,25 @@ export function BookingSummary({
   date,
   time,
   firstVisit,
+  onComplete,
 }: {
   business: BookingBusiness;
   items: BookingSummaryItem[];
   date: Date;
   time: string;
   firstVisit: boolean;
+  onComplete?: () => void;
 }) {
   const [state, formAction, isPending] = useActionState<
     BookingActionState,
     FormData
   >(createAppointmentRequest, { success: false });
+
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    if (state.success) onCompleteRef.current?.();
+  }, [state.success]);
   const [couponCode, setCouponCode] = useState("");
   const [couponState, setCouponState] = useState<
     | null
