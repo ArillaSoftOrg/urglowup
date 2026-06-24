@@ -10,6 +10,9 @@ import { MobileBusinessProfile } from "@/components/business-profile/mobile-busi
 import { ProfileEndingSection } from "@/components/business-profile/profile-ending-section";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { getMarketplaceBusinesses } from "@/lib/queries/marketplace";
+import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { UserRole } from "@/generated/prisma/enums";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -55,6 +58,30 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  const p = (path: string) => (locale === "tr" ? path : `/${locale}${path}`);
+  const user = await getCurrentUser();
+  const membership =
+    user && user.role !== UserRole.ADMIN
+      ? await db.businessMember.findFirst({
+          where: { userId: user.id },
+          select: { id: true },
+          orderBy: { createdAt: "asc" },
+        })
+      : null;
+  const accountHref = user
+    ? user.role === UserRole.ADMIN
+      ? "/admin"
+      : membership
+        ? "/business/dashboard"
+        : p("/account")
+    : p("/login");
+  const isFavorited = user
+    ? !!(await db.favorite.findUnique({
+        where: { userId_businessId: { userId: user.id, businessId: business.id } },
+        select: { id: true },
+      }))
+    : false;
+
   const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw] = await Promise.all([
     getBusinessReviewSummary(business.id),
     getGoogleReviewsForBusiness(business.id),
@@ -87,6 +114,8 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           isOpen={isOpen}
           location={location}
           locale={locale}
+          isLoggedIn={!!user}
+          initialIsFavorited={isFavorited}
         />
         <DesktopBusinessProfile
           business={business}
@@ -95,6 +124,9 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           isOpen={isOpen}
           location={location}
           locale={locale}
+          accountHref={accountHref}
+          isLoggedIn={!!user}
+          initialIsFavorited={isFavorited}
         />
         <ProfileEndingSection
           business={business}

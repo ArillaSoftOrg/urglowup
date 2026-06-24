@@ -12,7 +12,9 @@ import { isBusinessOpen } from "@/components/business-profile/hours-section";
 import { MobileBusinessProfile } from "@/components/business-profile/mobile-business-profile";
 import { ProfileEndingSection } from "@/components/business-profile/profile-ending-section";
 import { getMarketplaceBusinesses } from "@/lib/queries/marketplace";
+import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { UserRole } from "@/generated/prisma/enums";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -75,6 +77,29 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
       data: { businessId: business.id, source },
     })
   );
+
+  const user = await getCurrentUser();
+  const membership =
+    user && user.role !== UserRole.ADMIN
+      ? await db.businessMember.findFirst({
+          where: { userId: user.id },
+          select: { id: true },
+          orderBy: { createdAt: "asc" },
+        })
+      : null;
+  const accountHref = user
+    ? user.role === UserRole.ADMIN
+      ? "/admin"
+      : membership
+        ? "/business/dashboard"
+        : "/account"
+    : "/login";
+  const isFavorited = user
+    ? !!(await db.favorite.findUnique({
+        where: { userId_businessId: { userId: user.id, businessId: business.id } },
+        select: { id: true },
+      }))
+    : false;
 
   const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw] = await Promise.all([
     getBusinessReviewSummary(business.id),
@@ -198,6 +223,8 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
           reviewSummary={reviewSummary}
           isOpen={isOpen}
           location={location}
+          isLoggedIn={!!user}
+          initialIsFavorited={isFavorited}
         />
         <DesktopBusinessProfile
           business={business}
@@ -205,6 +232,9 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
           googleReviews={googleReviews}
           isOpen={isOpen}
           location={location}
+          accountHref={accountHref}
+          isLoggedIn={!!user}
+          initialIsFavorited={isFavorited}
         />
         <ProfileEndingSection
           business={business}

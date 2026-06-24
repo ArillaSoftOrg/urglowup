@@ -3,12 +3,11 @@ import {
   ArrowLeft,
   CalendarCheck,
   Clock,
-  Heart,
   MapPin,
   Navigation,
-  Share2,
   Star,
 } from "lucide-react";
+import { ShareFavoriteButtons } from "@/components/business-profile/share-favorite-buttons";
 import { AboutSection } from "@/components/business-profile/about-section";
 import {
   buildGalleryItems,
@@ -155,12 +154,16 @@ export function MobileBusinessProfile({
   isOpen,
   location,
   locale,
+  isLoggedIn = false,
+  initialIsFavorited = false,
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
   isOpen: boolean;
   location: string;
   locale?: string;
+  isLoggedIn?: boolean;
+  initialIsFavorited?: boolean;
 }) {
   const galleryItems = buildGalleryItems(business);
   const portfolioItems = buildPortfolioItems(business);
@@ -197,20 +200,14 @@ export function MobileBusinessProfile({
           {business.name}
         </p>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            aria-label="Paylaş"
-            className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
-          >
-            <Share2 className="size-5" />
-          </button>
-          <button
-            type="button"
-            aria-label="Favorilere ekle"
-            className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
-          >
-            <Heart className="size-5" />
-          </button>
+          <ShareFavoriteButtons
+            businessId={business.id}
+            businessName={business.name}
+            businessSlug={business.slug}
+            initialIsFavorited={initialIsFavorited}
+            isLoggedIn={isLoggedIn}
+            variant="mobile"
+          />
         </div>
       </header>
 
@@ -224,67 +221,69 @@ export function MobileBusinessProfile({
         />
       </section>
 
-      <section className="relative z-10 mx-4 -mt-9 rounded-[28px] border border-border/40 bg-background px-5 pb-7 pt-8 shadow-lg">
-        <h1 className="text-2xl font-bold leading-tight tracking-normal">
-          {business.name}
-        </h1>
-        {primaryCategory && (
-          <p className="mt-1 text-sm font-medium text-muted-foreground">{primaryCategory}</p>
-        )}
-
-        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm">
-          {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
-            <>
-              <span className="inline-flex items-center gap-1 font-semibold">
-                <Star className="size-3.5 fill-rating text-rating" />
-                {reviewSummary.averageRating.toFixed(1)}
-                <span className="font-normal text-muted-foreground">({reviewSummary.totalCount})</span>
-              </span>
-              <span aria-hidden className="text-muted-foreground/50">·</span>
-            </>
+      <div className="bg-background">
+        <section className="relative z-10 mx-3 -mt-9 rounded-[28px] border border-border/40 bg-background px-5 pb-5 pt-7 shadow-lg">
+          <h1 className="text-2xl font-bold leading-tight tracking-normal">
+            {business.name}
+          </h1>
+          {primaryCategory && (
+            <p className="mt-1 text-sm font-medium text-muted-foreground">{primaryCategory}</p>
           )}
-          <span className={cn("inline-flex items-center gap-1 text-sm", !isOpen && "text-warning-foreground")}>
-            <Clock className="size-3.5" />
-            {isOpen ? "Açık" : getNextOpenLabel(business.hours)}
-          </span>
-        </div>
 
-        {location && (
-          <div className="mt-3 flex min-h-11 items-center gap-2 rounded-xl bg-surface-cream px-3 py-2.5 text-sm shadow-xs">
-            <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1 truncate font-medium">{location}</span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            {reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null && (
+              <>
+                <span className="inline-flex items-center gap-1 font-semibold">
+                  <Star className="size-3.5 fill-rating text-rating" />
+                  {reviewSummary.averageRating.toFixed(1)}
+                  <span className="font-normal text-muted-foreground">({reviewSummary.totalCount})</span>
+                </span>
+                <span aria-hidden className="text-muted-foreground/50">·</span>
+              </>
+            )}
+            <span className={cn("inline-flex items-center gap-1 text-sm", !isOpen && "text-warning-foreground")}>
+              <Clock className="size-3.5" />
+              {isOpen ? "Açık" : getNextOpenLabel(business.hours)}
+            </span>
           </div>
-        )}
 
-        {categories.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {categories.map((category) => (
-              <Badge key={category.id} variant="neutral">
-                {category.name}
-              </Badge>
-            ))}
-          </div>
-        )}
+          {location && (
+            <div className="mt-2 flex min-h-10 items-center gap-2 rounded-xl bg-surface-cream px-3 py-2.5 text-sm shadow-xs">
+              <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate font-medium">{location}</span>
+            </div>
+          )}
 
-        {addressQuery && (
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-full px-0 text-sm font-semibold text-foreground transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <Navigation className="size-3.5" />
-            Adres tarifi alın
-          </a>
-        )}
+          {categories.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {categories.map((category) => (
+                <Badge key={category.id} variant="neutral">
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
+          )}
 
-      </section>
+          {addressQuery && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex min-h-10 items-center gap-2 rounded-full px-0 text-sm font-semibold text-foreground transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <Navigation className="size-3.5" />
+              Adres tarifi alın
+            </a>
+          )}
 
-      {hasAbout && (
-        <section id="about" className="scroll-mt-[106px] bg-background px-5 pt-7">
-          <AboutSection business={business} />
         </section>
-      )}
+
+        {hasAbout && (
+          <section id="about" className="scroll-mt-[106px] px-5 pt-4">
+            <AboutSection business={business} />
+          </section>
+        )}
+      </div>
 
       <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
 

@@ -69,7 +69,7 @@ export function MobileHeroGallery({
   return (
     <section className="pt-3">
       {items.length > 0 ? (
-        <div className="business-panel-mask flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {items.map((item, index) => (
             <button
               key={item.id}

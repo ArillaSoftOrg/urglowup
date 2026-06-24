@@ -1,13 +1,11 @@
 import Link from "next/link";
 import {
-  ChevronDown,
   Clock,
-  Heart,
   MapPin,
   Navigation,
-  Share2,
   Star,
 } from "lucide-react";
+import { ShareFavoriteButtons } from "@/components/business-profile/share-favorite-buttons";
 import { AboutSection } from "@/components/business-profile/about-section";
 import {
   BusinessGalleryHero,
@@ -74,7 +72,7 @@ function pathWithLocale(path: string, locale?: string) {
   return locale && locale !== "tr" ? `/${locale}${path}` : path;
 }
 
-function DesktopSearchHeader({ locale }: { locale?: string }) {
+function DesktopSearchHeader({ locale, accountHref }: { locale?: string; accountHref: string }) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
       <div className="mx-auto flex h-20 max-w-[1440px] items-center gap-8 px-5 sm:px-6 lg:px-10 xl:px-12">
@@ -95,16 +93,15 @@ function DesktopSearchHeader({ locale }: { locale?: string }) {
             İşletme Paneliniz
           </Link>
 
-          <button
-            type="button"
-            aria-label="Hesap menüsü"
-            className="flex h-10 items-center gap-2 rounded-full border bg-background px-2.5 shadow-sm lg:h-11 lg:gap-3 lg:px-3"
+          <Link
+            href={accountHref}
+            aria-label="Hesap"
+            className="flex h-10 items-center gap-2 rounded-full border bg-background px-2.5 shadow-sm transition hover:bg-muted lg:h-11 lg:gap-3 lg:px-3"
           >
             <span className="flex size-7 items-center justify-center rounded-full bg-muted text-sm font-bold lg:size-8">
               U
             </span>
-            <ChevronDown className="size-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>
@@ -158,11 +155,15 @@ function DesktopTitleBlock({
   reviewSummary,
   isOpen,
   location,
+  isLoggedIn,
+  initialIsFavorited,
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
   isOpen: boolean;
   location: string;
+  isLoggedIn: boolean;
+  initialIsFavorited: boolean;
 }) {
   const addressQuery = [business.name, business.address, business.district, business.city]
     .filter(Boolean)
@@ -225,20 +226,14 @@ function DesktopTitleBlock({
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        <button
-          type="button"
-          aria-label="Paylaş"
-          className="flex size-13 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
-        >
-          <Share2 className="size-5" />
-        </button>
-        <button
-          type="button"
-          aria-label="Favorilere ekle"
-          className="flex size-13 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-muted"
-        >
-          <Heart className="size-5" />
-        </button>
+        <ShareFavoriteButtons
+          businessId={business.id}
+          businessName={business.name}
+          businessSlug={business.slug}
+          initialIsFavorited={initialIsFavorited}
+          isLoggedIn={isLoggedIn}
+          variant="desktop"
+        />
       </div>
     </div>
   );
@@ -251,6 +246,9 @@ export function DesktopBusinessProfile({
   isOpen,
   location,
   locale,
+  accountHref = "/login",
+  isLoggedIn = false,
+  initialIsFavorited = false,
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
@@ -258,6 +256,9 @@ export function DesktopBusinessProfile({
   isOpen: boolean;
   location: string;
   locale?: string;
+  accountHref?: string;
+  isLoggedIn?: boolean;
+  initialIsFavorited?: boolean;
 }) {
   const galleryItems = buildGalleryItems(business);
   const portfolioItems = buildPortfolioItems(business);
@@ -276,7 +277,7 @@ export function DesktopBusinessProfile({
 
   return (
     <div className="hidden bg-background md:block">
-      <DesktopSearchHeader locale={locale} />
+      <DesktopSearchHeader locale={locale} accountHref={accountHref} />
 
       <div className="mx-auto max-w-[1440px] space-y-5 px-5 pb-8 pt-6 sm:px-6 lg:space-y-6 lg:px-10 lg:pt-7 xl:px-12">
         <DesktopBreadcrumbs business={business} locale={locale} />
@@ -285,6 +286,8 @@ export function DesktopBusinessProfile({
           reviewSummary={reviewSummary}
           isOpen={isOpen}
           location={location}
+          isLoggedIn={isLoggedIn}
+          initialIsFavorited={initialIsFavorited}
         />
         <section id="gallery" className="scroll-mt-[130px]">
           <BusinessGalleryHero business={business} />
