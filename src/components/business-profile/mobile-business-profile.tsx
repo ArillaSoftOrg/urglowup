@@ -180,13 +180,14 @@ export function MobileBusinessProfile({
 
         </section>
 
+        <SectionNav
+          sections={navSections}
+          initialActiveId={navSections[0]?.id ?? "services"}
+          className="border-t bg-background/95 md:hidden"
+        />
+
         {hasAbout && (
           <section id="about" className="scroll-mt-[106px]">
-            <SectionNav
-              sections={navSections}
-              initialActiveId="about"
-              className="border-t bg-background/95 md:hidden"
-            />
             <div className="px-5 pt-5">
               <AboutSection
                 business={business}
