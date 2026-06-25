@@ -67,16 +67,16 @@ export function MobileHeroGallery({
   const current = openIndex !== null ? items[openIndex] : null;
 
   return (
-    <section className="pt-3">
+    <section className="pt-0">
       {items.length > 0 ? (
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-3 scroll-pl-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-3 scroll-px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {items.map((item, index) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setOpenIndex(index)}
               aria-label="Görselleri görüntüle"
-              className="relative block aspect-[4/3] w-[86vw] max-w-[420px] shrink-0 snap-start overflow-hidden rounded-2xl bg-muted shadow-sm ring-1 ring-foreground/5 transition-transform active:scale-[0.99] focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="relative block aspect-[4/3] w-[calc(100vw-40px)] max-w-[420px] shrink-0 snap-center overflow-hidden rounded-2xl bg-muted shadow-sm ring-1 ring-foreground/5 transition-transform active:scale-[0.99] focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {item.isVideo ? (
                 <>
@@ -99,7 +99,7 @@ export function MobileHeroGallery({
                   src={item.thumbnailUrl}
                   alt={item.title ?? businessName}
                   fill
-                  sizes="86vw"
+                  sizes="calc(100vw - 40px)"
                   className="object-cover"
                   priority={index === 0}
                 />

@@ -96,20 +96,24 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
             return (
               <div
                 key={hour.dayOfWeek}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 text-base leading-6 text-foreground md:text-[15px]"
+                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-xl px-3 py-2 text-base leading-6 md:text-[15px] ${
+                  hasHours
+                    ? "bg-emerald-50 text-emerald-800"
+                    : "bg-amber-50 text-amber-800"
+                }`}
               >
                 <span className="flex min-w-0 items-center gap-3 md:gap-4">
                   <span
                     aria-hidden="true"
                     className={`size-3.5 shrink-0 rounded-full md:size-4 ${
-                      hasHours ? "bg-success-foreground" : "bg-muted-foreground/35"
+                      hasHours ? "bg-emerald-500" : "bg-amber-400"
                     }`}
                   />
                   <span className={isToday ? "font-bold" : "font-medium"}>
                     {DAY_LABELS[hour.dayOfWeek]}
                   </span>
                 </span>
-                <span className={isToday ? "font-bold" : "font-medium text-muted-foreground md:text-foreground"}>
+                <span className={isToday ? "font-bold" : "font-medium opacity-80"}>
                   {hasHours
                     ? `${formatTime(hour.openTime!)} – ${formatTime(hour.closeTime!)}`
                     : "Kapalı"}

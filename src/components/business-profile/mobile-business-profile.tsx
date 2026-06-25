@@ -223,7 +223,12 @@ export function MobileBusinessProfile({
                 <span aria-hidden className="text-muted-foreground/50">·</span>
               </>
             )}
-            <span className={cn("inline-flex items-center gap-1 text-sm", !isOpen && "text-warning-foreground")}>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-medium",
+                isOpen ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700",
+              )}
+            >
               <Clock className="size-3.5" />
               {isOpen ? "Açık" : getNextOpenLabel(business.hours)}
             </span>
@@ -241,20 +246,21 @@ export function MobileBusinessProfile({
 
         </section>
 
-        <SectionNav
-          sections={navSections}
-          initialActiveId={hasAbout ? "about" : navSections[0]?.id}
-          className="border-t bg-background/95 md:hidden"
-        />
-
         {hasAbout && (
-          <section id="about" className="scroll-mt-[106px] px-5">
-            <AboutSection
-              business={business}
-              showLocation={false}
-              showTopBorder={false}
-              inlineReadMore
+          <section id="about" className="scroll-mt-[106px]">
+            <SectionNav
+              sections={navSections}
+              initialActiveId="about"
+              className="border-t bg-background/95 md:hidden"
             />
+            <div className="px-5 pt-5">
+              <AboutSection
+                business={business}
+                showLocation={false}
+                showTopBorder={false}
+                inlineReadMore
+              />
+            </div>
           </section>
         )}
 
@@ -281,8 +287,8 @@ export function MobileBusinessProfile({
         <Link
           href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
-            buttonVariants({ variant: "brand", size: "lg" }),
-            "h-11 shrink-0 rounded-full px-6 text-sm font-bold",
+            buttonVariants({ size: "lg" }),
+            "h-11 shrink-0 rounded-full bg-foreground px-6 text-sm font-bold text-background shadow-lg shadow-foreground/15 hover:bg-foreground/90",
           )}
         >
           <CalendarCheck className="size-4" />

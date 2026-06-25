@@ -1,18 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Phone } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import { SocialIcon, type SocialIconName } from "@/components/shared/social-icons";
 import { LocationSection } from "./location-section";
-import { Phone } from "lucide-react";
 
 const SOCIAL_LINKS = [
   {
@@ -44,7 +38,6 @@ export function AboutSection({
   inlineReadMore?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
 
@@ -52,13 +45,17 @@ export function AboutSection({
   const hasContact = !!(business.phone || business.whatsapp);
   const hasAddress = business.address || business.city || business.district;
   const inlinePreviewLimit = 230;
-  const inlineText =
-    inlineReadMore && business.description && business.description.length > inlinePreviewLimit
-      ? `${business.description.slice(0, inlinePreviewLimit).trimEnd()}...`
-      : business.description;
+  const shouldInlineTruncate =
+    inlineReadMore &&
+    !expanded &&
+    !!business.description &&
+    business.description.length > inlinePreviewLimit;
+  const descriptionText = shouldInlineTruncate
+    ? `${business.description!.slice(0, inlinePreviewLimit).trimEnd()}...`
+    : business.description;
   const showReadMore =
     inlineReadMore && business.description
-      ? business.description.length > inlinePreviewLimit
+      ? !expanded && business.description.length > inlinePreviewLimit
       : overflows;
 
   useEffect(() => {
@@ -89,15 +86,14 @@ export function AboutSection({
                 !inlineReadMore && !expanded && "line-clamp-4",
               )}
             >
-              {inlineText}
+              {descriptionText}
             </p>
 
             {showReadMore && (
               <>
-                {/* Mobile: opens bottom sheet so text never competes with sticky CTA */}
                 <button
                   type="button"
-                  onClick={() => setSheetOpen(true)}
+                  onClick={() => setExpanded(true)}
                   className={cn(
                     "text-sm font-semibold text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden",
                     inlineReadMore ? "ml-1 inline align-baseline" : "mt-2.5 block",
@@ -106,30 +102,13 @@ export function AboutSection({
                   Devamını okuyun
                 </button>
 
-                {/* Desktop: expand in-place */}
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="mt-2.5 hidden text-sm font-semibold text-primary hover:underline focus:outline-none md:inline"
+                  className="mt-2.5 hidden text-sm font-semibold text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 md:inline"
                 >
                   {expanded ? "Daha az göster" : "Devamını oku"}
                 </button>
-
-                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <SheetContent
-                    side="bottom"
-                    className="max-h-[78dvh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom,24px)]"
-                  >
-                    <SheetHeader className="px-5 pb-3 pt-1">
-                      <SheetTitle className="text-base font-bold">Hakkında</SheetTitle>
-                    </SheetHeader>
-                    <div className="px-5 pb-6">
-                      <p className="whitespace-pre-line text-[15px] leading-[1.8] text-foreground/90">
-                        {business.description}
-                      </p>
-                    </div>
-                  </SheetContent>
-                </Sheet>
               </>
             )}
           </div>
@@ -192,7 +171,7 @@ export function AboutSection({
                     <SocialIcon name={icon} className="size-4 shrink-0" />
                     {label}
                   </a>
-                ) : null
+                ) : null,
               )}
             </div>
           </div>
