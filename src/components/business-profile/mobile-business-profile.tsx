@@ -13,6 +13,7 @@ import {
   buildPortfolioItems,
 } from "@/components/business-profile/business-gallery-hero";
 import { MobileHeroGallery } from "@/components/business-profile/mobile-hero-gallery";
+import { MobileServicesPreview } from "@/components/business-profile/mobile-services-preview";
 import { SectionNav, type NavSection } from "@/components/business-profile/section-nav";
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { HoursSection } from "@/components/business-profile/hours-section";
@@ -35,15 +36,6 @@ const DAY_LABELS: Record<string, string> = {
 interface ReviewSummary {
   averageRating: number | null;
   totalCount: number;
-}
-
-function formatPrice(service: BusinessWithDetails["services"][number]) {
-  if (service.priceType === "FREE_CONSULTATION") return "Ücretsiz danışma";
-  if (service.priceType === "CONSULTATION_REQUIRED") return "Fiyat için danışın";
-  if (!service.price) return null;
-
-  const amount = `₺${Number(service.price)}`;
-  return service.priceType === "STARTS_FROM" ? `${amount} itibaren` : amount;
 }
 
 const JS_TO_DAY = [
@@ -74,64 +66,6 @@ function getNextOpenLabel(hours: BusinessWithDetails["hours"]): string {
     return `Kapalı · ${DAY_LABELS[dayName]} ${time}'da açılacak`;
   }
   return "Kapalı";
-}
-
-
-function ServicesPreview({
-  business,
-  hrefPrefix = "",
-}: {
-  business: BusinessWithDetails;
-  hrefPrefix?: string;
-}) {
-  const categories: Array<{ id: string; name: string }> = [];
-
-  return (
-    <section id="services" className="scroll-mt-[106px] border-t border-border/70 px-5 py-8">
-      <h2 className="mb-4 text-2xl font-bold tracking-normal">Hizmetler</h2>
-
-      {categories.length > 0 && (
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-          <span className="inline-flex h-9 shrink-0 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground">
-            Öne Çıkanlar
-          </span>
-          {categories.map((category) => (
-            <span
-              key={category.id}
-              className="inline-flex h-9 shrink-0 items-center rounded-full border bg-background px-4 text-sm font-medium"
-            >
-              {category.name}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-3">
-        {business.services.slice(0, 5).map((service) => {
-          const price = formatPrice(service);
-          return (
-            <Link
-              key={service.id}
-              href={`${hrefPrefix}/b/${business.slug}/book?service=${service.id}`}
-              className="group flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-background px-4 py-4 shadow-xs transition-colors hover:bg-muted/30 active:bg-muted/50"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground group-hover:text-primary">{service.name}</p>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Clock className="size-3.5" />
-                  {service.durationMinutes} dk
-                </p>
-                {price && <p className="mt-2 text-sm font-bold text-foreground">{price}</p>}
-              </div>
-              <span className="shrink-0 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-xs">
-                Rezervasyon
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
-  );
 }
 
 export function MobileBusinessProfile({
@@ -169,7 +103,7 @@ export function MobileBusinessProfile({
   ];
 
   return (
-    <div className="min-h-screen bg-surface-cream pb-24 md:hidden">
+    <div className="min-h-screen bg-surface-cream md:hidden">
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Link
           href={hrefPrefix || "/"}
@@ -264,11 +198,11 @@ export function MobileBusinessProfile({
           </section>
         )}
 
-        <ServicesPreview business={business} hrefPrefix={hrefPrefix} />
+        <MobileServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
-        <div className="space-y-8 px-5 py-8">
+        <div className="space-y-8 px-5 pb-0">
           <BusinessPortfolioSection items={portfolioItems} business={business} />
-          <section id="other" className="scroll-mt-[106px] space-y-8">
+          <section className="space-y-8">
             <ReviewsSection business={business} reviewSummary={reviewSummary} />
             <section id="location" className="scroll-mt-[122px]">
               <LocationSection business={business} />

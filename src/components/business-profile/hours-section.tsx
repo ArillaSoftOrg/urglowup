@@ -81,12 +81,12 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
   const visibleFeatures = FEATURE_OPTIONS.filter((feature) => business[feature.key]);
 
   return (
-    <div className="space-y-9 border-t border-border/70 pt-8 md:grid md:max-w-5xl md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 md:space-y-0 md:pt-10">
-      <section aria-labelledby="opening-hours-title" className="space-y-5">
-        <h2 id="opening-hours-title" className="text-2xl font-bold tracking-normal">
+    <div className="space-y-8 border-t border-border/70 pt-8 md:grid md:max-w-5xl md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 md:space-y-0 md:pt-10">
+      <section aria-labelledby="opening-hours-title" className="space-y-4">
+        <h2 id="opening-hours-title" className="text-lg font-bold tracking-normal md:text-2xl">
           Açılış saatleri
         </h2>
-        <div className="space-y-2.5 md:space-y-3">
+        <div className="space-y-3 md:space-y-3">
           {sorted.map((hour) => {
             if (!hour) return null;
 
@@ -96,24 +96,20 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
             return (
               <div
                 key={hour.dayOfWeek}
-                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-xl px-3 py-2 text-base leading-6 md:text-[15px] ${
-                  hasHours
-                    ? "bg-emerald-50 text-emerald-800"
-                    : "bg-amber-50 text-amber-800"
-                }`}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 text-sm leading-5 text-foreground md:rounded-xl md:px-3 md:py-2 md:text-[15px]"
               >
-                <span className="flex min-w-0 items-center gap-3 md:gap-4">
+                <span className="flex min-w-0 items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className={`size-3.5 shrink-0 rounded-full md:size-4 ${
-                      hasHours ? "bg-emerald-500" : "bg-amber-400"
+                    className={`size-3 shrink-0 rounded-full ${
+                      hasHours ? "bg-[#62c93b]" : "bg-muted-foreground/35"
                     }`}
                   />
-                  <span className={isToday ? "font-bold" : "font-medium"}>
+                  <span className={isToday ? "font-bold" : hasHours ? "font-medium" : "font-semibold text-muted-foreground"}>
                     {DAY_LABELS[hour.dayOfWeek]}
                   </span>
                 </span>
-                <span className={isToday ? "font-bold" : "font-medium opacity-80"}>
+                <span className={isToday ? "font-bold" : hasHours ? "font-medium text-foreground" : "font-bold text-muted-foreground"}>
                   {hasHours
                     ? `${formatTime(hour.openTime!)} – ${formatTime(hour.closeTime!)}`
                     : "Kapalı"}
@@ -125,8 +121,8 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
       </section>
 
       {visibleFeatures.length > 0 && (
-        <section aria-labelledby="profile-features-title" className="space-y-5 border-t border-border/70 pt-9 md:border-t-0 md:pt-0">
-          <h2 id="profile-features-title" className="text-2xl font-bold tracking-normal">
+        <section aria-labelledby="profile-features-title" className="space-y-4 border-t border-border/70 pt-8 md:border-t-0 md:pt-0">
+          <h2 id="profile-features-title" className="text-lg font-bold tracking-normal md:text-2xl">
             Ek bilgiler
           </h2>
           <div className="space-y-3 md:flex md:flex-wrap md:gap-2 md:space-y-0">
@@ -136,7 +132,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
               return (
                 <span
                   key={feature.key}
-                  className="flex items-center gap-3 text-base font-medium text-foreground md:inline-flex md:gap-2 md:rounded-full md:border md:border-border/80 md:bg-muted/40 md:px-4 md:py-2 md:text-sm"
+                  className="flex items-center gap-3 text-sm font-medium text-foreground md:inline-flex md:gap-2 md:rounded-full md:border md:border-border/80 md:bg-muted/40 md:px-4 md:py-2"
                 >
                   <Icon className="size-4 shrink-0 stroke-[1.75]" />
                   {feature.label}

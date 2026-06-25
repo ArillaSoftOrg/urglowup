@@ -296,7 +296,7 @@ export function DesktopBusinessProfile({
 
       <SectionNav sections={navSections} />
 
-      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
+      <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-8 px-5 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10 lg:px-10 lg:py-10 xl:px-12">
         <div className="min-w-0 space-y-9">
           {hasAbout && (
             <section id="about" className="scroll-mt-[130px]">
@@ -320,6 +320,8 @@ export function DesktopBusinessProfile({
           <ContactSidebar
             business={business}
             reviewSummary={reviewSummary}
+            isOpen={isOpen}
+            location={location}
             locale={locale}
           />
         </aside>
