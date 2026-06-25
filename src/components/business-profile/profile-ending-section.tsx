@@ -1,12 +1,27 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Heart, Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
 function pathWithLocale(path: string, locale?: string) {
   return locale && locale !== "tr" ? `/${locale}${path}` : path;
 }
+
+const DISCOVERY_LINKS = [
+  { label: "Erkek Saç Kesimleri", categorySlug: "barber-shop" },
+  { label: "Saç Şekillendirme", categorySlug: "hair-salon" },
+  { label: "Çocuk Saç Kesimleri", categorySlug: "barber-shop" },
+  { label: "Kuaför Salonları", categorySlug: "hair-salon" },
+  { label: "Kaş Şekillendirme", categorySlug: "eyebrow-lash" },
+  { label: "Manikür", categorySlug: "nail-salon" },
+  { label: "Berberler", categorySlug: "barber-shop" },
+  { label: "Pedikür", categorySlug: "nail-salon" },
+  { label: "Tırnak Salonları", categorySlug: "nail-salon" },
+  { label: "Güzellik Salonları", categorySlug: "skin-care" },
+  { label: "Jel Tırnaklar", categorySlug: "nail-salon" },
+  { label: "Saç Boyama", categorySlug: "hair-salon" },
+];
 
 function NearbyBusinessCard({
   business,
@@ -87,14 +102,18 @@ export function ProfileEndingSection({
     href: pathWithLocale(`/category/${category.slug}${business.city ? `/${encodeURIComponent(business.city)}` : ""}`, locale),
   }));
   const links = [...categoryLinks, ...serviceLinks].slice(0, 9);
+  const discoveryLinks = DISCOVERY_LINKS.map(({ label, categorySlug }) => ({
+    label,
+    href: pathWithLocale(`/category/${categorySlug}${business.city ? `/${encodeURIComponent(business.city)}` : ""}`, locale),
+  }));
 
-  if (nearbyBusinesses.length === 0 && links.length === 0) return null;
+  if (nearbyBusinesses.length === 0 && links.length === 0 && discoveryLinks.length === 0) return null;
 
   return (
-    <section className="border-t border-border/70 bg-background">
-      <div className="mx-auto max-w-[1440px] space-y-14 px-5 py-12 sm:px-6 lg:px-10 lg:py-14 xl:px-12">
+    <section className="border-t border-border/70 bg-background md:border-t">
+      <div className="mx-auto max-w-[1440px] space-y-14 px-5 py-8 sm:px-6 md:py-12 lg:px-10 lg:py-14 xl:px-12">
         {nearbyBusinesses.length > 0 && (
-          <div className="space-y-6">
+          <div className="hidden space-y-6 md:block">
             <h2 className="text-2xl font-bold tracking-normal">
               Yakındaki mekanlar
             </h2>
@@ -106,21 +125,33 @@ export function ProfileEndingSection({
           </div>
         )}
 
-        <div className="space-y-7">
-          <h2 className="max-w-4xl text-3xl font-bold leading-tight tracking-normal lg:text-[34px]">
+        <div className="space-y-6 md:space-y-7">
+          <h2 className="max-w-[340px] text-[22px] font-bold leading-tight tracking-normal text-foreground md:max-w-4xl md:text-3xl lg:text-[34px]">
             İstediğiniz zaman, istediğiniz yerde kendinizi şımartın
           </h2>
           {business.city && (
             <Link
               href={pathWithLocale(`/city/${encodeURIComponent(business.city)}`, locale)}
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-5 text-base font-bold text-primary-foreground transition hover:bg-primary/90"
+              className="inline-flex h-9 items-center rounded-full bg-foreground px-4 text-sm font-bold text-background transition hover:bg-foreground/90 md:h-12 md:px-5 md:text-base"
             >
               Diğer işletmeler {city}
-              <ArrowRight className="size-4" />
             </Link>
           )}
+          {discoveryLinks.length > 0 && (
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4 pt-1 text-[13px] leading-none sm:text-sm md:hidden">
+              {discoveryLinks.map((link) => (
+                <Link
+                  key={`${link.href}-${link.label}`}
+                  href={link.href}
+                  className="font-medium text-foreground transition hover:text-foreground/80"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
           {links.length > 0 && (
-            <div className="grid gap-x-16 gap-y-4 pt-2 text-base sm:grid-cols-2 lg:grid-cols-3">
+            <div className="hidden gap-x-16 gap-y-4 pt-2 text-base md:grid md:grid-cols-2 lg:grid-cols-3">
               {links.map((link) => (
                 <Link
                   key={`${link.href}-${link.label}`}

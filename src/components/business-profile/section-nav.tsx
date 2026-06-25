@@ -121,16 +121,16 @@ export function SectionNav({
               aria-current={active ? "true" : undefined}
               className={cn(
                 // Layout
-                "relative mr-5 shrink-0 whitespace-nowrap py-3.5 last:mr-0",
+                "relative mr-6 shrink-0 whitespace-nowrap py-3.5 last:mr-0",
                 // Typography
-                "text-sm font-medium",
+                "text-[13px] font-semibold leading-none tracking-normal",
                 // Animated underline indicator
                 "after:absolute after:inset-x-0 after:bottom-0 after:h-[2px]",
-                "after:origin-left after:rounded-full after:bg-primary",
+                "after:origin-left after:rounded-full after:bg-foreground",
                 "after:transition-transform after:duration-200 after:ease-out",
                 active
                   ? "text-foreground after:scale-x-100"
-                  : "text-muted-foreground after:scale-x-0 hover:text-foreground/80",
+                  : "text-foreground/65 after:scale-x-0 hover:text-foreground",
                 "transition-colors duration-150",
               )}
             >
