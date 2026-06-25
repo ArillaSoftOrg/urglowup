@@ -4,7 +4,6 @@ import {
   CalendarCheck,
   Clock,
   MapPin,
-  Navigation,
   Star,
 } from "lucide-react";
 import { ShareFavoriteButtons } from "@/components/business-profile/share-favorite-buttons";
@@ -89,7 +88,7 @@ function ServicesPreview({
 
   return (
     <section id="services" className="scroll-mt-[106px] border-t border-border/70 px-5 py-8">
-      <h2 className="mb-4 text-xl font-bold tracking-normal">Hizmetler</h2>
+      <h2 className="mb-4 text-2xl font-bold tracking-normal">Hizmetler</h2>
 
       {categories.length > 0 && (
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
@@ -157,10 +156,6 @@ export function MobileBusinessProfile({
   const categories = business.categories.map((bc) => bc.category);
   const primaryCategory = categories[0]?.name;
   const hrefPrefix = locale && locale !== "tr" ? `/${locale}` : "";
-  const addressQuery = [business.name, business.address, business.district, business.city]
-    .filter(Boolean)
-    .join(" ");
-
   const hasSocial = !!(business.instagramUrl || business.facebookUrl || business.tiktokUrl);
   const hasContact = !!(business.phone || business.whatsapp);
   const hasAbout = !!(business.description || hasContact || hasSocial || business.address || business.city || business.district);
@@ -200,12 +195,6 @@ export function MobileBusinessProfile({
       {/* Spacer to push content below the fixed header */}
       <div aria-hidden className="h-14" />
 
-      <SectionNav
-        sections={navSections}
-        revealAfterId="about"
-        className="bg-background/95 md:hidden"
-      />
-
       <section id="gallery" className="scroll-mt-[106px]">
         <MobileHeroGallery
           items={galleryItems}
@@ -214,7 +203,7 @@ export function MobileBusinessProfile({
         />
       </section>
 
-      <main className="relative z-10 -mt-10 overflow-hidden rounded-t-[30px] bg-background shadow-lg">
+      <main className="relative z-10 -mt-10 rounded-t-[30px] bg-background shadow-lg">
         <section className="px-5 pb-5 pt-7">
           <h1 className="text-2xl font-bold leading-tight tracking-normal">
             {business.name}
@@ -241,29 +230,31 @@ export function MobileBusinessProfile({
           </div>
 
           {location && (
-            <div className="mt-2 flex min-h-10 items-center gap-2 rounded-xl bg-surface-cream px-3 py-2.5 text-sm shadow-xs">
-              <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
-              <span className="min-w-0 flex-1 truncate font-medium">{location}</span>
-            </div>
-          )}
-
-          {addressQuery && (
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex min-h-10 items-center gap-2 rounded-full px-0 text-sm font-semibold text-foreground transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
+              href="#location"
+              className="mt-3 flex min-h-11 items-center gap-2 rounded-xl bg-muted/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <Navigation className="size-3.5" />
-              Adres tarifi alın
+              <MapPin className="size-4 shrink-0 fill-foreground text-foreground" />
+              <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{location}</span>
             </a>
           )}
 
         </section>
 
+        <SectionNav
+          sections={navSections}
+          initialActiveId={hasAbout ? "about" : navSections[0]?.id}
+          className="border-t bg-background/95 md:hidden"
+        />
+
         {hasAbout && (
-          <section id="about" className="scroll-mt-[106px] px-5 pt-4">
-            <AboutSection business={business} showLocation={false} />
+          <section id="about" className="scroll-mt-[106px] px-5">
+            <AboutSection
+              business={business}
+              showLocation={false}
+              showTopBorder={false}
+              inlineReadMore
+            />
           </section>
         )}
 
@@ -273,7 +264,9 @@ export function MobileBusinessProfile({
           <BusinessPortfolioSection items={portfolioItems} business={business} />
           <section id="other" className="scroll-mt-[106px] space-y-8">
             <ReviewsSection business={business} reviewSummary={reviewSummary} />
-            <LocationSection business={business} />
+            <section id="location" className="scroll-mt-[122px]">
+              <LocationSection business={business} />
+            </section>
             <HoursSection business={business} />
           </section>
         </div>

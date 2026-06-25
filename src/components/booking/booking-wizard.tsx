@@ -22,7 +22,6 @@ import { LoginPrompt } from "./login-prompt";
 import type { BookingBusiness } from "@/lib/queries/appointments";
 
 type Service = BookingBusiness["services"][number];
-type Professional = BookingBusiness["professionals"][number];
 type BookingKind = "single" | "group";
 type Step = "kind" | "services" | "guests" | "experts" | "datetime" | "firstVisit" | "summary";
 

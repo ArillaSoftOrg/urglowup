@@ -35,9 +35,13 @@ const SOCIAL_LINKS = [
 export function AboutSection({
   business,
   showLocation = true,
+  showTopBorder = true,
+  inlineReadMore = false,
 }: {
   business: BusinessWithDetails;
   showLocation?: boolean;
+  showTopBorder?: boolean;
+  inlineReadMore?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -47,6 +51,15 @@ export function AboutSection({
   const hasSocial = SOCIAL_LINKS.some((s) => !!business[s.key]);
   const hasContact = !!(business.phone || business.whatsapp);
   const hasAddress = business.address || business.city || business.district;
+  const inlinePreviewLimit = 230;
+  const inlineText =
+    inlineReadMore && business.description && business.description.length > inlinePreviewLimit
+      ? `${business.description.slice(0, inlinePreviewLimit).trimEnd()}...`
+      : business.description;
+  const showReadMore =
+    inlineReadMore && business.description
+      ? business.description.length > inlinePreviewLimit
+      : overflows;
 
   useEffect(() => {
     const el = textRef.current;
@@ -57,7 +70,12 @@ export function AboutSection({
   if (!business.description && !hasContact && !hasSocial && !hasAddress) return null;
 
   return (
-    <div className="space-y-6 border-t border-border/70 pt-10">
+    <div
+      className={cn(
+        "space-y-6",
+        showTopBorder ? "border-t border-border/70 pt-8 md:pt-10" : "pt-0",
+      )}
+    >
       <div className="space-y-4">
         <h2 className="text-2xl font-bold tracking-normal">Hakkında</h2>
 
@@ -67,21 +85,25 @@ export function AboutSection({
               ref={textRef}
               className={cn(
                 "whitespace-pre-line text-[15px] leading-[1.8] text-foreground/90",
-                !expanded && "line-clamp-4",
+                inlineReadMore && "inline leading-[1.55] text-foreground",
+                !inlineReadMore && !expanded && "line-clamp-4",
               )}
             >
-              {business.description}
+              {inlineText}
             </p>
 
-            {overflows && (
+            {showReadMore && (
               <>
                 {/* Mobile: opens bottom sheet so text never competes with sticky CTA */}
                 <button
                   type="button"
                   onClick={() => setSheetOpen(true)}
-                  className="mt-2.5 text-sm font-semibold text-primary hover:underline focus:outline-none md:hidden"
+                  className={cn(
+                    "text-sm font-semibold text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden",
+                    inlineReadMore ? "ml-1 inline align-baseline" : "mt-2.5 block",
+                  )}
                 >
-                  Devamını oku
+                  Devamını okuyun
                 </button>
 
                 {/* Desktop: expand in-place */}

@@ -32,7 +32,7 @@ export function LocationSection({
     <section
       aria-label={showTitle ? undefined : "Konum"}
       aria-labelledby={showTitle ? "location-title" : undefined}
-      className="space-y-4"
+      className="space-y-5"
     >
       {showTitle && (
         <h2 id="location-title" className="text-2xl font-bold tracking-normal text-foreground">

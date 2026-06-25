@@ -81,9 +81,9 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
   const visibleFeatures = FEATURE_OPTIONS.filter((feature) => business[feature.key]);
 
   return (
-    <div className="space-y-9 border-t border-border/70 pt-9 md:grid md:max-w-5xl md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 md:space-y-0 md:pt-10">
+    <div className="space-y-9 border-t border-border/70 pt-8 md:grid md:max-w-5xl md:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] md:gap-14 md:space-y-0 md:pt-10">
       <section aria-labelledby="opening-hours-title" className="space-y-5">
-        <h2 id="opening-hours-title" className="text-[22px] font-bold leading-tight tracking-normal text-foreground md:text-2xl">
+        <h2 id="opening-hours-title" className="text-2xl font-bold tracking-normal">
           Açılış saatleri
         </h2>
         <div className="space-y-2.5 md:space-y-3">
@@ -122,7 +122,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
 
       {visibleFeatures.length > 0 && (
         <section aria-labelledby="profile-features-title" className="space-y-5 border-t border-border/70 pt-9 md:border-t-0 md:pt-0">
-          <h2 id="profile-features-title" className="text-[22px] font-bold leading-tight tracking-normal text-foreground md:text-2xl">
+          <h2 id="profile-features-title" className="text-2xl font-bold tracking-normal">
             Ek bilgiler
           </h2>
           <div className="space-y-3 md:flex md:flex-wrap md:gap-2 md:space-y-0">

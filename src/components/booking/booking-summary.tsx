@@ -73,7 +73,9 @@ export function BookingSummary({
   >(createAppointmentRequest, { success: false });
 
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
   useEffect(() => {
     if (state.success) onCompleteRef.current?.();
   }, [state.success]);

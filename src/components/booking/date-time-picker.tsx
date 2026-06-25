@@ -209,7 +209,7 @@ export function DateTimePicker({
                   if (!isDateDisabled(next)) {
                     handleDateSelect(next);
                   } else {
-                    let candidate = new Date(next);
+                    const candidate = new Date(next);
                     for (let i = 0; i < 60; i++) {
                       candidate.setDate(candidate.getDate() + 1);
                       if (!isDateDisabled(candidate)) {

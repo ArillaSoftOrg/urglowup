@@ -74,7 +74,7 @@ export function ReviewsSection({
   return (
     <div className="space-y-8 border-t border-border/70 pt-10">
       <div className="space-y-5">
-        <h2 className="text-2xl font-bold tracking-normal lg:text-[30px]">
+        <h2 className="text-2xl font-bold tracking-normal">
           Değerlendirmeler
         </h2>
 
