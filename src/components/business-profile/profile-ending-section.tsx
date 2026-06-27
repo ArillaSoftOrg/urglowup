@@ -110,7 +110,7 @@ export function ProfileEndingSection({
   if (nearbyBusinesses.length === 0 && links.length === 0 && discoveryLinks.length === 0) return null;
 
   return (
-    <section id="other" className="scroll-mt-[106px] border-t border-border/70 bg-background md:border-t">
+    <section id="other" className="hidden scroll-mt-[106px] border-t border-border/70 bg-background md:block md:border-t">
       <div className="mx-auto max-w-[1440px] space-y-14 px-5 py-8 sm:px-6 md:py-12 lg:px-10 lg:py-14 xl:px-12">
         {nearbyBusinesses.length > 0 && (
           <div className="hidden space-y-6 md:block">

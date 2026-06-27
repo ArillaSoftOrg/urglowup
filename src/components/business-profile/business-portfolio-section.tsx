@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { ImageIcon, Play } from "lucide-react";
+import { ChevronDown, ImageIcon, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GalleryItem } from "./business-gallery-hero";
 
@@ -32,6 +32,7 @@ interface BusinessForLightbox {
 }
 
 const VISIBLE_COUNT = 5;
+const MOBILE_VISIBLE_COUNT = 9;
 
 function PortfolioTile({
   item,
@@ -104,7 +105,11 @@ export function BusinessPortfolioSection({
   business: BusinessForLightbox;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [showAllMobile, setShowAllMobile] = useState(false);
   const visibleItems = items.slice(0, VISIBLE_COUNT);
+  const mobileVisibleItems = showAllMobile
+    ? items
+    : items.slice(0, MOBILE_VISIBLE_COUNT);
   const remaining = Math.max(items.length - VISIBLE_COUNT, 0);
   const current = openIndex !== null ? items[openIndex] : null;
 
@@ -147,11 +152,32 @@ export function BusinessPortfolioSection({
           </span>
         </div>
 
-        {/*
-          Mobile  : 2-col grid; featured spans both cols (full-width, 16:9), rest are square cells.
-          Desktop : [2fr 1fr 1fr] mosaic at fixed 380 px height; featured spans 2 rows on the left.
-        */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 md:h-[380px] md:grid-cols-[2fr_1fr_1fr] md:grid-rows-2">
+        <div className="grid grid-cols-3 gap-2 md:hidden">
+          {mobileVisibleItems.map((item, index) => (
+            <PortfolioTile
+              key={item.id}
+              item={item}
+              index={index}
+              showOverlay={false}
+              remaining={0}
+              className="aspect-square rounded-xl"
+              onOpen={setOpenIndex}
+            />
+          ))}
+        </div>
+
+        {items.length > MOBILE_VISIBLE_COUNT && !showAllMobile && (
+          <button
+            type="button"
+            onClick={() => setShowAllMobile(true)}
+            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-border bg-background text-sm font-bold text-foreground shadow-xs transition-colors hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 md:hidden"
+          >
+            Tümünü gör
+            <ChevronDown className="size-4" />
+          </button>
+        )}
+
+        <div className="hidden grid-cols-2 gap-2 sm:gap-2.5 md:grid md:h-[380px] md:grid-cols-[2fr_1fr_1fr] md:grid-rows-2">
           {featured && (
             <PortfolioTile
               item={featured}

@@ -18,7 +18,7 @@ import { SectionNav, type NavSection } from "@/components/business-profile/secti
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
-import { ReviewsSection } from "@/components/business-profile/reviews-section";
+import { TeamSection } from "@/components/business-profile/team-section";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails } from "@/lib/queries/business";
@@ -93,13 +93,16 @@ export function MobileBusinessProfile({
   const hasSocial = !!(business.instagramUrl || business.facebookUrl || business.tiktokUrl);
   const hasContact = !!(business.phone || business.whatsapp);
   const hasAbout = !!(business.description || hasContact || hasSocial || business.address || business.city || business.district);
+  const hasTeam = business.professionals.length > 0;
 
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
     ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     { id: "services", label: "Hizmetler" },
+    ...(hasTeam ? [{ id: "team", label: "Takım" }] : []),
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
-    { id: "other", label: "Diğer" },
+    { id: "hours", label: "Saatler" },
+    { id: "location", label: "Harita" },
   ];
 
   return (
@@ -239,13 +242,15 @@ export function MobileBusinessProfile({
         <MobileServicesPreview business={business} hrefPrefix={hrefPrefix} />
 
         <div className="space-y-8 px-5 pb-0">
+          <TeamSection business={business} hrefPrefix={hrefPrefix} />
           <BusinessPortfolioSection items={portfolioItems} business={business} />
           <section className="space-y-8">
-            <ReviewsSection business={business} reviewSummary={reviewSummary} />
+            <section id="hours" className="scroll-mt-[122px]">
+              <HoursSection business={business} />
+            </section>
             <section id="location" className="scroll-mt-[122px]">
               <LocationSection business={business} />
             </section>
-            <HoursSection business={business} />
           </section>
         </div>
       </main>
