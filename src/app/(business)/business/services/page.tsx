@@ -31,6 +31,7 @@ export default async function ServicesPage() {
   const serialized: ServiceData[] = services.map((s) => ({
     id: s.id,
     name: s.name,
+    category: s.category,
     description: s.description,
     durationMinutes: s.durationMinutes,
     price: s.price !== null ? Number(s.price) : null,

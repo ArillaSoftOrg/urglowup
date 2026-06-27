@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { normalizeServiceCategory } from "@/lib/service-categories";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 const INITIAL_SERVICE_COUNT = 8;
+const FEATURED_CATEGORY = "Öne Çıkanlar";
 
 function formatPrice(service: BusinessWithDetails["services"][number]) {
   if (service.priceType === "FREE_CONSULTATION") return "Ücretsiz danışma";
@@ -25,14 +27,50 @@ export function MobileServicesPreview({
   hrefPrefix?: string;
 }) {
   const [showAll, setShowAll] = useState(false);
-  const hasMore = business.services.length > INITIAL_SERVICE_COUNT;
+  const [activeCategory, setActiveCategory] = useState(FEATURED_CATEGORY);
+  const categories = Array.from(
+    new Set(business.services.map((service) => normalizeServiceCategory(service.category)))
+  );
+  const filteredServices =
+    activeCategory === FEATURED_CATEGORY
+      ? business.services
+      : business.services.filter(
+          (service) => normalizeServiceCategory(service.category) === activeCategory
+        );
+  const hasMore = filteredServices.length > INITIAL_SERVICE_COUNT;
   const visibleServices = showAll || !hasMore
-    ? business.services
-    : business.services.slice(0, INITIAL_SERVICE_COUNT);
+    ? filteredServices
+    : filteredServices.slice(0, INITIAL_SERVICE_COUNT);
 
   return (
     <section id="services" className="scroll-mt-[106px] bg-muted/45 px-5 py-8">
       <h2 className="mb-4 text-2xl font-bold tracking-normal text-foreground">Hizmetler</h2>
+
+      {business.services.length > 0 && (
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          {[FEATURED_CATEGORY, ...categories].map((category) => {
+            const isActive = activeCategory === category;
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => {
+                  setActiveCategory(category);
+                  setShowAll(false);
+                }}
+                className={cn(
+                  "inline-flex h-10 shrink-0 items-center rounded-full px-4 text-sm font-semibold transition-colors",
+                  isActive
+                    ? "bg-foreground text-background"
+                    : "border border-border bg-background text-foreground"
+                )}
+              >
+                {category}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="space-y-3">
         {visibleServices.map((service) => {

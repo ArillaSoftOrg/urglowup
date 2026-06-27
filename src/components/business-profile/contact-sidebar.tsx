@@ -83,7 +83,7 @@ export function ContactSidebar({
           href={`${hrefPrefix}/b/${business.slug}/book`}
           className={cn(
             buttonVariants({ size: "lg" }),
-            "h-[60px] w-full rounded-full text-lg font-bold",
+            "inline-flex h-[60px] w-full items-center justify-center rounded-full px-6 text-center text-lg font-bold whitespace-nowrap",
           )}
         >
           Rezervasyon yap

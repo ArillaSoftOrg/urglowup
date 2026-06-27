@@ -125,14 +125,14 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
           <h2 id="profile-features-title" className="text-lg font-bold tracking-normal md:text-2xl">
             Ek bilgiler
           </h2>
-          <div className="space-y-3 md:flex md:flex-wrap md:gap-2 md:space-y-0">
+          <div className="space-y-3">
             {visibleFeatures.map((feature) => {
               const Icon = feature.icon;
 
               return (
                 <span
                   key={feature.key}
-                  className="flex items-center gap-3 text-sm font-medium text-foreground md:inline-flex md:gap-2 md:rounded-full md:border md:border-border/80 md:bg-muted/40 md:px-4 md:py-2"
+                  className="flex items-center gap-3 text-sm font-medium text-foreground"
                 >
                   <Icon className="size-4 shrink-0 stroke-[1.75]" />
                   {feature.label}

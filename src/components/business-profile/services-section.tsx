@@ -1,9 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { normalizeServiceCategory } from "@/lib/service-categories";
 import { cn } from "@/lib/utils";
 import { CalendarCheck, Clock, Scissors } from "lucide-react";
 import type { BusinessWithDetails } from "@/lib/queries/business";
+
+const FEATURED_CATEGORY = "Öne Çıkanlar";
 
 function formatPrice(service: BusinessWithDetails["services"][number]): {
   amount: string | null;
@@ -26,13 +32,20 @@ export function ServicesSection({
 }: {
   business: BusinessWithDetails;
 }) {
-  const categories = business.categories.map((bc) => bc.category);
-  const featuredServices = business.services.slice(0, 3);
-  const remainingServices = business.services.slice(3);
+  const [activeCategory, setActiveCategory] = useState(FEATURED_CATEGORY);
+  const categories = Array.from(
+    new Set(business.services.map((service) => normalizeServiceCategory(service.category)))
+  );
+  const visibleServices =
+    activeCategory === FEATURED_CATEGORY
+      ? business.services
+      : business.services.filter(
+          (service) => normalizeServiceCategory(service.category) === activeCategory
+        );
 
   return (
     <section className="scroll-mt-[106px] space-y-5 md:scroll-mt-[130px]" id="services">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-5">
         <div>
           <h2 className="text-2xl font-bold tracking-normal">Hizmetler</h2>
           {business.services.length > 0 && (
@@ -42,19 +55,26 @@ export function ServicesSection({
           )}
         </div>
 
-        {categories.length > 0 && (
-          <div className="flex max-w-full gap-2 overflow-x-auto pb-1 sm:justify-end">
-            <span className="inline-flex h-10 shrink-0 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
-              Öne Çıkan
-            </span>
-            {categories.map((cat) => (
-              <span
-                key={cat.id}
-                className="inline-flex h-10 shrink-0 items-center rounded-full border bg-background px-5 text-sm font-medium"
-              >
-                {cat.name}
-              </span>
-            ))}
+        {business.services.length > 0 && (
+          <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+            {[FEATURED_CATEGORY, ...categories].map((category) => {
+              const isActive = activeCategory === category;
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setActiveCategory(category)}
+                  className={cn(
+                    "inline-flex h-11 shrink-0 items-center rounded-full px-5 text-sm font-semibold transition-colors",
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "border border-border bg-background text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  {category}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -71,14 +91,8 @@ export function ServicesSection({
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border bg-background">
-          {featuredServices.length > 0 && (
-            <div className="border-b bg-muted/25 px-5 py-3">
-              <p className="text-sm font-semibold">Öne çıkan hizmetler</p>
-            </div>
-          )}
-
           <div className="divide-y">
-            {[...featuredServices, ...remainingServices].map((service) => {
+            {visibleServices.map((service) => {
               const { amount, qualifier } = formatPrice(service);
               return (
                 <Link
@@ -90,7 +104,7 @@ export function ServicesSection({
                     <div>
                       <p className="text-base font-semibold group-hover:text-primary">{service.name}</p>
                       {service.description && (
-                        <p className="mt-1 max-w-2xl text-sm text-muted-foreground line-clamp-2">
+                        <p className="mt-1 line-clamp-2 max-w-2xl text-sm text-muted-foreground">
                           {service.description}
                         </p>
                       )}

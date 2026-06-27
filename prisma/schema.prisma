@@ -417,6 +417,7 @@ model BusinessService {
   business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   name            String
   slug            String    @unique
+  category        String?
   description     String?
   durationMinutes Int
   price           Decimal?  @db.Decimal(10, 2)

@@ -4,6 +4,7 @@ import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateUniqueServiceSlug } from "@/lib/slug";
 import { SERVICE_TEMPLATES } from "@/lib/service-templates";
+import { normalizeServiceCategory } from "@/lib/service-categories";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 
@@ -12,6 +13,7 @@ import { revalidatePath } from "next/cache";
 const serviceSchema = z
   .object({
     name: z.string().min(1, "Name is required").max(100),
+    category: z.string().optional().or(z.literal("")),
     description: z.string().max(500).optional().or(z.literal("")),
     durationMinutes: z.coerce.number().int().min(5, "Min 5 minutes").max(480),
     price: z.coerce.number().min(0).optional(),
@@ -28,6 +30,7 @@ const serviceSchema = z
   })
   .transform((data) => ({
     ...data,
+    category: normalizeServiceCategory(data.category),
     description: data.description || null,
     isActive: data.isActive === "on",
     price:
@@ -88,6 +91,7 @@ export async function createService(
       businessId,
       name: data.name,
       slug,
+      category: data.category,
       description: data.description,
       durationMinutes: data.durationMinutes,
       price: data.price,
@@ -135,6 +139,7 @@ export async function updateService(
     where: { id: serviceId },
     data: {
       name: data.name,
+      category: data.category,
       description: data.description,
       durationMinutes: data.durationMinutes,
       price: data.price,
@@ -239,6 +244,7 @@ export async function addTemplateServices(
         businessId,
         name: templateName,
         slug,
+        category: template.category,
         description: template.description ?? null,
         durationMinutes: safeDuration,
         price,

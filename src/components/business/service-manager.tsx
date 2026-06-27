@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { SERVICE_CATEGORY_OPTIONS, DEFAULT_SERVICE_CATEGORY } from "@/lib/service-categories";
 import {
   CheckCircle2,
   Clock,
@@ -44,6 +45,7 @@ import {
 export type ServiceData = {
   id: string;
   name: string;
+  category: string | null;
   description: string | null;
   durationMinutes: number;
   price: number | null;
@@ -186,22 +188,38 @@ function ServiceForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="durationMinutes">Süre (dakika)</Label>
-              <Input
-                id="durationMinutes"
-                name="durationMinutes"
-                type="number"
-                min={5}
-                max={480}
-                defaultValue={service?.durationMinutes ?? 30}
-                required
-              />
-              {state.errors?.durationMinutes && (
-                <p className="text-xs text-destructive">
-                  {state.errors.durationMinutes}
-                </p>
-              )}
+              <Label>Kategori</Label>
+              <Select name="category" defaultValue={service?.category ?? DEFAULT_SERVICE_CATEGORY}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SERVICE_CATEGORY_OPTIONS.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="durationMinutes">Süre (dakika)</Label>
+            <Input
+              id="durationMinutes"
+              name="durationMinutes"
+              type="number"
+              min={5}
+              max={480}
+              defaultValue={service?.durationMinutes ?? 30}
+              required
+            />
+            {state.errors?.durationMinutes && (
+              <p className="text-xs text-destructive">
+                {state.errors.durationMinutes}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -348,6 +366,7 @@ function ServiceCard({
             <Badge variant={service.isActive ? "pink" : "secondary"}>
               {service.isActive ? "Aktif" : "Pasif"}
             </Badge>
+            <Badge variant="outline">{service.category ?? DEFAULT_SERVICE_CATEGORY}</Badge>
           </div>
           {service.description && (
             <p className="line-clamp-2 text-xs text-muted-foreground">

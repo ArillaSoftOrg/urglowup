@@ -74,14 +74,6 @@ export function LocationSection({
         {fullAddress && (
           <p className="font-medium leading-snug text-foreground">{fullAddress}</p>
         )}
-        <a
-          href={directionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex font-medium text-primary hover:underline"
-        >
-          Adres tarifi alın
-        </a>
       </div>
 
       <div className="hidden flex-col gap-3 md:flex md:flex-row md:items-start md:justify-between">

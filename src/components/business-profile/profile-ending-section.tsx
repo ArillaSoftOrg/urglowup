@@ -117,7 +117,7 @@ export function ProfileEndingSection({
             <h2 className="text-xl font-bold tracking-normal md:text-2xl">
               Yakındaki mekanlar
             </h2>
-            <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible md:px-0">
+            <div className="flex snap-x gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible">
               {nearbyBusinesses.slice(0, 4).map((item) => (
                 <NearbyBusinessCard key={item.id} business={item} locale={locale} />
               ))}
