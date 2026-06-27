@@ -789,7 +789,9 @@ function PortfolioSection({
           Portföy görselleri
         </h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Profil portföy bölümünde görünür. Keşfet kartını etkilemez.
+          Profil portföy bölümünde görünür. Kare yükleme zorunlu değil;
+          dikey yakın planlar yüz, tırnak ve dövme detaylarını daha iyi
+          gösterir. Keşfet kartını etkilemez.
         </p>
       </div>
 

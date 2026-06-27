@@ -39,6 +39,9 @@ async function fetchBusinessBySlug(slug: string) {
           title: true,
           bio: true,
           avatarUrl: true,
+          user: {
+            select: { avatarUrl: true },
+          },
         },
       },
       _count: {
@@ -57,7 +60,7 @@ export async function getBusinessBySlug(
   slug: string
 ): Promise<BusinessBySlugResult> {
   // Check cache first
-  const cacheKey = `business:slug:${slug}`;
+  const cacheKey = `business:v2:slug:${slug}`;
   const cached = await getCached<NonNullable<BusinessBySlugResult>>(cacheKey);
   if (cached) {
     return cached;

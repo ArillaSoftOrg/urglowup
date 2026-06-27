@@ -32,7 +32,17 @@ interface BusinessForLightbox {
 }
 
 const VISIBLE_COUNT = 5;
-const MOBILE_VISIBLE_COUNT = 9;
+const MOBILE_VISIBLE_COUNT = 6;
+
+function getPortfolioPreviewAspect(item: GalleryItem) {
+  if (!item.width || !item.height) return "aspect-[4/5]";
+
+  const ratio = item.width / item.height;
+
+  if (ratio > 1.2) return "aspect-[16/10]";
+  if (ratio < 0.9) return "aspect-[4/5]";
+  return "aspect-square";
+}
 
 function PortfolioTile({
   item,
@@ -152,7 +162,7 @@ export function BusinessPortfolioSection({
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 md:hidden">
+        <div className="grid grid-cols-2 gap-2.5 md:hidden">
           {mobileVisibleItems.map((item, index) => (
             <PortfolioTile
               key={item.id}
@@ -160,7 +170,7 @@ export function BusinessPortfolioSection({
               index={index}
               showOverlay={false}
               remaining={0}
-              className="aspect-square rounded-xl"
+              className={cn(getPortfolioPreviewAspect(item), "rounded-xl")}
               onOpen={setOpenIndex}
             />
           ))}
@@ -177,7 +187,7 @@ export function BusinessPortfolioSection({
           </button>
         )}
 
-        <div className="hidden grid-cols-2 gap-2 sm:gap-2.5 md:grid md:h-[380px] md:grid-cols-[2fr_1fr_1fr] md:grid-rows-2">
+        <div className="hidden grid-cols-2 gap-2 sm:gap-2.5 md:grid md:h-[420px] md:grid-cols-[1.7fr_1fr_1fr] md:grid-rows-2">
           {featured && (
             <PortfolioTile
               item={featured}
@@ -204,7 +214,7 @@ export function BusinessPortfolioSection({
                 index={realIndex}
                 showOverlay={isLast}
                 remaining={remaining}
-                className="aspect-square md:aspect-auto md:h-full"
+                className={cn(getPortfolioPreviewAspect(item), "md:aspect-auto md:h-full")}
                 onOpen={setOpenIndex}
               />
             );

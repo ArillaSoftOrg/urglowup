@@ -35,19 +35,19 @@ export function LocationSection({
       className="space-y-5"
     >
       {showTitle && (
-        <h2 id="location-title" className="text-2xl font-bold tracking-normal text-foreground">
+        <h2 id="location-title" className="sr-only text-2xl font-bold tracking-normal text-foreground md:not-sr-only">
           Konum
         </h2>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-border/70 shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border/70 shadow-sm md:rounded-2xl">
         {hasCoords && mapsApiKey ? (
           <LazyBusinessMap
             lat={business.latitude as number}
             lng={business.longitude as number}
             name={business.name}
             apiKey={mapsApiKey}
-            className="flex h-[380px] w-full flex-col items-center justify-center overflow-hidden bg-muted/30 px-4 text-center sm:h-[480px]"
+            className="flex h-28 w-full flex-col items-center justify-center overflow-hidden bg-muted/30 px-4 text-center md:h-[380px] lg:h-[480px]"
           />
         ) : (
           <iframe
@@ -55,12 +55,26 @@ export function LocationSection({
             src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="h-[380px] w-full bg-muted/30 sm:h-[480px]"
+            className="h-28 w-full bg-muted/30 md:h-[380px] lg:h-[480px]"
           />
         )}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="space-y-1 text-sm md:hidden">
+        {fullAddress && (
+          <p className="font-medium leading-snug text-foreground">{fullAddress}</p>
+        )}
+        <a
+          href={directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex font-medium text-primary hover:underline"
+        >
+          Adres tarifi alın
+        </a>
+      </div>
+
+      <div className="hidden flex-col gap-3 md:flex md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 items-start gap-2.5">
           <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <div className="space-y-0.5 text-sm">

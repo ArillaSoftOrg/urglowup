@@ -36,9 +36,9 @@ function NearbyBusinessCard({
   return (
     <Link
       href={pathWithLocale(`/b/${business.slug}`, locale)}
-      className="group block min-w-[260px] flex-1 md:min-w-0"
+      className="group block min-w-[220px] flex-[0_0_58%] md:min-w-0 md:flex-1"
     >
-      <div className="relative aspect-[3/2] overflow-hidden rounded-xl bg-surface-cream">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-cream">
         {business.coverImageUrl ? (
           <Image
             src={business.coverImageUrl}
@@ -55,21 +55,21 @@ function NearbyBusinessCard({
         </span>
       </div>
 
-      <div className="mt-3 space-y-1">
+      <div className="mt-2 space-y-1">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="line-clamp-1 text-base font-bold tracking-normal text-foreground">
+          <h3 className="line-clamp-1 text-base font-bold leading-tight tracking-normal text-foreground">
             {business.name}
           </h3>
           {business.reviewAvg !== null && business.reviewCount > 0 && (
-            <span className="inline-flex shrink-0 items-center gap-1 text-sm font-bold">
-              <Star className="size-4 fill-rating text-rating" />
+            <span className="inline-flex shrink-0 items-center gap-1 text-sm font-bold leading-none">
+              <Star className="size-3.5 fill-rating text-rating" />
               {(business.reviewAvg / 2).toFixed(1)}
             </span>
           )}
         </div>
-        {location && <p className="line-clamp-1 text-sm text-muted-foreground">{location}</p>}
+        {location && <p className="line-clamp-1 text-sm leading-tight text-muted-foreground">{location}</p>}
         {(category || business.reviewCount > 0) && (
-          <p className="line-clamp-1 text-sm text-muted-foreground">
+          <p className="line-clamp-1 text-sm leading-tight text-muted-foreground">
             {[category, business.reviewCount > 0 ? `${business.reviewCount} değerlendirme` : null]
               .filter(Boolean)
               .join(" · ")}
@@ -110,14 +110,14 @@ export function ProfileEndingSection({
   if (nearbyBusinesses.length === 0 && links.length === 0 && discoveryLinks.length === 0) return null;
 
   return (
-    <section id="other" className="hidden scroll-mt-[106px] border-t border-border/70 bg-background md:block md:border-t">
+    <section id="other" className="scroll-mt-[106px] border-t border-border/70 bg-background md:border-t">
       <div className="mx-auto max-w-[1440px] space-y-14 px-5 py-8 sm:px-6 md:py-12 lg:px-10 lg:py-14 xl:px-12">
         {nearbyBusinesses.length > 0 && (
-          <div className="hidden space-y-6 md:block">
-            <h2 className="text-2xl font-bold tracking-normal">
+          <div className="space-y-4 md:space-y-6">
+            <h2 className="text-xl font-bold tracking-normal md:text-2xl">
               Yakındaki mekanlar
             </h2>
-            <div className="flex gap-6 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible">
+            <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible md:px-0">
               {nearbyBusinesses.slice(0, 4).map((item) => (
                 <NearbyBusinessCard key={item.id} business={item} locale={locale} />
               ))}

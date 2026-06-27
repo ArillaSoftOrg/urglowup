@@ -103,6 +103,7 @@ export function MobileBusinessProfile({
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
     { id: "hours", label: "Saatler" },
     { id: "location", label: "Harita" },
+    { id: "other", label: "Diğer" },
   ];
 
   return (

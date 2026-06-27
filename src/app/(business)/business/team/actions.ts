@@ -215,6 +215,7 @@ export async function createProfessionalForMember(
           firstName: true,
           lastName: true,
           email: true,
+          avatarUrl: true,
           professional: { select: { id: true, businessId: true } },
         },
       },
@@ -244,6 +245,7 @@ export async function createProfessionalForMember(
       userId: member.user.id,
       slug,
       displayName,
+      avatarUrl: member.user.avatarUrl,
       isActive: true,
     },
   });

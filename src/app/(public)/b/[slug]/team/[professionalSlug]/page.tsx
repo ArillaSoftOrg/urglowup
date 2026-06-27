@@ -21,6 +21,9 @@ async function getProfessionalWithBusiness(businessSlug: string, professionalSlu
       business: { slug: businessSlug, status: { in: ["ACTIVE_PRIVATE", "ACTIVE_MARKETPLACE"] } },
     },
     include: {
+      user: {
+        select: { avatarUrl: true },
+      },
       business: {
         select: {
           name: true,
@@ -63,6 +66,7 @@ export default async function ProfessionalPage({ params }: PageProps) {
   if (!pro) notFound();
 
   const bookingBase = `/b/${slug}/book`;
+  const avatarUrl = pro.avatarUrl ?? pro.user?.avatarUrl;
 
   const personJsonLd = {
     "@context": "https://schema.org",
@@ -70,7 +74,7 @@ export default async function ProfessionalPage({ params }: PageProps) {
     name: pro.displayName,
     jobTitle: pro.title ?? undefined,
     description: pro.bio ?? undefined,
-    image: pro.avatarUrl ?? undefined,
+    image: avatarUrl ?? undefined,
     worksFor: {
       "@type": "LocalBusiness",
       name: pro.business.name,
@@ -93,9 +97,9 @@ export default async function ProfessionalPage({ params }: PageProps) {
 
         {/* Profile header */}
         <div className="flex items-start gap-5">
-          {pro.avatarUrl ? (
+          {avatarUrl ? (
             <Image
-              src={pro.avatarUrl}
+              src={avatarUrl}
               alt={pro.displayName}
               width={96}
               height={96}

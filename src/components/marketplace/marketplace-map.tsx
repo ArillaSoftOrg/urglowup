@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { MapPin } from "lucide-react";
-import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
+import type { MapPlace } from "@/lib/marketplace/map-place";
 
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: true,
@@ -27,24 +27,21 @@ const mapOptions: google.maps.MapOptions = {
 const DEFAULT_CENTER = { lat: 39.0, lng: 35.0 };
 const DEFAULT_ZOOM = 6;
 
-function markerIcon(active: boolean): google.maps.Symbol {
+function markerIcon(active: boolean, variant: "bookable" | "external"): google.maps.Symbol {
+  const baseColor  = variant === "bookable" ? "#16a34a" : "#374151";
+  const lightColor = variant === "bookable" ? "#86efac" : "#9ca3af";
   return {
     path: google.maps.SymbolPath.CIRCLE,
     scale: active ? 11 : 8,
-    fillColor: active ? "#e0436b" : "#f3a8bf",
+    fillColor: active ? baseColor : lightColor,
     fillOpacity: 1,
     strokeColor: "#ffffff",
     strokeWeight: 2,
   };
 }
 
-interface LocatedBusiness extends MarketplaceBusiness {
-  latitude: number;
-  longitude: number;
-}
-
 interface MarketplaceMapProps {
-  businesses: LocatedBusiness[];
+  businesses: MapPlace[];
   apiKey: string;
   activeId: string | null;
   onActivate: (id: string | null) => void;
@@ -57,7 +54,7 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const markersRef = useRef<Map<string, { marker: google.maps.Marker; variant: "bookable" | "external" }>>(new Map());
   const clustererRef = useRef<MarkerClusterer | null>(null);
 
   const handleLoad = (map: google.maps.Map) => {
@@ -75,19 +72,19 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
     const markersById = markersRef.current;
 
     clustererRef.current?.clearMarkers();
-    markersById.forEach((marker) => marker.setMap(null));
+    markersById.forEach(({ marker }) => marker.setMap(null));
     markersById.clear();
 
-    const markers = businesses.map((business) => {
+    const markers = businesses.map((place) => {
       const marker = new google.maps.Marker({
-        position: { lat: business.latitude, lng: business.longitude },
-        title: business.name,
-        icon: markerIcon(false),
+        position: { lat: place.latitude, lng: place.longitude },
+        title: place.name,
+        icon: markerIcon(false, place.markerVariant),
       });
-      marker.addListener("click", () => onActivate(business.id));
-      marker.addListener("mouseover", () => onActivate(business.id));
+      marker.addListener("click", () => onActivate(place.id));
+      marker.addListener("mouseover", () => onActivate(place.id));
       marker.addListener("mouseout", () => onActivate(null));
-      markersById.set(business.id, marker);
+      markersById.set(place.id, { marker, variant: place.markerVariant });
       return marker;
     });
 
@@ -108,22 +105,22 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
 
     return () => {
       clusterer.clearMarkers();
-      markersById.forEach((marker) => marker.setMap(null));
+      markersById.forEach(({ marker }) => marker.setMap(null));
       markersById.clear();
     };
   }, [isLoaded, businesses, onActivate]);
 
   // Re-style + pan to the active marker without rebuilding everything
   useEffect(() => {
-    markersRef.current.forEach((marker, id) => {
+    markersRef.current.forEach(({ marker, variant }, id) => {
       const isActive = id === activeId;
-      marker.setIcon(markerIcon(isActive));
+      marker.setIcon(markerIcon(isActive, variant));
       marker.setZIndex(isActive ? 999 : undefined);
     });
 
     if (activeId) {
-      const marker = markersRef.current.get(activeId);
-      const position = marker?.getPosition();
+      const entry = markersRef.current.get(activeId);
+      const position = entry?.marker.getPosition();
       if (position && mapRef.current) mapRef.current.panTo(position);
     }
   }, [activeId]);

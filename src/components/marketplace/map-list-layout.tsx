@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { BusinessCard } from "./business-card";
 import { MarketplaceMap } from "./marketplace-map";
 import { cn } from "@/lib/utils";
+import { normalizeBusinessToMapPlace } from "@/lib/marketplace/map-place";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
 interface MapListLayoutProps {
@@ -39,6 +40,7 @@ export function MapListLayout({
     (b): b is MarketplaceBusiness & { latitude: number; longitude: number } =>
       b.latitude != null && b.longitude != null
   );
+  const mapPlaces = located.map((b) => normalizeBusinessToMapPlace(b, locale));
   const unlocatedCount = businesses.length - located.length;
 
   return (
@@ -98,7 +100,7 @@ export function MapListLayout({
           )}
         >
           <MarketplaceMap
-            businesses={located}
+            businesses={mapPlaces}
             apiKey={apiKey}
             activeId={activeId}
             onActivate={setActiveId}
