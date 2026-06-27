@@ -182,8 +182,45 @@ export function MobileBusinessProfile({
 
         <SectionNav
           sections={navSections}
-          initialActiveId={navSections[0]?.id ?? "services"}
+          initialActiveId="about"
+          revealAtId="about"
           className="border-t bg-background/95 md:hidden"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (() => {
+                const nav = document.querySelector('[data-mobile-section-nav="true"]');
+                const target = document.getElementById('about');
+                if (!nav || !target) return;
+                const sync = () => {
+                  const show = window.scrollY > 0 && target.getBoundingClientRect().top <= 120;
+                  nav.style.visibility = show ? 'visible' : 'hidden';
+                  nav.style.opacity = show ? '1' : '0';
+                  nav.style.pointerEvents = show ? 'auto' : 'none';
+                  if (!show) return;
+                  let current = 'about';
+                  nav.querySelectorAll('[data-section-id]').forEach((button) => {
+                    const id = button.getAttribute('data-section-id');
+                    const section = id ? document.getElementById(id) : null;
+                    if (section && section.getBoundingClientRect().top <= 120) current = id;
+                  });
+                  nav.querySelectorAll('[data-section-id]').forEach((button) => {
+                    const active = button.getAttribute('data-section-id') === current;
+                    button.setAttribute('aria-current', active ? 'true' : 'false');
+                    button.classList.toggle('text-foreground', active);
+                    button.classList.toggle('after:scale-x-100', active);
+                    button.classList.toggle('text-foreground/65', !active);
+                    button.classList.toggle('after:scale-x-0', !active);
+                    button.classList.toggle('hover:text-foreground', !active);
+                  });
+                };
+                window.addEventListener('scroll', sync, { passive: true });
+                window.addEventListener('resize', sync);
+                sync();
+              })();
+            `,
+          }}
         />
 
         {hasAbout && (

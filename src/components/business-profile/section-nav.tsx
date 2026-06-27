@@ -12,12 +12,15 @@ export function SectionNav({
   sections,
   className,
   initialActiveId,
+  revealAtId,
 }: {
   sections: NavSection[];
   className?: string;
   initialActiveId?: string;
+  revealAtId?: string;
 }) {
   const [activeId, setActiveId] = useState<string>(initialActiveId ?? sections[0]?.id ?? "");
+  const [revealed, setRevealed] = useState(!revealAtId);
   const shellRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -48,6 +51,33 @@ export function SectionNav({
     nav.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
   }, [activeId]);
 
+  useEffect(() => {
+    if (!revealAtId) return;
+
+    const syncReveal = () => {
+      const revealEl = document.getElementById(revealAtId);
+      if (!revealEl) return;
+      const shouldReveal = window.scrollY > 0 && revealEl.getBoundingClientRect().top <= 120;
+      const nav = shellRef.current;
+      if (nav) {
+        nav.style.visibility = shouldReveal ? "visible" : "hidden";
+        nav.style.opacity = shouldReveal ? "1" : "0";
+        nav.style.pointerEvents = shouldReveal ? "auto" : "none";
+      }
+      setRevealed((prev) => (prev === shouldReveal ? prev : shouldReveal));
+    };
+
+    window.addEventListener("scroll", syncReveal, { passive: true });
+    window.addEventListener("resize", syncReveal);
+    const intervalId = window.setInterval(syncReveal, 150);
+    syncReveal();
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("scroll", syncReveal);
+      window.removeEventListener("resize", syncReveal);
+    };
+  }, [revealAtId]);
+
   // Scroll-based scrollspy — picks the last section whose top is at/above the nav
   useEffect(() => {
     if (sections.length === 0) return;
@@ -73,7 +103,7 @@ export function SectionNav({
       window.removeEventListener("scroll", sync);
       window.removeEventListener("resize", sync);
     };
-  }, [sections, getStickyOffset, getVisibleSection]);
+  }, [sections, getStickyOffset, getVisibleSection, revealAtId]);
 
   const handleClick = (id: string) => {
     const el = getVisibleSection(id);
@@ -92,10 +122,13 @@ export function SectionNav({
   return (
     <nav
       ref={shellRef}
+      data-mobile-section-nav={revealAtId ? "true" : undefined}
       aria-label="Sayfa bölümleri"
       className={cn(
-        "sticky top-14 z-30 border-b bg-background/95 backdrop-blur-sm md:top-20",
+        revealAtId ? "fixed inset-x-0 top-14 z-30" : "sticky top-14 z-30 md:top-20",
+        "border-b bg-background/95 backdrop-blur-sm",
         "supports-[backdrop-filter]:bg-background/90",
+        revealAtId && !revealed && "pointer-events-none invisible opacity-0",
         className,
       )}
     >
@@ -112,6 +145,7 @@ export function SectionNav({
           return (
             <button
               key={id}
+              data-section-id={id}
               ref={(el) => {
                 if (el) itemRefs.current.set(id, el);
                 else itemRefs.current.delete(id);

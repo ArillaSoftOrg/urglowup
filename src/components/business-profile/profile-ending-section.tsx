@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, Star } from "lucide-react";
-import { SectionNav, type NavSection } from "@/components/business-profile/section-nav";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
@@ -22,14 +21,6 @@ const DISCOVERY_LINKS = [
   { label: "Güzellik Salonları", categorySlug: "skin-care" },
   { label: "Jel Tırnaklar", categorySlug: "nail-salon" },
   { label: "Saç Boyama", categorySlug: "hair-salon" },
-];
-
-const MOBILE_NAV_SECTIONS: NavSection[] = [
-  { id: "gallery", label: "Fotoğraflar" },
-  { id: "about", label: "Hakkında" },
-  { id: "services", label: "Hizmetler" },
-  { id: "portfolio", label: "Portföy" },
-  { id: "other", label: "Diğer" },
 ];
 
 function NearbyBusinessCard({
@@ -120,11 +111,6 @@ export function ProfileEndingSection({
 
   return (
     <section id="other" className="scroll-mt-[106px] border-t border-border/70 bg-background md:border-t">
-      <SectionNav
-        sections={MOBILE_NAV_SECTIONS}
-        initialActiveId="other"
-        className="md:hidden"
-      />
       <div className="mx-auto max-w-[1440px] space-y-14 px-5 py-8 sm:px-6 md:py-12 lg:px-10 lg:py-14 xl:px-12">
         {nearbyBusinesses.length > 0 && (
           <div className="hidden space-y-6 md:block">
