@@ -66,6 +66,7 @@ const CropDialog = dynamic(() => import("./crop-dialog"), {
 
 const CROP_ASPECTS: Partial<Record<string, number>> = {
   COVER: 2,
+  PORTFOLIO_IMAGE: 1,
 };
 
 interface ServiceOption {
@@ -789,9 +790,9 @@ function PortfolioSection({
           Portföy görselleri
         </h2>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Profil portföy bölümünde görünür. Kare yükleme zorunlu değil;
-          dikey yakın planlar yüz, tırnak ve dövme detaylarını daha iyi
-          gösterir. Keşfet kartını etkilemez.
+          Profil portföy bölümünde kare önizleme olarak görünür. Yüz, tırnak
+          ve dövme detayları için Kırpmayı Düzenle ile thumbnail odağını
+          ayarlayın. Keşfet kartını etkilemez.
         </p>
       </div>
 

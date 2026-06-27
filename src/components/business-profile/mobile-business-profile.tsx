@@ -94,12 +94,16 @@ export function MobileBusinessProfile({
   const hasContact = !!(business.phone || business.whatsapp);
   const hasAbout = !!(business.description || hasContact || hasSocial || business.address || business.city || business.district);
   const hasTeam = business.professionals.length > 0;
+  const mobileMapRatingLabel =
+    reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null
+      ? (reviewSummary.averageRating / 2).toFixed(1)
+      : null;
 
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
     ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
     { id: "services", label: "Hizmetler" },
-    ...(hasTeam ? [{ id: "team", label: "Takım" }] : []),
+    ...(hasTeam ? [{ id: "team", label: "Ekip" }] : []),
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
     { id: "hours", label: "Saatler" },
     { id: "location", label: "Harita" },
@@ -250,7 +254,7 @@ export function MobileBusinessProfile({
               <HoursSection business={business} />
             </section>
             <section id="location" className="scroll-mt-[122px]">
-              <LocationSection business={business} />
+              <LocationSection business={business} mobileRatingLabel={mobileMapRatingLabel} />
             </section>
           </section>
         </div>

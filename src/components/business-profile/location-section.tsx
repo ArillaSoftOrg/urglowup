@@ -9,9 +9,11 @@ const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 export function LocationSection({
   business,
   showTitle = true,
+  mobileRatingLabel,
 }: {
   business: BusinessWithDetails;
   showTitle?: boolean;
+  mobileRatingLabel?: string | null;
 }) {
   const hasAddress = business.address || business.city || business.district;
   if (!hasAddress) return null;
@@ -40,14 +42,14 @@ export function LocationSection({
         </h2>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border/70 shadow-sm md:rounded-2xl">
+      <div className="relative overflow-hidden rounded-xl border border-border/70 shadow-sm md:rounded-2xl">
         {hasCoords && mapsApiKey ? (
           <LazyBusinessMap
             lat={business.latitude as number}
             lng={business.longitude as number}
             name={business.name}
             apiKey={mapsApiKey}
-            className="flex h-28 w-full flex-col items-center justify-center overflow-hidden bg-muted/30 px-4 text-center md:h-[380px] lg:h-[480px]"
+            className="flex h-[224px] w-full flex-col items-center justify-center overflow-hidden bg-muted/30 px-4 text-center md:h-[380px] lg:h-[480px]"
           />
         ) : (
           <iframe
@@ -55,12 +57,20 @@ export function LocationSection({
             src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="h-28 w-full bg-muted/30 md:h-[380px] lg:h-[480px]"
+            className="h-[224px] w-full bg-muted/30 md:h-[380px] lg:h-[480px]"
           />
+        )}
+        {mobileRatingLabel && (
+          <span
+            aria-label={`${mobileRatingLabel} puan`}
+            className="absolute left-1/2 top-1/2 z-10 inline-flex h-10 min-w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-foreground px-3 text-sm font-bold text-background shadow-md md:hidden"
+          >
+            {mobileRatingLabel}
+          </span>
         )}
       </div>
 
-      <div className="space-y-1 text-sm md:hidden">
+      <div className="space-y-1.5 text-sm md:hidden">
         {fullAddress && (
           <p className="font-medium leading-snug text-foreground">{fullAddress}</p>
         )}

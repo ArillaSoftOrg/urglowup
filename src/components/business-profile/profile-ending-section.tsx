@@ -36,9 +36,9 @@ function NearbyBusinessCard({
   return (
     <Link
       href={pathWithLocale(`/b/${business.slug}`, locale)}
-      className="group block min-w-[220px] flex-[0_0_58%] md:min-w-0 md:flex-1"
+      className="group block min-w-[216px] flex-[0_0_56%] snap-start md:min-w-0 md:flex-1"
     >
-      <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-cream">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-cream shadow-sm">
         {business.coverImageUrl ? (
           <Image
             src={business.coverImageUrl}
@@ -50,13 +50,13 @@ function NearbyBusinessCard({
         ) : (
           <div className="size-full bg-gradient-to-br from-surface-cream to-brand-pink/30" />
         )}
-        <span className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full bg-foreground/35 text-background backdrop-blur">
+        <span className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full bg-foreground/40 text-background shadow-sm backdrop-blur">
           <Heart className="size-5" />
         </span>
       </div>
 
-      <div className="mt-2 space-y-1">
-        <div className="flex items-start justify-between gap-3">
+      <div className="mt-2.5 space-y-1">
+        <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-1 text-base font-bold leading-tight tracking-normal text-foreground">
             {business.name}
           </h3>
@@ -111,13 +111,13 @@ export function ProfileEndingSection({
 
   return (
     <section id="other" className="scroll-mt-[106px] border-t border-border/70 bg-background md:border-t">
-      <div className="mx-auto max-w-[1440px] space-y-14 px-5 py-8 sm:px-6 md:py-12 lg:px-10 lg:py-14 xl:px-12">
+      <div className="mx-auto max-w-[1440px] space-y-12 px-5 py-7 sm:px-6 md:space-y-14 md:py-12 lg:px-10 lg:py-14 xl:px-12">
         {nearbyBusinesses.length > 0 && (
           <div className="space-y-4 md:space-y-6">
             <h2 className="text-xl font-bold tracking-normal md:text-2xl">
               Yakındaki mekanlar
             </h2>
-            <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible md:px-0">
+            <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-4 md:gap-6 md:overflow-visible md:px-0">
               {nearbyBusinesses.slice(0, 4).map((item) => (
                 <NearbyBusinessCard key={item.id} business={item} locale={locale} />
               ))}
