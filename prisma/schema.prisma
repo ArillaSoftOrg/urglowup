@@ -190,6 +190,45 @@ enum BusinessMemberRole {
   STAFF
 }
 
+enum MembershipStatus {
+  ACTIVE
+  PENDING
+  REMOVED
+}
+
+enum BusinessOwnershipStatus {
+  UNCLAIMED
+  CLAIM_PENDING
+  CLAIMED
+}
+
+enum PlaceReferenceStatus {
+  DISCOVERED
+  APPROVED
+  HIDDEN
+  DUPLICATE
+  CLAIM_PENDING
+  CLAIMED
+  REJECTED
+  STALE
+  ERROR
+}
+
+enum ClaimRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ClaimVerificationType {
+  PHONE
+  EMAIL
+  DOCUMENT
+  GOOGLE_BUSINESS_PROFILE
+  MANUAL_ADMIN
+}
+
 enum Theme {
   LIGHT
   DARK
@@ -236,8 +275,10 @@ model User {
   createdCampaigns    Campaign[]
   sessions            Session[]
   twoFactor           TwoFactor?
-  businessMemberships BusinessMember[]
-  sentInvitations     BusinessInvitation[] @relation("SentInvitations")
+  businessMemberships   BusinessMember[]
+  sentInvitations       BusinessInvitation[]   @relation("SentInvitations")
+  claimRequests         BusinessClaimRequest[] @relation("UserClaimRequests")
+  reviewedClaimRequests BusinessClaimRequest[] @relation("ReviewedClaimRequests")
   conversations       Conversation[]                // Customer side of conversations
   sentMessages        Message[]                     // Messages sent by this user
   waitlistEntries     WaitlistEntry[]
@@ -334,6 +375,7 @@ model Business {
   petFriendly          Boolean        @default(false)
   maxGroupBookingGuests    Int           @default(4)
   googlePlaceId            String?
+  ownershipStatus          BusinessOwnershipStatus @default(CLAIMED)
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
 
@@ -360,6 +402,8 @@ model Business {
   customerNotes       BusinessCustomerNote[]
   coupons             Coupon[]
   waitlistEntries     WaitlistEntry[]
+  placeReferences     PlaceReference[]       @relation("PlaceReferenceClaim")
+  claimRequests       BusinessClaimRequest[] @relation("BusinessClaimRequests")
 
   @@index([city])
   @@index([status])
@@ -1096,6 +1140,7 @@ model BusinessMember {
   userId     String
   user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   role       BusinessMemberRole
+  status     MembershipStatus   @default(ACTIVE)
   invitedBy  String?
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
@@ -1162,4 +1207,66 @@ model WaitlistEntry {
   @@unique([businessId, customerId, serviceId, date, time])
   @@index([businessId, date, time])
   @@index([customerId])
+}
+
+// ─── Place Reference & Claim ──────────────────────────────────────
+
+model PlaceReference {
+  id                String               @id @default(cuid())
+  provider          String               @default("GOOGLE")
+  providerPlaceId   String
+
+  claimedBusinessId String?
+  claimedBusiness   Business?            @relation("PlaceReferenceClaim", fields: [claimedBusinessId], references: [id])
+
+  city              String?
+  district          String?
+  categoryHint      String?
+  status            PlaceReferenceStatus @default(DISCOVERED)
+
+  lastFetchedAt     DateTime?
+  cacheExpiresAt    DateTime?
+  fetchStatus       String?
+
+  claimRequests     BusinessClaimRequest[]
+
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@unique([provider, providerPlaceId])
+  @@index([city, district])
+  @@index([status])
+  @@index([claimedBusinessId])
+}
+
+model BusinessClaimRequest {
+  id               String                 @id @default(cuid())
+  userId           String
+  user             User                   @relation("UserClaimRequests", fields: [userId], references: [id])
+
+  businessId       String?
+  business         Business?              @relation("BusinessClaimRequests", fields: [businessId], references: [id])
+
+  placeReferenceId String?
+  placeReference   PlaceReference?        @relation(fields: [placeReferenceId], references: [id])
+
+  status           ClaimRequestStatus     @default(PENDING)
+  verificationType ClaimVerificationType?
+  evidenceUrl      String?
+  phone            String?
+  email            String?
+  note             String?
+
+  reviewedById     String?
+  reviewer         User?                  @relation("ReviewedClaimRequests", fields: [reviewedById], references: [id])
+  reviewedAt       DateTime?
+  rejectionReason  String?
+
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@index([userId])
+  @@index([businessId])
+  @@index([placeReferenceId])
+  @@index([status])
 }
