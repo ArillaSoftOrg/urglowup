@@ -20,6 +20,7 @@ const adminNav = [
   { title: "Stil Etiketleri", href: "/admin/style-tags" },
   { title: "Gönderiler", href: "/admin/posts" },
   { title: "Marketplace", href: "/admin/marketplace" },
+  { title: "Yer Referansları", href: "/admin/place-references" },
 ];
 
 export default async function AdminLayout({

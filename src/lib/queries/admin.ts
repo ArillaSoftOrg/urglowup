@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
-import type { AppointmentStatus, BusinessStatus, CampaignStatus, MediaStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
+import type { AppointmentStatus, BusinessStatus, CampaignStatus, MediaStatus, PlaceReferenceStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
 
 // ─── Dashboard ─────────────────────────────────────────────────
 
@@ -1513,3 +1513,62 @@ export async function getCampaignDetail(campaignId: string) {
 }
 
 export type AdminCampaignDetail = Awaited<ReturnType<typeof getCampaignDetail>>;
+
+// ─── PlaceReference ─────────────────────────────────────────────
+
+const VALID_PLACE_REFERENCE_STATUSES = new Set<PlaceReferenceStatus>([
+  "DISCOVERED",
+  "APPROVED",
+  "HIDDEN",
+  "DUPLICATE",
+  "CLAIM_PENDING",
+  "CLAIMED",
+  "REJECTED",
+  "STALE",
+  "ERROR",
+]);
+
+export function isValidPlaceReferenceStatus(
+  value: unknown
+): value is PlaceReferenceStatus {
+  return (
+    typeof value === "string" &&
+    VALID_PLACE_REFERENCE_STATUSES.has(value as PlaceReferenceStatus)
+  );
+}
+
+export async function getAdminPlaceReferences(params?: {
+  status?: PlaceReferenceStatus;
+  city?: string;
+}) {
+  return db.placeReference.findMany({
+    where: {
+      ...(params?.status ? { status: params.status } : {}),
+      ...(params?.city ? { city: params.city } : {}),
+    },
+    include: {
+      claimedBusiness: { select: { id: true, name: true, slug: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+}
+
+export type AdminPlaceReference = Awaited<
+  ReturnType<typeof getAdminPlaceReferences>
+>[number];
+
+export async function getApprovedUnclaimedPlaceReferences() {
+  return db.placeReference.findMany({
+    where: { status: "APPROVED", claimedBusinessId: null },
+    select: {
+      id: true,
+      provider: true,
+      providerPlaceId: true,
+      city: true,
+      district: true,
+      categoryHint: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
