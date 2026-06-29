@@ -2,7 +2,7 @@
 
 import { randomBytes } from "crypto";
 import { requireRole } from "@/lib/auth";
-import { UserRole } from "@/generated/prisma/enums";
+import { UserRole, BusinessMemberRole, MembershipStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { z } from "zod/v4";
@@ -652,13 +652,19 @@ export async function changeUserRole(
     }
   }
 
-  // Guard: BUSINESS_OWNER requires existing Business record
+  // Guard: BUSINESS_OWNER requires existing Business record (via member role or legacy ownerId)
   if (newRole === "BUSINESS_OWNER") {
-    const business = await db.business.findUnique({
-      where: { ownerId: userId },
-      select: { id: true },
-    });
-    if (!business) {
+    const [memberBusiness, legacyBusiness] = await Promise.all([
+      db.businessMember.findFirst({
+        where: { userId, role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+        select: { businessId: true },
+      }),
+      db.business.findFirst({
+        where: { ownerId: userId },
+        select: { id: true },
+      }),
+    ]);
+    if (!memberBusiness && !legacyBusiness) {
       return {
         success: false,
         message:

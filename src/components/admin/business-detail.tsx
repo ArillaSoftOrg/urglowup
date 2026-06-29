@@ -103,9 +103,9 @@ export function BusinessDetailView({
   business: AdminBusinessDetail;
   actionHistory: AdminAction[];
 }) {
-  const ownerName = [business.owner.firstName, business.owner.lastName]
-    .filter(Boolean)
-    .join(" ");
+  const ownerName = business.owner
+    ? [business.owner.firstName, business.owner.lastName].filter(Boolean).join(" ")
+    : "";
 
   const completion = calculateProfileCompletion(
     buildProfileCompletionData(business)
@@ -133,7 +133,9 @@ export function BusinessDetailView({
             <div>
               <p className="font-medium">Owner</p>
               <p className="text-muted-foreground">
-                {ownerName || "—"} ({business.owner.email})
+                {business.owner
+                  ? `${ownerName || "—"} (${business.owner.email})`
+                  : "Sahipsiz"}
               </p>
             </div>
             <div>

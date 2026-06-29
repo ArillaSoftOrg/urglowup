@@ -37,7 +37,7 @@ async function getAppointmentEmailPayload(appointmentId: string) {
   });
 
   if (!appt) throw new Error(`Appointment ${appointmentId} not found for email`);
-  if (!appt.business.owner?.email) throw new Error(`Business owner email missing for appointment ${appointmentId}`);
+  if (!appt.business.owner || !appt.business.owner.email) throw new Error(`Business owner email missing for appointment ${appointmentId}`);
   return appt;
 }
 
@@ -92,12 +92,12 @@ export async function sendNewRequestEmailToBusiness(
   }
 
   await sendEmail({
-    to: appt.business.owner.email,
+    to: appt.business.owner!.email,
     subject: `New appointment request from ${fullName(appt.customer.firstName, appt.customer.lastName)}`,
     react: React.createElement(AppointmentRequestEmail, {
       businessOwnerName: fullName(
-        appt.business.owner.firstName,
-        appt.business.owner.lastName,
+        appt.business.owner!.firstName,
+        appt.business.owner!.lastName,
         ""
       ),
       customerName: fullName(appt.customer.firstName, appt.customer.lastName),
@@ -259,10 +259,10 @@ export async function sendAdminCancelledEmailToBusinessOwner(
   const appt = await getAppointmentEmailPayload(appointmentId);
 
   const customerName = fullName(appt.customer.firstName, appt.customer.lastName);
-  const ownerName = fullName(appt.business.owner.firstName, appt.business.owner.lastName, "");
+  const ownerName = fullName(appt.business.owner!.firstName, appt.business.owner!.lastName, "");
 
   await sendEmail({
-    to: appt.business.owner.email,
+    to: appt.business.owner!.email,
     subject: `Admin cancelled an appointment at ${appt.business.name}`,
     react: React.createElement(AppointmentCancelledByCustomerEmail, {
       businessOwnerName: ownerName,
@@ -296,12 +296,12 @@ export async function sendCancelledByCustomerEmailToBusiness(
   }
 
   await sendEmail({
-    to: appt.business.owner.email,
+    to: appt.business.owner!.email,
     subject: `${fullName(appt.customer.firstName, appt.customer.lastName)} cancelled their appointment`,
     react: React.createElement(AppointmentCancelledByCustomerEmail, {
       businessOwnerName: fullName(
-        appt.business.owner.firstName,
-        appt.business.owner.lastName,
+        appt.business.owner!.firstName,
+        appt.business.owner!.lastName,
         ""
       ),
       customerName: fullName(appt.customer.firstName, appt.customer.lastName),
@@ -363,12 +363,12 @@ export async function sendRescheduleRequestEmailToBusiness(
   const newDateObj = new Date(newDate + "T00:00:00Z");
 
   await sendEmail({
-    to: appt.business.owner.email,
+    to: appt.business.owner!.email,
     subject: `${fullName(appt.customer.firstName, appt.customer.lastName)} requested to reschedule their appointment`,
     react: React.createElement(AppointmentRescheduleRequestEmail, {
       businessOwnerName: fullName(
-        appt.business.owner.firstName,
-        appt.business.owner.lastName,
+        appt.business.owner!.firstName,
+        appt.business.owner!.lastName,
         ""
       ),
       customerName: fullName(appt.customer.firstName, appt.customer.lastName),
@@ -435,6 +435,11 @@ export async function sendReviewModeratedEmail(
     return;
   }
 
+  if (!review.business.owner?.email) {
+    console.log(`[email] sendReviewModeratedEmail: review ${reviewId} has no business owner email`);
+    return;
+  }
+
   const { ContentModeratedEmail } = await import("@/emails/content-moderated");
 
   await sendEmail({
@@ -476,6 +481,11 @@ export async function sendPostModeratedEmail(
     return;
   }
 
+  if (!post.business.owner?.email) {
+    console.log(`[email] sendPostModeratedEmail: post ${postId} has no business owner email`);
+    return;
+  }
+
   const { ContentModeratedEmail } = await import("@/emails/content-moderated");
 
   await sendEmail({
@@ -514,6 +524,11 @@ export async function sendMediaModeratedEmail(
 
   if (!media) {
     console.log(`[email] sendMediaModeratedEmail: media ${mediaId} not found`);
+    return;
+  }
+
+  if (!media.business.owner?.email) {
+    console.log(`[email] sendMediaModeratedEmail: media ${mediaId} has no business owner email`);
     return;
   }
 

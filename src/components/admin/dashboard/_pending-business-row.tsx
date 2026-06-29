@@ -31,7 +31,9 @@ export function PendingBusinessRow({ business }: PendingBusinessRowProps) {
       <div className="flex-1">
         <p className="font-medium">{business.name}</p>
         <p className="text-xs text-muted-foreground">
-          {business.owner.firstName} {business.owner.lastName} • {business.owner.email}
+          {business.owner
+            ? `${business.owner.firstName ?? ""} ${business.owner.lastName ?? ""} • ${business.owner.email}`.trim()
+            : "Sahipsiz"}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
           {format(new Date(business.createdAt), "MMM d")}

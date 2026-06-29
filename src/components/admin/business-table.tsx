@@ -142,9 +142,9 @@ function BusinessRow({ business }: { business: AdminBusiness }) {
     });
   }
 
-  const ownerName = [business.owner.firstName, business.owner.lastName]
-    .filter(Boolean)
-    .join(" ");
+  const ownerName = business.owner
+    ? [business.owner.firstName, business.owner.lastName].filter(Boolean).join(" ")
+    : "";
 
   return (
     <div className="flex items-center justify-between border-b p-3 last:border-0 hover:bg-muted/50 transition-colors">
@@ -193,7 +193,7 @@ function BusinessRow({ business }: { business: AdminBusiness }) {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          {ownerName || business.owner.email} &middot; {business.city ?? "No city"}
+          {ownerName || business.owner?.email || "Sahipsiz"} &middot; {business.city ?? "No city"}
         </p>
       </div>
 
@@ -263,9 +263,9 @@ export function BusinessTable({
     return items.filter(
       (b) =>
         b.name.toLowerCase().includes(term) ||
-        b.owner.email.toLowerCase().includes(term) ||
-        (b.owner.firstName?.toLowerCase().includes(term) ?? false) ||
-        (b.owner.lastName?.toLowerCase().includes(term) ?? false)
+        (b.owner?.email?.toLowerCase().includes(term) ?? false) ||
+        (b.owner?.firstName?.toLowerCase().includes(term) ?? false) ||
+        (b.owner?.lastName?.toLowerCase().includes(term) ?? false)
     );
   };
 

@@ -33,8 +33,9 @@ async function getBusinessNotificationRecipientIds(businessId: string) {
 
   if (!business) return [];
 
+  const ownerIds = business.ownerId ? [business.ownerId] : [];
   return Array.from(
-    new Set([business.ownerId, ...business.members.map((member) => member.userId)])
+    new Set([...ownerIds, ...business.members.map((member) => member.userId)])
   );
 }
 

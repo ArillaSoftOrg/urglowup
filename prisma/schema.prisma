@@ -348,8 +348,8 @@ model RateLimit {
 
 model Business {
   id                   String         @id @default(cuid())
-  ownerId              String         @unique
-  owner                User           @relation(fields: [ownerId], references: [id])
+  ownerId              String?        @unique
+  owner                User?          @relation(fields: [ownerId], references: [id])
   name                 String
   slug                 String         @unique
   description          String?
