@@ -1,8 +1,9 @@
 "use server";
 
 import { requireRole } from "@/lib/auth";
-import { UserRole } from "@/generated/prisma/enums";
+import { UserRole, BusinessMemberRole, MembershipStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
+import { generateUniqueSlug } from "@/lib/slug";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { ADMIN_PLACE_REFERENCE_TRANSITIONS } from "@/lib/constants/place-reference";
@@ -247,4 +248,267 @@ export async function unlinkPlaceReferenceFromBusiness(
 
   revalidatePlaceReferences();
   return { success: true, message: "Business link removed." };
+}
+
+// ─── Convert PlaceReference → Business ──────────────────────────
+
+class ConvertError extends Error {}
+
+function isPrismaUniqueError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: unknown }).code === "P2002"
+  );
+}
+
+function normalizeSocialUrl(value: string | undefined | null, base: string): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http")) return trimmed;
+  return `${base}${trimmed.replace(/^@/, "")}`;
+}
+
+const convertPlaceReferenceSchema = z.object({
+  placeReferenceId: z.string().min(1),
+  name: z.string().min(2).max(100),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  phone: z.string().max(20).optional().or(z.literal("")),
+  whatsapp: z.string().max(20).optional().or(z.literal("")),
+  instagramUrl: z.string().max(200).optional().or(z.literal("")),
+  facebookUrl: z.string().max(200).optional().or(z.literal("")),
+  tiktokUrl: z.string().max(200).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
+  district: z.string().max(100).optional().or(z.literal("")),
+  address: z.string().max(500).optional().or(z.literal("")),
+  categoryIds: z.array(z.string()).max(10).default([]),
+  ownerEmail: z.preprocess(
+    (v) => {
+      if (typeof v !== "string") return undefined;
+      const t = v.trim().toLowerCase();
+      return t.length > 0 ? t : undefined;
+    },
+    z.string().email().optional()
+  ),
+  instantConfirmation: z.boolean().default(false),
+  inAppPayment: z.boolean().default(false),
+  petFriendly: z.boolean().default(false),
+  maxGroupBookingGuests: z.number().int().min(1).max(20).default(4),
+});
+
+export async function adminConvertPlaceReferenceToBusiness(
+  input: z.infer<typeof convertPlaceReferenceSchema>
+): Promise<PlaceReferenceActionState & { businessId?: string }> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const parsed = convertPlaceReferenceSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0].message };
+  }
+
+  const data = parsed.data;
+  const placeReferenceId = data.placeReferenceId;
+  const categoryIds = [...new Set(data.categoryIds)];
+
+  // 4) PlaceReference eligibility (pre-transaction)
+  const ref = await db.placeReference.findUnique({
+    where: { id: placeReferenceId },
+    select: {
+      id: true,
+      provider: true,
+      providerPlaceId: true,
+      status: true,
+      claimedBusinessId: true,
+    },
+  });
+
+  if (!ref) {
+    return { success: false, message: "Referans bulunamadı." };
+  }
+  if (ref.provider !== "GOOGLE") {
+    return { success: false, message: "Yalnızca Google referansları dönüştürülebilir." };
+  }
+  if (!ref.providerPlaceId) {
+    return { success: false, message: "Geçersiz Place ID." };
+  }
+  if (ref.claimedBusinessId !== null) {
+    return { success: false, message: "Bu referans zaten bir işletmeye bağlı." };
+  }
+  if (ref.status !== "APPROVED") {
+    return { success: false, message: "Yalnızca APPROVED referanslar dönüştürülebilir." };
+  }
+
+  // 5) Duplicate googlePlaceId (early UX)
+  const existingByPlace = await db.business.findFirst({
+    where: { googlePlaceId: ref.providerPlaceId },
+    select: { id: true },
+  });
+  if (existingByPlace) {
+    return { success: false, message: "Bu Google Place zaten bir Business ile eşleşmiş." };
+  }
+
+  // 6) Category validation
+  if (categoryIds.length > 0) {
+    const found = await db.businessCategory.findMany({
+      where: { id: { in: categoryIds } },
+      select: { id: true },
+    });
+    if (found.length !== categoryIds.length) {
+      return { success: false, message: "Geçersiz kategori." };
+    }
+  }
+
+  // 7) Owner resolution + guard (early UX)
+  let ownerId: string | null = null;
+  const ownerEmail = data.ownerEmail ?? null;
+  if (ownerEmail) {
+    const owner = await db.user.findUnique({
+      where: { email: ownerEmail },
+      select: { id: true },
+    });
+    if (!owner) {
+      return { success: false, message: `'${ownerEmail}' e-postasına sahip kullanıcı bulunamadı.` };
+    }
+    const [memberBusiness, legacyBusiness] = await Promise.all([
+      db.businessMember.findFirst({
+        where: { userId: owner.id, role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+        select: { businessId: true },
+      }),
+      db.business.findFirst({ where: { ownerId: owner.id }, select: { id: true } }),
+    ]);
+    if (memberBusiness || legacyBusiness) {
+      return { success: false, message: "Bu kullanıcı zaten başka bir işletmenin sahibidir." };
+    }
+    ownerId = owner.id;
+  }
+
+  // 8) Slug
+  const slug = await generateUniqueSlug(data.name);
+
+  let business: { id: string };
+  try {
+    business = await db.$transaction(async (tx) => {
+      // 1) Atomic lock: APPROVED + unclaimed → CLAIM_PENDING
+      const locked = await tx.placeReference.updateMany({
+        where: {
+          id: placeReferenceId,
+          provider: "GOOGLE",
+          status: "APPROVED",
+          claimedBusinessId: null,
+        },
+        data: { status: "CLAIM_PENDING" },
+      });
+      if (locked.count !== 1) {
+        throw new ConvertError("Referans artık dönüştürülebilir durumda değil.");
+      }
+
+      const fresh = await tx.placeReference.findUniqueOrThrow({
+        where: { id: placeReferenceId },
+        select: { providerPlaceId: true },
+      });
+
+      // 2) In-tx duplicate googlePlaceId guard
+      const dup = await tx.business.findFirst({
+        where: { googlePlaceId: fresh.providerPlaceId },
+        select: { id: true },
+      });
+      if (dup) {
+        throw new ConvertError("Bu Google Place zaten bir Business ile eşleşmiş.");
+      }
+
+      // 3) In-tx owner guard
+      if (ownerId) {
+        const [m, l] = await Promise.all([
+          tx.businessMember.findFirst({
+            where: { userId: ownerId, role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+            select: { businessId: true },
+          }),
+          tx.business.findFirst({ where: { ownerId }, select: { id: true } }),
+        ]);
+        if (m || l) {
+          throw new ConvertError("Bu kullanıcı zaten başka bir işletmenin sahibidir.");
+        }
+      }
+
+      const created = await tx.business.create({
+        data: {
+          name: data.name,
+          slug,
+          description: data.description?.trim() || null,
+          phone: data.phone?.trim() || null,
+          whatsapp: data.whatsapp?.trim() || null,
+          instagramUrl: normalizeSocialUrl(data.instagramUrl, "https://instagram.com/"),
+          facebookUrl: normalizeSocialUrl(data.facebookUrl, "https://facebook.com/"),
+          tiktokUrl: normalizeSocialUrl(data.tiktokUrl, "https://tiktok.com/@"),
+          city: data.city?.trim() || null,
+          district: data.district?.trim() || null,
+          address: data.address?.trim() || null,
+          googlePlaceId: fresh.providerPlaceId,
+          status: "ACTIVE_PRIVATE",
+          isMarketplaceVisible: false,
+          instantConfirmation: ownerId ? data.instantConfirmation : false,
+          inAppPayment: ownerId ? data.inAppPayment : false,
+          petFriendly: ownerId ? data.petFriendly : false,
+          maxGroupBookingGuests: data.maxGroupBookingGuests,
+          ...(ownerId
+            ? { ownerId, ownershipStatus: "CLAIMED" as const }
+            : { ownerId: null, ownershipStatus: "UNCLAIMED" as const }),
+        },
+        select: { id: true },
+      });
+
+      if (categoryIds.length > 0) {
+        await tx.businessToCategory.createMany({
+          data: categoryIds.map((categoryId) => ({ businessId: created.id, categoryId })),
+          skipDuplicates: true,
+        });
+      }
+
+      if (ownerId) {
+        await tx.businessMember.upsert({
+          where: { businessId_userId: { businessId: created.id, userId: ownerId } },
+          create: {
+            businessId: created.id,
+            userId: ownerId,
+            role: BusinessMemberRole.OWNER,
+            status: MembershipStatus.ACTIVE,
+          },
+          update: { role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+        });
+        await tx.user.update({
+          where: { id: ownerId },
+          data: { role: UserRole.BUSINESS_OWNER },
+        });
+      }
+
+      // 4) Final: CLAIM_PENDING → CLAIMED + link
+      await tx.placeReference.update({
+        where: { id: placeReferenceId },
+        data: { claimedBusinessId: created.id, status: "CLAIMED" },
+      });
+
+      return created;
+    });
+  } catch (err) {
+    if (err instanceof ConvertError) {
+      return { success: false, message: err.message };
+    }
+    if (isPrismaUniqueError(err)) {
+      return { success: false, message: "Bu Google Place zaten bir Business ile eşleşmiş." };
+    }
+    throw err;
+  }
+
+  await logAdminAction(
+    admin.id,
+    "placeReference.convert_to_business",
+    placeReferenceId,
+    `→ Business ${business.id}${ownerId ? ` owner:${ownerEmail}` : " (sahipsiz)"}`
+  );
+
+  revalidatePath("/admin/place-references");
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${business.id}`);
+  return { success: true, businessId: business.id, message: "İşletme oluşturuldu." };
 }

@@ -30,11 +30,15 @@ import {
   linkPlaceReferenceToBusiness,
   unlinkPlaceReferenceFromBusiness,
 } from "@/app/(admin)/admin/place-references/actions";
+import { ConvertPlaceReferenceDialog } from "@/components/admin/convert-place-reference-dialog";
 import type { AdminPlaceReference } from "@/lib/queries/admin";
 import type { PlaceReferenceStatus } from "@/generated/prisma/enums";
 
+type CategoryOption = { id: string; name: string; slug: string };
+
 interface PlaceReferenceTableProps {
   records: AdminPlaceReference[];
+  categories: CategoryOption[];
 }
 
 function formatDate(d: Date | null): string {
@@ -58,7 +62,7 @@ type LinkBusinessState = {
   businessId: string;
 };
 
-export function PlaceReferenceTable({ records }: PlaceReferenceTableProps) {
+export function PlaceReferenceTable({ records, categories }: PlaceReferenceTableProps) {
   const [pending, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ id: string; text: string; ok: boolean } | null>(null);
@@ -195,17 +199,24 @@ export function PlaceReferenceTable({ records }: PlaceReferenceTableProps) {
                         </Button>
                       </div>
                     ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs"
-                        onClick={() =>
-                          setLinkDialog({ id: rec.id, businessId: "" })
-                        }
-                      >
-                        <Link2 className="w-3 h-3 mr-1" />
-                        Bağla
-                      </Button>
+                      <div className="flex flex-col items-start gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() =>
+                            setLinkDialog({ id: rec.id, businessId: "" })
+                          }
+                        >
+                          <Link2 className="w-3 h-3 mr-1" />
+                          Bağla
+                        </Button>
+                        {rec.status === "APPROVED" &&
+                          rec.provider === "GOOGLE" &&
+                          !!rec.providerPlaceId && (
+                            <ConvertPlaceReferenceDialog record={rec} categories={categories} />
+                          )}
+                      </div>
                     )}
                   </td>
                   <td className="px-3 py-2 text-xs text-muted-foreground">
