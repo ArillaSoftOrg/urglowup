@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Upload, Loader2, ImagePlus } from "lucide-react";
 import { saveMediaRecord, saveCropMeta } from "@/app/(business)/business/media/actions";
 import {
@@ -37,12 +38,18 @@ type CropPending = {
   naturalHeight: number;
 };
 
+interface ServiceOption {
+  id: string;
+  name: string;
+}
+
 interface MediaUploadButtonProps {
   mediaType: MediaType;
   label?: string;
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
+  services?: ServiceOption[];
 }
 
 export function MediaUploadButton({
@@ -51,16 +58,21 @@ export function MediaUploadButton({
   variant = "outline",
   size = "default",
   className,
+  services = [],
 }: MediaUploadButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const serviceSelectId = useId();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [relatedServiceId, setRelatedServiceId] = useState("");
   const [cropPending, setCropPending] = useState<CropPending | null>(null);
   const [cropSaving, setCropSaving] = useState(false);
   const [, startTransition] = useTransition();
 
   const isVideo = mediaType === "PORTFOLIO_VIDEO";
+  const canAttachService =
+    mediaType === "PORTFOLIO_IMAGE" || mediaType === "PORTFOLIO_VIDEO";
   const accept = isVideo ? VIDEO_ACCEPT : IMAGE_ACCEPT;
   const maxSize = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
   const allowedMimes = isVideo
@@ -156,6 +168,7 @@ export function MediaUploadButton({
           bytes: cloudinaryResponse.bytes as number,
           duration: cloudinaryResponse.duration as number | undefined,
           title: "",
+          relatedServiceId,
           originalWidth: cloudinaryResponse.width as number | undefined,
           originalHeight: cloudinaryResponse.height as number | undefined,
         });
@@ -213,6 +226,30 @@ export function MediaUploadButton({
 
   return (
     <div className={className}>
+      {canAttachService && services.length > 0 && (
+        <div className="mb-2 space-y-1 text-left">
+          <Label
+            htmlFor={serviceSelectId}
+            className="text-xs font-medium"
+          >
+            Bağlı hizmet
+          </Label>
+          <select
+            id={serviceSelectId}
+            value={relatedServiceId}
+            onChange={(event) => setRelatedServiceId(event.target.value)}
+            disabled={uploading}
+            className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <option value="">Hizmet yok</option>
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <input
         ref={inputRef}
         type="file"

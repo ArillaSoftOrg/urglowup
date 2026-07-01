@@ -1,7 +1,20 @@
 import { Sparkles } from "lucide-react";
-import type { BusinessWithDetails } from "@/lib/queries/business";
+import type {
+  BusinessMediaEngagement,
+  BusinessWithDetails,
+} from "@/lib/queries/business";
 import { getOptimizedUrl, getVideoPosterUrl } from "@/lib/cloudinary";
 import { BusinessGalleryLightboxHero } from "./business-gallery-lightbox-hero";
+
+export interface GalleryService {
+  id: string;
+  name: string;
+  price: unknown;
+  priceType: string;
+  salePrice: unknown;
+  saleEndsAt: Date | string | null;
+  durationMinutes: number;
+}
 
 export interface GalleryItem {
   id: string;
@@ -12,9 +25,15 @@ export interface GalleryItem {
   width: number | null;
   height: number | null;
   isVideo: boolean;
+  relatedService?: GalleryService | null;
+  likeCount: number;
+  likedByCurrentUser: boolean;
 }
 
-function mediaToGalleryItem(m: BusinessWithDetails["media"][number]): GalleryItem {
+function mediaToGalleryItem(
+  m: BusinessWithDetails["media"][number],
+  engagement?: BusinessMediaEngagement,
+): GalleryItem {
   const isVideo = m.type === "PORTFOLIO_VIDEO";
   const cropMeta =
     !isVideo && m.cropX != null && m.cropY != null && m.cropWidth != null && m.cropHeight != null
@@ -47,6 +66,19 @@ function mediaToGalleryItem(m: BusinessWithDetails["media"][number]): GalleryIte
     width: m.originalWidth,
     height: m.originalHeight,
     isVideo,
+    relatedService: m.relatedService
+      ? {
+          id: m.relatedService.id,
+          name: m.relatedService.name,
+          price: m.relatedService.price,
+          priceType: m.relatedService.priceType,
+          salePrice: m.relatedService.salePrice,
+          saleEndsAt: m.relatedService.saleEndsAt,
+          durationMinutes: m.relatedService.durationMinutes,
+        }
+      : null,
+    likeCount: engagement?.likeCount ?? 0,
+    likedByCurrentUser: engagement?.likedByCurrentUser ?? false,
   };
 }
 
@@ -54,7 +86,7 @@ function mediaToGalleryItem(m: BusinessWithDetails["media"][number]): GalleryIte
 export function buildGalleryItems(business: BusinessWithDetails): GalleryItem[] {
   const coverItems = business.media
     .filter((m) => m.type === "COVER")
-    .map(mediaToGalleryItem);
+    .map((m) => mediaToGalleryItem(m));
 
   if (coverItems.length > 0) return coverItems;
 
@@ -68,6 +100,9 @@ export function buildGalleryItems(business: BusinessWithDetails): GalleryItem[] 
         width: null,
         height: null,
         isVideo: false,
+        relatedService: null,
+        likeCount: 0,
+        likedByCurrentUser: false,
       },
     ];
   }
@@ -76,10 +111,13 @@ export function buildGalleryItems(business: BusinessWithDetails): GalleryItem[] 
 }
 
 /** Portföy bölümü için sadece PORTFOLIO_IMAGE ve PORTFOLIO_VIDEO görselleri döndürür. */
-export function buildPortfolioItems(business: BusinessWithDetails): GalleryItem[] {
+export function buildPortfolioItems(
+  business: BusinessWithDetails,
+  engagement: Record<string, BusinessMediaEngagement> = {},
+): GalleryItem[] {
   return business.media
     .filter((m) => m.type === "PORTFOLIO_IMAGE" || m.type === "PORTFOLIO_VIDEO")
-    .map(mediaToGalleryItem);
+    .map((m) => mediaToGalleryItem(m, engagement[m.id]));
 }
 
 export function BusinessGalleryHero({

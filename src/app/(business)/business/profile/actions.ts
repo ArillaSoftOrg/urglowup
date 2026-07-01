@@ -41,6 +41,9 @@ const profileSchema = z.object({
   instantConfirmation: z.boolean(),
   inAppPayment: z.boolean(),
   petFriendly: z.boolean(),
+  wheelchairAccess: z.boolean(),
+  parkingAvailable: z.boolean(),
+  nearPublicTransit: z.boolean(),
 });
 
 export type ProfileActionState =
@@ -67,6 +70,9 @@ export async function updateBusinessProfile(
     instantConfirmation: formData.get("instantConfirmation") === "on",
     inAppPayment: formData.get("inAppPayment") === "on",
     petFriendly: formData.get("petFriendly") === "on",
+    wheelchairAccess: formData.get("wheelchairAccess") === "on",
+    parkingAvailable: formData.get("parkingAvailable") === "on",
+    nearPublicTransit: formData.get("nearPublicTransit") === "on",
   };
 
   const result = profileSchema.safeParse(raw);

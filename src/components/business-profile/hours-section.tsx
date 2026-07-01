@@ -1,4 +1,4 @@
-import { CircleCheck, CreditCard, PawPrint } from "lucide-react";
+import { Accessibility, BusFront, Car, CircleCheck, CreditCard, PawPrint } from "lucide-react";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 const DAY_ORDER = [
@@ -36,6 +36,21 @@ const FEATURE_OPTIONS = [
     key: "petFriendly",
     label: "Evcil hayvan uygundur",
     icon: PawPrint,
+  },
+  {
+    key: "wheelchairAccess",
+    label: "Tekerlekli sandalye erişimi",
+    icon: Accessibility,
+  },
+  {
+    key: "parkingAvailable",
+    label: "Otopark mevcut",
+    icon: Car,
+  },
+  {
+    key: "nearPublicTransit",
+    label: "Toplu taşımaya yakın",
+    icon: BusFront,
   },
 ] as const;
 
@@ -111,7 +126,7 @@ export function HoursSection({ business }: { business: BusinessWithDetails }) {
                 </span>
                 <span className={isToday ? "font-bold" : hasHours ? "font-medium text-foreground" : "font-bold text-muted-foreground"}>
                   {hasHours
-                    ? `${formatTime(hour.openTime!)} – ${formatTime(hour.closeTime!)}`
+                    ? `${formatTime(hour.openTime!)} - ${formatTime(hour.closeTime!)}`
                     : "Kapalı"}
                 </span>
               </div>

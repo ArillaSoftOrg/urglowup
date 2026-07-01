@@ -1,23 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { ChevronDown, ImageIcon, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GalleryItem } from "./business-gallery-hero";
 
-const GalleryLightboxOverlay = dynamic(
+const PortfolioMediaViewer = dynamic(
   () =>
-    import("./gallery-lightbox-overlay").then(
-      (mod) => mod.GalleryLightboxOverlay,
-    ),
+    import("./portfolio-media-viewer").then((mod) => mod.PortfolioMediaViewer),
   {
-    loading: () => <div className="fixed inset-0 z-50 bg-black/90" />,
+    loading: () => <div className="fixed inset-0 z-[100] bg-black" />,
   },
 );
 
 interface BusinessForLightbox {
+  id: string;
+  name: string;
   address: string | null;
   district: string | null;
   city: string | null;
@@ -100,9 +100,11 @@ function PortfolioTile({
 export function BusinessPortfolioSection({
   items,
   business,
+  isLoggedIn = false,
 }: {
   items: GalleryItem[];
   business: BusinessForLightbox;
+  isLoggedIn?: boolean;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [showAllMobile, setShowAllMobile] = useState(false);
@@ -114,28 +116,6 @@ export function BusinessPortfolioSection({
   const current = openIndex !== null ? items[openIndex] : null;
 
   const close = useCallback(() => setOpenIndex(null), []);
-  const prev = useCallback(
-    () =>
-      setOpenIndex((i) =>
-        i !== null ? (i - 1 + items.length) % items.length : null,
-      ),
-    [items.length],
-  );
-  const next = useCallback(
-    () => setOpenIndex((i) => (i !== null ? (i + 1) % items.length : null)),
-    [items.length],
-  );
-
-  useEffect(() => {
-    if (openIndex === null) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [close, next, openIndex, prev]);
 
   if (items.length === 0) return null;
 
@@ -224,16 +204,13 @@ export function BusinessPortfolioSection({
       </section>
 
       {current && (
-        <GalleryLightboxOverlay
-          current={current}
-          currentIndex={openIndex ?? 0}
-          total={items.length}
+        <PortfolioMediaViewer
+          items={items}
+          initialIndex={openIndex ?? 0}
+          businessSlug={business.slug}
+          businessName={business.name}
+          isLoggedIn={isLoggedIn}
           onClose={close}
-          onPrev={prev}
-          onNext={next}
-          hasPrev={items.length > 1}
-          hasNext={items.length > 1}
-          business={business}
         />
       )}
     </>

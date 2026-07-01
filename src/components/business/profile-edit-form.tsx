@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
+  Accessibility,
+  BusFront,
+  Car,
   Check,
   CircleCheck,
   CreditCard,
@@ -46,6 +49,9 @@ interface BusinessProfileData {
   instantConfirmation: boolean;
   inAppPayment: boolean;
   petFriendly: boolean;
+  wheelchairAccess: boolean;
+  parkingAvailable: boolean;
+  nearPublicTransit: boolean;
   categoryName?: string | null;
 }
 
@@ -173,6 +179,24 @@ const profileFeatureOptions = [
     label: "Evcil hayvan uygundur",
     description: "Mekanın evcil hayvan kabul ettiğini profilinizde belirtir.",
     icon: PawPrint,
+  },
+  {
+    name: "wheelchairAccess",
+    label: "Tekerlekli sandalye erişimi",
+    description: "Mekanın tekerlekli sandalye ile erişilebilir olduğunu belirtir.",
+    icon: Accessibility,
+  },
+  {
+    name: "parkingAvailable",
+    label: "Otopark mevcut",
+    description: "Müşterilere yakında veya mekanda otopark imkanı olduğunu gösterir.",
+    icon: Car,
+  },
+  {
+    name: "nearPublicTransit",
+    label: "Toplu taşımaya yakın",
+    description: "Mekanın toplu taşıma ile kolay ulaşılabilir olduğunu belirtir.",
+    icon: BusFront,
   },
 ] as const;
 

@@ -22,6 +22,7 @@ import { TeamSection } from "@/components/business-profile/team-section";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails } from "@/lib/queries/business";
+import type { BusinessMediaEngagement } from "@/lib/queries/business";
 
 const DAY_LABELS: Record<string, string> = {
   MONDAY: "Pazartesi",
@@ -93,6 +94,7 @@ export function MobileBusinessProfile({
   locale,
   isLoggedIn = false,
   initialIsFavorited = false,
+  mediaEngagement = {},
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
@@ -101,9 +103,10 @@ export function MobileBusinessProfile({
   locale?: string;
   isLoggedIn?: boolean;
   initialIsFavorited?: boolean;
+  mediaEngagement?: Record<string, BusinessMediaEngagement>;
 }) {
   const galleryItems = buildGalleryItems(business);
-  const portfolioItems = buildPortfolioItems(business);
+  const portfolioItems = buildPortfolioItems(business, mediaEngagement);
   const categories = business.categories.map((bc) => bc.category);
   const primaryCategory = categories[0]?.name;
   const hrefPrefix = locale && locale !== "tr" ? `/${locale}` : "";
@@ -260,7 +263,11 @@ export function MobileBusinessProfile({
 
         <div className="space-y-8 px-5 pb-0">
           <TeamSection business={business} hrefPrefix={hrefPrefix} />
-          <BusinessPortfolioSection items={portfolioItems} business={business} />
+          <BusinessPortfolioSection
+            items={portfolioItems}
+            business={business}
+            isLoggedIn={isLoggedIn}
+          />
           <section className="space-y-8">
             <section id="hours" className="scroll-mt-[122px]">
               <HoursSection business={business} />

@@ -21,7 +21,11 @@ import { TeamSection } from "@/components/business-profile/team-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
 import { LocationPinIcon } from "@/components/business-profile/location-pin-icon";
 import { cn } from "@/lib/utils";
-import type { BusinessWithDetails, GoogleReview } from "@/lib/queries/business";
+import type {
+  BusinessMediaEngagement,
+  BusinessWithDetails,
+  GoogleReview,
+} from "@/lib/queries/business";
 
 const DAY_LABELS: Record<string, string> = {
   MONDAY: "Pazartesi",
@@ -249,6 +253,7 @@ export function DesktopBusinessProfile({
   accountHref = "/login",
   isLoggedIn = false,
   initialIsFavorited = false,
+  mediaEngagement = {},
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
@@ -259,9 +264,10 @@ export function DesktopBusinessProfile({
   accountHref?: string;
   isLoggedIn?: boolean;
   initialIsFavorited?: boolean;
+  mediaEngagement?: Record<string, BusinessMediaEngagement>;
 }) {
   const galleryItems = buildGalleryItems(business);
-  const portfolioItems = buildPortfolioItems(business);
+  const portfolioItems = buildPortfolioItems(business, mediaEngagement);
 
   const hasSocial = !!(business.instagramUrl || business.facebookUrl || business.tiktokUrl);
   const hasContact = !!(business.phone || business.whatsapp);
@@ -304,7 +310,11 @@ export function DesktopBusinessProfile({
             </section>
           )}
           <ServicesSection business={business} />
-          <BusinessPortfolioSection items={portfolioItems} business={business} />
+          <BusinessPortfolioSection
+            items={portfolioItems}
+            business={business}
+            isLoggedIn={isLoggedIn}
+          />
           <section id="other" className="scroll-mt-[130px] space-y-9">
             <TeamSection business={business} />
             <HoursSection business={business} />

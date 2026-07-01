@@ -262,6 +262,7 @@ model User {
   appointments        Appointment[]
   reviews             Review[]
   favorites           Favorite[]
+  mediaLikes          BusinessMediaLike[]
   adminActions        AdminAction[]
   externalConnections BusinessExternalConnection[]
   taggedPosts         Post[]                       @relation("TaggedPosts")
@@ -373,6 +374,9 @@ model Business {
   instantConfirmation  Boolean        @default(false)
   inAppPayment         Boolean        @default(false)
   petFriendly          Boolean        @default(false)
+  wheelchairAccess     Boolean        @default(false)
+  parkingAvailable     Boolean        @default(false)
+  nearPublicTransit    Boolean        @default(false)
   maxGroupBookingGuests    Int           @default(4)
   googlePlaceId            String?
   ownershipStatus          BusinessOwnershipStatus @default(CLAIMED)
@@ -537,6 +541,7 @@ model BusinessMedia {
   description      String?
   relatedServiceId String?
   relatedService   BusinessService? @relation(fields: [relatedServiceId], references: [id], onDelete: SetNull)
+  likes            BusinessMediaLike[]
   cropX            Int?
   cropY            Int?
   cropWidth        Int?
@@ -547,6 +552,19 @@ model BusinessMedia {
   sortOrder        Int              @default(0)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+}
+
+model BusinessMediaLike {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     BusinessMedia @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, mediaId])
+  @@index([mediaId])
+  @@index([userId])
 }
 
 model Appointment {

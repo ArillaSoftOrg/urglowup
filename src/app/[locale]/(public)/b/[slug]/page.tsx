@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import {
   getBusinessBySlug,
+  getBusinessMediaEngagement,
   getGoogleReviewsForBusiness,
 } from "@/lib/queries/business";
 import { getBusinessReviewSummary } from "@/lib/queries/reviews";
@@ -82,13 +83,18 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
       }))
     : false;
 
-  const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw] = await Promise.all([
+  const portfolioMediaIds = business.media
+    .filter((m) => m.type === "PORTFOLIO_IMAGE" || m.type === "PORTFOLIO_VIDEO")
+    .map((m) => m.id);
+
+  const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw, mediaEngagement] = await Promise.all([
     getBusinessReviewSummary(business.id),
     getGoogleReviewsForBusiness(business.id),
     getMarketplaceBusinesses({
       city: business.city ?? undefined,
     }),
     getMarketplaceBusinesses(),
+    getBusinessMediaEngagement(portfolioMediaIds, user?.id),
   ]);
   const nearbyBusinesses = [...cityBusinessesRaw, ...fallbackBusinessesRaw]
     .filter((item, index, items) =>
@@ -116,6 +122,7 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           locale={locale}
           isLoggedIn={!!user}
           initialIsFavorited={isFavorited}
+          mediaEngagement={mediaEngagement}
         />
         <DesktopBusinessProfile
           business={business}
@@ -127,6 +134,7 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           accountHref={accountHref}
           isLoggedIn={!!user}
           initialIsFavorited={isFavorited}
+          mediaEngagement={mediaEngagement}
         />
         <ProfileEndingSection
           business={business}

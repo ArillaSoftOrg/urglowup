@@ -15,6 +15,19 @@ async function fetchBusinessBySlug(slug: string) {
       media: {
         where: { status: "ACTIVE" },
         orderBy: { sortOrder: "asc" },
+        include: {
+          relatedService: {
+            select: {
+              id: true,
+              name: true,
+              durationMinutes: true,
+              price: true,
+              priceType: true,
+              salePrice: true,
+              saleEndsAt: true,
+            },
+          },
+        },
       },
       reviews: {
         where: { status: "APPROVED" },
@@ -79,6 +92,45 @@ export async function getBusinessBySlug(
 export type BusinessWithDetails = NonNullable<
   Awaited<ReturnType<typeof getBusinessBySlug>>
 >;
+
+export type BusinessMediaEngagement = {
+  likeCount: number;
+  likedByCurrentUser: boolean;
+};
+
+export async function getBusinessMediaEngagement(
+  mediaIds: string[],
+  userId?: string,
+): Promise<Record<string, BusinessMediaEngagement>> {
+  if (mediaIds.length === 0) return {};
+
+  const [counts, userLikes] = await Promise.all([
+    db.businessMediaLike.groupBy({
+      by: ["mediaId"],
+      where: { mediaId: { in: mediaIds } },
+      _count: { mediaId: true },
+    }),
+    userId
+      ? db.businessMediaLike.findMany({
+          where: { userId, mediaId: { in: mediaIds } },
+          select: { mediaId: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const liked = new Set(userLikes.map((item) => item.mediaId));
+  const result: Record<string, BusinessMediaEngagement> = {};
+
+  for (const mediaId of mediaIds) {
+    const count = counts.find((item) => item.mediaId === mediaId);
+    result[mediaId] = {
+      likeCount: count?._count.mediaId ?? 0,
+      likedByCurrentUser: liked.has(mediaId),
+    };
+  }
+
+  return result;
+}
 
 export async function getBusinessForPublicLink(businessId: string) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

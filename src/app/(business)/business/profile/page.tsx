@@ -54,6 +54,9 @@ export default async function ProfilePage() {
       instantConfirmation: true,
       inAppPayment: true,
       petFriendly: true,
+      wheelchairAccess: true,
+      parkingAvailable: true,
+      nearPublicTransit: true,
       categories: {
         include: { category: { select: { name: true } } },
         take: 1,
@@ -79,6 +82,9 @@ export default async function ProfilePage() {
     instantConfirmation: business.instantConfirmation,
     inAppPayment: business.inAppPayment,
     petFriendly: business.petFriendly,
+    wheelchairAccess: business.wheelchairAccess,
+    parkingAvailable: business.parkingAvailable,
+    nearPublicTransit: business.nearPublicTransit,
     categoryName: business.categories[0]?.category.name ?? null,
   };
 

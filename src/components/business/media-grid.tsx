@@ -473,7 +473,7 @@ function LogoCard({
 
 // ─── Portfolio Section ───────────────────────────────────────────
 
-function AddMediaTile() {
+function AddMediaTile({ services }: { services: ServiceOption[] }) {
   return (
     <div className="flex aspect-square flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/20 p-3 text-center">
       <div className="flex size-12 items-center justify-center rounded-full border bg-background">
@@ -485,12 +485,14 @@ function AddMediaTile() {
           label="Fotoğraf"
           size="sm"
           variant="outline"
+          services={services}
         />
         <MediaUploadButton
           mediaType="PORTFOLIO_VIDEO"
           label="Video"
           size="sm"
           variant="outline"
+          services={services}
         />
       </div>
     </div>
@@ -753,6 +755,7 @@ function PortfolioGrid({
           label="İlk fotoğrafını paylaş"
           variant="ghost"
           size="sm"
+          services={services}
         />
       </div>
     );
@@ -760,7 +763,7 @@ function PortfolioGrid({
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {showAddTile && <AddMediaTile />}
+      {showAddTile && <AddMediaTile services={services} />}
       {items.map((item) => (
         <MediaItemCard key={item.id} media={item} services={services} />
       ))}
