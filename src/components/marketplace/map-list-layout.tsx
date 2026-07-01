@@ -8,13 +8,16 @@ import { BusinessCard } from "./business-card";
 import { MarketplaceMap } from "./marketplace-map";
 import { cn } from "@/lib/utils";
 import { normalizeBusinessToMapPlace } from "@/lib/marketplace/map-place";
+import type { MapPlace } from "@/lib/marketplace/map-place";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
 interface MapListLayoutProps {
   businesses: MarketplaceBusiness[];
+  externalPlaces?: MapPlace[];
   apiKey: string;
   emptyMessage: string;
   unlocatedNotice: (count: number) => string;
+  noBookableNotice?: string;
   locale?: string;
   listLabel: string;
   mapLabel: string;
@@ -22,9 +25,11 @@ interface MapListLayoutProps {
 
 export function MapListLayout({
   businesses,
+  externalPlaces,
   apiKey,
   emptyMessage,
   unlocatedNotice,
+  noBookableNotice,
   locale,
   listLabel,
   mapLabel,
@@ -32,7 +37,11 @@ export function MapListLayout({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
-  if (businesses.length === 0) {
+  const external = externalPlaces ?? [];
+
+  // Only fall back to the empty state when there are neither bookable
+  // businesses nor external markers to show.
+  if (businesses.length === 0 && external.length === 0) {
     return <EmptyState icon={Store} headline={emptyMessage} surface="cream" />;
   }
 
@@ -40,7 +49,8 @@ export function MapListLayout({
     (b): b is MarketplaceBusiness & { latitude: number; longitude: number } =>
       b.latitude != null && b.longitude != null
   );
-  const mapPlaces = located.map((b) => normalizeBusinessToMapPlace(b, locale));
+  const internalPlaces = located.map((b) => normalizeBusinessToMapPlace(b, locale));
+  const mapPlaces = [...internalPlaces, ...external];
   const unlocatedCount = businesses.length - located.length;
 
   return (
@@ -70,23 +80,29 @@ export function MapListLayout({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
-        {/* List */}
+        {/* List — internal (bookable) businesses only; external never appears here */}
         <div className={cn("space-y-3", mobileView === "map" && "hidden lg:block")}>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
-            {businesses.map((business) => (
-              <div
-                key={business.id}
-                onMouseEnter={() => setActiveId(business.id)}
-                onMouseLeave={() => setActiveId((current) => (current === business.id ? null : current))}
-                className={cn(
-                  "rounded-2xl transition-shadow",
-                  activeId === business.id && "ring-2 ring-brand-pink"
-                )}
-              >
-                <BusinessCard business={business} locale={locale} />
-              </div>
-            ))}
-          </div>
+          {businesses.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {noBookableNotice ?? emptyMessage}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+              {businesses.map((business) => (
+                <div
+                  key={business.id}
+                  onMouseEnter={() => setActiveId(business.id)}
+                  onMouseLeave={() => setActiveId((current) => (current === business.id ? null : current))}
+                  className={cn(
+                    "rounded-2xl transition-shadow",
+                    activeId === business.id && "ring-2 ring-brand-pink"
+                  )}
+                >
+                  <BusinessCard business={business} locale={locale} />
+                </div>
+              ))}
+            </div>
+          )}
           {unlocatedCount > 0 && (
             <p className="text-xs text-muted-foreground">{unlocatedNotice(unlocatedCount)}</p>
           )}

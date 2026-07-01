@@ -14,6 +14,12 @@ export type MapPlace = {
   rating?: number;
   reviewCount?: number;
   attribution?: "Google Maps";
+  // Phase 6 — external operational fields (no Google native content):
+  placeReferenceId?: string;
+  providerPlaceId?: string;
+  categoryHint?: string;
+  city?: string;
+  district?: string;
 };
 
 export function normalizeBusinessToMapPlace(
@@ -30,5 +36,57 @@ export function normalizeBusinessToMapPlace(
     isBookable: true,
     markerVariant: "bookable",
     profileUrl: `${prefix}/b/${b.slug}`,
+  };
+}
+
+/**
+ * Builds a Google Maps deep link for an external place. Client-safe, pure.
+ * Returns undefined when there is no providerPlaceId (no link is shown).
+ */
+export function buildGoogleMapsPlaceUrl(
+  providerPlaceId: string | null | undefined,
+  label: string,
+): string | undefined {
+  if (!providerPlaceId) return undefined;
+  const q = encodeURIComponent(label || "işletme");
+  const pid = encodeURIComponent(providerPlaceId);
+  return `https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=${pid}`;
+}
+
+/**
+ * Normalizes an APPROVED + unclaimed PlaceReference (+ request-time coords)
+ * into an external, non-bookable MapPlace. Pure/client-safe.
+ *
+ * POLICY: uses ONLY our operational labels (categoryHint/city/district).
+ * Never uses Google displayName/address/phone/rating/review/photo, and never
+ * sets rating/reviewCount.
+ */
+export function normalizePlaceReferenceToMapPlace(
+  ref: {
+    id: string;
+    providerPlaceId: string;
+    city: string | null;
+    district: string | null;
+    categoryHint: string | null;
+  },
+  coords: { lat: number; lng: number },
+): MapPlace {
+  const label = ref.categoryHint ?? "Google Maps işletmesi";
+  return {
+    id: `ext-${ref.id}`,
+    source: "GOOGLE",
+    name: label,
+    latitude: coords.lat,
+    longitude: coords.lng,
+    isBookable: false,
+    markerVariant: "external",
+    profileUrl: undefined,
+    googleMapsUri: buildGoogleMapsPlaceUrl(ref.providerPlaceId, label),
+    placeReferenceId: ref.id,
+    providerPlaceId: ref.providerPlaceId,
+    categoryHint: ref.categoryHint ?? undefined,
+    city: ref.city ?? undefined,
+    district: ref.district ?? undefined,
+    attribution: "Google Maps",
   };
 }

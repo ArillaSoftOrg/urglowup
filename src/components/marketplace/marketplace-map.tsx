@@ -40,6 +40,58 @@ function markerIcon(active: boolean, variant: "bookable" | "external"): google.m
   };
 }
 
+/**
+ * Builds external-marker InfoWindow content with DOM nodes + textContent
+ * (never HTML-string interpolation) so operational labels can't inject markup.
+ * Shows ONLY our operational fields — no Google native content.
+ */
+function buildExternalInfoContent(place: MapPlace): HTMLElement {
+  const root = document.createElement("div");
+  root.style.maxWidth = "220px";
+  root.style.fontSize = "13px";
+  root.style.lineHeight = "1.4";
+
+  const title = document.createElement("p");
+  title.style.fontWeight = "600";
+  title.style.margin = "0 0 2px";
+  title.textContent = place.name;
+  root.appendChild(title);
+
+  const loc = [place.city, place.district].filter(Boolean).join(" · ");
+  if (loc) {
+    const locEl = document.createElement("p");
+    locEl.style.margin = "0 0 4px";
+    locEl.style.color = "#6b7280";
+    locEl.textContent = loc;
+    root.appendChild(locEl);
+  }
+
+  const source = document.createElement("p");
+  source.style.margin = "0";
+  source.style.color = "#6b7280";
+  source.textContent = "Google Maps kaynağı";
+  root.appendChild(source);
+
+  const notBookable = document.createElement("p");
+  notBookable.style.margin = "0 0 6px";
+  notBookable.style.color = "#6b7280";
+  notBookable.textContent = "Randevu Fersha üzerinden alınamaz";
+  root.appendChild(notBookable);
+
+  if (place.googleMapsUri) {
+    const link = document.createElement("a");
+    link.href = place.googleMapsUri;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.style.color = "#2563eb";
+    link.style.fontWeight = "500";
+    link.textContent = "Google Maps'te aç";
+    root.appendChild(link);
+  }
+
+  return root;
+}
+
 interface MarketplaceMapProps {
   businesses: MapPlace[];
   apiKey: string;
@@ -54,8 +106,9 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<Map<string, { marker: google.maps.Marker; variant: "bookable" | "external" }>>(new Map());
+  const markersRef = useRef<Map<string, { marker: google.maps.Marker; place: MapPlace }>>(new Map());
   const clustererRef = useRef<MarkerClusterer | null>(null);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   const handleLoad = (map: google.maps.Map) => {
     mapRef.current = map;
@@ -71,6 +124,11 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
     const map = mapRef.current;
     const markersById = markersRef.current;
 
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new google.maps.InfoWindow();
+    }
+    const infoWindow = infoWindowRef.current;
+
     clustererRef.current?.clearMarkers();
     markersById.forEach(({ marker }) => marker.setMap(null));
     markersById.clear();
@@ -81,10 +139,22 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
         title: place.name,
         icon: markerIcon(false, place.markerVariant),
       });
-      marker.addListener("click", () => onActivate(place.id));
-      marker.addListener("mouseover", () => onActivate(place.id));
-      marker.addListener("mouseout", () => onActivate(null));
-      markersById.set(place.id, { marker, variant: place.markerVariant });
+      if (place.source === "GOOGLE") {
+        // External: open a Google-Maps-CTA InfoWindow; no booking, no profile.
+        marker.addListener("click", () => {
+          infoWindow.setContent(buildExternalInfoContent(place));
+          infoWindow.open({ map, anchor: marker });
+        });
+      } else {
+        // Internal: existing highlight + pan behavior.
+        marker.addListener("click", () => {
+          infoWindow.close();
+          onActivate(place.id);
+        });
+        marker.addListener("mouseover", () => onActivate(place.id));
+        marker.addListener("mouseout", () => onActivate(null));
+      }
+      markersById.set(place.id, { marker, place });
       return marker;
     });
 
@@ -112,9 +182,9 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
 
   // Re-style + pan to the active marker without rebuilding everything
   useEffect(() => {
-    markersRef.current.forEach(({ marker, variant }, id) => {
+    markersRef.current.forEach(({ marker, place }, id) => {
       const isActive = id === activeId;
-      marker.setIcon(markerIcon(isActive, variant));
+      marker.setIcon(markerIcon(isActive, place.markerVariant));
       marker.setZIndex(isActive ? 999 : undefined);
     });
 

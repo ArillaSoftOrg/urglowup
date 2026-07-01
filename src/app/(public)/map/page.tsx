@@ -7,6 +7,7 @@ import {
   getMarketplaceCities,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
+import { getExternalMapPlaces } from "@/lib/marketplace/external-map-places";
 import { FilterBar } from "@/components/marketplace/filter-bar";
 import { MapListLayout } from "@/components/marketplace/map-list-layout";
 import { ChevronRight } from "lucide-react";
@@ -36,7 +37,7 @@ export default async function MapPage({ searchParams }: PageProps) {
   const rawParams = await searchParams;
   const filters = parseMarketplaceFilters(rawParams);
 
-  const [businesses, categories, cities] = await Promise.all([
+  const [businesses, categories, cities, externalPlaces] = await Promise.all([
     getMarketplaceBusinesses({
       categorySlug: filters.categorySlug,
       city:         filters.city,
@@ -48,6 +49,7 @@ export default async function MapPage({ searchParams }: PageProps) {
     }),
     getMarketplaceCategories(),
     getMarketplaceCities(),
+    getExternalMapPlaces(filters),
   ]);
 
   const hasAnyFilter = !!(
@@ -93,9 +95,11 @@ export default async function MapPage({ searchParams }: PageProps) {
       {mapsApiKey ? (
         <MapListLayout
           businesses={businesses}
+          externalPlaces={externalPlaces}
           apiKey={mapsApiKey}
           emptyMessage="Bu filtrelerle eşleşen uzman bulunamadı."
           unlocatedNotice={(count) => `${count} işletmenin konum bilgisi henüz haritada gösterilemiyor.`}
+          noBookableNotice="Bu filtrede randevu alınabilir işletme yok."
           listLabel="Liste"
           mapLabel="Harita"
         />

@@ -48,6 +48,23 @@ export const PLACES_DISCOVERY_MAX_RESULTS = 20;
 /** Per-request timeout for a discovery call */
 export const PLACES_DISCOVERY_TIMEOUT_MS = 8_000;
 
+// ── Google Places location (Phase 6) ──────────────────────────────────────────
+
+/** Places API (New) Place Details base — server-side coordinate resolution only */
+export const GOOGLE_PLACES_DETAILS_API = "https://places.googleapis.com/v1/places";
+
+/** FieldMask for Place Details: id + coordinate ONLY — no native content */
+export const PLACES_LOCATION_FIELD_MASK = "id,location";
+
+/** Hard cap on external (Google) markers resolved per map request */
+export const MAX_EXTERNAL_MAP_MARKERS = 20;
+
+/** Max concurrent Place Details calls while resolving external markers */
+export const EXTERNAL_LOCATION_CONCURRENCY = 3;
+
+/** Per-request timeout for a Place Details coordinate lookup */
+export const PLACES_LOCATION_TIMEOUT_MS = 6_000;
+
 // ── Rate limits ───────────────────────────────────────────────────────────────
 
 /** Conservative requests-per-minute ceiling (adjust after testing) */
