@@ -8,7 +8,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { passwordSchema } from "@/lib/password-policy";
-import { UserRole, BusinessMemberRole } from "@/generated/prisma/enums";
+import { UserRole, BusinessMemberRole, MembershipStatus } from "@/generated/prisma/enums";
 import { meetsMinRole } from "./permissions";
 import { AuthEmailVerification } from "@/emails/auth-email-verification";
 import { AuthPasswordReset } from "@/emails/auth-password-reset";
@@ -256,33 +256,58 @@ export async function requireRole(role: UserRole) {
   return user;
 }
 
+/**
+ * Resolves a user's active business access that satisfies `minRole`.
+ * Primary source: BusinessMember(status=ACTIVE) whose role meets minRole.
+ * Legacy fallback: Business.ownerId (OWNER meets any minRole).
+ * Returns null when no active membership meets minRole and no legacy ownership.
+ */
+export async function getActiveBusinessAccess(
+  user: { id: string; role: UserRole },
+  minRole: BusinessMemberRole = BusinessMemberRole.STAFF,
+): Promise<{ businessId: string; memberRole: BusinessMemberRole } | null> {
+  const members = await db.businessMember.findMany({
+    where: { userId: user.id, status: MembershipStatus.ACTIVE },
+    select: { businessId: true, role: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // First ACTIVE membership that meets minRole (handles STAFF@A + OWNER@B).
+  const match = members.find((m) => meetsMinRole(m.role, minRole));
+  if (match) return { businessId: match.businessId, memberRole: match.role };
+
+  // Legacy fallback: original BUSINESS_OWNER whose member row may not exist yet.
+  if (user.role === UserRole.BUSINESS_OWNER) {
+    const biz = await db.business.findFirst({
+      where: { ownerId: user.id },
+      select: { id: true },
+    });
+    if (biz) return { businessId: biz.id, memberRole: BusinessMemberRole.OWNER };
+  }
+
+  return null;
+}
+
 export async function requireBusiness(
   minRole: BusinessMemberRole = BusinessMemberRole.STAFF,
 ) {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login");
 
-  const member = await db.businessMember.findFirst({
-    where: { userId: user.id },
-    select: { businessId: true, role: true },
-    orderBy: { createdAt: "asc" },
-  });
-
-  // Legacy fallback: original BUSINESS_OWNER whose member row may not exist yet
-  if (!member && user.role === UserRole.BUSINESS_OWNER) {
-    const biz = await db.business.findUnique({
-      where: { ownerId: user.id },
-      select: { id: true },
-    });
-    if (!biz) redirect("/business/onboarding");
-    return { user, businessId: biz.id, memberRole: BusinessMemberRole.OWNER };
+  const access = await getActiveBusinessAccess(user, minRole);
+  if (access) {
+    return { user, businessId: access.businessId, memberRole: access.memberRole };
   }
 
-  if (!member) redirect("/auth/login");
+  // No access meeting minRole. Does the user have a lower-role business?
+  // Preserve existing behavior: insufficient role → /business/dashboard.
+  if (minRole !== BusinessMemberRole.STAFF) {
+    const anyAccess = await getActiveBusinessAccess(user);
+    if (anyAccess) redirect("/business/dashboard");
+  }
 
-  if (!meetsMinRole(member.role, minRole)) redirect("/business/dashboard");
-
-  return { user, businessId: member.businessId, memberRole: member.role };
+  if (user.role === UserRole.BUSINESS_OWNER) redirect("/business/onboarding");
+  redirect("/auth/login");
 }
 
 export async function requireAdminMfa() {

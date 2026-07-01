@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getActiveBusinessAccess } from "@/lib/auth";
+import { UserRole } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { BusinessSidebar } from "@/components/business/layout/business-sidebar";
 import { privateRobots } from "@/lib/seo";
@@ -17,17 +18,17 @@ export default async function BusinessLayout({
   const user = await getCurrentUser();
   if (!user) redirect("/");
 
-  const member = await db.businessMember.findFirst({
-    where: { userId: user.id },
-    select: { id: true, businessId: true, role: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!member) redirect("/");
+  const access = await getActiveBusinessAccess(user);
+  if (!access) {
+    // Consistent with requireBusiness: owner → onboarding; otherwise home.
+    if (user.role === UserRole.BUSINESS_OWNER) redirect("/business/onboarding");
+    redirect("/");
+  }
 
   const [notifications, unreadCount] = await Promise.all([
     db.inAppNotification.findMany({
       where: {
-        businessId: member.businessId,
+        businessId: access.businessId,
         recipientUserId: user.id,
       },
       orderBy: { createdAt: "desc" },
@@ -44,7 +45,7 @@ export default async function BusinessLayout({
     }),
     db.inAppNotification.count({
       where: {
-        businessId: member.businessId,
+        businessId: access.businessId,
         recipientUserId: user.id,
         readAt: null,
       },
@@ -54,7 +55,7 @@ export default async function BusinessLayout({
   return (
     <div className="min-h-screen flex flex-col bg-[oklch(0.985_0.012_285)]">
       <BusinessSidebar
-        memberRole={member.role}
+        memberRole={access.memberRole}
         notifications={notifications.map((notification) => ({
           ...notification,
           createdAt: notification.createdAt.toISOString(),
