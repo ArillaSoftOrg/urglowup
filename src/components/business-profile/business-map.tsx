@@ -10,7 +10,12 @@ const mapOptions: google.maps.MapOptions = {
   streetViewControl: false,
   fullscreenControl: false,
   styles: [
-    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+    { featureType: "poi.business", elementType: "labels", stylers: [{ visibility: "off" }] },
+    { featureType: "poi.attraction", elementType: "labels", stylers: [{ visibility: "off" }] },
+    { featureType: "poi.sports_complex", elementType: "labels", stylers: [{ visibility: "off" }] },
+    { featureType: "poi.government", elementType: "labels", stylers: [{ visibility: "on" }] },
+    { featureType: "poi.medical", elementType: "labels", stylers: [{ visibility: "on" }] },
+    { featureType: "poi.school", elementType: "labels", stylers: [{ visibility: "on" }] },
     { featureType: "transit", stylers: [{ visibility: "off" }] },
     { elementType: "geometry", stylers: [{ color: "#f5f0eb" }] },
     { featureType: "water", elementType: "geometry", stylers: [{ color: "#d4c5ba" }] },

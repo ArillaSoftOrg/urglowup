@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 import {
   ChevronDown,
   Clock,
-  MapPin,
   Star,
 } from "lucide-react";
 import Link from "next/link";
+import { LocationPinIcon } from "@/components/business-profile/location-pin-icon";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 interface ReviewSummary {
@@ -117,7 +117,7 @@ export function ContactSidebar({
 
           {addressLabel && (
             <div className="flex items-start gap-3">
-              <MapPin className="mt-1 size-5 shrink-0" />
+              <LocationPinIcon className="mt-1" />
               <p className="min-w-0 flex-1 font-medium text-foreground">
                 {addressLabel}
                 {addressQuery && (

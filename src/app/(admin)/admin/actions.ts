@@ -599,6 +599,109 @@ export async function bulkApproveReviews(
   };
 }
 
+// ─── Admin Business Assign Owner ───────────────────────────────
+
+const adminAssignOwnerSchema = z.object({
+  businessId: z.string().min(1),
+  userEmail: z.string().email(),
+});
+
+export async function adminAssignOwner(
+  input: z.infer<typeof adminAssignOwnerSchema>
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = adminAssignOwnerSchema.safeParse(input);
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const { businessId } = result.data;
+  const normalizedEmail = result.data.userEmail.trim().toLowerCase();
+
+  const business = await db.business.findUnique({
+    where: { id: businessId },
+    select: { id: true, ownerId: true },
+  });
+
+  if (!business) {
+    return { success: false, message: "İşletme bulunamadı." };
+  }
+
+  if (business.ownerId !== null) {
+    return {
+      success: false,
+      message: "Bu işletmenin zaten sahibi var. Owner transfer bu fazda desteklenmiyor.",
+    };
+  }
+
+  const existingOwnerMember = await db.businessMember.findFirst({
+    where: { businessId, role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+    select: { userId: true },
+  });
+
+  if (existingOwnerMember) {
+    return { success: false, message: "Bu işletmede zaten aktif bir sahip üye var." };
+  }
+
+  const user = await db.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true, role: true },
+  });
+
+  if (!user) {
+    return { success: false, message: `'${normalizedEmail}' e-postasına sahip kullanıcı bulunamadı.` };
+  }
+
+  const [existingMemberBusiness, legacyBusiness] = await Promise.all([
+    db.businessMember.findFirst({
+      where: { userId: user.id, role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+      select: { businessId: true },
+    }),
+    db.business.findFirst({
+      where: { ownerId: user.id },
+      select: { id: true },
+    }),
+  ]);
+
+  if (existingMemberBusiness || legacyBusiness) {
+    return { success: false, message: "Bu kullanıcı zaten başka bir işletmenin sahibidir." };
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.business.update({
+      where: { id: businessId },
+      data: { ownerId: user.id, ownershipStatus: "CLAIMED" },
+    });
+    await tx.businessMember.upsert({
+      where: { businessId_userId: { businessId, userId: user.id } },
+      create: {
+        businessId,
+        userId: user.id,
+        role: BusinessMemberRole.OWNER,
+        status: MembershipStatus.ACTIVE,
+      },
+      update: { role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+    });
+    await tx.user.update({
+      where: { id: user.id },
+      data: { role: UserRole.BUSINESS_OWNER },
+    });
+  });
+
+  await logAdminAction(
+    admin.id,
+    "business.assign_owner",
+    "Business",
+    businessId,
+    `owner: ${normalizedEmail}`
+  );
+
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${businessId}`);
+  return { success: true, message: "Sahip atandı." };
+}
+
 // ─── Admin Business Create / Edit ──────────────────────────────
 
 function normalizeSocialUrlAdmin(value: string | undefined | null, base: string): string | null {

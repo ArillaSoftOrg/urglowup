@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { updateBusinessStatus } from "@/app/(admin)/admin/actions";
+import { AssignOwnerDialog } from "./assign-owner-dialog";
 import {
   BUSINESS_STATUS_LABELS,
   BUSINESS_STATUS_COLORS,
@@ -143,11 +144,16 @@ export function BusinessDetailView({
           <div className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
               <p className="font-medium">Owner</p>
-              <p className="text-muted-foreground">
-                {business.owner
-                  ? `${ownerName || "—"} (${business.owner.email})`
-                  : "Sahipsiz"}
-              </p>
+              {business.owner ? (
+                <p className="text-muted-foreground">
+                  {`${ownerName || "—"} (${business.owner.email})`}
+                </p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-muted-foreground">Sahipsiz</p>
+                  <AssignOwnerDialog businessId={business.id} />
+                </div>
+              )}
             </div>
             <div>
               <p className="font-medium">Slug</p>

@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   CalendarCheck,
   Clock,
-  MapPin,
   Star,
 } from "lucide-react";
 import { ShareFavoriteButtons } from "@/components/business-profile/share-favorite-buttons";
@@ -18,6 +17,7 @@ import { SectionNav, type NavSection } from "@/components/business-profile/secti
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
+import { LocationPinIcon } from "@/components/business-profile/location-pin-icon";
 import { TeamSection } from "@/components/business-profile/team-section";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,11 +94,6 @@ export function MobileBusinessProfile({
   const hasContact = !!(business.phone || business.whatsapp);
   const hasAbout = !!(business.description || hasContact || hasSocial || business.address || business.city || business.district);
   const hasTeam = business.professionals.length > 0;
-  const mobileMapRatingLabel =
-    reviewSummary.totalCount > 0 && reviewSummary.averageRating !== null
-      ? (reviewSummary.averageRating / 2).toFixed(1)
-      : null;
-
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
     ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
@@ -167,8 +162,8 @@ export function MobileBusinessProfile({
             )}
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-medium",
-                isOpen ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700",
+                "inline-flex items-center gap-1 text-sm font-medium",
+                isOpen ? "text-success-foreground" : "text-warning-foreground",
               )}
             >
               <Clock className="size-3.5" />
@@ -181,7 +176,7 @@ export function MobileBusinessProfile({
               href="#location"
               className="mt-3 flex min-h-11 items-center gap-2 rounded-xl bg-muted/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <MapPin className="size-4 shrink-0 fill-foreground text-foreground" />
+              <LocationPinIcon />
               <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{location}</span>
             </a>
           )}
@@ -254,7 +249,7 @@ export function MobileBusinessProfile({
               <HoursSection business={business} />
             </section>
             <section id="location" className="scroll-mt-[122px]">
-              <LocationSection business={business} mobileRatingLabel={mobileMapRatingLabel} />
+              <LocationSection business={business} />
             </section>
           </section>
         </div>

@@ -2,6 +2,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MapPin, Navigation } from "lucide-react";
 import { LazyBusinessMap } from "./lazy-business-map";
+import { LocationPinIcon } from "./location-pin-icon";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
@@ -9,11 +10,9 @@ const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 export function LocationSection({
   business,
   showTitle = true,
-  mobileRatingLabel,
 }: {
   business: BusinessWithDetails;
   showTitle?: boolean;
-  mobileRatingLabel?: string | null;
 }) {
   const hasAddress = business.address || business.city || business.district;
   if (!hasAddress) return null;
@@ -60,14 +59,15 @@ export function LocationSection({
             className="h-[224px] w-full bg-muted/30 md:h-[380px] lg:h-[480px]"
           />
         )}
-        {mobileRatingLabel && (
-          <span
-            aria-label={`${mobileRatingLabel} puan`}
-            className="absolute left-1/2 top-1/2 z-10 inline-flex h-10 min-w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-foreground px-3 text-sm font-bold text-background shadow-md md:hidden"
-          >
-            {mobileRatingLabel}
-          </span>
-        )}
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-1/2 z-10 inline-flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-brand-pink text-brand-pink-foreground shadow-lg ring-4 ring-background/85 md:hidden"
+        >
+          <MapPin className="size-5 fill-current" />
+        </span>
+        <span className="sr-only">
+          {business.name} konumu haritada işaretlendi
+        </span>
       </div>
 
       <div className="space-y-1.5 text-sm md:hidden">
@@ -78,7 +78,7 @@ export function LocationSection({
 
       <div className="hidden flex-col gap-3 md:flex md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 items-start gap-2.5">
-          <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <LocationPinIcon className="mt-0.5" />
           <div className="space-y-0.5 text-sm">
             {business.address && (
               <p className="font-medium text-foreground">{business.address}</p>

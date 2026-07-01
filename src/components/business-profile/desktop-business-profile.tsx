@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   Clock,
-  MapPin,
   Navigation,
   Star,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { ProfileSearchHeader } from "@/components/business-profile/profile-searc
 import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { TeamSection } from "@/components/business-profile/team-section";
 import { ServicesSection } from "@/components/business-profile/services-section";
+import { LocationPinIcon } from "@/components/business-profile/location-pin-icon";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails, GoogleReview } from "@/lib/queries/business";
 
@@ -203,7 +203,7 @@ function DesktopTitleBlock({
             <>
               <span aria-hidden>·</span>
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-4" />
+                <LocationPinIcon />
                 {location}
               </span>
             </>
