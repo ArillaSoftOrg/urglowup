@@ -63,6 +63,9 @@ const envSchema = z.object({
   // Google Maps (Maps Phase 1)
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
   GOOGLE_MAPS_SERVER_API_KEY: z.string().optional(),
+  // Google Places discovery (Phase 5) — server-only; falls back to GOOGLE_MAPS_SERVER_API_KEY
+  GOOGLE_PLACES_SERVER_API_KEY: z.string().optional(),
+  GOOGLE_PLACES_DRY_RUN: z.string().optional(),
   // WhatsApp Business Cloud API
   WHATSAPP_NOTIFICATIONS_ENABLED: z.string().optional(),
   WHATSAPP_DRY_RUN: z.string().optional(),

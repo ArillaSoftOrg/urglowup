@@ -5,6 +5,7 @@ import {
   isValidPlaceReferenceStatus,
 } from "@/lib/queries/admin";
 import { PlaceReferenceTable } from "@/components/admin/place-reference-table";
+import { PlaceDiscoveryPanel } from "@/components/admin/place-discovery-panel";
 import { PLACE_REFERENCE_STATUS_LABELS } from "@/lib/constants/place-reference";
 import type { PlaceReferenceStatus } from "@/generated/prisma/enums";
 
@@ -54,6 +55,8 @@ export default async function AdminPlaceReferencesPage({ searchParams }: PagePro
           Google Places üzerinden keşfedilen dış işletme referansları.
         </p>
       </div>
+
+      <PlaceDiscoveryPanel />
 
       {/* Filter bar */}
       <div className="flex flex-wrap gap-2 text-sm">

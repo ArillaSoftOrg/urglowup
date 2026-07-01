@@ -36,6 +36,18 @@ export const GOOGLE_MAX_REVIEWS_PER_FETCH = 50;
 /** Max photos to request per sync call */
 export const GOOGLE_MAX_PHOTOS_PER_FETCH = 20;
 
+// ── Google Places discovery (Phase 5) ─────────────────────────────────────────
+
+/** Places API (New) Text Search endpoint — server-side discovery only */
+export const GOOGLE_PLACES_TEXT_SEARCH_API =
+  "https://places.googleapis.com/v1/places:searchText";
+
+/** Hard cap on results per discovery run (single page; New API page limit) */
+export const PLACES_DISCOVERY_MAX_RESULTS = 20;
+
+/** Per-request timeout for a discovery call */
+export const PLACES_DISCOVERY_TIMEOUT_MS = 8_000;
+
 // ── Rate limits ───────────────────────────────────────────────────────────────
 
 /** Conservative requests-per-minute ceiling (adjust after testing) */

@@ -7,6 +7,8 @@ import { generateUniqueSlug } from "@/lib/slug";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { ADMIN_PLACE_REFERENCE_TRANSITIONS } from "@/lib/constants/place-reference";
+import { PLACES_DISCOVERY_MAX_RESULTS } from "@/lib/constants/external";
+import { discoverGooglePlaceIds } from "@/lib/external/google/places-discovery";
 import type { PlaceReferenceStatus } from "@/generated/prisma/enums";
 
 export type PlaceReferenceActionState = {
@@ -511,4 +513,117 @@ export async function adminConvertPlaceReferenceToBusiness(
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${business.id}`);
   return { success: true, businessId: business.id, message: "İşletme oluşturuldu." };
+}
+
+// ─── Google Places Discovery ────────────────────────────────────
+
+export type PlaceDiscoveryActionState = {
+  success: boolean;
+  message?: string;
+  created?: number;
+  skipped?: number;
+  total?: number;
+};
+
+const discoverSchema = z.object({
+  city: z.string().trim().min(1).max(100),
+  district: z.string().trim().max(100).optional().or(z.literal("")),
+  categoryHint: z.string().trim().min(1).max(100),
+  queryText: z.string().trim().max(200).optional().or(z.literal("")),
+  maxResults: z
+    .number()
+    .int()
+    .min(1)
+    .max(PLACES_DISCOVERY_MAX_RESULTS)
+    .default(PLACES_DISCOVERY_MAX_RESULTS),
+});
+
+/** Strip control chars / newlines to keep the text query single-line and safe. */
+function sanitizeSegment(value: string): string {
+  return value.replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export async function adminDiscoverPlaceReferences(
+  input: z.infer<typeof discoverSchema>
+): Promise<PlaceDiscoveryActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const parsed = discoverSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0].message };
+  }
+
+  const city = sanitizeSegment(parsed.data.city);
+  const district = sanitizeSegment(parsed.data.district ?? "");
+  const categoryHint = sanitizeSegment(parsed.data.categoryHint);
+  const queryText = sanitizeSegment(parsed.data.queryText ?? "");
+  const maxResults = parsed.data.maxResults;
+
+  const textQuery = [queryText, categoryHint, district, city]
+    .filter(Boolean)
+    .join(" ");
+
+  const result = await discoverGooglePlaceIds(textQuery, maxResults);
+
+  if (!result.ok) {
+    const message =
+      result.error === "NO_API_KEY"
+        ? "Google Places API anahtarı yapılandırılmamış."
+        : result.error === "RATE_LIMITED"
+          ? "Google Places istek sınırına ulaşıldı. Lütfen sonra tekrar deneyin."
+          : result.error === "TIMEOUT"
+            ? "Google Places yanıt vermedi (zaman aşımı)."
+            : "Google Places araması başarısız oldu.";
+    return { success: false, message };
+  }
+
+  const placeIds = [...new Set(result.placeIds)];
+  const total = placeIds.length;
+
+  if (total === 0) {
+    return { success: true, message: "Sonuç bulunamadı.", created: 0, skipped: 0, total: 0 };
+  }
+
+  // Native content YOK — yalnızca id + operasyonel segment etiketi yazılır.
+  const existing = await db.placeReference.findMany({
+    where: { provider: "GOOGLE", providerPlaceId: { in: placeIds } },
+    select: { providerPlaceId: true },
+  });
+  const existingIds = new Set(existing.map((e) => e.providerPlaceId));
+  const newIds = placeIds.filter((id) => !existingIds.has(id));
+
+  if (newIds.length > 0) {
+    await db.placeReference.createMany({
+      data: newIds.map((providerPlaceId) => ({
+        provider: "GOOGLE",
+        providerPlaceId,
+        status: "DISCOVERED" as PlaceReferenceStatus,
+        city: city || null,
+        district: district || null,
+        categoryHint: categoryHint || null,
+        fetchStatus: "DISCOVERED",
+        lastFetchedAt: new Date(),
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  const created = newIds.length;
+  const skipped = total - created;
+
+  await logAdminAction(
+    admin.id,
+    "placeReference.discover",
+    "-",
+    `city=${city} district=${district || "-"} cat=${categoryHint} created=${created} skipped=${skipped} total=${total}`
+  );
+
+  revalidatePlaceReferences();
+  return {
+    success: true,
+    created,
+    skipped,
+    total,
+    message: `${created} eklendi · ${skipped} zaten vardı · toplam ${total}`,
+  };
 }
