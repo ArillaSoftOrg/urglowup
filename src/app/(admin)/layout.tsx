@@ -21,6 +21,7 @@ const adminNav = [
   { title: "Gönderiler", href: "/admin/posts" },
   { title: "Marketplace", href: "/admin/marketplace" },
   { title: "Yer Referansları", href: "/admin/place-references" },
+  { title: "Talep Başvuruları", href: "/admin/claim-requests" },
 ];
 
 export default async function AdminLayout({

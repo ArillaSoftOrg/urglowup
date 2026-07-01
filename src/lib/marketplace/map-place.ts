@@ -82,6 +82,7 @@ export function normalizePlaceReferenceToMapPlace(
     markerVariant: "external",
     profileUrl: undefined,
     googleMapsUri: buildGoogleMapsPlaceUrl(ref.providerPlaceId, label),
+    claimUrl: `/claim-business?placeReferenceId=${encodeURIComponent(ref.id)}`,
     placeReferenceId: ref.id,
     providerPlaceId: ref.providerPlaceId,
     categoryHint: ref.categoryHint ?? undefined,

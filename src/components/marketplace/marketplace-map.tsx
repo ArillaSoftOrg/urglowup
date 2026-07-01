@@ -83,10 +83,22 @@ function buildExternalInfoContent(place: MapPlace): HTMLElement {
     link.href = place.googleMapsUri;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
+    link.style.display = "block";
     link.style.color = "#2563eb";
     link.style.fontWeight = "500";
     link.textContent = "Google Maps'te aç";
     root.appendChild(link);
+  }
+
+  if (place.claimUrl) {
+    const claim = document.createElement("a");
+    claim.href = place.claimUrl;
+    claim.style.display = "block";
+    claim.style.marginTop = "4px";
+    claim.style.color = "#2563eb";
+    claim.style.fontWeight = "500";
+    claim.textContent = "Bu işletme sizin mi?";
+    root.appendChild(claim);
   }
 
   return root;

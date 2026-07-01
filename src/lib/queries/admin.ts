@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
-import type { AppointmentStatus, BusinessStatus, CampaignStatus, MediaStatus, PlaceReferenceStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
+import type { AppointmentStatus, BusinessStatus, CampaignStatus, ClaimRequestStatus, MediaStatus, PlaceReferenceStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
 
 // ─── Dashboard ─────────────────────────────────────────────────
 
@@ -1572,3 +1572,54 @@ export async function getApprovedUnclaimedPlaceReferences() {
     orderBy: { createdAt: "desc" },
   });
 }
+
+// ─── Claim Requests ─────────────────────────────────────────────
+
+const VALID_CLAIM_REQUEST_STATUSES = new Set<ClaimRequestStatus>([
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "CANCELLED",
+]);
+
+export function isValidClaimRequestStatus(
+  value: unknown
+): value is ClaimRequestStatus {
+  return (
+    typeof value === "string" &&
+    VALID_CLAIM_REQUEST_STATUSES.has(value as ClaimRequestStatus)
+  );
+}
+
+export async function getAdminClaimRequests(params?: {
+  status?: ClaimRequestStatus;
+}) {
+  return db.businessClaimRequest.findMany({
+    where: {
+      ...(params?.status ? { status: params.status } : {}),
+    },
+    include: {
+      user: {
+        select: { id: true, firstName: true, lastName: true, email: true },
+      },
+      placeReference: {
+        select: {
+          id: true,
+          city: true,
+          district: true,
+          categoryHint: true,
+          provider: true,
+          status: true,
+          claimedBusinessId: true,
+        },
+      },
+      business: { select: { id: true, name: true, slug: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+}
+
+export type AdminClaimRequest = Awaited<
+  ReturnType<typeof getAdminClaimRequests>
+>[number];
