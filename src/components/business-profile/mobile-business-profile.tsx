@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   CalendarCheck,
   Clock,
+  MapPin,
   Star,
 } from "lucide-react";
 import { ShareFavoriteButtons } from "@/components/business-profile/share-favorite-buttons";
@@ -17,7 +18,6 @@ import { SectionNav, type NavSection } from "@/components/business-profile/secti
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
-import { LocationPinIcon } from "@/components/business-profile/location-pin-icon";
 import { TeamSection } from "@/components/business-profile/team-section";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -66,6 +66,23 @@ function getNextOpenLabel(hours: BusinessWithDetails["hours"]): string {
     return `Kapalı · ${DAY_LABELS[dayName]} ${time}'da açılacak`;
   }
   return "Kapalı";
+}
+
+function ClosedStatusText({ label }: { label: string }) {
+  const [status, ...rest] = label.split(" · ");
+  const restText = rest.join(" · ");
+
+  return (
+    <>
+      <span className="text-warning-foreground">{status}</span>
+      {restText && (
+        <>
+          <span className="text-muted-foreground"> - </span>
+          <span className="text-muted-foreground">{restText}</span>
+        </>
+      )}
+    </>
+  );
 }
 
 export function MobileBusinessProfile({
@@ -163,11 +180,11 @@ export function MobileBusinessProfile({
             <span
               className={cn(
                 "inline-flex items-center gap-1 text-sm font-medium",
-                isOpen ? "text-success-foreground" : "text-warning-foreground",
+                isOpen && "text-success-foreground",
               )}
             >
-              <Clock className="size-3.5" />
-              {isOpen ? "Açık" : getNextOpenLabel(business.hours)}
+              <Clock className={cn("size-3.5", !isOpen && "text-warning-foreground")} />
+              {isOpen ? "Açık" : <ClosedStatusText label={getNextOpenLabel(business.hours)} />}
             </span>
           </div>
 
@@ -176,7 +193,7 @@ export function MobileBusinessProfile({
               href="#location"
               className="mt-3 flex min-h-11 items-center gap-2 rounded-xl bg-muted/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <LocationPinIcon />
+              <MapPin className="size-3.5 shrink-0 fill-foreground text-foreground" />
               <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{location}</span>
             </a>
           )}

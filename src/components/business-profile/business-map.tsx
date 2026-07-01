@@ -2,6 +2,7 @@
 
 import { GoogleMap, MarkerF, useJsApiLoader } from "@react-google-maps/api";
 import { MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: true,
@@ -10,11 +11,12 @@ const mapOptions: google.maps.MapOptions = {
   streetViewControl: false,
   fullscreenControl: false,
   styles: [
-    { featureType: "poi.business", elementType: "labels", stylers: [{ visibility: "off" }] },
-    { featureType: "poi.attraction", elementType: "labels", stylers: [{ visibility: "off" }] },
-    { featureType: "poi.sports_complex", elementType: "labels", stylers: [{ visibility: "off" }] },
+    { featureType: "poi", elementType: "all", stylers: [{ visibility: "off" }] },
+    { featureType: "poi.government", elementType: "geometry", stylers: [{ visibility: "on" }] },
     { featureType: "poi.government", elementType: "labels", stylers: [{ visibility: "on" }] },
+    { featureType: "poi.medical", elementType: "geometry", stylers: [{ visibility: "on" }] },
     { featureType: "poi.medical", elementType: "labels", stylers: [{ visibility: "on" }] },
+    { featureType: "poi.school", elementType: "geometry", stylers: [{ visibility: "on" }] },
     { featureType: "poi.school", elementType: "labels", stylers: [{ visibility: "on" }] },
     { featureType: "transit", stylers: [{ visibility: "off" }] },
     { elementType: "geometry", stylers: [{ color: "#f5f0eb" }] },
@@ -26,18 +28,34 @@ const mapOptions: google.maps.MapOptions = {
 };
 
 interface BusinessMapProps {
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   name: string;
   apiKey: string;
+  query?: string;
   className?: string;
 }
 
-export function BusinessMap({ lat, lng, name, apiKey, className }: BusinessMapProps) {
+export function BusinessMap({ lat, lng, name, apiKey, query, className }: BusinessMapProps) {
+  const [geocodedCenter, setGeocodedCenter] = useState<google.maps.LatLngLiteral | null>(null);
+  const hasCoords = typeof lat === "number" && typeof lng === "number";
+
   const { isLoaded, loadError: sdkError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
     language: "tr",
   });
+
+  useEffect(() => {
+    if (!isLoaded || hasCoords || !query) return;
+
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address: query }, (results, status) => {
+      if (status !== "OK" || !results?.[0]) return;
+
+      const location = results[0].geometry.location;
+      setGeocodedCenter({ lat: location.lat(), lng: location.lng() });
+    });
+  }, [hasCoords, isLoaded, query]);
 
   if (sdkError) {
     return (
@@ -52,11 +70,11 @@ export function BusinessMap({ lat, lng, name, apiKey, className }: BusinessMapPr
     );
   }
 
-  if (!isLoaded) {
+  const center = hasCoords ? { lat, lng } : geocodedCenter;
+
+  if (!isLoaded || !center) {
     return <div className={className ?? "h-48 w-full animate-pulse rounded-xl bg-surface-cream"} />;
   }
-
-  const center = { lat, lng };
 
   return (
     <GoogleMap
