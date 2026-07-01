@@ -523,6 +523,7 @@ export type PlaceDiscoveryActionState = {
   created?: number;
   skipped?: number;
   total?: number;
+  dryRun?: boolean;
 };
 
 const discoverSchema = z.object({
@@ -577,45 +578,46 @@ export async function adminDiscoverPlaceReferences(
     return { success: false, message };
   }
 
-  const placeIds = [...new Set(result.placeIds)];
-  const total = placeIds.length;
+  const dryRun = result.dryRun === true;
+  const uniquePlaceIds = [...new Set(result.placeIds)];
+  const total = uniquePlaceIds.length;
 
   if (total === 0) {
-    return { success: true, message: "Sonuç bulunamadı.", created: 0, skipped: 0, total: 0 };
+    return {
+      success: true,
+      message: dryRun ? "[DRY-RUN] Sonuç bulunamadı." : "Sonuç bulunamadı.",
+      created: 0,
+      skipped: 0,
+      total: 0,
+      dryRun,
+    };
   }
 
   // Native content YOK — yalnızca id + operasyonel segment etiketi yazılır.
-  const existing = await db.placeReference.findMany({
-    where: { provider: "GOOGLE", providerPlaceId: { in: placeIds } },
-    select: { providerPlaceId: true },
+  // Gerçek eklenen sayı createMany sonucundan alınır (skipDuplicates unique
+  // @@unique([provider, providerPlaceId]) ihlallerini atlar).
+  const createResult = await db.placeReference.createMany({
+    data: uniquePlaceIds.map((providerPlaceId) => ({
+      provider: "GOOGLE",
+      providerPlaceId,
+      status: "DISCOVERED" as PlaceReferenceStatus,
+      city: city || null,
+      district: district || null,
+      categoryHint: categoryHint || null,
+      fetchStatus: "DISCOVERED",
+      lastFetchedAt: new Date(),
+    })),
+    skipDuplicates: true,
   });
-  const existingIds = new Set(existing.map((e) => e.providerPlaceId));
-  const newIds = placeIds.filter((id) => !existingIds.has(id));
 
-  if (newIds.length > 0) {
-    await db.placeReference.createMany({
-      data: newIds.map((providerPlaceId) => ({
-        provider: "GOOGLE",
-        providerPlaceId,
-        status: "DISCOVERED" as PlaceReferenceStatus,
-        city: city || null,
-        district: district || null,
-        categoryHint: categoryHint || null,
-        fetchStatus: "DISCOVERED",
-        lastFetchedAt: new Date(),
-      })),
-      skipDuplicates: true,
-    });
-  }
-
-  const created = newIds.length;
+  const created = createResult.count;
   const skipped = total - created;
 
   await logAdminAction(
     admin.id,
     "placeReference.discover",
     "-",
-    `city=${city} district=${district || "-"} cat=${categoryHint} created=${created} skipped=${skipped} total=${total}`
+    `${dryRun ? "[dry-run] " : ""}city=${city} district=${district || "-"} cat=${categoryHint} created=${created} skipped=${skipped} total=${total}`
   );
 
   revalidatePlaceReferences();
@@ -624,6 +626,7 @@ export async function adminDiscoverPlaceReferences(
     created,
     skipped,
     total,
-    message: `${created} eklendi · ${skipped} zaten vardı · toplam ${total}`,
+    dryRun,
+    message: `${dryRun ? "[DRY-RUN] " : ""}${created} eklendi · ${skipped} zaten vardı · toplam ${total}`,
   };
 }

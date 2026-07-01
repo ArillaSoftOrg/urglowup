@@ -30,6 +30,7 @@ export type PlaceDiscoveryResult = {
   ok: boolean;
   placeIds: string[];
   error?: PlaceDiscoveryError;
+  dryRun?: boolean;
 };
 
 /** Minimal shape of the FieldMask-limited response — only `places[].id` */
@@ -45,13 +46,24 @@ function resolveApiKey(): string | null {
   );
 }
 
+/**
+ * Dry-run is ONLY honored outside production. In production a stray
+ * GOOGLE_PLACES_DRY_RUN flag must never inject fake place ids into the queue.
+ */
+function isDryRunEnabled(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.GOOGLE_PLACES_DRY_RUN === "true"
+  );
+}
+
 /** Deterministic synthetic ids for dry-run (no API cost, no real content). */
-function dryRunPlaceIds(textQuery: string, maxResultCount: number): string[] {
+function dryRunPlaceIds(textQuery: string, pageSize: number): string[] {
   let hash = 0;
   for (let i = 0; i < textQuery.length; i++) {
     hash = (hash * 31 + textQuery.charCodeAt(i)) >>> 0;
   }
-  const count = Math.min(maxResultCount, 5);
+  const count = Math.min(pageSize, 5);
   return Array.from({ length: count }, (_, i) => `dryrun-${hash}-${i}`);
 }
 
@@ -61,12 +73,12 @@ function dryRunPlaceIds(textQuery: string, maxResultCount: number): string[] {
  */
 export async function discoverGooglePlaceIds(
   textQuery: string,
-  maxResultCount: number
+  pageSize: number
 ): Promise<PlaceDiscoveryResult> {
-  if (process.env.GOOGLE_PLACES_DRY_RUN === "true") {
-    const placeIds = dryRunPlaceIds(textQuery, maxResultCount);
+  if (isDryRunEnabled()) {
+    const placeIds = dryRunPlaceIds(textQuery, pageSize);
     console.log(`[places-discovery] dry-run count=${placeIds.length}`);
-    return { ok: true, placeIds };
+    return { ok: true, placeIds, dryRun: true };
   }
 
   const apiKey = resolveApiKey();
@@ -85,12 +97,14 @@ export async function discoverGooglePlaceIds(
         headers: {
           "Content-Type": "application/json",
           "X-Goog-Api-Key": apiKey,
-          // FieldMask: Google returns ONLY place ids — no native content.
+          // FieldMask: Google returns ONLY place ids — no native content,
+          // and no nextPageToken is requested (pagination is out of scope).
           "X-Goog-FieldMask": "places.id",
         },
         body: JSON.stringify({
           textQuery,
-          maxResultCount,
+          // `pageSize` (maxResultCount is deprecated). Single page only.
+          pageSize,
           languageCode: "tr",
           regionCode: "TR",
         }),
