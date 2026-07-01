@@ -13,7 +13,9 @@ import {
   Star,
   AlertTriangle,
   TrendingUp,
+  Pencil,
 } from "lucide-react";
+import Link from "next/link";
 import { updateBusinessStatus } from "@/app/(admin)/admin/actions";
 import {
   BUSINESS_STATUS_LABELS,
@@ -119,9 +121,18 @@ export function BusinessDetailView({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>{business.name}</CardTitle>
-            <Badge className={BUSINESS_STATUS_COLORS[business.status]}>
-              {BUSINESS_STATUS_LABELS[business.status]}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className={BUSINESS_STATUS_COLORS[business.status]}>
+                {BUSINESS_STATUS_LABELS[business.status]}
+              </Badge>
+              <Link
+                href={`/admin/businesses/${business.id}/edit`}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border rounded px-2 py-1 transition-colors"
+              >
+                <Pencil className="size-3" />
+                Düzenle
+              </Link>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

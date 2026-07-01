@@ -159,6 +159,9 @@ function BusinessRow({ business }: { business: AdminBusiness }) {
           <Badge className={`text-xs ${BUSINESS_STATUS_COLORS[business.status]}`}>
             {BUSINESS_STATUS_LABELS[business.status]}
           </Badge>
+          {business.ownershipStatus === "UNCLAIMED" && (
+            <Badge variant="secondary" className="text-xs">Sahipsiz</Badge>
+          )}
           <RiskBadge business={business} />
           {business.priorViolations > 0 && (
             <ViolationSummaryChip

@@ -383,7 +383,7 @@ export async function updateBusinessStatus(
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    select: { status: true, slug: true },
+    select: { status: true, slug: true, ownerId: true },
   });
 
   if (!business) {
@@ -396,6 +396,10 @@ export async function updateBusinessStatus(
       success: false,
       message: `Cannot change status from ${business.status} to ${newStatus}.`,
     };
+  }
+
+  if (newStatus === "ACTIVE_MARKETPLACE" && !business.ownerId) {
+    return { success: false, message: "Sahipsiz business ACTIVE_MARKETPLACE yapılamaz." };
   }
 
   const isMarketplaceVisible = MARKETPLACE_VISIBILITY_FOR_STATUS[newStatus];
@@ -593,6 +597,218 @@ export async function bulkApproveReviews(
     success: true,
     message: `Approved ${pendingReviews.length} review(s).`,
   };
+}
+
+// ─── Admin Business Create / Edit ──────────────────────────────
+
+function normalizeSocialUrlAdmin(value: string | undefined | null, base: string): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http")) return trimmed;
+  return `${base}${trimmed.replace(/^@/, "")}`;
+}
+
+const adminCreateBusinessSchema = z.object({
+  name: z.string().min(2).max(100),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  phone: z.string().max(20).optional().or(z.literal("")),
+  whatsapp: z.string().max(20).optional().or(z.literal("")),
+  instagramUrl: z.string().max(200).optional().or(z.literal("")),
+  facebookUrl: z.string().max(200).optional().or(z.literal("")),
+  tiktokUrl: z.string().max(200).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
+  district: z.string().max(100).optional().or(z.literal("")),
+  address: z.string().max(500).optional().or(z.literal("")),
+  categoryIds: z.array(z.string()).max(10).default([]),
+  ownerEmail: z.string().email().optional().or(z.literal("")),
+  instantConfirmation: z.boolean().default(false),
+  inAppPayment: z.boolean().default(false),
+  petFriendly: z.boolean().default(false),
+  maxGroupBookingGuests: z.number().int().min(1).max(20).default(4),
+});
+
+export async function adminCreateBusiness(
+  input: z.infer<typeof adminCreateBusinessSchema>
+): Promise<AdminActionState & { businessId?: string }> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = adminCreateBusinessSchema.safeParse(input);
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const data = result.data;
+  const ownerEmail = data.ownerEmail?.trim() || null;
+
+  let ownerId: string | null = null;
+
+  if (ownerEmail) {
+    const owner = await db.user.findUnique({
+      where: { email: ownerEmail },
+      select: { id: true },
+    });
+    if (!owner) {
+      return { success: false, message: `'${ownerEmail}' e-postasına sahip kullanıcı bulunamadı.` };
+    }
+
+    const [existingMember, legacyBusiness] = await Promise.all([
+      db.businessMember.findFirst({
+        where: { userId: owner.id, role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+        select: { businessId: true },
+      }),
+      db.business.findFirst({
+        where: { ownerId: owner.id },
+        select: { id: true },
+      }),
+    ]);
+
+    if (existingMember || legacyBusiness) {
+      return { success: false, message: "Bu kullanıcı zaten başka bir işletmenin sahibidir." };
+    }
+
+    ownerId = owner.id;
+  }
+
+  const { generateUniqueSlug } = await import("@/lib/slug");
+  const slug = await generateUniqueSlug(data.name);
+
+  const businessData = {
+    name: data.name,
+    slug,
+    description: data.description?.trim() || null,
+    phone: data.phone?.trim() || null,
+    whatsapp: data.whatsapp?.trim() || null,
+    instagramUrl: normalizeSocialUrlAdmin(data.instagramUrl, "https://instagram.com/"),
+    facebookUrl: normalizeSocialUrlAdmin(data.facebookUrl, "https://facebook.com/"),
+    tiktokUrl: normalizeSocialUrlAdmin(data.tiktokUrl, "https://tiktok.com/@"),
+    city: data.city?.trim() || null,
+    district: data.district?.trim() || null,
+    address: data.address?.trim() || null,
+    status: "ACTIVE_PRIVATE" as const,
+    isMarketplaceVisible: false,
+    instantConfirmation: ownerId ? data.instantConfirmation : false,
+    inAppPayment: ownerId ? data.inAppPayment : false,
+    petFriendly: ownerId ? data.petFriendly : false,
+    maxGroupBookingGuests: data.maxGroupBookingGuests,
+    ...(ownerId
+      ? { ownerId, ownershipStatus: "CLAIMED" as const }
+      : { ownerId: null, ownershipStatus: "UNCLAIMED" as const }),
+  };
+
+  const business = await db.$transaction(async (tx) => {
+    const created = await tx.business.create({
+      data: businessData,
+      select: { id: true },
+    });
+
+    if (data.categoryIds.length > 0) {
+      await tx.businessToCategory.createMany({
+        data: data.categoryIds.map((categoryId) => ({ businessId: created.id, categoryId })),
+        skipDuplicates: true,
+      });
+    }
+
+    if (ownerId) {
+      await tx.businessMember.create({
+        data: { businessId: created.id, userId: ownerId, role: BusinessMemberRole.OWNER, status: MembershipStatus.ACTIVE },
+      });
+      await tx.user.update({
+        where: { id: ownerId },
+        data: { role: UserRole.BUSINESS_OWNER },
+      });
+    }
+
+    return created;
+  });
+
+  await logAdminAction(
+    admin.id,
+    "business.create",
+    "Business",
+    business.id,
+    ownerId ? `Sahipli — owner: ${ownerEmail}` : "Sahipsiz (UNCLAIMED)"
+  );
+
+  revalidatePath("/admin/businesses");
+  return { success: true, businessId: business.id };
+}
+
+const adminUpdateBusinessSchema = z.object({
+  businessId: z.string().min(1),
+  name: z.string().min(2).max(100),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  phone: z.string().max(20).optional().or(z.literal("")),
+  whatsapp: z.string().max(20).optional().or(z.literal("")),
+  instagramUrl: z.string().max(200).optional().or(z.literal("")),
+  facebookUrl: z.string().max(200).optional().or(z.literal("")),
+  tiktokUrl: z.string().max(200).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
+  district: z.string().max(100).optional().or(z.literal("")),
+  address: z.string().max(500).optional().or(z.literal("")),
+  categoryIds: z.array(z.string()).max(10).default([]),
+  instantConfirmation: z.boolean(),
+  inAppPayment: z.boolean(),
+  petFriendly: z.boolean(),
+  maxGroupBookingGuests: z.number().int().min(1).max(20),
+});
+
+export async function adminUpdateBusiness(
+  input: z.infer<typeof adminUpdateBusinessSchema>
+): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+
+  const result = adminUpdateBusinessSchema.safeParse(input);
+  if (!result.success) {
+    return { success: false, message: result.error.issues[0].message };
+  }
+
+  const data = result.data;
+
+  const existing = await db.business.findUnique({
+    where: { id: data.businessId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    return { success: false, message: "İşletme bulunamadı." };
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.businessToCategory.deleteMany({ where: { businessId: data.businessId } });
+
+    if (data.categoryIds.length > 0) {
+      await tx.businessToCategory.createMany({
+        data: data.categoryIds.map((categoryId) => ({ businessId: data.businessId, categoryId })),
+        skipDuplicates: true,
+      });
+    }
+
+    await tx.business.update({
+      where: { id: data.businessId },
+      data: {
+        name: data.name,
+        description: data.description?.trim() || null,
+        phone: data.phone?.trim() || null,
+        whatsapp: data.whatsapp?.trim() || null,
+        instagramUrl: normalizeSocialUrlAdmin(data.instagramUrl, "https://instagram.com/"),
+        facebookUrl: normalizeSocialUrlAdmin(data.facebookUrl, "https://facebook.com/"),
+        tiktokUrl: normalizeSocialUrlAdmin(data.tiktokUrl, "https://tiktok.com/@"),
+        city: data.city?.trim() || null,
+        district: data.district?.trim() || null,
+        address: data.address?.trim() || null,
+        instantConfirmation: data.instantConfirmation,
+        inAppPayment: data.inAppPayment,
+        petFriendly: data.petFriendly,
+        maxGroupBookingGuests: data.maxGroupBookingGuests,
+      },
+    });
+  });
+
+  await logAdminAction(admin.id, "business.update", "Business", data.businessId, "Admin düzenlemesi");
+
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${data.businessId}`);
+  return { success: true, message: "İşletme güncellendi." };
 }
 
 // ─── User Actions ──────────────────────────────────────────────
