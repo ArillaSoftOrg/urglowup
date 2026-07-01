@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Loader2, Inbox } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,10 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { rejectClaimRequest } from "@/app/(admin)/admin/claim-requests/actions";
+import {
+  rejectClaimRequest,
+  approveClaimRequest,
+} from "@/app/(admin)/admin/claim-requests/actions";
 import {
   CLAIM_STATUS_LABELS,
   CLAIM_STATUS_VARIANTS,
@@ -40,10 +45,21 @@ function requesterName(user: AdminClaimRequest["user"]): string {
 }
 
 export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ id: string; text: string; ok: boolean } | null>(null);
   const [rejectDialog, setRejectDialog] = useState<{ id: string; reason: string } | null>(null);
+
+  function handleApprove(id: string) {
+    setActionId(id);
+    startTransition(async () => {
+      const res = await approveClaimRequest(id);
+      setMessage({ id, text: res.message ?? "", ok: res.success });
+      setActionId(null);
+      if (res.success) router.refresh();
+    });
+  }
 
   function handleReject() {
     if (!rejectDialog) return;
@@ -134,15 +150,32 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
                   </td>
                   <td className="px-3 py-2 text-right">
                     {rec.status === "PENDING" ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
-                        disabled={isLoading}
-                        onClick={() => setRejectDialog({ id: rec.id, reason: "" })}
+                      <div className="flex justify-end gap-1.5">
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={isLoading}
+                          onClick={() => handleApprove(rec.id)}
+                        >
+                          {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Onayla"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={isLoading}
+                          onClick={() => setRejectDialog({ id: rec.id, reason: "" })}
+                        >
+                          Reddet
+                        </Button>
+                      </div>
+                    ) : rec.business ? (
+                      <Link
+                        href={`/admin/businesses/${rec.business.id}`}
+                        className="text-xs text-blue-600 hover:underline"
                       >
-                        {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Reddet"}
-                      </Button>
+                        {rec.business.name}
+                      </Link>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
