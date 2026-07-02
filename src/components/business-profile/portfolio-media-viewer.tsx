@@ -152,7 +152,8 @@ export function PortfolioMediaViewer({
     (index: number) => {
       const bounded = Math.max(0, Math.min(index, items.length - 1));
       slideRefs.current[bounded]?.scrollIntoView({
-        block: "start",
+        inline: "start",
+        block: "nearest",
         behavior: "smooth",
       });
       setActiveIndex(bounded);
@@ -169,7 +170,10 @@ export function PortfolioMediaViewer({
     window.addEventListener("popstate", onPop);
 
     requestAnimationFrame(() => {
-      slideRefs.current[initialIndex]?.scrollIntoView({ block: "start" });
+      slideRefs.current[initialIndex]?.scrollIntoView({
+        inline: "start",
+        block: "nearest",
+      });
     });
 
     return () => {
@@ -206,11 +210,11 @@ export function PortfolioMediaViewer({
       if (event.key === "Escape" || event.key === "Backspace") {
         history.back();
       }
-      if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
         event.preventDefault();
         goTo(activeIndex + 1);
       }
-      if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
         event.preventDefault();
         goTo(activeIndex - 1);
       }
@@ -310,7 +314,7 @@ export function PortfolioMediaViewer({
 
       <div
         ref={scrollerRef}
-        className="h-full snap-y snap-mandatory overflow-y-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex h-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, index) => {
           const service = item.relatedService;
@@ -326,7 +330,7 @@ export function PortfolioMediaViewer({
                 slideRefs.current[index] = node;
               }}
               data-index={index}
-              className="relative flex h-[100dvh] snap-start items-center justify-center overflow-hidden bg-black px-0"
+              className="relative flex h-[100dvh] w-screen shrink-0 snap-start items-center justify-center overflow-hidden bg-black px-0"
             >
               <div className="absolute inset-0 flex items-center justify-center">
                 {item.isVideo ? (
