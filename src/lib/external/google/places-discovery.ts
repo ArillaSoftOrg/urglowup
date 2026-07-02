@@ -1,3 +1,5 @@
+import "server-only";
+
 /**
  * Server-side Google Places discovery.
  *
