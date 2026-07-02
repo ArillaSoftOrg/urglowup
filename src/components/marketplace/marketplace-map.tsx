@@ -27,6 +27,15 @@ const mapOptions: google.maps.MapOptions = {
 const DEFAULT_CENTER = { lat: 39.0, lng: 35.0 };
 const DEFAULT_ZOOM = 6;
 
+// External-marker copy (TR). Kept in one place; no Google native content.
+const EXTERNAL_INFO_COPY = {
+  source: "Google Maps kaynağı",
+  description:
+    "Bu işletme Fersha'ya henüz katılmamış olabilir. Fersha üzerinden randevu alınamaz.",
+  openInMaps: "Google Maps'te aç",
+  claim: "Bu işletme sizin mi?",
+} as const;
+
 function markerIcon(active: boolean, variant: "bookable" | "external"): google.maps.Symbol {
   const baseColor  = variant === "bookable" ? "#16a34a" : "#374151";
   const lightColor = variant === "bookable" ? "#86efac" : "#9ca3af";
@@ -69,14 +78,14 @@ function buildExternalInfoContent(place: MapPlace): HTMLElement {
   const source = document.createElement("p");
   source.style.margin = "0";
   source.style.color = "#6b7280";
-  source.textContent = "Google Maps kaynağı";
+  source.textContent = EXTERNAL_INFO_COPY.source;
   root.appendChild(source);
 
-  const notBookable = document.createElement("p");
-  notBookable.style.margin = "0 0 6px";
-  notBookable.style.color = "#6b7280";
-  notBookable.textContent = "Randevu Fersha üzerinden alınamaz";
-  root.appendChild(notBookable);
+  const description = document.createElement("p");
+  description.style.margin = "4px 0 6px";
+  description.style.color = "#6b7280";
+  description.textContent = EXTERNAL_INFO_COPY.description;
+  root.appendChild(description);
 
   if (place.googleMapsUri) {
     const link = document.createElement("a");
@@ -86,7 +95,8 @@ function buildExternalInfoContent(place: MapPlace): HTMLElement {
     link.style.display = "block";
     link.style.color = "#2563eb";
     link.style.fontWeight = "500";
-    link.textContent = "Google Maps'te aç";
+    link.textContent = EXTERNAL_INFO_COPY.openInMaps;
+    link.setAttribute("aria-label", `${place.name} — ${EXTERNAL_INFO_COPY.openInMaps}`);
     root.appendChild(link);
   }
 
@@ -97,7 +107,8 @@ function buildExternalInfoContent(place: MapPlace): HTMLElement {
     claim.style.marginTop = "4px";
     claim.style.color = "#2563eb";
     claim.style.fontWeight = "500";
-    claim.textContent = "Bu işletme sizin mi?";
+    claim.textContent = EXTERNAL_INFO_COPY.claim;
+    claim.setAttribute("aria-label", `${place.name} — ${EXTERNAL_INFO_COPY.claim}`);
     root.appendChild(claim);
   }
 
@@ -153,7 +164,9 @@ export function MarketplaceMap({ businesses, apiKey, activeId, onActivate }: Mar
       });
       if (place.source === "GOOGLE") {
         // External: open a Google-Maps-CTA InfoWindow; no booking, no profile.
+        // Clear any internal highlight so a stale list card isn't left active.
         marker.addListener("click", () => {
+          onActivate(null);
           infoWindow.setContent(buildExternalInfoContent(place));
           infoWindow.open({ map, anchor: marker });
         });

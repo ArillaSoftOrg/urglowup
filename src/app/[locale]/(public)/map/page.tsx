@@ -107,7 +107,7 @@ export default async function LocaleMapPage({ params, searchParams }: PageProps)
           apiKey={mapsApiKey}
           emptyMessage="No professionals match these filters."
           unlocatedNotice={(count) => `${count} businesses don't have location data yet and aren't shown on the map.`}
-          noBookableNotice="No bookable businesses match this filter."
+          noBookableNotice="No bookable businesses found in this area on Fersha."
           locale={locale}
           listLabel="List"
           mapLabel="Map"

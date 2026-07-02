@@ -99,7 +99,7 @@ export default async function MapPage({ searchParams }: PageProps) {
           apiKey={mapsApiKey}
           emptyMessage="Bu filtrelerle eşleşen uzman bulunamadı."
           unlocatedNotice={(count) => `${count} işletmenin konum bilgisi henüz haritada gösterilemiyor.`}
-          noBookableNotice="Bu filtrede randevu alınabilir işletme yok."
+          noBookableNotice="Bu bölgede Fersha üzerinden randevu alınabilir işletme bulunamadı."
           listLabel="Liste"
           mapLabel="Harita"
         />

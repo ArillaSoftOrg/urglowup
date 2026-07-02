@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { List, Map as MapIcon, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -38,6 +39,8 @@ export function MapListLayout({
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
   const external = externalPlaces ?? [];
+  const forBusinessHref =
+    locale && locale !== "tr" ? `/${locale}/for-business` : "/for-business";
 
   // Only fall back to the empty state when there are neither bookable
   // businesses nor external markers to show.
@@ -83,9 +86,17 @@ export function MapListLayout({
         {/* List — internal (bookable) businesses only; external never appears here */}
         <div className={cn("space-y-3", mobileView === "map" && "hidden lg:block")}>
           {businesses.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {noBookableNotice ?? emptyMessage}
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {noBookableNotice ?? emptyMessage}
+              </p>
+              <Link
+                href={forBusinessHref}
+                className="inline-block text-sm font-medium text-brand-pink-foreground hover:underline"
+              >
+                İşletmeniz Fersha&apos;da yer alsın →
+              </Link>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
               {businesses.map((business) => (
@@ -111,7 +122,7 @@ export function MapListLayout({
         {/* Map */}
         <div
           className={cn(
-            "h-[60vh] overflow-hidden rounded-2xl border border-border/60 lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)]",
+            "relative h-[60vh] overflow-hidden rounded-2xl border border-border/60 lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)]",
             mobileView === "list" && "hidden lg:block"
           )}
         >
@@ -121,6 +132,20 @@ export function MapListLayout({
             activeId={activeId}
             onActivate={setActiveId}
           />
+
+          {/* Legend — text + color (not color-only) for accessibility */}
+          <div className="pointer-events-none absolute bottom-2 left-2 z-10 rounded-lg bg-white/90 px-2.5 py-1.5 text-[11px] leading-tight shadow-sm backdrop-blur">
+            <div className="flex items-center gap-1.5">
+              <span className="size-2.5 shrink-0 rounded-full bg-[#16a34a]" />
+              <span className="text-foreground">Randevu alınabilir</span>
+            </div>
+            {external.length > 0 && (
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className="size-2.5 shrink-0 rounded-full bg-[#374151]" />
+                <span className="text-foreground">Google Maps kaynağı</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
