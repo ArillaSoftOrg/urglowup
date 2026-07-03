@@ -94,11 +94,98 @@ test("forgot-password footer link navigates back to login", async ({
   await expect(page.getByLabel("E-posta")).toBeVisible();
 });
 
+test("forgot-password uses generic success message for unknown emails", async ({
+  page,
+}) => {
+  await page.goto("/forgot-password");
+
+  await page.getByLabel("E-posta").fill("unknown-reset-user@example.com");
+  await page.waitForTimeout(1600);
+  await page
+    .getByRole("button", { name: "Sıfırlama bağlantısı gönder" })
+    .click();
+
+  await expect(
+    page.getByText(
+      "Eğer bu e-posta adresiyle kayıtlı bir hesap varsa şifre sıfırlama bağlantısı gönderildi.",
+    ),
+  ).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("Hesap bulunamadı");
+});
+
+test("forgot-password accepts uppercase registered email input when configured", async ({
+  page,
+}) => {
+  const resetEmail = process.env.E2E_RESET_EMAIL;
+  test.skip(
+    !resetEmail,
+    "Set E2E_RESET_EMAIL to a seeded email account to verify normalization",
+  );
+
+  await page.goto("/forgot-password");
+
+  await page.getByLabel("E-posta").fill(resetEmail!.toUpperCase());
+  await page.waitForTimeout(1600);
+  await page
+    .getByRole("button", { name: "Sıfırlama bağlantısı gönder" })
+    .click();
+
+  await expect(
+    page.getByText(
+      "Eğer bu e-posta adresiyle kayıtlı bir hesap varsa şifre sıfırlama bağlantısı gönderildi.",
+    ),
+  ).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("Hesap bulunamadı");
+});
+
 test("login page shows password-reset success message when ?reset=success", async ({
   page,
 }) => {
   await page.goto("/login?reset=success");
   await expect(page.getByText("Şifreniz güncellendi")).toBeVisible();
+});
+
+test("reset-password with fake token renders form then rejects securely", async ({
+  page,
+}) => {
+  await page.goto("/reset-password?token=fake");
+
+  await expect(page.getByLabel("Yeni şifre", { exact: true })).toBeVisible();
+  await page.getByLabel("Yeni şifre", { exact: true }).fill("Validpass1!");
+  await page.getByLabel("Yeni şifre tekrar").fill("Validpass1!");
+  await page.waitForTimeout(1600);
+  await page.getByRole("button", { name: "Şifreyi güncelle" }).click();
+
+  await expect(
+    page.getByText(
+      "Bağlantı artık geçerli değil. Güvenliğiniz için yeni bir bağlantı isteyin.",
+    ),
+  ).toBeVisible();
+});
+
+test("admin reset-password keeps admin context with fake token", async ({
+  page,
+}) => {
+  await page.goto("/admin/reset-password?token=fake&next=/admin");
+
+  await expect(page.getByLabel("Yeni şifre", { exact: true })).toBeVisible();
+  await page.getByLabel("Yeni şifre", { exact: true }).fill("Validpass1!");
+  await page.getByLabel("Yeni şifre tekrar").fill("Validpass1!");
+  await page.waitForTimeout(1600);
+  await page.getByRole("button", { name: "Şifreyi güncelle" }).click();
+
+  await expect(
+    page.getByText(
+      "Bağlantı artık geçerli değil. Güvenliğiniz için yeni bir bağlantı isteyin.",
+    ),
+  ).toBeVisible();
+  await expect(page.locator('a[href="/admin/login"]')).toHaveText(
+    /Giris yap|Giriş yap/,
+  );
+  await expect(page.locator('a[href="/admin/login"]')).toHaveAttribute(
+    "href",
+    "/admin/login",
+  );
 });
 
 test("login page shows an error for invalid credentials", async ({ page }) => {

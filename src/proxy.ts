@@ -12,6 +12,11 @@ import {
 
 const PROTECTED_PREFIXES = ["/account", "/business", "/admin"];
 const PUBLIC_BUSINESS_PREFIXES = ["/business/register", "/business/invite"];
+const PUBLIC_ADMIN_AUTH_PATHS = [
+  "/admin/login",
+  "/admin/forgot-password",
+  "/admin/reset-password",
+];
 const COOKIE_NAME = "NEXT_LOCALE";
 const AUTH_COOKIE_PREFIX = "urglowup";
 
@@ -57,9 +62,13 @@ export function proxy(request: NextRequest) {
   const isPublicBusinessPath = PUBLIC_BUSINESS_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
   );
+  const isPublicAdminAuthPath = PUBLIC_ADMIN_AUTH_PATHS.some(
+    (path) => pathname === path,
+  );
 
   if (
     !isPublicBusinessPath &&
+    !isPublicAdminAuthPath &&
     PROTECTED_PREFIXES.some(
       (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
     )

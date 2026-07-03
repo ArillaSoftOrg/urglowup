@@ -22,6 +22,9 @@ import { db } from "@/lib/db";
 
 type AuthMessageTone = "success" | "error" | "info";
 
+const PASSWORD_RESET_GENERIC_MESSAGE =
+  "Eğer bu e-posta adresiyle kayıtlı bir hesap varsa şifre sıfırlama bağlantısı gönderildi. Gelen kutunu ve spam klasörünü kontrol et.";
+
 export type AuthFormState = {
   success: boolean;
   message?: string;
@@ -249,17 +252,6 @@ export async function forgotPasswordAction(
     return errorState(rateLimit.message);
   }
 
-  const existingUser = await db.user.findUnique({
-    where: { email: parsed.data.email },
-    select: { id: true },
-  });
-
-  if (!existingUser) {
-    return errorState(
-      "Hesap bulunamadı. Kullanıcı adını, e-postanı veya cep telefonu numaranı kontrol et ve tekrar dene.",
-    );
-  }
-
   const email = parsed.data.email.trim().toLowerCase();
 
   try {
@@ -302,8 +294,7 @@ export async function forgotPasswordAction(
   return {
     success: true,
     tone: "success",
-    message:
-      "Şifre sıfırlama bağlantısını gönderdik. Gelen kutunu ve spam klasörünü kontrol et.",
+    message: PASSWORD_RESET_GENERIC_MESSAGE,
   };
 }
 
@@ -352,9 +343,11 @@ export async function resetPasswordAction(
 
   const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
   const loginUrl =
-    redirectTo === "/account"
-      ? "/login?reset=success"
-      : `/login?reset=success&redirect_url=${encodeURIComponent(redirectTo)}`;
+    redirectTo === "/admin"
+      ? "/admin/login?reset=success"
+      : redirectTo === "/account"
+        ? "/login?reset=success"
+        : `/login?reset=success&redirect_url=${encodeURIComponent(redirectTo)}`;
 
   redirect(loginUrl);
 }
@@ -505,6 +498,19 @@ function mapAuthError(
   const normalizedDetails = `${details.code ?? ""} ${details.message ?? ""}`
     .toLowerCase()
     .trim();
+
+  if (
+    context === "forgotPassword" &&
+    (normalizedDetails.includes("credential account not found") ||
+      normalizedDetails.includes("password not found") ||
+      normalizedDetails.includes("user not found"))
+  ) {
+    return {
+      success: true,
+      tone: "success",
+      message: PASSWORD_RESET_GENERIC_MESSAGE,
+    };
+  }
 
   if (
     normalizedDetails.includes("too many requests") ||
