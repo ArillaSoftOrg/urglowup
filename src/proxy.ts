@@ -78,7 +78,11 @@ export function proxy(request: NextRequest) {
     });
     if (!sessionCookie) {
       const authUrl = new URL(
-        pathname === "/business/onboarding" ? "/register" : "/login",
+        pathname === "/business/onboarding"
+          ? "/register"
+          : pathname === "/admin" || pathname.startsWith("/admin/")
+            ? "/admin/login"
+            : "/login",
         request.url,
       );
       const redirectTarget = `${pathname}${request.nextUrl.search}`;

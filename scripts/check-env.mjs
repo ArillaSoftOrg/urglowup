@@ -36,6 +36,15 @@ function isValidOriginCsv(value) {
     });
 }
 
+function isPositiveInteger(value) {
+  if (!value) {
+    return true;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1;
+}
+
 for (const fileName of [".env", ".env.local"]) {
   const filePath = path.join(cwd, fileName);
   if (!fs.existsSync(filePath)) {
@@ -131,6 +140,54 @@ const checks = [
     validate: (value) => Boolean(value),
     hint: "Recommended before enabling internal cron endpoints.",
   },
+  {
+    key: "AUTH_RATE_LIMIT_LOGIN_IP",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for login attempts per IP.",
+  },
+  {
+    key: "AUTH_RATE_LIMIT_LOGIN_EMAIL",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for login attempts per email.",
+  },
+  {
+    key: "AUTH_RATE_LIMIT_FORGOT_PASSWORD_IP",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for forgot-password attempts per IP.",
+  },
+  {
+    key: "AUTH_RATE_LIMIT_FORGOT_PASSWORD_EMAIL",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for forgot-password attempts per email.",
+  },
+  {
+    key: "AUTH_RATE_LIMIT_RESET_PASSWORD_IP",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for reset-password attempts per IP.",
+  },
+  {
+    key: "AUTH_RATE_LIMIT_RESET_PASSWORD_TOKEN",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for reset-password attempts per token.",
+  },
+  {
+    key: "AUTH_RATE_LIMIT_VERIFICATION_IP",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for verification attempts per IP.",
+  },
+  {
+    key: "AUTH_RATE_LIMIT_VERIFICATION_EMAIL",
+    required: false,
+    validate: isPositiveInteger,
+    hint: "Optional positive integer override for verification attempts per email.",
+  },
 ];
 
 const requiredFailures = [];
@@ -143,6 +200,23 @@ for (const check of checks) {
   if (!valid) {
     const target = check.required ? requiredFailures : recommendedFailures;
     target.push(`${check.key}: ${check.hint}`);
+  }
+}
+
+const isProduction =
+  env.VERCEL_ENV === "production" || env.NODE_ENV === "production";
+
+if (isProduction) {
+  if (!env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+    requiredFailures.push(
+      "NEXT_PUBLIC_TURNSTILE_SITE_KEY: Required in production for auth bot protection.",
+    );
+  }
+
+  if (!env.TURNSTILE_SECRET_KEY) {
+    requiredFailures.push(
+      "TURNSTILE_SECRET_KEY: Required in production for auth bot protection.",
+    );
   }
 }
 

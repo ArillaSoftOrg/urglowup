@@ -18,6 +18,11 @@ import {
 } from "@/lib/auth-rate-limit";
 import { validateBotProtection } from "@/lib/bot-protection";
 import { isAdminEmail } from "@/lib/admin-bootstrap";
+import {
+  logAuthEvent,
+  maskEmailForLog,
+  normalizeEmailForAuth,
+} from "@/lib/auth-security";
 import { db } from "@/lib/db";
 
 type AuthMessageTone = "success" | "error" | "info";
@@ -99,11 +104,17 @@ export async function signInAction(
   }
 
   const requestHeaders = await headers();
+  const email = normalizeEmailForAuth(parsed.data.email);
   const rateLimit = await enforceLoginRateLimit(
     requestHeaders,
-    parsed.data.email,
+    email,
   );
   if (!rateLimit.ok) {
+    logAuthEvent("warn", "auth.rate_limited", {
+      flow: "login",
+      dimension: "ip_or_email",
+      email: maskEmailForLog(email),
+    });
     return errorState(rateLimit.message);
   }
 
@@ -113,7 +124,7 @@ export async function signInAction(
   try {
     const result = await auth.api.signInEmail({
       body: {
-        email: parsed.data.email,
+        email,
         password: parsed.data.password,
         callbackURL: redirectTo,
       },
@@ -130,8 +141,9 @@ export async function signInAction(
     }
 
     if (!twoFactorChallengeUrl && !hasSuccessfulSignInResult(result)) {
-      console.error("[auth:sign-in-unexpected-response]", {
-        email: maskEmail(parsed.data.email),
+      logAuthEvent("error", "auth.login_failed", {
+        email: maskEmailForLog(email),
+        reason: "unexpected_response",
         resultKeys:
           result && typeof result === "object" ? Object.keys(result) : [],
       });
@@ -141,7 +153,7 @@ export async function signInAction(
   } catch (error) {
     if (isAuthErrorCode(error, "EMAIL_NOT_VERIFIED")) {
       const resent = await resendVerificationEmail(
-        parsed.data.email,
+        email,
         redirectTo,
         requestHeaders,
       );
@@ -155,8 +167,8 @@ export async function signInAction(
       };
     }
 
-    console.error("[auth:sign-in-failed]", {
-      email: maskEmail(parsed.data.email),
+    logAuthEvent("error", "auth.login_failed", {
+      email: maskEmailForLog(email),
       ...getAuthErrorDetails(error),
     });
 
@@ -195,13 +207,14 @@ export async function signUpAction(
 
   const { firstName, lastName } = splitName(parsed.data.name);
   const requestHeaders = await headers();
+  const email = normalizeEmailForAuth(parsed.data.email);
   const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
 
   try {
     const result = await auth.api.signUpEmail({
       body: {
         name: parsed.data.name,
-        email: parsed.data.email,
+        email,
         password: parsed.data.password,
         firstName,
         lastName,
@@ -244,15 +257,19 @@ export async function forgotPasswordAction(
   }
 
   const requestHeaders = await headers();
+  const email = normalizeEmailForAuth(parsed.data.email);
   const rateLimit = await enforceForgotPasswordRateLimit(
     requestHeaders,
-    parsed.data.email,
+    email,
   );
   if (!rateLimit.ok) {
+    logAuthEvent("warn", "auth.rate_limited", {
+      flow: "forgot_password",
+      dimension: "ip_or_email",
+      email: maskEmailForLog(email),
+    });
     return errorState(rateLimit.message);
   }
-
-  const email = parsed.data.email.trim().toLowerCase();
 
   try {
     const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
@@ -264,8 +281,8 @@ export async function forgotPasswordAction(
         ? resetPath
         : `${resetPath}?next=${encodeURIComponent(redirectTo)}`;
 
-    console.log("[auth:forgot-password-action]", {
-      email: maskEmail(email),
+    logAuthEvent("info", "auth.reset_requested", {
+      email: maskEmailForLog(email),
       isAdmin,
       resetPath,
       resetRedirect,
@@ -279,13 +296,13 @@ export async function forgotPasswordAction(
       headers: requestHeaders,
     });
 
-    console.log("[auth:forgot-password-requested]", {
-      email: maskEmail(email),
+    logAuthEvent("info", "auth.reset_request_accepted", {
+      email: maskEmailForLog(email),
       isAdmin,
     });
   } catch (error) {
-    console.error("[auth:forgot-password-error]", {
-      email: maskEmail(email),
+    logAuthEvent("error", "auth.reset_request_failed", {
+      email: maskEmailForLog(email),
       error: String(error),
     });
     return mapAuthError(error, "forgotPassword");
@@ -326,6 +343,10 @@ export async function resetPasswordAction(
     parsed.data.token,
   );
   if (!rateLimit.ok) {
+    logAuthEvent("warn", "auth.rate_limited", {
+      flow: "reset_password",
+      dimension: "ip_or_token",
+    });
     return errorState(rateLimit.message);
   }
 
@@ -340,6 +361,8 @@ export async function resetPasswordAction(
   } catch (error) {
     return mapAuthError(error, "resetPassword");
   }
+
+  logAuthEvent("info", "auth.reset_completed");
 
   const redirectTo = normalizeAuthRedirect(parsed.data.redirectTo);
   const loginUrl =
@@ -375,18 +398,24 @@ export async function resendVerificationAction(
   }
 
   const requestHeaders = await headers();
+  const email = normalizeEmailForAuth(parsed.data.email);
   const rateLimit = await enforceVerificationEmailRateLimit(
     requestHeaders,
-    parsed.data.email,
+    email,
   );
   if (!rateLimit.ok) {
+    logAuthEvent("warn", "auth.rate_limited", {
+      flow: "verification",
+      dimension: "ip_or_email",
+      email: maskEmailForLog(email),
+    });
     return errorState(rateLimit.message);
   }
 
   try {
     await auth.api.sendVerificationEmail({
       body: {
-        email: parsed.data.email,
+        email,
         callbackURL: buildVerificationCallbackURL(parsed.data.redirectTo),
       },
       headers: requestHeaders,
@@ -664,16 +693,6 @@ function isAuthErrorCode(error: unknown, code: string) {
   return getAuthErrorDetails(error).code === code;
 }
 
-function maskEmail(email: string) {
-  const [local, domain] = email.split("@");
-
-  if (!local || !domain) {
-    return "[redacted]";
-  }
-
-  return `${local.slice(0, 2)}***@${domain}`;
-}
-
 async function resendVerificationEmail(
   email: string,
   redirectTo: string,
@@ -699,8 +718,9 @@ async function resendVerificationEmail(
     return true;
   } catch (error) {
     // Log the error for diagnostics without exposing details to the user.
-    console.error("[auth:resend-verification-failed]", {
-      email: maskEmail(email),
+    logAuthEvent("error", "auth.email_failed", {
+      flow: "verification_resend",
+      email: maskEmailForLog(email),
       error: String(error),
     });
     return false;

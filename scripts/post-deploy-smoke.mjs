@@ -18,13 +18,18 @@ const AUTH_NOINDEX_PAGES = [
   { path: "/login", label: "Login page" },
   { path: "/register", label: "Register page" },
   { path: "/forgot-password", label: "Forgot-password page" },
+  { path: "/reset-password?error=INVALID_TOKEN", label: "Reset-password invalid token page" },
   { path: "/verify-email", label: "Verify-email page" },
+  { path: "/admin/login", label: "Admin login page" },
+  { path: "/admin/forgot-password", label: "Admin forgot-password page" },
+  { path: "/admin/reset-password?error=INVALID_TOKEN", label: "Admin reset-password invalid token page" },
 ];
 
 const PROTECTED_ROUTES = [
-  { path: "/account", label: "Customer account" },
-  { path: "/business/dashboard", label: "Business dashboard" },
-  { path: "/admin", label: "Admin dashboard" },
+  { path: "/account", label: "Customer account", expectedLoginPath: "/login" },
+  { path: "/business/dashboard", label: "Business dashboard", expectedLoginPath: "/login" },
+  { path: "/admin", label: "Admin dashboard", expectedLoginPath: "/admin/login" },
+  { path: "/admin/mfa/challenge", label: "Admin MFA challenge", expectedLoginPath: "/admin/login" },
 ];
 
 const ROBOTS_DISALLOWS = [
@@ -225,7 +230,8 @@ async function checkProtectedRedirects(baseUrl, failures) {
     const location = response.headers.get("location");
     const locationPath = location ? new URL(location, baseUrl).pathname : "";
     const redirectStatus = [301, 302, 303, 307, 308].includes(response.status);
-    const ok = redirectStatus && locationPath.startsWith("/login");
+    const ok =
+      redirectStatus && locationPath.startsWith(route.expectedLoginPath);
 
     logResult(
       ok,
@@ -237,7 +243,7 @@ async function checkProtectedRedirects(baseUrl, failures) {
       pushFailure(
         failures,
         route.label,
-        `${route.path} should redirect anonymous users to /login.`,
+        `${route.path} should redirect anonymous users to ${route.expectedLoginPath}.`,
       );
     }
   }

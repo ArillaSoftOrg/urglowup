@@ -25,7 +25,17 @@
 | `RESEND_API_KEY` | Yes | From Resend Dashboard |
 | `EMAIL_FROM` | Yes | Verified sender address in Resend |
 | `EMAIL_REPLY_TO` | Optional | Support inbox for user replies |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Yes in production | Cloudflare Turnstile site key for auth bot protection |
+| `TURNSTILE_SECRET_KEY` | Yes in production | Cloudflare Turnstile secret key for server-side verification |
 | `ADMIN_EMAILS` | Recommended | Comma-separated emails promoted to `ADMIN` on login |
+| `AUTH_RATE_LIMIT_LOGIN_IP` | Optional | Defaults to 30 attempts / 10 minutes per IP |
+| `AUTH_RATE_LIMIT_LOGIN_EMAIL` | Optional | Defaults to 5 attempts / 10 minutes per email |
+| `AUTH_RATE_LIMIT_FORGOT_PASSWORD_IP` | Optional | Defaults to 30 attempts / hour per IP |
+| `AUTH_RATE_LIMIT_FORGOT_PASSWORD_EMAIL` | Optional | Defaults to 3 attempts / hour per email |
+| `AUTH_RATE_LIMIT_RESET_PASSWORD_IP` | Optional | Defaults to 30 attempts / hour per IP |
+| `AUTH_RATE_LIMIT_RESET_PASSWORD_TOKEN` | Optional | Defaults to 5 attempts / hour per token |
+| `AUTH_RATE_LIMIT_VERIFICATION_IP` | Optional | Defaults to 30 attempts / hour per IP |
+| `AUTH_RATE_LIMIT_VERIFICATION_EMAIL` | Optional | Defaults to 3 attempts / hour per email |
 | `GOOGLE_CLIENT_ID` | Optional | Required only for Google Business Profile integration |
 | `GOOGLE_CLIENT_SECRET` | Optional | Required only for Google Business Profile integration |
 | `GOOGLE_REDIRECT_URI` | Optional | Must match your Google OAuth app |
@@ -39,12 +49,16 @@
 - [ ] `BETTER_AUTH_SECRET` generated securely
 - [ ] `BETTER_AUTH_URL` set to the production origin if needed
 - [ ] `BETTER_AUTH_TRUSTED_ORIGINS` includes preview/admin aliases if they are allowed to initiate auth flows
+- [ ] `trustedProxyHeaders` is only enabled behind the known production proxy/CDN path that sets `x-forwarded-for` / `x-real-ip`
 - [ ] Better Auth cookies are issued with the `urglowup` prefix in production
 - [ ] `/api/auth/[...all]` route is deployed and reachable
 - [ ] Register flow works
 - [ ] Login flow works
 - [ ] Forgot-password flow sends reset email
 - [ ] Email verification flow sends verification email
+- [ ] Turnstile site and secret keys are configured in production
+- [ ] Auth rate-limit overrides, if set, are positive integers
+- [ ] Auth logs mask email addresses and redact reset tokens / callback URLs
 
 ### Google Sign-In (optional)
 
@@ -117,6 +131,8 @@ Notes:
 
 - Multiple emails: `ADMIN_EMAILS=alice@example.com,bob@example.com`
 - Removing an email from `ADMIN_EMAILS` does not demote an already-promoted user
+- Production `ADMIN_EMAILS` must be limited to founder/operator-owned inboxes. Do not include shared, contractor, or unverified mailbox aliases.
+- Admin social login stays disabled; admin access must use email/password plus MFA.
 
 ---
 
@@ -136,9 +152,19 @@ Notes:
 2. Check `EMAIL_FROM`
 3. Confirm sending domain is verified
 4. Check Resend logs for bounces or rejections
+5. Check app logs for `auth.email_failed` with `flow=password_reset`
+6. Confirm reset URLs in logs are redacted; never paste raw reset links into tickets
 
 ### Verification emails are not arriving
 
 1. Check Resend setup
 2. Confirm `/api/auth/[...all]` is reachable
 3. Inspect application logs for Better Auth email errors
+4. Check app logs for `auth.email_failed` with `flow=email_verification`
+
+### Suspicious auth traffic or brute force
+
+1. Check app logs for `auth.rate_limited`
+2. Review the affected flow (`login`, `forgot_password`, `reset_password`, or `verification`)
+3. Tighten the matching `AUTH_RATE_LIMIT_*` override if needed
+4. Confirm Turnstile is active in production

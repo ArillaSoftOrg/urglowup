@@ -25,6 +25,15 @@ Core pieces:
 - Admin role bootstrap via `ADMIN_EMAILS`
 - **Google Sign-In** (when `GOOGLE_AUTH_CLIENT_ID` and `GOOGLE_AUTH_CLIENT_SECRET` are set)
 
+## Security Behavior
+
+- Auth email inputs are normalized with `trim().toLowerCase()` before Better Auth calls and app-level rate-limit checks.
+- Forgot-password always returns a generic success message so account existence is not disclosed.
+- Password reset tokens are single-use Better Auth verification values and password reset revokes existing sessions.
+- Auth logs use event names such as `auth.login_failed`, `auth.reset_requested`, `auth.reset_completed`, `auth.email_failed`, and `auth.rate_limited`.
+- Auth logs must mask email addresses and redact reset tokens or callback URLs.
+- Admin social login is intentionally disabled. Admin access uses email/password and MFA.
+
 ## Google Sign-In
 
 Google OAuth is opt-in: the button appears on `/login` and `/register` only when both `GOOGLE_AUTH_CLIENT_ID` and `GOOGLE_AUTH_CLIENT_SECRET` are set.
@@ -80,6 +89,8 @@ DIRECT_URL=
 RESEND_API_KEY=
 EMAIL_FROM=
 EMAIL_REPLY_TO=
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
 ```
 
 Recommended:
@@ -87,6 +98,14 @@ Recommended:
 ```env
 ADMIN_EMAILS=
 OAUTH_TOKEN_ENCRYPTION_KEY=
+AUTH_RATE_LIMIT_LOGIN_IP=
+AUTH_RATE_LIMIT_LOGIN_EMAIL=
+AUTH_RATE_LIMIT_FORGOT_PASSWORD_IP=
+AUTH_RATE_LIMIT_FORGOT_PASSWORD_EMAIL=
+AUTH_RATE_LIMIT_RESET_PASSWORD_IP=
+AUTH_RATE_LIMIT_RESET_PASSWORD_TOKEN=
+AUTH_RATE_LIMIT_VERIFICATION_IP=
+AUTH_RATE_LIMIT_VERIFICATION_EMAIL=
 ```
 
 Google Sign-In (optional — shows button when both are set):
@@ -105,6 +124,8 @@ For a full local example, see [.env.local.example](/C:/Users/YUSUF/Documents/Git
 - `trustedOrigins` is derived from `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_URL`, and optional `BETTER_AUTH_TRUSTED_ORIGINS`.
 - Better Auth cookies use the `urglowup` prefix and trust forwarded proxy headers in production.
 - Password reset revokes existing sessions.
+- App-level rate limits protect login, forgot-password, reset-password, and verification email requests. Defaults are safe for production and can be tuned with `AUTH_RATE_LIMIT_*` variables.
+- Turnstile is required by `npm run env:check` when `NODE_ENV=production` or `VERCEL_ENV=production`.
 - Protected routes are fully resolved server-side through `getCurrentUser()`.
 - Admin role promotion happens on login when the email exists in `ADMIN_EMAILS`.
 

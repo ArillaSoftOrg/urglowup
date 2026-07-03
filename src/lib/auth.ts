@@ -13,6 +13,11 @@ import { meetsMinRole } from "./permissions";
 import { AuthEmailVerification } from "@/emails/auth-email-verification";
 import { AuthPasswordReset } from "@/emails/auth-password-reset";
 import { isAdminEmail } from "./admin-bootstrap";
+import {
+  logAuthEvent,
+  maskEmailForLog,
+  redactAuthUrlForLog,
+} from "./auth-security";
 import { db } from "./db";
 import { sendEmail } from "./email";
 import { env } from "./env";
@@ -108,6 +113,7 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     autoSignIn: true,
     revokeSessionsOnPasswordReset: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
     password: {
       hash: async (plaintext: string) => {
         const result = passwordSchema.safeParse(plaintext);
@@ -123,10 +129,11 @@ export const auth = betterAuth({
       },
     },
     sendResetPassword: async ({ user, url }) => {
-      console.log("[auth:password-reset-email-attempt]", {
+      logAuthEvent("info", "auth.email_send_attempt", {
+        flow: "password_reset",
         userId: user.id,
-        email: user.email,
-        resetUrl: url,
+        email: maskEmailForLog(user.email),
+        resetUrl: redactAuthUrlForLog(url),
       });
 
       const result = await sendEmail({
@@ -141,19 +148,21 @@ export const auth = betterAuth({
       });
 
       if (!result.success) {
-        console.error("[auth:password-reset-email-failed]", {
+        logAuthEvent("error", "auth.email_failed", {
+          flow: "password_reset",
           userId: user.id,
-          email: user.email,
+          email: maskEmailForLog(user.email),
           errorType: result.errorType,
           errorMessage: result.error,
-          resetUrl: url,
+          resetUrl: redactAuthUrlForLog(url),
         });
         // Don't throw — let the reset token be created anyway.
         // Better to have a reset token than to fail the entire request.
       } else {
-        console.log("[auth:password-reset-email-sent]", {
+        logAuthEvent("info", "auth.email_sent", {
+          flow: "password_reset",
           userId: user.id,
-          email: user.email,
+          email: maskEmailForLog(user.email),
           messageId: result.messageId,
         });
       }
@@ -177,9 +186,10 @@ export const auth = betterAuth({
       });
 
       if (!result.success) {
-        console.error("[auth:verification-email-failed]", {
+        logAuthEvent("error", "auth.email_failed", {
+          flow: "email_verification",
           userId: user.id,
-          email: user.email,
+          email: maskEmailForLog(user.email),
           errorType: result.errorType,
           errorMessage: result.error,
         });
