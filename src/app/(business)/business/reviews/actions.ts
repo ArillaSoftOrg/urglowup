@@ -2,8 +2,10 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const replySchema = z.object({
   reply: z.string().min(1, "Yanıt boş olamaz").max(1000, "En fazla 1000 karakter"),
@@ -19,6 +21,17 @@ export async function replyToReview(
   formData: FormData
 ): Promise<ReviewReplyState> {
   const { businessId } = await requireBusiness("MANAGER");
+
+  const rateLimit = await enforceRateLimit({
+    scope: "review",
+    headers: await headers(),
+    subjectId: businessId,
+    ipLimit: 30,
+    subjectLimit: 15,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, error: rateLimit.message };
+  }
 
   const result = replySchema.safeParse({ reply: formData.get("reply") });
   if (!result.success) {

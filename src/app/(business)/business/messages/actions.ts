@@ -2,6 +2,8 @@
 
 import { requireBusiness } from "@/lib/auth";
 import { sendMessage } from "@/lib/queries/messages";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 import { z } from "zod/v4";
 
 const sendSchema = z.object({
@@ -14,6 +16,17 @@ export async function sendBusinessMessage(
   content: string
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   const { user } = await requireBusiness();
+
+  const rateLimit = await enforceRateLimit({
+    scope: "message",
+    headers: await headers(),
+    subjectId: user.id,
+    ipLimit: 120,
+    subjectLimit: 60,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, error: rateLimit.message };
+  }
 
   const parsed = sendSchema.safeParse({ conversationId, content });
   if (!parsed.success) {

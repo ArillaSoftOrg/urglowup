@@ -4,7 +4,9 @@ import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import {
   IMAGE_MEDIA_TYPES,
   VIDEO_MEDIA_TYPES,
@@ -72,6 +74,17 @@ export async function saveMediaRecord(
   data: z.infer<typeof saveMediaSchema>
 ): Promise<MediaActionState> {
   const { businessId } = await requireBusiness("MANAGER");
+
+  const rateLimit = await enforceRateLimit({
+    scope: "media-action",
+    headers: await headers(),
+    subjectId: businessId,
+    ipLimit: 200,
+    subjectLimit: 120,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, message: rateLimit.message };
+  }
 
   const result = saveMediaSchema.safeParse(data);
   if (!result.success) {

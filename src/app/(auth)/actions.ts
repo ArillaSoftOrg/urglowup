@@ -148,6 +148,13 @@ export async function signInAction(
           result && typeof result === "object" ? Object.keys(result) : [],
       });
 
+      if (isAdminEmail(email)) {
+        logAuthEvent("warn", "admin.login_failed", {
+          email: maskEmailForLog(email),
+          reason: "unexpected_response",
+        });
+      }
+
       return mapAuthError(result, "signIn");
     }
   } catch (error) {
@@ -171,6 +178,12 @@ export async function signInAction(
       email: maskEmailForLog(email),
       ...getAuthErrorDetails(error),
     });
+
+    if (isAdminEmail(email)) {
+      logAuthEvent("warn", "admin.login_failed", {
+        email: maskEmailForLog(email),
+      });
+    }
 
     return mapAuthError(error, "signIn");
   }

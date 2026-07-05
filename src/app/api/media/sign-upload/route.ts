@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { generateUploadSignature } from "@/lib/cloudinary";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import {
   IMAGE_MEDIA_TYPES,
   VIDEO_MEDIA_TYPES,
@@ -45,6 +46,23 @@ export async function POST(request: Request) {
   });
   if (!business) {
     return NextResponse.json({ error: "No business found" }, { status: 404 });
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "media-sign",
+    headers: request.headers,
+    subjectId: user.id,
+    ipLimit: 120,
+    subjectLimit: 60,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: rateLimit.message },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
+    );
   }
 
   // Parse body

@@ -2,6 +2,8 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { sendMessage } from "@/lib/queries/messages";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 interface SendMessageResult {
@@ -26,6 +28,17 @@ export async function sendCustomerMessage(
 
   if (content.length > 5000) {
     return { success: false, error: "Message is too long" };
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "message",
+    headers: await headers(),
+    subjectId: user.id,
+    ipLimit: 120,
+    subjectLimit: 60,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, error: rateLimit.message };
   }
 
   try {

@@ -263,7 +263,7 @@ async function getLastActivityDatesForBusinesses(businessIds: string[]) {
     LEFT JOIN "Appointment" a ON a."businessId" = b.id
     LEFT JOIN "Review" r ON r."businessId" = b.id
     LEFT JOIN "Post" p ON p."businessId" = b.id
-    WHERE b.id = ANY($1::text[])
+    WHERE b.id = ANY(${businessIds}::text[])
     GROUP BY b.id
   `;
 
@@ -709,7 +709,7 @@ async function getLastLoginDatesForUsers(
   >`
     SELECT "userId", MAX("updatedAt") as "lastLoginAt"
     FROM "Session"
-    WHERE "userId" = ANY($1::text[])
+    WHERE "userId" = ANY(${userIds}::text[])
     GROUP BY "userId"
   `;
 
@@ -753,7 +753,7 @@ async function getAppointmentDataForUsers(
       COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed,
       MAX("requestedDate") as "lastDate"
     FROM "Appointment"
-    WHERE "customerId" = ANY($1::text[])
+    WHERE "customerId" = ANY(${userIds}::text[])
     GROUP BY "customerId"
   `;
 

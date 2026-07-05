@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { MediaType } from "@/generated/prisma/enums";
 
 interface Params {
@@ -27,10 +28,27 @@ async function getLikeCount(mediaId: string) {
   return db.businessMediaLike.count({ where: { mediaId } });
 }
 
-export async function POST(_request: Request, { params }: Params) {
+export async function POST(request: Request, { params }: Params) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "media-action",
+    headers: request.headers,
+    subjectId: user.id,
+    ipLimit: 200,
+    subjectLimit: 120,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: rateLimit.message },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
+    );
   }
 
   const { id: mediaId } = await params;

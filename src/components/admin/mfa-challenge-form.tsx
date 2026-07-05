@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
-import { logMfaEvent } from "@/app/(admin-mfa)/admin/mfa/actions";
+import {
+  logMfaEvent,
+  logMfaChallengeFailure,
+} from "@/app/(admin-mfa)/admin/mfa/actions";
 
 interface ChallengeState {
   loading: boolean;
@@ -41,6 +44,7 @@ export function MfaChallengeForm({ redirectTo }: { redirectTo: string }) {
       });
 
       if (result.error) {
+        void logMfaChallengeFailure("totp").catch(() => {});
         setState((prev) => ({
           ...prev,
           error: result.error.message || "Invalid TOTP code",
@@ -78,6 +82,7 @@ export function MfaChallengeForm({ redirectTo }: { redirectTo: string }) {
       });
 
       if (result.error) {
+        void logMfaChallengeFailure("backup").catch(() => {});
         setState((prev) => ({
           ...prev,
           error: result.error.message || "Invalid backup code",

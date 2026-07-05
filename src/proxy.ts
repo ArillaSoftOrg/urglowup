@@ -9,6 +9,7 @@ import {
   SUPPORTED_LOCALES,
   type Locale,
 } from "@/lib/i18n-config";
+import { isAdminIpAllowed } from "@/lib/admin-ip-allowlist";
 
 const PROTECTED_PREFIXES = ["/account", "/business", "/admin"];
 const PUBLIC_BUSINESS_PREFIXES = ["/business/register", "/business/invite"];
@@ -59,6 +60,19 @@ function needsLocaleRouting(pathname: string): boolean {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Optional network gate: when ADMIN_IP_ALLOWLIST is configured, restrict the
+  // entire /admin surface to allowlisted IPs. Disabled (no-op) when unset.
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    if (!isAdminIpAllowed(request.headers)) {
+      console.warn("[admin.ip_denied]", {
+        path: pathname,
+        ip: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown",
+      });
+      return new NextResponse(null, { status: 404 });
+    }
+  }
+
   const isPublicBusinessPath = PUBLIC_BUSINESS_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
   );

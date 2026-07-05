@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod/v4";
 import type { PostContentType, PostStatus } from "@/generated/prisma/enums";
 import { requireBusiness } from "@/lib/auth";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
 import { db } from "@/lib/db";
 import { isSuspended } from "@/lib/admin/user-suspension";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export type PostActionState = {
   success: boolean;
@@ -44,6 +46,17 @@ export async function createPost(
   data: z.infer<typeof createPostSchema>,
 ): Promise<PostActionState> {
   const { businessId, user } = await requireBusiness("MANAGER");
+
+  const rateLimit = await enforceRateLimit({
+    scope: "media-action",
+    headers: await headers(),
+    subjectId: businessId,
+    ipLimit: 200,
+    subjectLimit: 120,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, message: rateLimit.message };
+  }
 
   const owner = await db.user.findUnique({
     where: { id: user.id },

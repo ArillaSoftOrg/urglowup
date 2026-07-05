@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import { headers } from "next/headers";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { EDITABLE_STATUSES, MAX_COMMENT_LENGTH } from "@/lib/constants/reviews";
 import { getGlobalAverage, recalculateBusinessStats } from "@/lib/ratings/calculator";
 import { env } from "@/lib/env";
@@ -65,6 +67,17 @@ export async function submitReview(
 
   if (isSuspended(user)) {
     return { success: false, message: "Your account is suspended. Please contact support." };
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "review",
+    headers: await headers(),
+    subjectId: user.id,
+    ipLimit: 30,
+    subjectLimit: 15,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, message: rateLimit.message };
   }
 
   const result = submitSchema.safeParse({
@@ -161,6 +174,17 @@ export async function updateReview(
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, message: "Not authenticated." };
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "review",
+    headers: await headers(),
+    subjectId: user.id,
+    ipLimit: 30,
+    subjectLimit: 15,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, message: rateLimit.message };
   }
 
   const result = updateSchema.safeParse({

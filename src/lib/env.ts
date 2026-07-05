@@ -18,6 +18,34 @@ function isValidOriginList(value?: string) {
     });
 }
 
+// Comma-separated list of IPv4/IPv6 addresses or CIDR ranges permitted to reach
+// /admin. Empty/unset disables the allowlist (no restriction). Only the address
+// or a `address/prefix` CIDR form is accepted — full parsing/matching lives in
+// src/lib/admin-ip-allowlist.ts.
+function isValidIpAllowlist(value?: string) {
+  if (!value) {
+    return true;
+  }
+
+  const ipv4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
+  const ipv6 = /^[0-9a-fA-F:]+$/;
+
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .every((entry) => {
+      const [address, prefix] = entry.split("/");
+      if (prefix !== undefined) {
+        const parsedPrefix = Number(prefix);
+        if (!Number.isInteger(parsedPrefix) || parsedPrefix < 0 || parsedPrefix > 128) {
+          return false;
+        }
+      }
+      return ipv4.test(address) || (ipv6.test(address) && address.includes(":"));
+    });
+}
+
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   BETTER_AUTH_SECRET: z.string().min(32),
@@ -39,6 +67,18 @@ const envSchema = z.object({
   // Optional — existing
   ADMIN_EMAILS: z.string().optional(),
   TOTP_ISSUER: z.string().min(1).default("UrGlowUp"),
+  // Content-Security-Policy is enforced by default; "true" is the emergency
+  // rollback that switches the header back to Report-Only.
+  CSP_REPORT_ONLY: z.string().optional(),
+  // Optional admin network gate — comma-separated IPs/CIDRs allowed to reach /admin.
+  // Empty/unset disables the allowlist. Only safe behind a trusted proxy/CDN.
+  ADMIN_IP_ALLOWLIST: z
+    .string()
+    .optional()
+    .refine(
+      (value) => isValidIpAllowlist(value),
+      "ADMIN_IP_ALLOWLIST must be a comma-separated list of IPv4/IPv6 addresses or CIDR ranges, for example 203.0.113.4,198.51.100.0/24",
+    ),
   // Feature flags
   REVIEW_MODERATION_MODE: z.enum(["approved", "pending"]).optional().default("approved"),
   // Google Business Profile OAuth (Phase 15+)

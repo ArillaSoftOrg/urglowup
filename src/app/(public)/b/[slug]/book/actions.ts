@@ -22,6 +22,8 @@ import {
 import { notifyBusinessAppointmentRequested } from "@/lib/in-app-notifications";
 import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
 import { validateBotProtection } from "@/lib/bot-protection";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 // ─── Schemas ────────────────────────────────────────────────────
 
@@ -205,6 +207,17 @@ export async function createAppointmentRequest(
 
   if (isSuspended(user)) {
     return { success: false, message: "Hesabınız askıya alınmıştır. Destek ile iletişime geçin." };
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "booking",
+    headers: await headers(),
+    subjectId: user.id,
+    ipLimit: 40,
+    subjectLimit: 20,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, message: rateLimit.message };
   }
 
   const raw = Object.fromEntries(formData.entries());

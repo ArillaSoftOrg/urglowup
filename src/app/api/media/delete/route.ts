@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { getResourceType } from "@/lib/constants/media";
 import { revalidatePath } from "next/cache";
 
@@ -32,6 +33,23 @@ export async function DELETE(request: Request) {
   });
   if (!business) {
     return NextResponse.json({ error: "No business found" }, { status: 404 });
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "media-action",
+    headers: request.headers,
+    subjectId: user.id,
+    ipLimit: 200,
+    subjectLimit: 120,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: rateLimit.message },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
+    );
   }
 
   let body: unknown;

@@ -2,6 +2,8 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 export type WaitlistActionState = { success: boolean; message: string };
@@ -14,6 +16,17 @@ export async function joinWaitlist(
 ): Promise<WaitlistActionState> {
   const user = await getCurrentUser();
   if (!user) return { success: false, message: "Giriş yapmalısınız." };
+
+  const rateLimit = await enforceRateLimit({
+    scope: "booking",
+    headers: await headers(),
+    subjectId: user.id,
+    ipLimit: 40,
+    subjectLimit: 20,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, message: rateLimit.message };
+  }
 
   const dateObj = new Date(date + "T00:00:00");
 

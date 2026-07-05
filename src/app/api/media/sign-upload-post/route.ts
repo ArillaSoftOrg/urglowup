@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireBusiness } from "@/lib/auth";
 import { generateUploadSignature } from "@/lib/cloudinary";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { z } from "zod/v4";
 
 const requestSchema = z.object({
@@ -14,6 +15,23 @@ export async function POST(request: Request) {
     businessId = result.businessId;
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "media-sign",
+    headers: request.headers,
+    subjectId: businessId,
+    ipLimit: 120,
+    subjectLimit: 60,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: rateLimit.message },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
+    );
   }
 
   let body: unknown;

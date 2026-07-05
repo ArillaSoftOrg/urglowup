@@ -2,8 +2,10 @@
 
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export type ClaimActionState = {
   success: boolean;
@@ -34,6 +36,17 @@ export async function submitBusinessClaim(
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, message: "Başvuru için giriş yapmalısınız." };
+  }
+
+  const rateLimit = await enforceRateLimit({
+    scope: "claim",
+    headers: await headers(),
+    subjectId: user.id,
+    ipLimit: 20,
+    subjectLimit: 10,
+  });
+  if (!rateLimit.ok) {
+    return { success: false, message: rateLimit.message };
   }
 
   const parsed = submitClaimSchema.safeParse(input);
