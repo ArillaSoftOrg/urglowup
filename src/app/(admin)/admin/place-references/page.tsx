@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   getAdminPlaceReferences,
   getAdminCategories,
+  getAdminBusinesses,
   isValidPlaceReferenceStatus,
 } from "@/lib/queries/admin";
 import { PlaceReferenceTable } from "@/components/admin/place-reference-table";
@@ -39,12 +40,13 @@ export default async function AdminPlaceReferencesPage({ searchParams }: PagePro
       ? params.city.trim()
       : undefined;
 
-  const [records, categories] = await Promise.all([
+  const [records, categories, businesses] = await Promise.all([
     getAdminPlaceReferences({
       status: statusParam,
       city: cityParam,
     }),
     getAdminCategories(),
+    getAdminBusinesses(),
   ]);
 
   return (
@@ -97,7 +99,26 @@ export default async function AdminPlaceReferencesPage({ searchParams }: PagePro
         </div>
       )}
 
-      <PlaceReferenceTable records={records} categories={categories} />
+      <PlaceReferenceTable
+        records={records}
+        categories={categories}
+        businesses={businesses.map((business) => ({
+          id: business.id,
+          name: business.name,
+          slug: business.slug,
+          city: business.city,
+          district: business.district,
+          status: business.status,
+          ownershipStatus: business.ownershipStatus,
+          owner: business.owner
+            ? {
+                email: business.owner.email,
+                firstName: business.owner.firstName,
+                lastName: business.owner.lastName,
+              }
+            : null,
+        }))}
+      />
     </div>
   );
 }

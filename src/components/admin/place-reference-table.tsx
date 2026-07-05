@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition, useState } from "react";
+import Link from "next/link";
+import { useTransition, useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MoreHorizontal, Loader2, MapPin, Unlink, Link2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Loader2,
+  MapPin,
+  Unlink,
+  Link2,
+  Search,
+  ExternalLink,
+} from "lucide-react";
+import {
+  BUSINESS_STATUS_LABELS,
+  BUSINESS_STATUS_VARIANTS,
+} from "@/lib/constants/business";
 import {
   PLACE_REFERENCE_STATUS_LABELS,
   PLACE_REFERENCE_STATUS_VARIANTS,
@@ -33,13 +46,32 @@ import {
 import { ConvertPlaceReferenceDialog } from "@/components/admin/convert-place-reference-dialog";
 import { buildGoogleMapsPlaceUrl } from "@/lib/marketplace/map-place";
 import type { AdminPlaceReference } from "@/lib/queries/admin";
-import type { PlaceReferenceStatus } from "@/generated/prisma/enums";
+import type {
+  BusinessOwnershipStatus,
+  BusinessStatus,
+  PlaceReferenceStatus,
+} from "@/generated/prisma/enums";
 
 type CategoryOption = { id: string; name: string; slug: string };
+type BusinessOption = {
+  id: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  district: string | null;
+  status: BusinessStatus;
+  ownershipStatus: BusinessOwnershipStatus;
+  owner: {
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
+};
 
 interface PlaceReferenceTableProps {
   records: AdminPlaceReference[];
   categories: CategoryOption[];
+  businesses: BusinessOption[];
 }
 
 function formatDate(d: Date | null): string {
@@ -61,6 +93,7 @@ type EditMetadataState = {
 type LinkBusinessState = {
   id: string;
   businessId: string;
+  query: string;
 };
 
 function buildMapsLabel(rec: AdminPlaceReference) {
@@ -69,12 +102,81 @@ function buildMapsLabel(rec: AdminPlaceReference) {
     .join(" ");
 }
 
-export function PlaceReferenceTable({ records, categories }: PlaceReferenceTableProps) {
+function shortId(id: string) {
+  return id.length <= 8 ? id : id.slice(0, 8);
+}
+
+function formatLocation(
+  item: Pick<BusinessOption | AdminPlaceReference, "city" | "district">,
+) {
+  return [item.district, item.city].filter(Boolean).join(" / ") || "Konum yok";
+}
+
+function formatOwner(owner: BusinessOption["owner"]) {
+  if (!owner) return "Sahipsiz";
+  const name = [owner.firstName, owner.lastName].filter(Boolean).join(" ");
+  return name ? `${name} (${owner.email})` : owner.email;
+}
+
+function normalizeSearch(value: string) {
+  return value.trim().toLocaleLowerCase("tr-TR");
+}
+
+function businessSearchText(business: BusinessOption) {
+  return normalizeSearch(
+    [
+      business.id,
+      shortId(business.id),
+      business.name,
+      business.slug,
+      business.city,
+      business.district,
+      business.status,
+      BUSINESS_STATUS_LABELS[business.status],
+      business.ownershipStatus,
+      business.owner?.email,
+      business.owner?.firstName,
+      business.owner?.lastName,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
+}
+
+export function PlaceReferenceTable({
+  records,
+  categories,
+  businesses,
+}: PlaceReferenceTableProps) {
   const [pending, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ id: string; text: string; ok: boolean } | null>(null);
   const [editDialog, setEditDialog] = useState<EditMetadataState | null>(null);
   const [linkDialog, setLinkDialog] = useState<LinkBusinessState | null>(null);
+  const businessSearchIndex = useMemo(
+    () =>
+      businesses.map((business) => ({
+        business,
+        searchText: businessSearchText(business),
+      })),
+    [businesses],
+  );
+  const currentLinkRecord = linkDialog
+    ? records.find((record) => record.id === linkDialog.id) ?? null
+    : null;
+  const selectedBusiness = linkDialog?.businessId
+    ? businesses.find((business) => business.id === linkDialog.businessId) ?? null
+    : null;
+  const normalizedBusinessQuery = normalizeSearch(linkDialog?.query ?? "");
+  const matchingBusinessCount = businessSearchIndex.filter(({ searchText }) =>
+    normalizedBusinessQuery ? searchText.includes(normalizedBusinessQuery) : true,
+  ).length;
+  const filteredBusinesses = businessSearchIndex
+    .filter(({ searchText }) =>
+      normalizedBusinessQuery ? searchText.includes(normalizedBusinessQuery) : true,
+    )
+    .slice(0, 20)
+    .map(({ business }) => business);
 
   function handleStatus(id: string, newStatus: PlaceReferenceStatus) {
     setActionId(id);
@@ -110,7 +212,7 @@ export function PlaceReferenceTable({ records, categories }: PlaceReferenceTable
     if (!linkDialog) return;
     const { id, businessId } = linkDialog;
     if (!businessId.trim()) {
-      setMessage({ id, text: "Business ID boş olamaz.", ok: false });
+      setMessage({ id, text: "Bağlamak için bir işletme seçin.", ok: false });
       return;
     }
     setActionId(id);
@@ -158,6 +260,9 @@ export function PlaceReferenceTable({ records, categories }: PlaceReferenceTable
                 rec.providerPlaceId,
                 buildMapsLabel(rec),
               );
+              const linkedBusiness = rec.claimedBusiness
+                ? businesses.find((business) => business.id === rec.claimedBusiness?.id) ?? null
+                : null;
 
               return (
                 <tr key={rec.id} className="hover:bg-muted/30">
@@ -192,8 +297,30 @@ export function PlaceReferenceTable({ records, categories }: PlaceReferenceTable
                   </td>
                   <td className="px-3 py-2 text-xs">
                     {rec.claimedBusiness ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-blue-600 font-medium">{rec.claimedBusiness.name}</span>
+                      <div className="flex items-start gap-1.5">
+                        <div className="min-w-0">
+                          <Link
+                            href={`/admin/businesses/${rec.claimedBusiness.id}`}
+                            className="block truncate font-medium text-blue-600 hover:underline"
+                          >
+                            {rec.claimedBusiness.name}
+                          </Link>
+                          <div className="text-[11px] text-muted-foreground">
+                            {linkedBusiness ? formatLocation(linkedBusiness) : formatLocation(rec)}
+                          </div>
+                          <Badge
+                            variant={
+                              linkedBusiness
+                                ? BUSINESS_STATUS_VARIANTS[linkedBusiness.status]
+                                : "secondary"
+                            }
+                            className="mt-1 text-[10px]"
+                          >
+                            {linkedBusiness
+                              ? BUSINESS_STATUS_LABELS[linkedBusiness.status]
+                              : "BaÄŸlÄ±"}
+                          </Badge>
+                        </div>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -216,7 +343,7 @@ export function PlaceReferenceTable({ records, categories }: PlaceReferenceTable
                           size="sm"
                           className="h-6 px-2 text-xs"
                           onClick={() =>
-                            setLinkDialog({ id: rec.id, businessId: "" })
+                            setLinkDialog({ id: rec.id, businessId: "", query: "" })
                           }
                         >
                           <Link2 className="w-3 h-3 mr-1" />
@@ -365,26 +492,141 @@ export function PlaceReferenceTable({ records, categories }: PlaceReferenceTable
 
       {/* Link Business Dialog */}
       <Dialog open={!!linkDialog} onOpenChange={(open) => !open && setLinkDialog(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>İşletme Bağla</DialogTitle>
           </DialogHeader>
-          {linkDialog && (
+          {linkDialog && currentLinkRecord && (
             <div className="space-y-4 pt-2">
               <p className="text-sm text-muted-foreground">
-                Bu yer referansını mevcut bir işletmeye bağlamak için Business ID girin.
+                Bu yer referansını mevcut bir işletmeye bağlamak için listeden işletme seçin.
               </p>
-              <div className="space-y-1">
-                <Label htmlFor="link-business-id">Business ID</Label>
-                <Input
-                  id="link-business-id"
-                  value={linkDialog.businessId}
-                  onChange={(e) =>
-                    setLinkDialog((p) => p ? { ...p, businessId: e.target.value } : null)
-                  }
-                  placeholder="cuid..."
-                  className="font-mono text-xs"
-                />
+              <div className="rounded-md border bg-muted/30 p-3 text-xs">
+                <div className="mb-2 font-medium text-foreground">Yer referansı</div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <span className="text-muted-foreground">Konum: </span>
+                    {formatLocation(currentLinkRecord)}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Kategori: </span>
+                    {currentLinkRecord.categoryHint ?? "—"}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-muted-foreground">Place ID: </span>
+                    <span className="font-mono">{currentLinkRecord.providerPlaceId}</span>
+                  </div>
+                </div>
+                {buildGoogleMapsPlaceUrl(
+                  currentLinkRecord.providerPlaceId,
+                  buildMapsLabel(currentLinkRecord),
+                ) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 h-8"
+                    onClick={() => {
+                      const url = buildGoogleMapsPlaceUrl(
+                        currentLinkRecord.providerPlaceId,
+                        buildMapsLabel(currentLinkRecord),
+                      );
+                      if (url) window.open(url, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    <ExternalLink className="mr-1 size-3" />
+                    Google Maps&apos;te aç
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="business-search">İşletme ara</Label>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="business-search"
+                    value={linkDialog.query}
+                    onChange={(e) =>
+                      setLinkDialog((p) =>
+                        p ? { ...p, query: e.target.value, businessId: "" } : null,
+                      )
+                    }
+                    placeholder="İşletme adı, şehir, sahip e-postası veya kısa ID"
+                    className="pl-9"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {matchingBusinessCount > 20
+                    ? `${matchingBusinessCount} eşleşme var; ilk 20 gösteriliyor. Aramayı daraltın.`
+                    : `${matchingBusinessCount} eşleşme`}
+                </p>
+              </div>
+
+              <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                {filteredBusinesses.length === 0 ? (
+                  <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+                    Eşleşen işletme bulunamadı.
+                  </div>
+                ) : (
+                  filteredBusinesses.map((business) => {
+                    const isSelected = business.id === linkDialog.businessId;
+                    return (
+                      <button
+                        key={business.id}
+                        type="button"
+                        className={`w-full rounded-md border p-3 text-left transition-colors ${
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() =>
+                          setLinkDialog((p) =>
+                            p ? { ...p, businessId: business.id } : null,
+                          )
+                        }
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{business.name}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {formatLocation(business)} · {formatOwner(business.owner)}
+                            </div>
+                            <div className="mt-1 font-mono text-[11px] text-muted-foreground">
+                              ID: {shortId(business.id)}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge
+                              variant={BUSINESS_STATUS_VARIANTS[business.status]}
+                              className="text-[10px]"
+                            >
+                              {BUSINESS_STATUS_LABELS[business.status]}
+                            </Badge>
+                            {business.ownershipStatus === "UNCLAIMED" && (
+                              <Badge variant="secondary" className="text-[10px]">
+                                Sahipsiz
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+
+              {selectedBusiness && (
+                <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                  <div className="font-medium">Seçilen işletme: {selectedBusiness.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {formatLocation(selectedBusiness)} · {formatOwner(selectedBusiness.owner)} · ID:{" "}
+                    <span className="font-mono">{shortId(selectedBusiness.id)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-xs text-muted-foreground">
+                Teknik ID seçimden otomatik doldurulur; manuel ID girişi gerekmez.
               </div>
               {message?.id === linkDialog.id && !message.ok && (
                 <p className="text-sm text-red-600">{message.text}</p>
