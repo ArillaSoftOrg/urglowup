@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,10 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { adminConvertPlaceReferenceToBusiness } from "@/app/(admin)/admin/place-references/actions";
+import {
+  adminConvertPlaceReferenceToBusiness,
+  adminFetchGooglePlacePrefill,
+} from "@/app/(admin)/admin/place-references/actions";
 import type { AdminPlaceReference } from "@/lib/queries/admin";
 
 type ConvertRecord = Pick<
@@ -24,6 +27,10 @@ type ConvertRecord = Pick<
 >;
 
 type CategoryOption = { id: string; name: string; slug: string };
+
+type PrefillData = NonNullable<
+  Awaited<ReturnType<typeof adminFetchGooglePlacePrefill>>["data"]
+>;
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -44,6 +51,12 @@ export function ConvertPlaceReferenceDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [prefillMessage, setPrefillMessage] = useState<string | null>(null);
+  const [isPrefillPending, setIsPrefillPending] = useState(false);
+  const [googleMapsUri, setGoogleMapsUri] = useState("");
+  const [websiteUri, setWebsiteUri] = useState("");
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState("");
+  const [photoAttribution, setPhotoAttribution] = useState("");
   const [isPending, startTransition] = useTransition();
 
   // NOTE: All form fields start EMPTY. PlaceReference context (below) is
@@ -64,6 +77,8 @@ export function ConvertPlaceReferenceDialog({
   const [inAppPayment, setInAppPayment] = useState(false);
   const [petFriendly, setPetFriendly] = useState(false);
   const [maxGroupBookingGuests, setMaxGroupBookingGuests] = useState(4);
+  const [latitude, setLatitude] = useState<number | undefined>(undefined);
+  const [longitude, setLongitude] = useState<number | undefined>(undefined);
 
   function resetForm() {
     setName("");
@@ -82,12 +97,54 @@ export function ConvertPlaceReferenceDialog({
     setInAppPayment(false);
     setPetFriendly(false);
     setMaxGroupBookingGuests(4);
+    setLatitude(undefined);
+    setLongitude(undefined);
+    setGoogleMapsUri("");
+    setWebsiteUri("");
+    setPhotoPreviewUrl("");
+    setPhotoAttribution("");
+    setPrefillMessage(null);
     setError(null);
   }
 
   function handleOpen() {
     resetForm();
     setOpen(true);
+    void loadPrefill({ overwrite: true });
+  }
+
+  function applyPrefill(data: PrefillData, { overwrite = false } = {}) {
+    setName((current) => overwrite || !current.trim() ? data.name ?? "" : current);
+    setDescription((current) => overwrite || !current.trim() ? data.description ?? "" : current);
+    setPhone((current) => overwrite || !current.trim() ? data.phone ?? "" : current);
+    setWhatsapp((current) => overwrite || !current.trim() ? data.whatsapp ?? "" : current);
+    setCity((current) => overwrite || !current.trim() ? data.city ?? "" : current);
+    setDistrict((current) => overwrite || !current.trim() ? data.district ?? "" : current);
+    setAddress((current) => overwrite || !current.trim() ? data.address ?? "" : current);
+    setLatitude((current) => overwrite ? data.latitude : current ?? data.latitude);
+    setLongitude((current) => overwrite ? data.longitude : current ?? data.longitude);
+    setGoogleMapsUri(data.googleMapsUri ?? "");
+    setWebsiteUri(data.websiteUri ?? "");
+    setPhotoPreviewUrl(data.photoPreviewUrl ?? "");
+    setPhotoAttribution(data.attributionLabel ?? "");
+  }
+
+  async function loadPrefill(options: { overwrite?: boolean } = {}) {
+    setIsPrefillPending(true);
+    setPrefillMessage(null);
+    try {
+      const res = await adminFetchGooglePlacePrefill(record.id);
+      if (res.success && res.data) {
+        applyPrefill(res.data, options);
+        setPrefillMessage("Google verileri forma dolduruldu. Kaydetmeden önce kontrol edin.");
+      } else {
+        setPrefillMessage(res.message ?? "Google verileri alınamadı, manuel doldurabilirsiniz.");
+      }
+    } catch {
+      setPrefillMessage("Google verileri alınamadı, manuel doldurabilirsiniz.");
+    } finally {
+      setIsPrefillPending(false);
+    }
   }
 
   function toggleCategory(id: string) {
@@ -118,6 +175,8 @@ export function ConvertPlaceReferenceDialog({
         inAppPayment,
         petFriendly,
         maxGroupBookingGuests,
+        latitude,
+        longitude,
       });
       if (res.success && res.businessId) {
         setOpen(false);
@@ -162,6 +221,84 @@ export function ConvertPlaceReferenceDialog({
             <p className="pt-1 text-[11px] text-muted-foreground">
               Google&apos;dan yalnızca Place ID saklanır. İşletme bilgilerini aşağıda manuel girin.
             </p>
+          </div>
+
+          <div className="mb-4 rounded-md border bg-background p-3 text-xs">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">Google otomatik doldurma</p>
+                <p className="mt-1 text-muted-foreground">
+                  {isPrefillPending
+                    ? "Google Place verileri alınıyor..."
+                    : prefillMessage ?? "Google verileri formu doldurmak için kullanılır."}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 shrink-0"
+                disabled={isPrefillPending}
+                onClick={() => void loadPrefill()}
+              >
+                {isPrefillPending ? (
+                  <Loader2 className="mr-1 size-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-1 size-3" />
+                )}
+                Yeniden doldur
+              </Button>
+            </div>
+
+            {(googleMapsUri || websiteUri || latitude !== undefined || longitude !== undefined) && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {googleMapsUri && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => window.open(googleMapsUri, "_blank", "noopener,noreferrer")}
+                  >
+                    <ExternalLink className="mr-1 size-3" />
+                    Google Maps
+                  </Button>
+                )}
+                {websiteUri && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => window.open(websiteUri, "_blank", "noopener,noreferrer")}
+                  >
+                    <ExternalLink className="mr-1 size-3" />
+                    Web sitesi
+                  </Button>
+                )}
+                {latitude !== undefined && longitude !== undefined && (
+                  <span className="font-mono text-[11px] text-muted-foreground">
+                    {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {photoPreviewUrl && (
+              <div className="mt-3 overflow-hidden rounded-md border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photoPreviewUrl}
+                  alt="Google işletme görseli önizlemesi"
+                  className="h-36 w-full object-cover"
+                />
+                <div className="bg-muted/50 px-2 py-1 text-[11px] text-muted-foreground">
+                  Google görsel önizlemesi
+                  {photoAttribution ? ` · ${photoAttribution}` : ""}
+                  {" · Kaydedilmez"}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">

@@ -20,10 +20,10 @@ const cspDirectives = [
   // React uses eval() only in development for enhanced debugging.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com https://maps.googleapis.com https://maps.gstatic.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://img.clerk.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.googleusercontent.com",
   "font-src 'self' data:",
   "connect-src 'self' https://maps.googleapis.com https://*.googleapis.com https://challenges.cloudflare.com https://res.cloudinary.com",
-  "frame-src https://challenges.cloudflare.com",
+  "frame-src https://challenges.cloudflare.com https://www.google.com https://maps.google.com",
   "media-src 'self' https://res.cloudinary.com blob: data:",
   "worker-src 'self' blob:",
   "upgrade-insecure-requests",

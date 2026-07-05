@@ -7,13 +7,67 @@ import { generateUniqueSlug } from "@/lib/slug";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { ADMIN_PLACE_REFERENCE_TRANSITIONS } from "@/lib/constants/place-reference";
-import { PLACES_DISCOVERY_MAX_RESULTS } from "@/lib/constants/external";
+import {
+  GOOGLE_PLACES_DETAILS_API,
+  PLACES_DISCOVERY_MAX_RESULTS,
+  PLACES_LOCATION_TIMEOUT_MS,
+} from "@/lib/constants/external";
 import { discoverGooglePlaceIds } from "@/lib/external/google/places-discovery";
+import {
+  calculateBackoffMs,
+  canRetry,
+  delay,
+  isRetryableStatusCode,
+} from "@/lib/external/google/rate-limit";
 import type { PlaceReferenceStatus } from "@/generated/prisma/enums";
 
 export type PlaceReferenceActionState = {
   success: boolean;
   message?: string;
+};
+
+type GooglePlacePrefillData = {
+  name?: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  district?: string;
+  phone?: string;
+  whatsapp?: string;
+  websiteUri?: string;
+  googleMapsUri?: string;
+  latitude?: number;
+  longitude?: number;
+  photoPreviewUrl?: string;
+  attributionLabel?: string;
+};
+
+type GooglePlacePrefillResult = {
+  success: boolean;
+  message?: string;
+  data?: GooglePlacePrefillData;
+};
+
+type GooglePlaceDetailsResponse = {
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  nationalPhoneNumber?: string;
+  internationalPhoneNumber?: string;
+  websiteUri?: string;
+  googleMapsUri?: string;
+  location?: { latitude?: number; longitude?: number };
+  addressComponents?: Array<{
+    longText?: string;
+    types?: string[];
+  }>;
+  photos?: Array<{
+    name?: string;
+    authorAttributions?: Array<{ displayName?: string }>;
+  }>;
+};
+
+type GooglePlacePhotoMediaResponse = {
+  photoUri?: string;
 };
 
 async function logAdminAction(
@@ -39,6 +93,150 @@ async function logAdminAction(
 
 function revalidatePlaceReferences() {
   revalidatePath("/admin/place-references");
+}
+
+function resolvePlacesApiKey(): string | null {
+  return (
+    process.env.GOOGLE_PLACES_SERVER_API_KEY ||
+    process.env.GOOGLE_MAPS_SERVER_API_KEY ||
+    null
+  );
+}
+
+function getAddressComponent(
+  components: GooglePlaceDetailsResponse["addressComponents"],
+  types: string[],
+) {
+  return components?.find((component) =>
+    types.some((type) => component.types?.includes(type)),
+  )?.longText;
+}
+
+function inferCityAndDistrict(
+  details: GooglePlaceDetailsResponse,
+  fallback: { city: string | null; district: string | null },
+) {
+  const city =
+    fallback.city ||
+    getAddressComponent(details.addressComponents, [
+      "administrative_area_level_1",
+      "locality",
+    ]) ||
+    null;
+  const district =
+    fallback.district ||
+    getAddressComponent(details.addressComponents, [
+      "administrative_area_level_2",
+      "sublocality",
+      "sublocality_level_1",
+      "locality",
+    ]) ||
+    null;
+
+  return { city, district };
+}
+
+function buildDescriptionDraft({
+  name,
+  categoryHint,
+  city,
+  district,
+}: {
+  name?: string;
+  categoryHint: string | null;
+  city: string | null;
+  district: string | null;
+}) {
+  const service = categoryHint?.trim() || "hizmet";
+  const location = [district, city].filter(Boolean).join(" / ");
+  if (name && location) {
+    return `${name}, ${location} bölgesinde ${service} hizmetleri sunan bir işletmedir.`;
+  }
+  if (name) {
+    return `${name}, ${service} hizmetleri sunan bir işletmedir.`;
+  }
+  if (location) {
+    return `${location} bölgesinde ${service} hizmetleri sunan bir işletme.`;
+  }
+  return `${service} hizmetleri sunan bir işletme.`;
+}
+
+async function fetchGooglePlacePhotoPreview(
+  photoName: string | undefined,
+  apiKey: string,
+): Promise<string | undefined> {
+  if (!photoName) return undefined;
+  const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=420&skipHttpRedirect=true&key=${encodeURIComponent(apiKey)}`;
+
+  try {
+    const res = await fetch(mediaUrl, { method: "GET" });
+    if (!res.ok) return undefined;
+    const json = (await res.json()) as GooglePlacePhotoMediaResponse;
+    return typeof json.photoUri === "string" ? json.photoUri : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchGooglePlaceDetails(
+  placeId: string,
+  apiKey: string,
+): Promise<GooglePlaceDetailsResponse | null> {
+  const url = `${GOOGLE_PLACES_DETAILS_API}/${encodeURIComponent(placeId)}`;
+  const fieldMask = [
+    "id",
+    "displayName",
+    "formattedAddress",
+    "nationalPhoneNumber",
+    "internationalPhoneNumber",
+    "websiteUri",
+    "googleMapsUri",
+    "location",
+    "addressComponents",
+    "photos",
+  ].join(",");
+
+  for (let attempt = 0; ; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), PLACES_LOCATION_TIMEOUT_MS);
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask": fieldMask,
+        },
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeout);
+      const isAbort = err instanceof Error && err.name === "AbortError";
+      if (!isAbort && canRetry(attempt)) {
+        await delay(calculateBackoffMs(attempt));
+        continue;
+      }
+      return null;
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      if (isRetryableStatusCode(res.status) && canRetry(attempt)) {
+        await delay(calculateBackoffMs(attempt));
+        continue;
+      }
+      return null;
+    }
+
+    try {
+      return (await res.json()) as GooglePlaceDetailsResponse;
+    } catch {
+      return null;
+    }
+  }
 }
 
 // ─── Status Update ──────────────────────────────────────────────
@@ -272,6 +470,103 @@ function normalizeSocialUrl(value: string | undefined | null, base: string): str
   return `${base}${trimmed.replace(/^@/, "")}`;
 }
 
+export async function adminFetchGooglePlacePrefill(
+  placeReferenceId: string,
+): Promise<GooglePlacePrefillResult> {
+  await requireRole(UserRole.ADMIN);
+
+  const parsed = z.string().min(1).safeParse(placeReferenceId);
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0].message };
+  }
+
+  const ref = await db.placeReference.findUnique({
+    where: { id: parsed.data },
+    select: {
+      id: true,
+      provider: true,
+      providerPlaceId: true,
+      city: true,
+      district: true,
+      categoryHint: true,
+      claimedBusinessId: true,
+    },
+  });
+
+  if (!ref) {
+    return { success: false, message: "Referans bulunamadı." };
+  }
+  if (ref.provider !== "GOOGLE" || !ref.providerPlaceId) {
+    return { success: false, message: "Yalnızca Google referansları otomatik doldurulabilir." };
+  }
+  if (ref.claimedBusinessId !== null) {
+    return { success: false, message: "Bu referans zaten bir işletmeye bağlı." };
+  }
+
+  const apiKey = resolvePlacesApiKey();
+  if (!apiKey) {
+    return {
+      success: false,
+      message: "Google verileri alınamadı, manuel doldurabilirsiniz.",
+    };
+  }
+
+  const details = await fetchGooglePlaceDetails(ref.providerPlaceId, apiKey);
+  if (!details) {
+    return {
+      success: false,
+      message: "Google verileri alınamadı, manuel doldurabilirsiniz.",
+    };
+  }
+
+  const name = details.displayName?.text?.trim() || undefined;
+  const { city, district } = inferCityAndDistrict(details, {
+    city: ref.city,
+    district: ref.district,
+  });
+  const phone =
+    details.nationalPhoneNumber?.trim() ||
+    details.internationalPhoneNumber?.trim() ||
+    undefined;
+  const firstPhoto = details.photos?.[0];
+  const photoPreviewUrl = await fetchGooglePlacePhotoPreview(firstPhoto?.name, apiKey);
+  const attributionLabel =
+    firstPhoto?.authorAttributions
+      ?.map((attribution) => attribution.displayName)
+      .filter((value): value is string => Boolean(value?.trim()))
+      .join(", ") || "Google";
+
+  return {
+    success: true,
+    data: {
+      name,
+      description: buildDescriptionDraft({
+        name,
+        categoryHint: ref.categoryHint,
+        city,
+        district,
+      }),
+      address: details.formattedAddress?.trim() || undefined,
+      city: city || undefined,
+      district: district || undefined,
+      phone,
+      whatsapp: phone,
+      websiteUri: details.websiteUri?.trim() || undefined,
+      googleMapsUri: details.googleMapsUri?.trim() || undefined,
+      latitude:
+        typeof details.location?.latitude === "number"
+          ? details.location.latitude
+          : undefined,
+      longitude:
+        typeof details.location?.longitude === "number"
+          ? details.location.longitude
+          : undefined,
+      photoPreviewUrl,
+      attributionLabel,
+    },
+  };
+}
+
 const convertPlaceReferenceSchema = z.object({
   placeReferenceId: z.string().min(1),
   name: z.string().min(2).max(100),
@@ -297,6 +592,8 @@ const convertPlaceReferenceSchema = z.object({
   inAppPayment: z.boolean().default(false),
   petFriendly: z.boolean().default(false),
   maxGroupBookingGuests: z.number().int().min(1).max(20).default(4),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 export async function adminConvertPlaceReferenceToBusiness(
@@ -446,6 +743,10 @@ export async function adminConvertPlaceReferenceToBusiness(
           city: data.city?.trim() || null,
           district: data.district?.trim() || null,
           address: data.address?.trim() || null,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
+          geocodedAt: data.latitude !== undefined && data.longitude !== undefined ? new Date() : null,
+          geocodingStatus: data.latitude !== undefined && data.longitude !== undefined ? "GOOGLE_PLACE" : null,
           googlePlaceId: fresh.providerPlaceId,
           status: "ACTIVE_PRIVATE",
           isMarketplaceVisible: false,

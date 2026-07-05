@@ -7,6 +7,10 @@ import type { BusinessWithDetails } from "@/lib/queries/business";
 
 const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
+function buildMapsEmbedUrl(query: string) {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+}
+
 export function LocationSection({
   business,
   showTitle = true,
@@ -20,6 +24,7 @@ export function LocationSection({
   const addressParts = [business.address, business.district, business.city].filter(Boolean);
   const fullAddress = addressParts.join(", ");
   const mapQuery = [business.name, fullAddress].filter(Boolean).join(" ");
+  const embedUrl = buildMapsEmbedUrl(mapQuery || fullAddress);
   const hasCoords =
     typeof business.latitude === "number" &&
     typeof business.longitude === "number";
@@ -42,19 +47,23 @@ export function LocationSection({
       )}
 
       <div className="relative overflow-hidden rounded-xl border border-border/70 shadow-sm md:rounded-2xl">
-        {mapsApiKey ? (
+        {mapsApiKey && hasCoords ? (
           <LazyBusinessMap
-            lat={hasCoords ? (business.latitude as number) : undefined}
-            lng={hasCoords ? (business.longitude as number) : undefined}
+            lat={business.latitude as number}
+            lng={business.longitude as number}
             name={business.name}
             apiKey={mapsApiKey}
             query={mapQuery}
             className="flex h-[224px] w-full flex-col items-center justify-center overflow-hidden bg-muted/30 px-4 text-center md:h-[380px] lg:h-[480px]"
           />
         ) : (
-          <div className="flex h-[224px] w-full items-center justify-center bg-muted/30 px-5 text-center text-sm text-muted-foreground md:h-[380px] lg:h-[480px]">
-            Harita şu anda gösterilemiyor.
-          </div>
+          <iframe
+            title={`${business.name} konumu`}
+            src={embedUrl}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="h-[224px] w-full border-0 bg-muted/30 md:h-[380px] lg:h-[480px]"
+          />
         )}
       </div>
 
