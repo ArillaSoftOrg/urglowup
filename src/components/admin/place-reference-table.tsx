@@ -31,6 +31,7 @@ import {
   unlinkPlaceReferenceFromBusiness,
 } from "@/app/(admin)/admin/place-references/actions";
 import { ConvertPlaceReferenceDialog } from "@/components/admin/convert-place-reference-dialog";
+import { buildGoogleMapsPlaceUrl } from "@/lib/marketplace/map-place";
 import type { AdminPlaceReference } from "@/lib/queries/admin";
 import type { PlaceReferenceStatus } from "@/generated/prisma/enums";
 
@@ -61,6 +62,12 @@ type LinkBusinessState = {
   id: string;
   businessId: string;
 };
+
+function buildMapsLabel(rec: AdminPlaceReference) {
+  return [rec.categoryHint, rec.district, rec.city]
+    .filter((part): part is string => Boolean(part?.trim()))
+    .join(" ");
+}
 
 export function PlaceReferenceTable({ records, categories }: PlaceReferenceTableProps) {
   const [pending, startTransition] = useTransition();
@@ -147,6 +154,10 @@ export function PlaceReferenceTable({ records, categories }: PlaceReferenceTable
               const isLoading = pending && actionId === rec.id;
               const currentMessage = message?.id === rec.id ? message : null;
               const allowedNext = getAllowedTransitions(rec.status as PlaceReferenceStatus);
+              const mapsUrl = buildGoogleMapsPlaceUrl(
+                rec.providerPlaceId,
+                buildMapsLabel(rec),
+              );
 
               return (
                 <tr key={rec.id} className="hover:bg-muted/30">
@@ -269,11 +280,11 @@ export function PlaceReferenceTable({ records, categories }: PlaceReferenceTable
                         >
                           Metadata düzenle
                         </DropdownMenuItem>
-                        {rec.providerPlaceId && (
+                        {mapsUrl && (
                           <DropdownMenuItem
                             onClick={() =>
                               window.open(
-                                `https://maps.google.com/?q=${encodeURIComponent(rec.providerPlaceId)}`,
+                                mapsUrl,
                                 "_blank",
                                 "noopener,noreferrer"
                               )
