@@ -337,23 +337,21 @@ export function PlaceReferenceTable({
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-start gap-1">
+                      <div className="flex flex-col items-start gap-1.5">
+                        {rec.provider === "GOOGLE" && !!rec.providerPlaceId && (
+                          <ConvertPlaceReferenceDialog record={rec} categories={categories} />
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 px-2 text-xs"
+                          className="h-6 px-2 text-xs text-muted-foreground"
                           onClick={() =>
                             setLinkDialog({ id: rec.id, businessId: "", query: "" })
                           }
                         >
                           <Link2 className="w-3 h-3 mr-1" />
-                          Bağla
+                          Mevcut işletmeye bağla
                         </Button>
-                        {rec.status === "APPROVED" &&
-                          rec.provider === "GOOGLE" &&
-                          !!rec.providerPlaceId && (
-                            <ConvertPlaceReferenceDialog record={rec} categories={categories} />
-                          )}
                       </div>
                     )}
                   </td>
@@ -494,12 +492,12 @@ export function PlaceReferenceTable({
       <Dialog open={!!linkDialog} onOpenChange={(open) => !open && setLinkDialog(null)}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>İşletme Bağla</DialogTitle>
+            <DialogTitle>Mevcut İşletmeye Bağla</DialogTitle>
           </DialogHeader>
           {linkDialog && currentLinkRecord && (
             <div className="space-y-4 pt-2">
               <p className="text-sm text-muted-foreground">
-                Bu yer referansını mevcut bir işletmeye bağlamak için listeden işletme seçin.
+                Bu Google referansını yeni işletme oluşturmak yerine mevcut bir işletme kaydına bağlamak için kullanın.
               </p>
               <div className="rounded-md border bg-muted/30 p-3 text-xs">
                 <div className="mb-2 font-medium text-foreground">Yer referansı</div>

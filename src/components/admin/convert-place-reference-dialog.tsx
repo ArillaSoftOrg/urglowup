@@ -132,16 +132,16 @@ export function ConvertPlaceReferenceDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <Button
         size="sm"
-        variant="outline"
+        variant="default"
         className="h-6 px-2 text-xs"
         onClick={handleOpen}
       >
-        Business&apos;a Dönüştür
+        İşletme oluştur
       </Button>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Business&apos;a Dönüştür</DialogTitle>
+            <DialogTitle>Google Referansından İşletme Oluştur</DialogTitle>
           </DialogHeader>
 
           {/* Read-only PlaceReference context — NOT copied into form inputs */}
@@ -160,7 +160,7 @@ export function ConvertPlaceReferenceDialog({
               <span>{record.categoryHint ?? "—"}</span>
             </div>
             <p className="pt-1 text-[11px] text-muted-foreground">
-              Bu değerler yalnızca referanstır. İşletme bilgilerini aşağıda manuel girin.
+              Google&apos;dan yalnızca Place ID saklanır. İşletme bilgilerini aşağıda manuel girin.
             </p>
           </div>
 
@@ -283,7 +283,7 @@ export function ConvertPlaceReferenceDialog({
             </DialogClose>
             <Button type="submit" disabled={isPending || name.trim().length < 2}>
               {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
-              Dönüştür
+              İşletme oluştur
             </Button>
           </DialogFooter>
         </form>

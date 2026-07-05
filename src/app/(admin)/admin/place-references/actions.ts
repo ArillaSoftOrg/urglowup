@@ -337,8 +337,8 @@ export async function adminConvertPlaceReferenceToBusiness(
   if (ref.claimedBusinessId !== null) {
     return { success: false, message: "Bu referans zaten bir işletmeye bağlı." };
   }
-  if (ref.status !== "APPROVED") {
-    return { success: false, message: "Yalnızca APPROVED referanslar dönüştürülebilir." };
+  if (ref.status !== "APPROVED" && ref.status !== "DISCOVERED") {
+    return { success: false, message: "Yalnızca DISCOVERED veya APPROVED referanslar işletmeye dönüştürülebilir." };
   }
 
   // 5) Duplicate googlePlaceId (early UX)
@@ -391,12 +391,12 @@ export async function adminConvertPlaceReferenceToBusiness(
   let business: { id: string };
   try {
     business = await db.$transaction(async (tx) => {
-      // 1) Atomic lock: APPROVED + unclaimed → CLAIM_PENDING
+      // 1) Atomic lock: DISCOVERED/APPROVED + unclaimed → CLAIM_PENDING
       const locked = await tx.placeReference.updateMany({
         where: {
           id: placeReferenceId,
           provider: "GOOGLE",
-          status: "APPROVED",
+          status: { in: ["DISCOVERED", "APPROVED"] },
           claimedBusinessId: null,
         },
         data: { status: "CLAIM_PENDING" },
