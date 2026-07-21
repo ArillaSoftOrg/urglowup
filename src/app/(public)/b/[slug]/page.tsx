@@ -15,7 +15,8 @@ import { ProfileEndingSection } from "@/components/business-profile/profile-endi
 import { getMarketplaceBusinesses } from "@/lib/queries/marketplace";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { UserRole } from "@/generated/prisma/enums";
+import { getDictionary } from "@/lib/get-dictionary";
+import { getPublicAccountMenuState } from "@/components/layout/public-account-menu-state";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -80,27 +81,24 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
   );
 
   const user = await getCurrentUser();
-  const membership =
-    user && user.role !== UserRole.ADMIN
-      ? await db.businessMember.findFirst({
-          where: { userId: user.id },
+  const [dict, accountMenuState, isFavorited] = await Promise.all([
+    getDictionary("tr"),
+    getPublicAccountMenuState(user, "tr"),
+    user
+      ? db.favorite.findUnique({
+          where: { userId_businessId: { userId: user.id, businessId: business.id } },
           select: { id: true },
-          orderBy: { createdAt: "asc" },
         })
-      : null;
-  const accountHref = user
-    ? user.role === UserRole.ADMIN
-      ? "/admin"
-      : membership
-        ? "/business/dashboard"
-        : "/account"
-    : "/login";
-  const isFavorited = user
-    ? !!(await db.favorite.findUnique({
-        where: { userId_businessId: { userId: user.id, businessId: business.id } },
-        select: { id: true },
-      }))
-    : false;
+      : null,
+  ]);
+  const accountMenuLabels = {
+    openMenu: dict.nav.openMenu,
+    account: dict.nav.account,
+    businessPanel: dict.nav.businessPanel,
+    adminPanel: dict.nav.adminPanel,
+    forBusiness: dict.nav.forBusiness,
+    listBusiness: dict.nav.listBusiness,
+  };
 
   const portfolioMediaIds = business.media
     .filter((m) => m.type === "PORTFOLIO_IMAGE" || m.type === "PORTFOLIO_VIDEO")
@@ -229,8 +227,10 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
           reviewSummary={reviewSummary}
           isOpen={isOpen}
           location={location}
+          accountMenuState={accountMenuState}
+          accountMenuLabels={accountMenuLabels}
           isLoggedIn={!!user}
-          initialIsFavorited={isFavorited}
+          initialIsFavorited={!!isFavorited}
           mediaEngagement={mediaEngagement}
         />
         <DesktopBusinessProfile
@@ -239,9 +239,10 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
           googleReviews={googleReviews}
           isOpen={isOpen}
           location={location}
-          accountHref={accountHref}
+          accountMenuState={accountMenuState}
+          accountMenuLabels={accountMenuLabels}
           isLoggedIn={!!user}
-          initialIsFavorited={isFavorited}
+          initialIsFavorited={!!isFavorited}
           mediaEngagement={mediaEngagement}
         />
         <ProfileEndingSection

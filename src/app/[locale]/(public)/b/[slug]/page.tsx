@@ -13,7 +13,9 @@ import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import { getMarketplaceBusinesses } from "@/lib/queries/marketplace";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { UserRole } from "@/generated/prisma/enums";
+import { getDictionary } from "@/lib/get-dictionary";
+import { getPublicAccountMenuState } from "@/components/layout/public-account-menu-state";
+import type { Locale } from "@/lib/i18n-config";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -59,29 +61,25 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  const p = (path: string) => (locale === "tr" ? path : `/${locale}${path}`);
   const user = await getCurrentUser();
-  const membership =
-    user && user.role !== UserRole.ADMIN
-      ? await db.businessMember.findFirst({
-          where: { userId: user.id },
+  const [dict, accountMenuState, isFavorited] = await Promise.all([
+    getDictionary(locale as Locale),
+    getPublicAccountMenuState(user, locale as Locale),
+    user
+      ? db.favorite.findUnique({
+          where: { userId_businessId: { userId: user.id, businessId: business.id } },
           select: { id: true },
-          orderBy: { createdAt: "asc" },
         })
-      : null;
-  const accountHref = user
-    ? user.role === UserRole.ADMIN
-      ? "/admin"
-      : membership
-        ? "/business/dashboard"
-        : p("/account")
-    : p("/login");
-  const isFavorited = user
-    ? !!(await db.favorite.findUnique({
-        where: { userId_businessId: { userId: user.id, businessId: business.id } },
-        select: { id: true },
-      }))
-    : false;
+      : null,
+  ]);
+  const accountMenuLabels = {
+    openMenu: dict.nav.openMenu,
+    account: dict.nav.account,
+    businessPanel: dict.nav.businessPanel,
+    adminPanel: dict.nav.adminPanel,
+    forBusiness: dict.nav.forBusiness,
+    listBusiness: dict.nav.listBusiness,
+  };
 
   const portfolioMediaIds = business.media
     .filter((m) => m.type === "PORTFOLIO_IMAGE" || m.type === "PORTFOLIO_VIDEO")
@@ -120,8 +118,10 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           isOpen={isOpen}
           location={location}
           locale={locale}
+          accountMenuState={accountMenuState}
+          accountMenuLabels={accountMenuLabels}
           isLoggedIn={!!user}
-          initialIsFavorited={isFavorited}
+          initialIsFavorited={!!isFavorited}
           mediaEngagement={mediaEngagement}
         />
         <DesktopBusinessProfile
@@ -131,9 +131,10 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           isOpen={isOpen}
           location={location}
           locale={locale}
-          accountHref={accountHref}
+          accountMenuState={accountMenuState}
+          accountMenuLabels={accountMenuLabels}
           isLoggedIn={!!user}
-          initialIsFavorited={isFavorited}
+          initialIsFavorited={!!isFavorited}
           mediaEngagement={mediaEngagement}
         />
         <ProfileEndingSection

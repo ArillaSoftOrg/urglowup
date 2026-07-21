@@ -20,6 +20,11 @@ import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
 import { TeamSection } from "@/components/business-profile/team-section";
 import { buttonVariants } from "@/components/ui/button";
+import {
+  PublicAccountMenu,
+  type PublicAccountMenuLabels,
+} from "@/components/layout/public-account-menu";
+import type { PublicAccountMenuState } from "@/components/layout/public-account-menu-state";
 import { cn } from "@/lib/utils";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 import type { BusinessMediaEngagement } from "@/lib/queries/business";
@@ -92,6 +97,8 @@ export function MobileBusinessProfile({
   isOpen,
   location,
   locale,
+  accountMenuState,
+  accountMenuLabels,
   isLoggedIn = false,
   initialIsFavorited = false,
   mediaEngagement = {},
@@ -101,6 +108,8 @@ export function MobileBusinessProfile({
   isOpen: boolean;
   location: string;
   locale?: string;
+  accountMenuState: PublicAccountMenuState;
+  accountMenuLabels: PublicAccountMenuLabels;
   isLoggedIn?: boolean;
   initialIsFavorited?: boolean;
   mediaEngagement?: Record<string, BusinessMediaEngagement>;
@@ -146,6 +155,11 @@ export function MobileBusinessProfile({
             initialIsFavorited={initialIsFavorited}
             isLoggedIn={isLoggedIn}
             variant="mobile"
+          />
+          <PublicAccountMenu
+            state={accountMenuState}
+            labels={accountMenuLabels}
+            className="h-10 px-3 text-sm"
           />
         </div>
       </header>

@@ -1,11 +1,8 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { UserRole } from "@/generated/prisma/enums";
-import { NavbarMobileMenu } from "./navbar-mobile-menu";
+import { PublicAccountMenu } from "./public-account-menu";
+import { getPublicAccountMenuState } from "./public-account-menu-state";
 import { NavLinks } from "./navbar-nav-links";
 import { NavbarScrollEffect } from "./navbar-scroll-effect";
 import { getDictionary } from "@/lib/get-dictionary";
@@ -22,31 +19,11 @@ export async function Navbar({ locale = "tr", hideExploreLinks = false }: Navbar
     getDictionary(locale),
   ]);
 
-  const membership =
-    user && user.role !== UserRole.ADMIN
-      ? await db.businessMember.findFirst({
-          where: { userId: user.id },
-          select: { id: true },
-          orderBy: { createdAt: "asc" },
-        })
-      : null;
-
   const p = (path: string) =>
     locale === "tr" ? path : `/${locale}${path}`;
 
+  const menuState = await getPublicAccountMenuState(user, locale);
   const businessHref = p("/for-business");
-  const accountHref = user
-    ? user.role === UserRole.ADMIN
-      ? { label: dict.nav.adminPanel, href: "/admin" }
-      : membership
-        ? { label: dict.nav.businessPanel, href: "/business/dashboard" }
-        : { label: dict.nav.account, href: "/account" }
-    : null;
-
-  const menuPrimaryLink = accountHref ?? {
-    label: dict.nav.forBusiness,
-    href: businessHref,
-  };
 
   return (
     <header
@@ -80,51 +57,17 @@ export async function Navbar({ locale = "tr", hideExploreLinks = false }: Navbar
         )}
 
         <div className="flex items-center gap-2">
-          {user ? (
-            <Link
-              href={accountHref?.href ?? "/account"}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-xs md:inline-flex"
-              )}
-            >
-              {accountHref?.label ?? dict.nav.account}
-            </Link>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "lg" }),
-                  "hidden rounded-full px-4 font-semibold md:inline-flex"
-                )}
-              >
-                {dict.nav.signIn}
-              </Link>
-              <Link
-                href={businessHref}
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "hidden rounded-full border-border/80 bg-background px-5 font-semibold shadow-xs sm:inline-flex"
-                )}
-              >
-                {dict.nav.listBusiness}
-              </Link>
-            </>
-          )}
-          <NavbarMobileMenu
-            navLink={menuPrimaryLink}
-            businessHref={businessHref}
-            businessLabel={dict.nav.forBusiness}
-            listBusinessLabel={dict.nav.listBusiness}
-            exploreHref={p("/explore")}
-            exploreLabel={dict.nav.explore}
-            openMenuLabel={dict.nav.openMenu}
-            signInLabel={dict.nav.signIn}
-            signUpLabel={dict.nav.signUp}
-            accountLabel={dict.nav.account}
-            isLoggedIn={!!user}
-            hideMarketingLinks={hideExploreLinks}
+          <PublicAccountMenu
+            state={menuState}
+            labels={{
+              openMenu: dict.nav.openMenu,
+              account: dict.nav.account,
+              businessPanel: dict.nav.businessPanel,
+              adminPanel: dict.nav.adminPanel,
+              forBusiness: dict.nav.forBusiness,
+              listBusiness: dict.nav.listBusiness,
+            }}
+            hideExploreLinks={hideExploreLinks}
           />
         </div>
       </div>
