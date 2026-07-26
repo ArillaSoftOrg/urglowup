@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import type {
   BusinessMediaEngagement,
   BusinessWithDetails,
-  GoogleReview,
+  GoogleReviewData,
 } from "@/lib/queries/business";
 
 const DAY_LABELS: Record<string, string> = {
@@ -98,7 +98,7 @@ function ClosedStatusText({ label }: { label: string }) {
 export function MobileBusinessProfile({
   business,
   reviewSummary,
-  googleReviews = [],
+  googleReviewData,
   isOpen,
   location,
   locale,
@@ -110,7 +110,7 @@ export function MobileBusinessProfile({
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
-  googleReviews?: GoogleReview[];
+  googleReviewData?: GoogleReviewData;
   isOpen: boolean;
   location: string;
   locale?: string;
@@ -143,7 +143,7 @@ export function MobileBusinessProfile({
     { id: "hours", label: "Saatler" },
     { id: "location", label: "Harita" },
     ...(
-      business.reviews.length > 0 || googleReviews.length > 0
+      business.reviews.length > 0 || (googleReviewData?.reviews.length ?? 0) > 0
         ? [{ id: "reviews", label: "Yorumlar" }]
         : []
     ),
@@ -318,7 +318,7 @@ export function MobileBusinessProfile({
               <ReviewsSection
                 business={business}
                 reviewSummary={reviewSummary}
-                googleReviews={googleReviews}
+                googleReviewData={googleReviewData}
               />
             </section>
           </section>

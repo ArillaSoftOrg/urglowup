@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import type {
   BusinessMediaEngagement,
   BusinessWithDetails,
-  GoogleReview,
+  GoogleReviewData,
 } from "@/lib/queries/business";
 
 const DAY_LABELS: Record<string, string> = {
@@ -247,7 +247,7 @@ function DesktopTitleBlock({
 export function DesktopBusinessProfile({
   business,
   reviewSummary,
-  googleReviews,
+  googleReviewData,
   isOpen,
   location,
   locale,
@@ -259,7 +259,7 @@ export function DesktopBusinessProfile({
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
-  googleReviews?: GoogleReview[];
+  googleReviewData?: GoogleReviewData;
   isOpen: boolean;
   location: string;
   locale?: string;
@@ -328,7 +328,7 @@ export function DesktopBusinessProfile({
             <ReviewsSection
               business={business}
               reviewSummary={reviewSummary}
-              googleReviews={googleReviews}
+              googleReviewData={googleReviewData}
             />
           </section>
         </div>

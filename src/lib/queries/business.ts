@@ -3,6 +3,7 @@ import { getCached, setCached } from "@/lib/cache";
 import {
   fetchGooglePlacesReviews,
   type GooglePlacesReview,
+  type GooglePlacesReviewData,
 } from "@/lib/external/google/places-reviews";
 
 async function fetchBusinessBySlug(slug: string) {
@@ -207,7 +208,7 @@ async function fetchCachedGoogleReviewsForBusiness(businessId: string) {
     take: 10,
   });
 
-  return reviews.map(
+  const normalizedReviews = reviews.map(
     (review): GoogleReview => ({
       id: review.id,
       rating: review.rating,
@@ -225,9 +226,20 @@ async function fetchCachedGoogleReviewsForBusiness(businessId: string) {
       reportUrl: null,
     }),
   );
+
+  return {
+    reviews: normalizedReviews,
+    averageRating:
+      normalizedReviews.length > 0
+        ? normalizedReviews.reduce((sum, review) => sum + review.rating, 0) /
+          normalizedReviews.length
+        : null,
+    totalCount: normalizedReviews.length,
+  } satisfies GoogleReviewData;
 }
 
 export type GoogleReview = GooglePlacesReview;
+export type GoogleReviewData = GooglePlacesReviewData;
 
 export async function getGoogleReviewsForBusiness(
   businessId: string,
@@ -235,13 +247,13 @@ export async function getGoogleReviewsForBusiness(
     placeId?: string | null;
     languageCode?: string;
   },
-): Promise<GoogleReview[]> {
+): Promise<GoogleReviewData> {
   if (options?.placeId) {
-    const placeReviews = await fetchGooglePlacesReviews(
+    const placeReviewData = await fetchGooglePlacesReviews(
       options.placeId,
       options.languageCode,
     );
-    if (placeReviews.length > 0) return placeReviews;
+    if (placeReviewData.reviews.length > 0) return placeReviewData;
   }
 
   return fetchCachedGoogleReviewsForBusiness(businessId);

@@ -105,7 +105,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
     .filter((m) => m.type === "PORTFOLIO_IMAGE" || m.type === "PORTFOLIO_VIDEO")
     .map((m) => m.id);
 
-  const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw, mediaEngagement] = await Promise.all([
+  const [reviewSummary, googleReviewData, cityBusinessesRaw, fallbackBusinessesRaw, mediaEngagement] = await Promise.all([
     getBusinessReviewSummary(business.id),
     getGoogleReviewsForBusiness(business.id, {
       placeId: business.googlePlaceId,
@@ -230,7 +230,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
         <MobileBusinessProfile
           business={business}
           reviewSummary={reviewSummary}
-          googleReviews={googleReviews}
+          googleReviewData={googleReviewData}
           isOpen={isOpen}
           location={location}
           accountMenuState={accountMenuState}
@@ -242,7 +242,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
         <DesktopBusinessProfile
           business={business}
           reviewSummary={reviewSummary}
-          googleReviews={googleReviews}
+          googleReviewData={googleReviewData}
           isOpen={isOpen}
           location={location}
           accountMenuState={accountMenuState}

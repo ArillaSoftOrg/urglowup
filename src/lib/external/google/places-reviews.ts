@@ -2,7 +2,7 @@ import "server-only";
 
 import { GOOGLE_PLACES_DETAILS_API } from "@/lib/constants/external";
 
-const PLACES_REVIEWS_FIELD_MASK = "reviews";
+const PLACES_REVIEWS_FIELD_MASK = "rating,userRatingCount,reviews";
 const PLACES_REVIEWS_TIMEOUT_MS = 6_000;
 
 type LocalizedText = {
@@ -11,6 +11,8 @@ type LocalizedText = {
 };
 
 type GooglePlacesReviewResponse = {
+  rating?: number;
+  userRatingCount?: number;
   reviews?: Array<{
     name?: string;
     relativePublishTimeDescription?: string;
@@ -43,6 +45,18 @@ export type GooglePlacesReview = {
   attribution: "Google Maps";
   sourceUrl: string | null;
   reportUrl: string | null;
+};
+
+export type GooglePlacesReviewData = {
+  reviews: GooglePlacesReview[];
+  averageRating: number | null;
+  totalCount: number;
+};
+
+const EMPTY_REVIEW_DATA: GooglePlacesReviewData = {
+  reviews: [],
+  averageRating: null,
+  totalCount: 0,
 };
 
 function resolvePlacesApiKey(): string | null {
@@ -109,6 +123,23 @@ export function normalizePlacesReviews(
   });
 }
 
+export function normalizePlacesReviewData(
+  response: GooglePlacesReviewResponse,
+): GooglePlacesReviewData {
+  const averageRating = Number(response.rating);
+  const totalCount = Number(response.userRatingCount);
+
+  return {
+    reviews: normalizePlacesReviews(response),
+    averageRating:
+      Number.isFinite(averageRating) && averageRating >= 1 && averageRating <= 5
+        ? averageRating
+        : null,
+    totalCount:
+      Number.isInteger(totalCount) && totalCount >= 0 ? totalCount : 0,
+  };
+}
+
 /**
  * Reads Google Places review content at request time.
  *
@@ -119,9 +150,9 @@ export function normalizePlacesReviews(
 export async function fetchGooglePlacesReviews(
   placeId: string,
   languageCode = "tr",
-): Promise<GooglePlacesReview[]> {
+): Promise<GooglePlacesReviewData> {
   const apiKey = resolvePlacesApiKey();
-  if (!apiKey || !placeId.trim()) return [];
+  if (!apiKey || !placeId.trim()) return EMPTY_REVIEW_DATA;
 
   const controller = new AbortController();
   const timeout = setTimeout(
@@ -151,10 +182,10 @@ export async function fetchGooglePlacesReviews(
         status: response.status,
         placeId,
       });
-      return [];
+      return EMPTY_REVIEW_DATA;
     }
 
-    return normalizePlacesReviews(
+    return normalizePlacesReviewData(
       (await response.json()) as GooglePlacesReviewResponse,
     );
   } catch (error) {
@@ -165,7 +196,7 @@ export async function fetchGooglePlacesReviews(
           ? "timeout"
           : "network_error",
     });
-    return [];
+    return EMPTY_REVIEW_DATA;
   } finally {
     clearTimeout(timeout);
   }

@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { updateBusinessStatus } from "@/app/(admin)/admin/actions";
 import { AssignOwnerDialog } from "./assign-owner-dialog";
+import { GooglePlaceMatchPanel } from "./google-place-match-panel";
 import {
   BUSINESS_STATUS_LABELS,
   BUSINESS_STATUS_COLORS,
@@ -186,6 +187,14 @@ export function BusinessDetailView({
           )}
         </CardContent>
       </Card>
+
+      <GooglePlaceMatchPanel
+        business={{
+          id: business.id,
+          name: business.name,
+          googlePlaceId: business.googlePlaceId,
+        }}
+      />
 
       {/* Health Overview & Profile Completeness */}
       <div className="grid gap-4 md:grid-cols-2">
