@@ -23,7 +23,7 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
           longitude: true,
           categories: {
             select: {
-              category: { select: { name: true, slug: true } },
+              category: { select: { id: true, name: true, slug: true } },
             },
           },
           media: {

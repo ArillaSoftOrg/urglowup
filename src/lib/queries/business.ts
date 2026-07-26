@@ -1,5 +1,9 @@
 import { db } from "@/lib/db";
 import { getCached, setCached } from "@/lib/cache";
+import {
+  fetchGooglePlacesReviews,
+  type GooglePlacesReview,
+} from "@/lib/external/google/places-reviews";
 
 async function fetchBusinessBySlug(slug: string) {
   return db.business.findUnique({
@@ -185,38 +189,60 @@ export type BusinessForPublicLink = NonNullable<
   Awaited<ReturnType<typeof getBusinessForPublicLink>>
 >;
 
-async function fetchGoogleReviewsForBusiness(businessId: string) {
-  return db.externalReviewCache.findMany({
+async function fetchCachedGoogleReviewsForBusiness(businessId: string) {
+  const reviews = await db.externalReviewCache.findMany({
     where: {
       businessId,
       provider: "GOOGLE_BUSINESS_PROFILE",
+      visibilityStatus: "VISIBLE",
       expiresAt: { gt: new Date() }, // Only non-expired reviews
+      connection: {
+        is: {
+          status: "ACTIVE",
+          showExternalReviews: true,
+        },
+      },
     },
     orderBy: { createTime: "desc" },
     take: 10,
   });
+
+  return reviews.map(
+    (review): GoogleReview => ({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      originalComment: null,
+      isTranslated: false,
+      reviewerDisplayName: review.reviewerDisplayName,
+      reviewerProfilePhotoUrl: review.reviewerProfilePhotoUrl,
+      reviewerProfileUrl: null,
+      createTime: review.createTime,
+      relativePublishTimeDescription: null,
+      merchantReply: review.merchantReply,
+      attribution: "Google Maps",
+      sourceUrl: review.sourceUrl,
+      reportUrl: null,
+    }),
+  );
 }
 
-export type GoogleReview = Awaited<
-  ReturnType<typeof fetchGoogleReviewsForBusiness>
->[number];
+export type GoogleReview = GooglePlacesReview;
 
 export async function getGoogleReviewsForBusiness(
-  businessId: string
+  businessId: string,
+  options?: {
+    placeId?: string | null;
+    languageCode?: string;
+  },
 ): Promise<GoogleReview[]> {
-  // Check cache first
-  const cacheKey = `reviews:google:${businessId}`;
-  const cached = await getCached<GoogleReview[]>(cacheKey);
-  if (cached) {
-    return cached;
+  if (options?.placeId) {
+    const placeReviews = await fetchGooglePlacesReviews(
+      options.placeId,
+      options.languageCode,
+    );
+    if (placeReviews.length > 0) return placeReviews;
   }
 
-  const reviews = await fetchGoogleReviewsForBusiness(businessId);
-
-  // Cache for 1 hour (reviews don't change frequently)
-  if (reviews.length > 0) {
-    await setCached(cacheKey, reviews, { ttlSeconds: 3600 });
-  }
-
-  return reviews;
+  return fetchCachedGoogleReviewsForBusiness(businessId);
 }

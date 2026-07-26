@@ -18,6 +18,7 @@ import { SectionNav, type NavSection } from "@/components/business-profile/secti
 import { BusinessPortfolioSection } from "@/components/business-profile/business-portfolio-section";
 import { HoursSection } from "@/components/business-profile/hours-section";
 import { LocationSection } from "@/components/business-profile/location-section";
+import { ReviewsSection } from "@/components/business-profile/reviews-section";
 import { TeamSection } from "@/components/business-profile/team-section";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -26,8 +27,11 @@ import {
 } from "@/components/layout/public-account-menu";
 import type { PublicAccountMenuState } from "@/components/layout/public-account-menu-state";
 import { cn } from "@/lib/utils";
-import type { BusinessWithDetails } from "@/lib/queries/business";
-import type { BusinessMediaEngagement } from "@/lib/queries/business";
+import type {
+  BusinessMediaEngagement,
+  BusinessWithDetails,
+  GoogleReview,
+} from "@/lib/queries/business";
 
 const DAY_LABELS: Record<string, string> = {
   MONDAY: "Pazartesi",
@@ -94,6 +98,7 @@ function ClosedStatusText({ label }: { label: string }) {
 export function MobileBusinessProfile({
   business,
   reviewSummary,
+  googleReviews = [],
   isOpen,
   location,
   locale,
@@ -105,6 +110,7 @@ export function MobileBusinessProfile({
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
+  googleReviews?: GoogleReview[];
   isOpen: boolean;
   location: string;
   locale?: string;
@@ -136,6 +142,11 @@ export function MobileBusinessProfile({
     ...(portfolioItems.length > 0 ? [{ id: "portfolio", label: "Portföy" }] : []),
     { id: "hours", label: "Saatler" },
     { id: "location", label: "Harita" },
+    ...(
+      business.reviews.length > 0 || googleReviews.length > 0
+        ? [{ id: "reviews", label: "Yorumlar" }]
+        : []
+    ),
     { id: "other", label: "Diğer" },
   ];
 
@@ -302,6 +313,13 @@ export function MobileBusinessProfile({
             </section>
             <section id="location" className="scroll-mt-[122px]">
               <LocationSection business={business} />
+            </section>
+            <section id="reviews" className="scroll-mt-[122px]">
+              <ReviewsSection
+                business={business}
+                reviewSummary={reviewSummary}
+                googleReviews={googleReviews}
+              />
             </section>
           </section>
         </div>

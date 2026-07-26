@@ -17,6 +17,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getDictionary } from "@/lib/get-dictionary";
 import { getPublicAccountMenuState } from "@/components/layout/public-account-menu-state";
+import { RecentBusinessViewTracker } from "@/components/home/recent-business-history";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -106,7 +107,10 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
 
   const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw, mediaEngagement] = await Promise.all([
     getBusinessReviewSummary(business.id),
-    getGoogleReviewsForBusiness(business.id),
+    getGoogleReviewsForBusiness(business.id, {
+      placeId: business.googlePlaceId,
+      languageCode: "tr",
+    }),
     getMarketplaceBusinesses({
       city: business.city ?? undefined,
     }),
@@ -208,6 +212,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
 
   return (
     <>
+      <RecentBusinessViewTracker businessId={business.id} />
       <style>{`
         [data-navbar] {
           display: none !important;
@@ -225,6 +230,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
         <MobileBusinessProfile
           business={business}
           reviewSummary={reviewSummary}
+          googleReviews={googleReviews}
           isOpen={isOpen}
           location={location}
           accountMenuState={accountMenuState}

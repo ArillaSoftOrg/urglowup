@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { rememberBusinessView } from "@/lib/recent-business-history";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
 
 // Deterministic gradient based on business name initial — uses design tokens
@@ -33,6 +36,8 @@ export function BusinessCard({
   return (
     <Link
       href={`${prefix}/b/${slug}`}
+      data-business-id={business.id}
+      onClick={() => rememberBusinessView(business.id)}
       className="group flex flex-col transition-transform active:scale-[0.98]"
     >
       {/* Media tile */}

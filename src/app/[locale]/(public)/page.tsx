@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
+  getHomePersonalization,
   getMarketplaceBusinesses,
   getMarketplaceCategories,
   getMarketplaceCities,
 } from "@/lib/queries/marketplace";
-import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
+import { HomeDiscoverySections } from "@/components/home/home-discovery-sections";
 import { HomeHowItWorks } from "@/components/home/home-how-it-works";
 import { HomeVerifiedCallout } from "@/components/home/home-verified-callout";
 import { HomeSearchPanel } from "@/components/home/home-search-panel";
@@ -15,6 +17,12 @@ import { HomeTestimonialsMarquee } from "@/components/home/home-testimonials-mar
 import { getDictionary } from "@/lib/get-dictionary";
 import { buildAlternates, getOgLocale } from "@/lib/i18n-metadata";
 import type { Locale } from "@/lib/i18n-config";
+import { getCurrentUser } from "@/lib/auth";
+import { getHomeDiscoveryCopy } from "@/lib/home-discovery-copy";
+import {
+  RECENT_BUSINESSES_COOKIE_KEY,
+  parseRecentBusinessIds,
+} from "@/lib/recent-business-history";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -28,6 +36,7 @@ const homeSearchCopy: Record<
     searchPlaceholder: string;
     regionPlaceholder: string;
     categoryPlaceholder: string;
+    datePlaceholder?: string;
     submit: string;
     popularSearches: string;
     popularServicesTitle: string;
@@ -242,16 +251,22 @@ export default async function LocaleHomePage({ params }: PageProps) {
   const currentLocale = locale as Locale;
   const dict = await getDictionary(currentLocale);
   const copy = homeSearchCopy[currentLocale] ?? homeSearchCopy.tr;
+  const discoveryCopy = getHomeDiscoveryCopy(currentLocale);
   const p = (path: string) => `/${locale}${path}`;
 
-  const [categories, businesses, cities] = await Promise.all([
+  const [user, cookieStore] = await Promise.all([getCurrentUser(), cookies()]);
+  const [categories, businesses, cities, personalization] = await Promise.all([
     getMarketplaceCategories(),
     getMarketplaceBusinesses(),
     getMarketplaceCities(),
+    user ? getHomePersonalization(user.id) : null,
   ]);
 
   const activeCategories = categories.filter((c) => c.businessCount > 0);
   const featuredBusinesses = businesses.slice(0, 6);
+  const recentBusinessIds = parseRecentBusinessIds(
+    cookieStore.get(RECENT_BUSINESSES_COOKIE_KEY)?.value,
+  );
 
   return (
     <div className="flex flex-col">
@@ -272,11 +287,22 @@ export default async function LocaleHomePage({ params }: PageProps) {
               slug: category.slug,
             }))}
             cities={cities}
+            businesses={featuredBusinesses.map((business) => ({
+              name: business.name,
+              slug: business.slug,
+              city: business.city,
+              district: business.district,
+              categoryName: business.categories[0]?.category.name,
+            }))}
             exploreHref={p("/explore")}
+            locale={locale}
             labels={{
               searchPlaceholder: copy.searchPlaceholder,
               regionPlaceholder: copy.regionPlaceholder,
               categoryPlaceholder: copy.categoryPlaceholder,
+              datePlaceholder:
+                copy.datePlaceholder ??
+                (currentLocale === "tr" ? "Tarih ve saat seç" : "Choose date and time"),
               submit: copy.submit,
             }}
           />
@@ -344,23 +370,14 @@ export default async function LocaleHomePage({ params }: PageProps) {
         </section>
       )}
 
-      {featuredBusinesses.length > 0 && (
-        <section className="bg-background px-4 py-12 md:py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-8 flex items-end justify-end gap-4">
-              <Link
-                href={p("/explore")}
-                className="shrink-0 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                {dict.home.featuredSeeAll}
-              </Link>
-            </div>
-            <div className={cn(featuredBusinesses.length === 1 && "max-w-sm")}>
-              <BusinessGrid businesses={featuredBusinesses} locale={currentLocale} />
-            </div>
-          </div>
-        </section>
-      )}
+      <HomeDiscoverySections
+        businesses={businesses}
+        copy={discoveryCopy}
+        exploreHref={p("/explore")}
+        locale={currentLocale}
+        personalization={personalization}
+        recentBusinessIds={recentBusinessIds}
+      />
 
       <HomeHowItWorks />
       <HomeVerifiedCallout />

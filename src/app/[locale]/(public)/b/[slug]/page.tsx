@@ -15,6 +15,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getDictionary } from "@/lib/get-dictionary";
 import { getPublicAccountMenuState } from "@/components/layout/public-account-menu-state";
+import { RecentBusinessViewTracker } from "@/components/home/recent-business-history";
 import type { Locale } from "@/lib/i18n-config";
 import type { Metadata } from "next";
 
@@ -87,7 +88,10 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
 
   const [reviewSummary, googleReviews, cityBusinessesRaw, fallbackBusinessesRaw, mediaEngagement] = await Promise.all([
     getBusinessReviewSummary(business.id),
-    getGoogleReviewsForBusiness(business.id),
+    getGoogleReviewsForBusiness(business.id, {
+      placeId: business.googlePlaceId,
+      languageCode: locale,
+    }),
     getMarketplaceBusinesses({
       city: business.city ?? undefined,
     }),
@@ -105,6 +109,7 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
 
   return (
     <>
+      <RecentBusinessViewTracker businessId={business.id} />
       <style>{`
         [data-navbar] {
           display: none !important;
@@ -115,6 +120,7 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
         <MobileBusinessProfile
           business={business}
           reviewSummary={reviewSummary}
+          googleReviews={googleReviews}
           isOpen={isOpen}
           location={location}
           locale={locale}

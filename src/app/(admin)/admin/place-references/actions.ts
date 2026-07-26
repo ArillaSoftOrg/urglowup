@@ -372,11 +372,16 @@ export async function linkPlaceReferenceToBusiness(
   const [record, business] = await Promise.all([
     db.placeReference.findUnique({
       where: { id: placeReferenceId },
-      select: { id: true, claimedBusinessId: true },
+      select: {
+        id: true,
+        provider: true,
+        providerPlaceId: true,
+        claimedBusinessId: true,
+      },
     }),
     db.business.findUnique({
       where: { id: businessId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, slug: true, googlePlaceId: true },
     }),
   ]);
 
@@ -392,11 +397,43 @@ export async function linkPlaceReferenceToBusiness(
       message: "Already linked to a business. Unlink first.",
     };
   }
+  if (record.provider !== "GOOGLE" || !record.providerPlaceId) {
+    return { success: false, message: "Geçerli bir Google Place ID bulunamadı." };
+  }
+  if (
+    business.googlePlaceId &&
+    business.googlePlaceId !== record.providerPlaceId
+  ) {
+    return {
+      success: false,
+      message: "Bu işletme farklı bir Google Place ID ile eşleşmiş.",
+    };
+  }
 
-  await db.placeReference.update({
-    where: { id: placeReferenceId },
-    data: { claimedBusinessId: businessId },
+  const duplicatePlace = await db.business.findFirst({
+    where: {
+      googlePlaceId: record.providerPlaceId,
+      id: { not: businessId },
+    },
+    select: { id: true },
   });
+  if (duplicatePlace) {
+    return {
+      success: false,
+      message: "Bu Google Place ID başka bir işletmeyle eşleşmiş.",
+    };
+  }
+
+  await db.$transaction([
+    db.placeReference.update({
+      where: { id: placeReferenceId },
+      data: { claimedBusinessId: businessId },
+    }),
+    db.business.update({
+      where: { id: businessId },
+      data: { googlePlaceId: record.providerPlaceId },
+    }),
+  ]);
 
   await logAdminAction(
     admin.id,
@@ -405,6 +442,7 @@ export async function linkPlaceReferenceToBusiness(
     `linked to Business ${businessId} (${business.name})`
   );
 
+  await invalidateCache(`business:v2:slug:${business.slug}`);
   revalidatePlaceReferences();
   return { success: true, message: `Linked to "${business.name}".` };
 }
@@ -425,7 +463,14 @@ export async function unlinkPlaceReferenceFromBusiness(
 
   const record = await db.placeReference.findUnique({
     where: { id: placeReferenceId },
-    select: { id: true, claimedBusinessId: true },
+    select: {
+      id: true,
+      providerPlaceId: true,
+      claimedBusinessId: true,
+      claimedBusiness: {
+        select: { googlePlaceId: true, slug: true },
+      },
+    },
   });
 
   if (!record) {
@@ -435,10 +480,20 @@ export async function unlinkPlaceReferenceFromBusiness(
     return { success: false, message: "Not linked to any business." };
   }
 
-  await db.placeReference.update({
-    where: { id: placeReferenceId },
-    data: { claimedBusinessId: null },
-  });
+  await db.$transaction([
+    db.placeReference.update({
+      where: { id: placeReferenceId },
+      data: { claimedBusinessId: null },
+    }),
+    ...(record.claimedBusiness?.googlePlaceId === record.providerPlaceId
+      ? [
+          db.business.update({
+            where: { id: record.claimedBusinessId },
+            data: { googlePlaceId: null },
+          }),
+        ]
+      : []),
+  ]);
 
   await logAdminAction(
     admin.id,
@@ -447,6 +502,11 @@ export async function unlinkPlaceReferenceFromBusiness(
     `unlinked from Business ${record.claimedBusinessId}`
   );
 
+  if (record.claimedBusiness?.slug) {
+    await invalidateCache(
+      `business:v2:slug:${record.claimedBusiness.slug}`,
+    );
+  }
   revalidatePlaceReferences();
   return { success: true, message: "Business link removed." };
 }

@@ -26,7 +26,7 @@ export type MarketplaceBusiness = {
   district: string | null;
   latitude: number | null;
   longitude: number | null;
-  categories: Array<{ category: { name: string; slug: string } }>;
+  categories: Array<{ category: { id: string; name: string; slug: string } }>;
   /** Count of approved UrGlowUp reviews */
   reviewCount: number;
   /** Bayesian-adjusted average rating (0–10), or null if no reviews */
@@ -270,7 +270,7 @@ export async function getMarketplaceBusinesses(
       longitude: true,
       categories: {
         select: {
-          category: { select: { name: true, slug: true } },
+          category: { select: { id: true, name: true, slug: true } },
         },
       },
       media: {
@@ -364,6 +364,57 @@ export async function getMarketplaceCities(): Promise<MarketplaceCity[]> {
   return result
     .filter((r): r is typeof r & { city: string } => r.city !== null)
     .map((r) => ({ city: r.city, count: r._count.id }));
+}
+
+export type HomePersonalization = {
+  rebookBusinessIds: string[];
+  preferredCategoryIds: string[];
+};
+
+/**
+ * Returns the small amount of signed-in customer context needed by the home
+ * discovery rows. Personal recommendations are only read when the customer
+ * has explicitly granted personalization consent.
+ */
+export async function getHomePersonalization(
+  userId: string,
+): Promise<HomePersonalization> {
+  const [appointments, preferences] = await Promise.all([
+    db.appointment.findMany({
+      where: {
+        customerId: userId,
+        status: "COMPLETED",
+        business: ACTIVE_VISIBLE,
+      },
+      orderBy: [{ requestedDate: "desc" }, { requestedTime: "desc" }],
+      select: { businessId: true },
+      take: 50,
+    }),
+    db.userPreferences.findUnique({
+      where: { userId },
+      select: {
+        personalizationConsentAt: true,
+        preferredCategoryIds: true,
+      },
+    }),
+  ]);
+
+  const rebookBusinessIds = [...new Set(
+    appointments.map((appointment) => appointment.businessId),
+  )].slice(0, 12);
+
+  const storedCategoryIds =
+    preferences?.personalizationConsentAt &&
+    Array.isArray(preferences.preferredCategoryIds)
+      ? preferences.preferredCategoryIds
+      : [];
+
+  return {
+    rebookBusinessIds,
+    preferredCategoryIds: storedCategoryIds.filter(
+      (categoryId): categoryId is string => typeof categoryId === "string",
+    ),
+  };
 }
 
 /**
