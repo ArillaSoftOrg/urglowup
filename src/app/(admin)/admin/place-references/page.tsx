@@ -7,21 +7,31 @@ import {
 } from "@/lib/queries/admin";
 import { PlaceReferenceTable } from "@/components/admin/place-reference-table";
 import { PlaceDiscoveryPanel } from "@/components/admin/place-discovery-panel";
-import { PLACE_REFERENCE_STATUS_LABELS } from "@/lib/constants/place-reference";
+import {
+  PLACE_REFERENCE_STATUS_HELP,
+  PLACE_REFERENCE_STATUS_LABELS,
+} from "@/lib/constants/place-reference";
 import type { PlaceReferenceStatus } from "@/generated/prisma/enums";
 
 export const metadata = { title: "Admin - Yer Referansları" };
 
-const ALL_STATUSES: PlaceReferenceStatus[] = [
+const STATUS_FILTER_GROUPS: {
+  label: string;
+  statuses: PlaceReferenceStatus[];
+}[] = [
+  { label: "Yeni", statuses: ["DISCOVERED"] },
+  { label: "Yayında", statuses: ["APPROVED"] },
+  { label: "Bağlandı", statuses: ["CLAIM_PENDING", "CLAIMED"] },
+  { label: "Sorunlu", statuses: ["DUPLICATE", "STALE", "ERROR"] },
+  { label: "Gizlenenler", statuses: ["HIDDEN", "REJECTED"] },
+];
+
+const STATUS_GUIDE: PlaceReferenceStatus[] = [
   "DISCOVERED",
   "APPROVED",
-  "HIDDEN",
-  "DUPLICATE",
   "CLAIM_PENDING",
   "CLAIMED",
-  "REJECTED",
-  "STALE",
-  "ERROR",
+  "DUPLICATE",
 ];
 
 interface PageProps {
@@ -51,40 +61,69 @@ export default async function AdminPlaceReferencesPage({ searchParams }: PagePro
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Yer Referansları</h1>
-        <p className="text-muted-foreground">
-          Google Places üzerinden keşfedilen dış işletme referansları.
-        </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Yer Referansları</h1>
+          <p className="text-muted-foreground">
+            Google Places üzerinden keşfedilen dış işletme referansları.
+          </p>
+        </div>
+        <div className="w-full lg:w-80">
+          <PlaceDiscoveryPanel />
+        </div>
       </div>
 
-      <PlaceDiscoveryPanel />
+      <div className="rounded-md border bg-muted/20 p-3">
+        <div className="mb-2 text-sm font-medium">Statü rehberi</div>
+        <div className="grid gap-2 text-xs text-muted-foreground md:grid-cols-2 xl:grid-cols-3">
+          {STATUS_GUIDE.map((status) => (
+            <div key={status} className="min-w-0">
+              <span className="font-medium text-foreground">
+                {PLACE_REFERENCE_STATUS_LABELS[status]}:
+              </span>{" "}
+              {PLACE_REFERENCE_STATUS_HELP[status]}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap gap-2 text-sm">
+      <div className="space-y-3 text-sm">
         <Link
           href="/admin/place-references"
-          className={`px-3 py-1 rounded-full border transition-colors ${
+          className={`inline-flex h-8 items-center rounded-full border px-3 transition-colors ${
             !statusParam
               ? "bg-primary text-primary-foreground border-primary"
               : "border-border hover:bg-muted"
           }`}
         >
-          Tümü ({records.length > 0 && !statusParam ? records.length : "—"})
+          Tümü
         </Link>
-        {ALL_STATUSES.map((s) => (
-          <Link
-            key={s}
-            href={`/admin/place-references?status=${s}${cityParam ? `&city=${encodeURIComponent(cityParam)}` : ""}`}
-            className={`px-3 py-1 rounded-full border transition-colors ${
-              statusParam === s
-                ? "bg-primary text-primary-foreground border-primary"
-                : "border-border hover:bg-muted"
-            }`}
-          >
-            {PLACE_REFERENCE_STATUS_LABELS[s]}
-          </Link>
-        ))}
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {STATUS_FILTER_GROUPS.map((group) => (
+            <div key={group.label} className="min-w-0 space-y-1">
+              <div className="text-xs font-medium text-muted-foreground">
+                {group.label}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {group.statuses.map((s) => (
+                  <Link
+                    key={s}
+                    href={`/admin/place-references?status=${s}${cityParam ? `&city=${encodeURIComponent(cityParam)}` : ""}`}
+                    title={PLACE_REFERENCE_STATUS_HELP[s]}
+                    className={`inline-flex h-7 items-center rounded-full border px-2.5 transition-colors ${
+                      statusParam === s
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {PLACE_REFERENCE_STATUS_LABELS[s]}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {cityParam && (

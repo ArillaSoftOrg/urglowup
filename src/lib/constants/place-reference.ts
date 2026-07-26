@@ -3,14 +3,26 @@ import type { BadgeVariant } from "@/components/ui/badge";
 
 export const PLACE_REFERENCE_STATUS_LABELS: Record<PlaceReferenceStatus, string> = {
   DISCOVERED: "Keşfedildi",
-  APPROVED: "Onaylandı",
+  APPROVED: "Haritada Yayında",
   HIDDEN: "Gizli",
-  DUPLICATE: "Yinelenen",
-  CLAIM_PENDING: "Talep Bekliyor",
-  CLAIMED: "Talep Edildi",
+  DUPLICATE: "Mükerrer",
+  CLAIM_PENDING: "Sahiplenme Bekliyor",
+  CLAIMED: "İşletmeye Bağlandı",
   REJECTED: "Reddedildi",
   STALE: "Eskimiş",
   ERROR: "Hata",
+};
+
+export const PLACE_REFERENCE_STATUS_HELP: Record<PlaceReferenceStatus, string> = {
+  DISCOVERED: "Google'dan bulundu, admin kararı bekliyor.",
+  APPROVED: "Geçerli dış referans. İşletmeye bağlı değilse haritada Google kaynağı olarak görünür.",
+  HIDDEN: "Haritadan ve keşif akışından gizlenir.",
+  DUPLICATE: "Sistemde aynı işletme veya Google Place zaten var.",
+  CLAIM_PENDING: "Sahiplenme veya işletmeye dönüştürme süreci devam ediyor.",
+  CLAIMED: "Referans bir Business kaydına bağlandı, dış marker olarak görünmez.",
+  REJECTED: "Admin tarafından reddedildi.",
+  STALE: "Google kaydı eskimiş veya yeniden kontrol gerektiriyor.",
+  ERROR: "Son fetch veya doğrulama işleminde hata oluştu.",
 };
 
 export const PLACE_REFERENCE_STATUS_VARIANTS: Record<PlaceReferenceStatus, BadgeVariant> = {

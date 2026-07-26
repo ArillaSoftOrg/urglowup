@@ -40,17 +40,17 @@ export function PlaceDiscoveryPanel() {
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border bg-background">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
+        className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50"
       >
         <span className="flex items-center gap-2">
-          <Search className="w-4 h-4" />
+          <Search className="size-4 shrink-0" />
           Google&apos;dan Keşfet
         </span>
-        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {open ? <ChevronUp className="size-4 shrink-0" /> : <ChevronDown className="size-4 shrink-0" />}
       </button>
 
       {open && (
@@ -119,7 +119,10 @@ export function PlaceDiscoveryPanel() {
           </div>
 
           {result && (
-            <p className={`text-sm ${result.ok ? "text-green-600" : "text-red-600"}`}>
+            <p
+              role={result.ok ? "status" : "alert"}
+              className={`text-sm ${result.ok ? "text-success-foreground" : "text-destructive"}`}
+            >
               {result.text}
             </p>
           )}

@@ -33,6 +33,7 @@ import {
   BUSINESS_STATUS_VARIANTS,
 } from "@/lib/constants/business";
 import {
+  PLACE_REFERENCE_STATUS_HELP,
   PLACE_REFERENCE_STATUS_LABELS,
   PLACE_REFERENCE_STATUS_VARIANTS,
   getAllowedTransitions,
@@ -143,6 +144,10 @@ function businessSearchText(business: BusinessOption) {
   );
 }
 
+function statusUpdateMessage(status: PlaceReferenceStatus) {
+  return `${PLACE_REFERENCE_STATUS_LABELS[status]} olarak işaretlendi.`;
+}
+
 export function PlaceReferenceTable({
   records,
   categories,
@@ -182,7 +187,11 @@ export function PlaceReferenceTable({
     setActionId(id);
     startTransition(async () => {
       const result = await updatePlaceReferenceStatus(id, newStatus);
-      setMessage({ id, text: result.message ?? "", ok: result.success });
+      setMessage({
+        id,
+        text: result.success ? statusUpdateMessage(newStatus) : result.message ?? "",
+        ok: result.success,
+      });
       setActionId(null);
     });
   }
@@ -240,14 +249,11 @@ export function PlaceReferenceTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50 text-muted-foreground">
-              <th className="px-3 py-2 text-left font-medium">Provider / Place ID</th>
-              <th className="px-3 py-2 text-left font-medium">Şehir / İlçe</th>
-              <th className="px-3 py-2 text-left font-medium">Kategori</th>
+              <th className="min-w-[260px] px-3 py-2 text-left font-medium">Referans</th>
               <th className="px-3 py-2 text-left font-medium">Durum</th>
-              <th className="px-3 py-2 text-left font-medium">Fetch Durumu</th>
-              <th className="px-3 py-2 text-left font-medium">İşletme</th>
-              <th className="px-3 py-2 text-left font-medium">Eklenme</th>
-              <th className="px-3 py-2 text-left font-medium">Son Fetch</th>
+              <th className="min-w-[220px] px-3 py-2 text-left font-medium">Eşleşme Durumu</th>
+              <th className="min-w-[190px] px-3 py-2 text-left font-medium">Aksiyon</th>
+              <th className="px-3 py-2 text-left font-medium">Tarihçe</th>
               <th className="px-3 py-2 text-right font-medium">İşlemler</th>
             </tr>
           </thead>
@@ -263,39 +269,49 @@ export function PlaceReferenceTable({
               const linkedBusiness = rec.claimedBusiness
                 ? businesses.find((business) => business.id === rec.claimedBusiness?.id) ?? null
                 : null;
+              const status = rec.status as PlaceReferenceStatus;
 
               return (
                 <tr key={rec.id} className="hover:bg-muted/30">
-                  <td className="px-3 py-2">
-                    <div className="font-mono text-xs text-muted-foreground">{rec.provider}</div>
-                    <div className="font-mono text-xs truncate max-w-[160px]" title={rec.providerPlaceId}>
+                  <td className="px-3 py-3 align-top">
+                    <div className="font-medium">
+                      {formatLocation(rec)}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>{rec.categoryHint ?? "Kategori yok"}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{rec.provider}</span>
+                    </div>
+                    <div
+                      className="mt-1 max-w-[260px] truncate font-mono text-[11px] text-muted-foreground"
+                      title={rec.providerPlaceId}
+                    >
                       {rec.providerPlaceId}
                     </div>
                   </td>
-                  <td className="px-3 py-2">
-                    <div>{rec.city ?? <span className="text-muted-foreground">—</span>}</div>
-                    <div className="text-xs text-muted-foreground">{rec.district ?? "—"}</div>
-                  </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
-                    {rec.categoryHint ?? "—"}
-                  </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-3 align-top">
                     <Badge
-                      variant={PLACE_REFERENCE_STATUS_VARIANTS[rec.status as PlaceReferenceStatus]}
+                      variant={PLACE_REFERENCE_STATUS_VARIANTS[status]}
                       className="text-xs"
+                      title={PLACE_REFERENCE_STATUS_HELP[status]}
                     >
-                      {PLACE_REFERENCE_STATUS_LABELS[rec.status as PlaceReferenceStatus]}
+                      {PLACE_REFERENCE_STATUS_LABELS[status]}
                     </Badge>
+                    <p className="mt-1 max-w-[220px] text-xs text-muted-foreground">
+                      {PLACE_REFERENCE_STATUS_HELP[status]}
+                    </p>
                     {currentMessage && (
-                      <p className={`mt-1 text-xs ${currentMessage.ok ? "text-green-600" : "text-red-600"}`}>
+                      <p
+                        role={currentMessage.ok ? "status" : "alert"}
+                        className={`mt-1 text-xs ${
+                          currentMessage.ok ? "text-success-foreground" : "text-destructive"
+                        }`}
+                      >
                         {currentMessage.text}
                       </p>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
-                    {rec.fetchStatus ?? "—"}
-                  </td>
-                  <td className="px-3 py-2 text-xs">
+                  <td className="px-3 py-3 align-top text-xs">
                     {rec.claimedBusiness ? (
                       <div className="flex items-start gap-1.5">
                         <div className="min-w-0">
@@ -318,22 +334,46 @@ export function PlaceReferenceTable({
                           >
                             {linkedBusiness
                               ? BUSINESS_STATUS_LABELS[linkedBusiness.status]
-                              : "BaÄŸlÄ±"}
+                            : "Bağlı"}
                           </Badge>
                         </div>
+                      </div>
+                    ) : status === "DUPLICATE" ? (
+                      <div className="max-w-[220px] text-muted-foreground">
+                        Mükerrer işaretli. Aynı işletme varsa mevcut kayda bağlayın veya menüden yeniden onaylayın.
+                      </div>
+                    ) : (
+                      <div className="max-w-[220px] text-muted-foreground">
+                        Henüz Business kaydına bağlı değil.
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-3 align-top text-xs">
+                    {rec.claimedBusiness ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          render={<Link href={`/admin/businesses/${rec.claimedBusiness.id}`} />}
+                        >
+                          <ExternalLink className="mr-1 size-3" />
+                          İşletmeyi aç
+                        </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-5 w-5"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-muted-foreground"
                           disabled={isLoading}
                           onClick={() => handleUnlink(rec.id)}
                           title="İşletme bağlantısını kaldır"
                         >
                           {isLoading ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="mr-1 size-3 animate-spin" />
                           ) : (
-                            <Unlink className="w-3 h-3" />
+                            <Unlink className="mr-1 size-3" />
                           )}
+                          Bağlantıyı kaldır
                         </Button>
                       </div>
                     ) : (
@@ -349,19 +389,18 @@ export function PlaceReferenceTable({
                             setLinkDialog({ id: rec.id, businessId: "", query: "" })
                           }
                         >
-                          <Link2 className="w-3 h-3 mr-1" />
+                          <Link2 className="mr-1 size-3" />
                           Mevcut işletmeye bağla
                         </Button>
                       </div>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
-                    {formatDate(rec.createdAt)}
+                  <td className="px-3 py-3 align-top text-xs text-muted-foreground">
+                    <div>Eklenme: {formatDate(rec.createdAt)}</div>
+                    <div>Son fetch: {formatDate(rec.lastFetchedAt)}</div>
+                    <div>Fetch: {rec.fetchStatus ?? "—"}</div>
                   </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
-                    {formatDate(rec.lastFetchedAt)}
-                  </td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-3 py-3 text-right align-top">
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
@@ -387,7 +426,7 @@ export function PlaceReferenceTable({
                                 key={s}
                                 onClick={() => handleStatus(rec.id, s)}
                               >
-                                {PLACE_REFERENCE_STATUS_LABELS[s]} yap
+                                {PLACE_REFERENCE_STATUS_LABELS[s]} olarak işaretle
                               </DropdownMenuItem>
                             ))}
                             <DropdownMenuSeparator />
@@ -627,7 +666,7 @@ export function PlaceReferenceTable({
                 Teknik ID seçimden otomatik doldurulur; manuel ID girişi gerekmez.
               </div>
               {message?.id === linkDialog.id && !message.ok && (
-                <p className="text-sm text-red-600">{message.text}</p>
+                <p role="alert" className="text-sm text-destructive">{message.text}</p>
               )}
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setLinkDialog(null)}>
