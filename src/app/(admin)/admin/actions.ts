@@ -20,6 +20,7 @@ import {
   sendCancelledByBusinessEmailToCustomer,
   sendAdminCancelledEmailToBusinessOwner,
   sendReviewModeratedEmail,
+  sendPostModeratedEmail,
   sendMediaModeratedEmail,
 } from "@/lib/email-notifications";
 import { sendReviewRequestWhatsAppToCustomer } from "@/lib/whatsapp-notifications";
@@ -1898,10 +1899,11 @@ const adminSetPostStatusSchema = z.object({
   },
   { message: "Reason is required for hiding or removing posts", path: ["reason"] }
 );
+type AdminPostStatus = z.infer<typeof adminSetPostStatusSchema>["status"];
 
 export async function adminSetPostStatus(
   postId: string,
-  status: PostStatus,
+  status: AdminPostStatus,
   reason?: string
 ): Promise<AdminActionState> {
   const admin = await requireRole(UserRole.ADMIN);
