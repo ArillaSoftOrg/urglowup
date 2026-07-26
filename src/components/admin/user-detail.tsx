@@ -21,7 +21,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Link from "next/link";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import {
   LIFECYCLE_COLORS,
@@ -217,7 +216,7 @@ export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-muted rounded">
               <p className="text-2xl font-bold">
                 {appointmentData?.total ?? 0}
@@ -229,12 +228,6 @@ export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
                 {appointmentData?.completed ?? 0}
               </p>
               <p className="text-xs text-muted-foreground">Completed</p>
-            </div>
-            <div className="text-center p-3 bg-muted rounded">
-              <p className="text-2xl font-bold">
-                {data.engagement.saves}
-              </p>
-              <p className="text-xs text-muted-foreground">Saved Posts</p>
             </div>
           </div>
         </CardContent>
@@ -374,32 +367,12 @@ export function UserDetailView({ data, currentAdminId }: UserDetailViewProps) {
           <CardTitle>Engagement</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div>
             <div className="p-3 bg-muted rounded">
               <p className="text-2xl font-bold">{data.engagement.favorites}</p>
               <p className="text-xs text-muted-foreground">Favorites</p>
             </div>
-            <div className="p-3 bg-muted rounded">
-              <p className="text-2xl font-bold">{data.engagement.saves}</p>
-              <p className="text-xs text-muted-foreground">Saved Posts</p>
-            </div>
           </div>
-          {data.engagement.saveDetails.length > 0 && (
-            <div>
-              <p className="text-sm font-medium mb-2">Recent Saves</p>
-              <div className="space-y-2">
-                {data.engagement.saveDetails.map((save) => (
-                  <Link
-                    key={save.id}
-                    href={`/admin/posts/${save.post.id}`}
-                    className="text-xs text-primary hover:underline block"
-                  >
-                    {save.post.business.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 

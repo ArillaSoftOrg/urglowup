@@ -5,7 +5,7 @@ import { computeBusinessSignals } from "./business-signals";
 
 export interface ModerationQueueItem {
   id: string;
-  entityType: "Review" | "Post" | "BusinessMedia";
+  entityType: "Review" | "BusinessMedia";
   entityId: string;
   businessId: string;
   businessName: string;
@@ -21,7 +21,7 @@ export interface ModerationQueueItem {
 }
 
 interface QueueFilters {
-  entityType?: "Review" | "Post" | "BusinessMedia";
+  entityType?: "Review" | "BusinessMedia";
   priorityTier?: PriorityTier | "all";
   limit?: number;
   offset?: number;
@@ -58,29 +58,12 @@ async function getBusinessRiskScoreMap(
 export async function getAdminModerationQueue(filters: QueueFilters = {}) {
   const { entityType, priorityTier = "all", limit = 50, offset = 0 } = filters;
 
-  // Get all active reviews, posts, and media for queue consideration
-  const [reviews, posts, media] = await Promise.all([
+  const [reviews, media] = await Promise.all([
     db.review.findMany({
       where: { status: { in: ["PENDING", "APPROVED"] } },
       include: {
         business: { select: { id: true, name: true, slug: true, ratingStats: true } },
         customer: { select: { firstName: true, lastName: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    }),
-    db.post.findMany({
-      where: { status: "ACTIVE" },
-      include: {
-        business: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            ratingStats: true,
-            owner: { select: { id: true, firstName: true, lastName: true } },
-          },
-        },
       },
       orderBy: { createdAt: "desc" },
       take: 200,
@@ -104,7 +87,7 @@ export async function getAdminModerationQueue(filters: QueueFilters = {}) {
   ]);
 
   const allBusinessIds = Array.from(
-    new Set([...reviews, ...posts, ...media].map((i) => i.business.id))
+    new Set([...reviews, ...media].map((i) => i.business.id))
   );
   const [businessViolations, businessRiskScores] = await Promise.all([
     getViolationHistoriesForBusinesses(allBusinessIds),
@@ -141,38 +124,6 @@ export async function getAdminModerationQueue(filters: QueueFilters = {}) {
       status: review.status,
       createdAt: review.createdAt,
       snippet: review.comment ?? "(No comment)",
-      priorViolations,
-    });
-  }
-
-  // Add posts
-  for (const post of posts) {
-    const priorViolations = businessViolations.get(post.business.id)?.total ?? 0;
-    const riskScore = businessRiskScores.get(post.business.id) ?? 0;
-    const priority = computeContentPriority({
-      createdAt: post.createdAt,
-      businessRiskScore: riskScore,
-      businessPriorViolations: priorViolations,
-    });
-
-    items.push({
-      id: post.id,
-      entityType: "Post",
-      entityId: post.id,
-      businessId: post.business.id,
-      businessName: post.business.name,
-      businessSlug: post.business.slug,
-      authorId: post.business.owner?.id,
-      authorName: post.business.owner
-        ? [post.business.owner.firstName, post.business.owner.lastName]
-            .filter(Boolean)
-            .join(" ")
-        : undefined,
-      priorityScore: priority.score,
-      priorityTier: priority.tier,
-      status: post.status,
-      createdAt: post.createdAt,
-      snippet: post.description ?? "(No description)",
       priorViolations,
     });
   }

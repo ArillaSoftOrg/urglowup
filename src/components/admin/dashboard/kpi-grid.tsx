@@ -6,7 +6,6 @@ import {
   MessageSquare,
   ImageOff,
   Clock,
-  FileText,
   UserPlus,
   AlertCircle,
   TrendingDown,
@@ -101,13 +100,6 @@ export function KpiGrid({ metrics }: KpiGridProps) {
       icon: Clock,
       href: "/admin/businesses",
       alert: metrics.pendingApprovals > 0,
-    },
-    {
-      label: "Active Posts",
-      value: metrics.postStatusCounts["ACTIVE"] ?? 0,
-      icon: FileText,
-      href: "/admin/posts",
-      alert: false,
     },
     {
       label: "New Signups (7d)",

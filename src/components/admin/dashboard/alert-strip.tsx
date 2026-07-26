@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   AlertTriangle,
   MessageSquare,
-  FileX,
   ImageOff,
   ShieldOff,
 } from "lucide-react";
@@ -19,7 +18,6 @@ interface AlertStripProps {
 export function AlertStrip({
   pendingApprovals,
   pendingReviews,
-  hiddenPosts,
   hiddenMedia,
   suspendedBusinesses,
 }: AlertStripProps) {
@@ -35,12 +33,6 @@ export function AlertStrip({
       label: "pending reviews",
       icon: MessageSquare,
       href: "/admin/reviews",
-    },
-    {
-      count: hiddenPosts,
-      label: "hidden/removed posts",
-      icon: FileX,
-      href: "/admin/posts",
     },
     {
       count: hiddenMedia,

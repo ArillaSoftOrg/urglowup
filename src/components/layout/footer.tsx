@@ -16,9 +16,7 @@ const footerColumns = [
       { label: "Tüm Uzmanlar", href: "/explore" },
       { label: "Kategoriler", href: "/explore" },
       { label: "Yakınımdaki Salonlar", href: "/map" },
-      { label: "Popüler Hizmetler", href: "/styles" },
       { label: "Kampanyalar", href: "/deals" },
-      { label: "Blog", href: "/styles" },
     ],
   },
   {

@@ -134,7 +134,6 @@ export async function revokeConsent(
     updateData.personalizationRevokedAt = now;
     // Clear cached affinity on revocation
     updateData.preferredCategoryIds = null;
-    updateData.preferredStyleTagIds = null;
     updateData.affinityComputedAt = null;
   } else if (category === ConsentCategory.ANALYTICS) {
     updateData.analyticsRevokedAt = now;

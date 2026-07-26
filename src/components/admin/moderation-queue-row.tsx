@@ -25,7 +25,6 @@ import {
   adminRemoveReview,
   hideMedia,
   removeMedia,
-  adminSetPostStatus,
   adminAddContentNote,
   adminSuspendUser,
 } from "@/app/(admin)/admin/actions";
@@ -52,8 +51,6 @@ export function ModerationQueueRow({ item }: ModerationQueueRowProps) {
           await adminHideReview(item.id, reason);
         } else if (item.entityType === "BusinessMedia") {
           await hideMedia(item.id, reason);
-        } else if (item.entityType === "Post") {
-          await adminSetPostStatus(item.id, "HIDDEN", reason);
         }
         setActionInProgress(null);
         resolve();
@@ -68,8 +65,6 @@ export function ModerationQueueRow({ item }: ModerationQueueRowProps) {
           await adminRemoveReview(item.id, reason);
         } else if (item.entityType === "BusinessMedia") {
           await removeMedia(item.id, reason);
-        } else if (item.entityType === "Post") {
-          await adminSetPostStatus(item.id, "REMOVED", reason);
         }
         setActionInProgress(null);
         resolve();

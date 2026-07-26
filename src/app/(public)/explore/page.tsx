@@ -8,18 +8,11 @@ import {
   getMarketplaceCities,
   parseMarketplaceFilters,
 } from "@/lib/queries/marketplace";
-import { getExplorePosts } from "@/lib/queries/posts";
-import { getAllStyleTags } from "@/lib/queries/style-tags";
-import { getCurrentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { BusinessGrid } from "@/components/marketplace/business-grid";
 import { CategoryCard } from "@/components/marketplace/category-card";
 import { SearchPanel } from "@/components/marketplace/search-panel";
 import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
-import { ExploreTabs } from "@/components/explore/explore-tabs";
-import { PostFeed } from "@/components/explore/post-feed";
 import { buildAlternates } from "@/lib/i18n-metadata";
-import { z } from "zod/v4";
 
 export const metadata: Metadata = {
   title: "Güzellik & Kişisel Bakım Uzmanlarını Keşfet",
@@ -41,7 +34,6 @@ interface PageProps {
 
 export default async function ExplorePage({ searchParams }: PageProps) {
   const rawParams = await searchParams;
-  const tab = (rawParams.tab as string) ?? "isletmeler";
   const filters = parseMarketplaceFilters(rawParams);
 
   const categories = await getMarketplaceCategories();
@@ -49,11 +41,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-10">
-      {/* Tab switcher */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Suspense fallback={<div className="h-10" />}>
-          <ExploreTabs activeTab={tab} />
-        </Suspense>
+      <div className="mb-6 flex justify-end">
         <Link
           href="/deals"
           className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background px-4 py-1.5 text-sm font-medium transition-colors hover:bg-surface-cream"
@@ -63,89 +51,11 @@ export default async function ExplorePage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      {tab === "ilham" ? (
-        <InspirationTab
-          categories={activeCategories.map((c) => ({
-            id: c.id,
-            name: c.name,
-            slug: c.slug,
-          }))}
-        />
-      ) : (
-        <BusinessesTab
-          filters={filters}
-          activeCategories={activeCategories}
-        />
-      )}
+      <BusinessesTab
+        filters={filters}
+        activeCategories={activeCategories}
+      />
     </div>
-  );
-}
-
-// ─── İlham Tab ────────────────────────────────────────────────────
-
-const affinitySchema = z.array(z.string());
-
-async function InspirationTab({
-  categories,
-}: {
-  categories: Array<{ id: string; name: string; slug: string }>;
-}) {
-  const user = await getCurrentUser().catch(() => null);
-
-  let preferredCategoryIds: string[] | undefined;
-
-  if (user) {
-    const prefs = await db.userPreferences.findUnique({
-      where: { userId: user.id },
-      select: {
-        personalizationConsentAt: true,
-        personalizationRevokedAt: true,
-        preferredCategoryIds: true,
-      },
-    });
-
-    const consentActive =
-      !!prefs?.personalizationConsentAt &&
-      (!prefs.personalizationRevokedAt ||
-        prefs.personalizationConsentAt > prefs.personalizationRevokedAt);
-
-    if (consentActive && prefs?.preferredCategoryIds) {
-      const parsed = affinitySchema.safeParse(prefs.preferredCategoryIds);
-      if (parsed.success && parsed.data.length > 0) {
-        preferredCategoryIds = parsed.data;
-      }
-    }
-  }
-
-  // Show nudge to logged-in users who have never consented (or revoked).
-  const showPersonalizationNudge =
-    !!user &&
-    !preferredCategoryIds;
-
-  const [{ posts, nextCursor }, styleTags] = await Promise.all([
-    getExplorePosts({
-      take: 20,
-      userId: user?.id,
-      preferredCategoryIds,
-    }),
-    getAllStyleTags(),
-  ]);
-
-  return (
-    <PostFeed
-      initialPosts={posts}
-      initialNextCursor={nextCursor}
-      initialStyleTags={styleTags.map((tag) => ({
-        id: tag.id,
-        name: tag.name,
-        slug: tag.slug,
-        categoryId: tag.categoryId,
-        postCount: tag.postCount,
-      }))}
-      categories={categories}
-      isLoggedIn={!!user}
-      showPersonalizationNudge={showPersonalizationNudge}
-    />
   );
 }
 

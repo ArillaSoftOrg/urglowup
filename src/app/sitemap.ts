@@ -9,7 +9,6 @@ import {
   CATEGORY_LOCATION_INDEX_THRESHOLD,
 } from "@/lib/queries/marketplace";
 import { getAllServiceSlugs } from "@/lib/queries/services";
-import { getAllStyleTags } from "@/lib/queries/style-tags";
 import { PRODUCTION_LOCALES } from "@/lib/i18n-config";
 
 export const dynamic = "force-dynamic";
@@ -40,14 +39,13 @@ function rootOnly(
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [
-    businesses, categories, cities, districts, styleTags,
+    businesses, categories, cities, districts,
     services, categoryCityCombos, categoryDistrictCombos,
   ] = await Promise.all([
     getAllMarketplaceBusinessSlugs(),
     getMarketplaceCategories(),
     getMarketplaceCities(),
     getMarketplaceDistricts(),
-    getAllStyleTags(),
     getAllServiceSlugs(),
     getMarketplaceCategoryCityCombos(),
     getMarketplaceCategoryDistrictCombos(),
@@ -57,7 +55,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...forAllLocales("",                      { changeFrequency: "daily",   priority: 1.0 }),
     ...forAllLocales("/explore",              { changeFrequency: "daily",   priority: 0.9 }),
     ...forAllLocales("/deals",                { changeFrequency: "daily",   priority: 0.7 }),
-    ...forAllLocales("/styles",               { changeFrequency: "weekly",  priority: 0.6 }),
     ...forAllLocales("/for-business",         { changeFrequency: "monthly", priority: 0.6 }),
     ...forAllLocales("/map",                  { changeFrequency: "weekly",  priority: 0.4 }),
     ...forAllLocales("/puanlama-sistemi",     { changeFrequency: "monthly", priority: 0.5 }),
@@ -126,15 +123,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       )
     );
 
-  const styleTagPages: MetadataRoute.Sitemap = styleTags
-    .filter((t) => t.postCount > 0)
-    .flatMap((t) =>
-      forAllLocales(`/styles/${t.slug}`, {
-        changeFrequency: "weekly",
-        priority:        0.65,
-      })
-    );
-
   return [
     ...staticPages,
     ...businessPages,
@@ -144,6 +132,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...servicePages,
     ...categoryCityPages,
     ...categoryDistrictPages,
-    ...styleTagPages,
   ];
 }

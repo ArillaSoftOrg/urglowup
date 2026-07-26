@@ -17,8 +17,6 @@ const adminNav = [
   { title: "Medya", href: "/admin/media" },
   { title: "Yorumlar", href: "/admin/reviews" },
   { title: "Kategoriler", href: "/admin/categories" },
-  { title: "Stil Etiketleri", href: "/admin/style-tags" },
-  { title: "Gönderiler", href: "/admin/posts" },
   { title: "Marketplace", href: "/admin/marketplace" },
   { title: "Yer Referansları", href: "/admin/place-references" },
   { title: "Talep Başvuruları", href: "/admin/claim-requests" },

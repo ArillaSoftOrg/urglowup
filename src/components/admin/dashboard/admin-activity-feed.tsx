@@ -25,15 +25,10 @@ const ACTION_TYPE_CONFIG: Record<
   "media.hide": { label: "Media —", variant: "neutral" },
   "media.remove": { label: "Media ✕", variant: "destructive" },
   "media.restore": { label: "Restored", variant: "success" },
-  "post.set_status": { label: "Post", variant: "neutral" },
   "user.change_role": { label: "Role", variant: "info" },
   "category.create": { label: "Category +", variant: "success" },
   "category.update": { label: "Category", variant: "info" },
   "category.delete": { label: "Category —", variant: "destructive" },
-  "styleTag.create": { label: "Tag +", variant: "success" },
-  "styleTag.update": { label: "Tag", variant: "info" },
-  "styleTag.toggle": { label: "Tag", variant: "info" },
-  "styleTag.delete": { label: "Tag —", variant: "destructive" },
   "appointment.override_status": { label: "Appointment", variant: "warning" },
   "appointment.bulk_cancel": { label: "Cancelled", variant: "destructive" },
 };
@@ -52,8 +47,6 @@ function getTargetLink(targetType: string, targetId: string): string | null {
       return `/admin/reviews`;
     case "BusinessMedia":
       return `/admin/media`;
-    case "Post":
-      return `/admin/posts`;
     case "User":
       return `/admin/users`;
     default:

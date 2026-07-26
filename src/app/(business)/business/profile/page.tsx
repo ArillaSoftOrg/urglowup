@@ -10,7 +10,6 @@ import {
   Settings,
   Star,
   Users2,
-  LayoutGrid,
 } from "lucide-react";
 import { requireBusiness } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -24,7 +23,6 @@ export const metadata = { title: "Profil" };
 const profileSections = [
   { title: "Hizmetler", href: "/business/services", icon: Scissors },
   { title: "Vitrin", href: "/business/media", icon: ImageIcon },
-  { title: "Gönderiler", href: "/business/posts", icon: LayoutGrid },
   { title: "Çalışma Saatleri", href: "/business/hours", icon: Clock },
   { title: "Değerlendirmeler", href: "/business/reviews", icon: Star },
   { title: "Ekip", href: "/business/team", icon: Users2 },

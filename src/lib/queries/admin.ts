@@ -840,27 +840,9 @@ export async function getAdminUserDetail(userId: string) {
       orderBy: { requestedDate: "desc" },
       take: 10,
     }),
-    (async () => {
-      const [favorites, saves, saveDetails] = await Promise.all([
-        db.favorite.count({ where: { userId } }),
-        db.postSave.count({ where: { userId } }),
-        db.postSave.findMany({
-          where: { userId },
-          include: {
-            post: {
-              select: {
-                id: true,
-                contentType: true,
-                business: { select: { id: true, name: true } },
-              },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 5,
-        }),
-      ]);
-      return { favorites, saves, saveDetails };
-    })(),
+    db.favorite
+      .count({ where: { userId } })
+      .then((favorites) => ({ favorites })),
     getAdminUserActionHistory(userId),
     db.consentAuditLog.findMany({
       where: { userId },

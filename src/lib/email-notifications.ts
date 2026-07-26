@@ -457,52 +457,6 @@ export async function sendReviewModeratedEmail(
 }
 
 /**
- * Sent to business owner when a post is hidden or removed by admin.
- */
-export async function sendPostModeratedEmail(
-  postId: string,
-  action: "hidden" | "removed",
-  reason?: string
-): Promise<void> {
-  const post = await db.post.findUnique({
-    where: { id: postId },
-    include: {
-      business: {
-        select: {
-          name: true,
-          owner: { select: { email: true, firstName: true, lastName: true } },
-        },
-      },
-    },
-  });
-
-  if (!post) {
-    console.log(`[email] sendPostModeratedEmail: post ${postId} not found`);
-    return;
-  }
-
-  if (!post.business.owner?.email) {
-    console.log(`[email] sendPostModeratedEmail: post ${postId} has no business owner email`);
-    return;
-  }
-
-  const { ContentModeratedEmail } = await import("@/emails/content-moderated");
-
-  await sendEmail({
-    to: post.business.owner.email,
-    subject: `A post from your ${post.business.name} profile has been ${
-      action === "hidden" ? "hidden" : "removed"
-    }`,
-    react: React.createElement(ContentModeratedEmail, {
-      businessName: post.business.name,
-      contentType: "post",
-      action,
-      reason,
-    }),
-  });
-}
-
-/**
  * Sent to business owner when media is hidden or removed by admin.
  */
 export async function sendMediaModeratedEmail(

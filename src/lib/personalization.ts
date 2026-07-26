@@ -9,13 +9,10 @@ function isDecayed(date: Date): boolean {
 }
 
 /**
- * Recomputes category and style-tag affinity scores for a user from their
- * PostSaves, Favorites, and Appointments, then stores the ranked ID lists in
- * UserPreferences.
+ * Recomputes category affinity scores for a user from favorites and
+ * appointments, then stores the ranked ID list in UserPreferences.
  *
  * Signals and weights:
- *   PostSave → Post.categoryId          3 pts (÷2 if >90 days old)
- *   PostSave → Post.styleTags           3 pts (÷2 if >90 days old)
  *   Favorite → Business categories      2 pts (÷2 if >90 days old)
  *   Appointment COMPLETED → categories  4 pts (÷2 if >90 days old)
  *   Appointment PENDING/CONFIRMED       2 pts (÷2 if >90 days old)
@@ -39,34 +36,10 @@ export async function computeAndStoreUserAffinity(userId: string): Promise<void>
   }
 
   const categoryScores = new Map<string, number>();
-  const styleTagScores = new Map<string, number>();
 
   function addScore(map: Map<string, number>, key: string, base: number, date: Date) {
     const w = isDecayed(date) ? base / 2 : base;
     map.set(key, (map.get(key) ?? 0) + w);
-  }
-
-  // ── PostSave signals ────────────────────────────────────────────
-  const postSaves = await db.postSave.findMany({
-    where: { userId },
-    select: {
-      createdAt: true,
-      post: {
-        select: {
-          categoryId: true,
-          styleTags: { select: { styleTagId: true } },
-        },
-      },
-    },
-  });
-
-  for (const save of postSaves) {
-    if (save.post.categoryId) {
-      addScore(categoryScores, save.post.categoryId, 3, save.createdAt);
-    }
-    for (const st of save.post.styleTags) {
-      addScore(styleTagScores, st.styleTagId, 3, save.createdAt);
-    }
   }
 
   // ── Favorite signals ────────────────────────────────────────────
@@ -110,22 +83,15 @@ export async function computeAndStoreUserAffinity(userId: string): Promise<void>
     .slice(0, MAX_AFFINITY_IDS)
     .map(([id]) => id);
 
-  const topStyleTags = [...styleTagScores.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, MAX_AFFINITY_IDS)
-    .map(([id]) => id);
-
   await db.userPreferences.upsert({
     where: { userId },
     create: {
       userId,
       preferredCategoryIds: topCategories,
-      preferredStyleTagIds: topStyleTags,
       affinityComputedAt: new Date(),
     },
     update: {
       preferredCategoryIds: topCategories,
-      preferredStyleTagIds: topStyleTags,
       affinityComputedAt: new Date(),
     },
   });

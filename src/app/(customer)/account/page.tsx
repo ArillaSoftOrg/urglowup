@@ -25,11 +25,10 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [appointments, reviews, favoritesCount, savedPostsCount] = await Promise.all([
+  const [appointments, reviews, favoritesCount] = await Promise.all([
     getCustomerAppointments(user.id),
     getCustomerReviews(user.id),
     db.favorite.count({ where: { userId: user.id } }),
-    db.postSave.count({ where: { userId: user.id } }),
   ]);
 
   const now = new Date();
@@ -109,7 +108,7 @@ export default async function AccountPage() {
       )}
 
       {/* Stat summary */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="pt-5 text-center">
             <p className="text-2xl font-bold">{appointments.length}</p>
@@ -126,12 +125,6 @@ export default async function AccountPage() {
           <CardContent className="pt-5 text-center">
             <p className="text-2xl font-bold">{reviews.length}</p>
             <p className="text-xs text-muted-foreground mt-1">Yorum</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 text-center">
-            <p className="text-2xl font-bold">{savedPostsCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">Kayıtlı Gönderi</p>
           </CardContent>
         </Card>
       </div>
