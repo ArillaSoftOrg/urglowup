@@ -431,7 +431,12 @@ export async function linkPlaceReferenceToBusiness(
     }),
     db.business.update({
       where: { id: businessId },
-      data: { googlePlaceId: record.providerPlaceId },
+      data: {
+        googlePlaceId: record.providerPlaceId,
+        googlePlaceMatchStatus: "MATCHED",
+        googlePlaceMatchAttemptedAt: new Date(),
+        googlePlaceMatchError: null,
+      },
     }),
   ]);
 
@@ -489,7 +494,12 @@ export async function unlinkPlaceReferenceFromBusiness(
       ? [
           db.business.update({
             where: { id: record.claimedBusinessId },
-            data: { googlePlaceId: null },
+            data: {
+              googlePlaceId: null,
+              googlePlaceMatchStatus: null,
+              googlePlaceMatchAttemptedAt: null,
+              googlePlaceMatchError: null,
+            },
           }),
         ]
       : []),
@@ -809,6 +819,8 @@ export async function adminConvertPlaceReferenceToBusiness(
           geocodedAt: data.latitude !== undefined && data.longitude !== undefined ? new Date() : null,
           geocodingStatus: data.latitude !== undefined && data.longitude !== undefined ? "GOOGLE_PLACE" : null,
           googlePlaceId: fresh.providerPlaceId,
+          googlePlaceMatchStatus: "MATCHED",
+          googlePlaceMatchAttemptedAt: new Date(),
           status: ownerId ? "ACTIVE_PRIVATE" : "ACTIVE_MARKETPLACE",
           isMarketplaceVisible: ownerId ? false : true,
           instantConfirmation: ownerId ? data.instantConfirmation : false,

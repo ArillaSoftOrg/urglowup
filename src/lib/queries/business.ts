@@ -1,5 +1,10 @@
 import { db } from "@/lib/db";
 import { getCached, setCached } from "@/lib/cache";
+import { GOOGLE_MAX_REVIEWS_PER_FETCH } from "@/lib/constants/external";
+import {
+  resolveGooglePlaceIdForBusiness,
+  type GooglePlaceAutoMatchBusiness,
+} from "@/lib/external/google/place-backfill";
 import {
   fetchGooglePlacesReviews,
   type GooglePlacesReview,
@@ -205,7 +210,7 @@ async function fetchCachedGoogleReviewsForBusiness(businessId: string) {
       },
     },
     orderBy: { createTime: "desc" },
-    take: 10,
+    take: GOOGLE_MAX_REVIEWS_PER_FETCH,
   });
 
   const normalizedReviews = reviews.map(
@@ -246,15 +251,29 @@ export async function getGoogleReviewsForBusiness(
   options?: {
     placeId?: string | null;
     languageCode?: string;
+    autoMatchBusiness?: GooglePlaceAutoMatchBusiness;
   },
 ): Promise<GoogleReviewData> {
-  if (options?.placeId) {
+  const cachedReviewData = await fetchCachedGoogleReviewsForBusiness(businessId);
+  if (cachedReviewData.reviews.length > 0) {
+    return cachedReviewData;
+  }
+
+  let placeId = options?.placeId ?? null;
+  if (!placeId && options?.autoMatchBusiness) {
+    const match = await resolveGooglePlaceIdForBusiness(
+      options.autoMatchBusiness,
+    );
+    placeId = match.placeId ?? null;
+  }
+
+  if (placeId) {
     const placeReviewData = await fetchGooglePlacesReviews(
-      options.placeId,
-      options.languageCode,
+      placeId,
+      options?.languageCode,
     );
     if (placeReviewData.reviews.length > 0) return placeReviewData;
   }
 
-  return fetchCachedGoogleReviewsForBusiness(businessId);
+  return cachedReviewData;
 }

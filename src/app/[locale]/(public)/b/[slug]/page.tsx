@@ -91,6 +91,16 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
     getGoogleReviewsForBusiness(business.id, {
       placeId: business.googlePlaceId,
       languageCode: locale,
+      autoMatchBusiness: {
+        id: business.id,
+        slug: business.slug,
+        name: business.name,
+        address: business.address,
+        city: business.city,
+        district: business.district,
+        latitude: business.latitude,
+        longitude: business.longitude,
+      },
     }),
     getMarketplaceBusinesses({
       city: business.city ?? undefined,

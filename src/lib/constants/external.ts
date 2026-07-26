@@ -48,6 +48,12 @@ export const PLACES_DISCOVERY_MAX_RESULTS = 20;
 /** Per-request timeout for a discovery call */
 export const PLACES_DISCOVERY_TIMEOUT_MS = 8_000;
 
+/** Max businesses checked for a missing Google Place ID per cron run */
+export const GOOGLE_PLACE_BACKFILL_BATCH_SIZE = 10;
+
+/** Ambiguous/not-found matches are retried after this many days */
+export const GOOGLE_PLACE_MATCH_RETRY_DAYS = 7;
+
 // ── Google Places location (Phase 6) ──────────────────────────────────────────
 
 /** Places API (New) Place Details base — server-side coordinate resolution only */

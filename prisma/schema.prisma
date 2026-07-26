@@ -24,6 +24,13 @@ enum BusinessStatus {
   REJECTED
 }
 
+enum GooglePlaceMatchStatus {
+  MATCHED
+  AMBIGUOUS
+  NOT_FOUND
+  ERROR
+}
+
 enum PriceType {
   FIXED
   STARTS_FROM
@@ -238,51 +245,51 @@ enum Theme {
 // ─── Models ──────────────────────────────────────────────────────
 
 model User {
-  id             String   @id @default(cuid())
-  name           String   @default("")
-  email          String   @unique
-  emailVerified  Boolean  @default(false)
-  firstName      String?
-  lastName       String?
-  phone          String?
-  serviceAddress String?
-  avatarUrl      String?
-  role           UserRole @default(CUSTOMER)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  suspendedAt    DateTime?
-  suspendedUntil DateTime?
+  id               String    @id @default(cuid())
+  name             String    @default("")
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  firstName        String?
+  lastName         String?
+  phone            String?
+  serviceAddress   String?
+  avatarUrl        String?
+  role             UserRole  @default(CUSTOMER)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  suspendedAt      DateTime?
+  suspendedUntil   DateTime?
   suspensionReason String?
 
-  twoFactorEnabled    Boolean          @default(false)
+  twoFactorEnabled Boolean @default(false)
 
-  business            Business?
-  professional        Professional?
-  accounts            Account[]
-  appointments        Appointment[]
-  reviews             Review[]
-  favorites           Favorite[]
-  mediaLikes          BusinessMediaLike[]
-  adminActions        AdminAction[]
-  externalConnections BusinessExternalConnection[]
-  taggedPosts         Post[]                       @relation("TaggedPosts")
-  postSaves           PostSave[]
-  preferences         UserPreferences?
-  consentAuditLogs    ConsentAuditLog[]
-  notificationLogs    NotificationLog[]
-  inAppNotifications  InAppNotification[]
-  campaignRecipients  CampaignRecipient[]          @relation("CampaignRecipients")
-  unsubscribeToken    UnsubscribeToken?            @relation("UnsubscribeTokens")
-  createdCampaigns    Campaign[]
-  sessions            Session[]
-  twoFactor           TwoFactor?
+  business              Business?
+  professional          Professional?
+  accounts              Account[]
+  appointments          Appointment[]
+  reviews               Review[]
+  favorites             Favorite[]
+  mediaLikes            BusinessMediaLike[]
+  adminActions          AdminAction[]
+  externalConnections   BusinessExternalConnection[]
+  taggedPosts           Post[]                       @relation("TaggedPosts")
+  postSaves             PostSave[]
+  preferences           UserPreferences?
+  consentAuditLogs      ConsentAuditLog[]
+  notificationLogs      NotificationLog[]
+  inAppNotifications    InAppNotification[]
+  campaignRecipients    CampaignRecipient[]          @relation("CampaignRecipients")
+  unsubscribeToken      UnsubscribeToken?            @relation("UnsubscribeTokens")
+  createdCampaigns      Campaign[]
+  sessions              Session[]
+  twoFactor             TwoFactor?
   businessMemberships   BusinessMember[]
-  sentInvitations       BusinessInvitation[]   @relation("SentInvitations")
-  claimRequests         BusinessClaimRequest[] @relation("UserClaimRequests")
-  reviewedClaimRequests BusinessClaimRequest[] @relation("ReviewedClaimRequests")
-  conversations       Conversation[]                // Customer side of conversations
-  sentMessages        Message[]                     // Messages sent by this user
-  waitlistEntries     WaitlistEntry[]
+  sentInvitations       BusinessInvitation[]         @relation("SentInvitations")
+  claimRequests         BusinessClaimRequest[]       @relation("UserClaimRequests")
+  reviewedClaimRequests BusinessClaimRequest[]       @relation("ReviewedClaimRequests")
+  conversations         Conversation[] // Customer side of conversations
+  sentMessages          Message[] // Messages sent by this user
+  waitlistEntries       WaitlistEntry[]
 }
 
 model Session {
@@ -348,40 +355,43 @@ model RateLimit {
 }
 
 model Business {
-  id                   String         @id @default(cuid())
-  ownerId              String?        @unique
-  owner                User?          @relation(fields: [ownerId], references: [id])
-  name                 String
-  slug                 String         @unique
-  description          String?
-  phone                String?
-  whatsapp             String?
-  instagramUrl         String?
-  facebookUrl          String?
-  tiktokUrl            String?
-  address              String?
-  city                 String?
-  district             String?
-  latitude             Float?
-  longitude            Float?
-  geocodedAt           DateTime?
-  geocodingStatus      String?
-  geocodingError       String?
-  coverImageUrl        String?
-  logoUrl              String?
-  status               BusinessStatus @default(DRAFT)
-  isMarketplaceVisible Boolean        @default(false)
-  instantConfirmation  Boolean        @default(false)
-  inAppPayment         Boolean        @default(false)
-  petFriendly          Boolean        @default(false)
-  wheelchairAccess     Boolean        @default(false)
-  parkingAvailable     Boolean        @default(false)
-  nearPublicTransit    Boolean        @default(false)
-  maxGroupBookingGuests    Int           @default(4)
-  googlePlaceId            String?
-  ownershipStatus          BusinessOwnershipStatus @default(CLAIMED)
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  id                          String                  @id @default(cuid())
+  ownerId                     String?                 @unique
+  owner                       User?                   @relation(fields: [ownerId], references: [id])
+  name                        String
+  slug                        String                  @unique
+  description                 String?
+  phone                       String?
+  whatsapp                    String?
+  instagramUrl                String?
+  facebookUrl                 String?
+  tiktokUrl                   String?
+  address                     String?
+  city                        String?
+  district                    String?
+  latitude                    Float?
+  longitude                   Float?
+  geocodedAt                  DateTime?
+  geocodingStatus             String?
+  geocodingError              String?
+  coverImageUrl               String?
+  logoUrl                     String?
+  status                      BusinessStatus          @default(DRAFT)
+  isMarketplaceVisible        Boolean                 @default(false)
+  instantConfirmation         Boolean                 @default(false)
+  inAppPayment                Boolean                 @default(false)
+  petFriendly                 Boolean                 @default(false)
+  wheelchairAccess            Boolean                 @default(false)
+  parkingAvailable            Boolean                 @default(false)
+  nearPublicTransit           Boolean                 @default(false)
+  maxGroupBookingGuests       Int                     @default(4)
+  googlePlaceId               String?
+  googlePlaceMatchStatus      GooglePlaceMatchStatus?
+  googlePlaceMatchAttemptedAt DateTime?
+  googlePlaceMatchError       String?
+  ownershipStatus             BusinessOwnershipStatus @default(CLAIMED)
+  createdAt                   DateTime                @default(now())
+  updatedAt                   DateTime                @updatedAt
 
   categories          BusinessToCategory[]
   services            BusinessService[]
@@ -406,11 +416,12 @@ model Business {
   customerNotes       BusinessCustomerNote[]
   coupons             Coupon[]
   waitlistEntries     WaitlistEntry[]
-  placeReferences     PlaceReference[]       @relation("PlaceReferenceClaim")
-  claimRequests       BusinessClaimRequest[] @relation("BusinessClaimRequests")
+  placeReferences     PlaceReference[]             @relation("PlaceReferenceClaim")
+  claimRequests       BusinessClaimRequest[]       @relation("BusinessClaimRequests")
 
   @@index([city])
   @@index([status])
+  @@index([googlePlaceMatchStatus, googlePlaceMatchAttemptedAt])
 }
 
 model BusinessCustomerNote {
@@ -477,28 +488,28 @@ model BusinessService {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  appointments    Appointment[]
+  appointments     Appointment[]
   appointmentItems AppointmentItem[]
-  media           BusinessMedia[]
-  posts           Post[]
-  professionals   ProfessionalService[]
-  waitlistEntries WaitlistEntry[]
+  media            BusinessMedia[]
+  posts            Post[]
+  professionals    ProfessionalService[]
+  waitlistEntries  WaitlistEntry[]
 }
 
 model BusinessHour {
-  id                  String    @id @default(cuid())
-  businessId          String
-  business            Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  dayOfWeek           DayOfWeek
-  isOpen              Boolean   @default(true)
-  openTime            String?
-  closeTime           String?
-  slotIntervalMinutes Int       @default(30)
-  appointmentBufferMinutes Int   @default(0)
-  workBlocks          Json?
-  breakBlocks         Json?
-  staffNotes          String?
-  exceptionNotes      String?
+  id                       String    @id @default(cuid())
+  businessId               String
+  business                 Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  dayOfWeek                DayOfWeek
+  isOpen                   Boolean   @default(true)
+  openTime                 String?
+  closeTime                String?
+  slotIntervalMinutes      Int       @default(30)
+  appointmentBufferMinutes Int       @default(0)
+  workBlocks               Json?
+  breakBlocks              Json?
+  staffNotes               String?
+  exceptionNotes           String?
 
   @@unique([businessId, dayOfWeek])
 }
@@ -531,16 +542,16 @@ model BusinessHolidaySuggestion {
 }
 
 model BusinessMedia {
-  id               String           @id @default(cuid())
+  id               String              @id @default(cuid())
   businessId       String
-  business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business         Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
   url              String
   publicId         String
   type             MediaType
   title            String?
   description      String?
   relatedServiceId String?
-  relatedService   BusinessService? @relation(fields: [relatedServiceId], references: [id], onDelete: SetNull)
+  relatedService   BusinessService?    @relation(fields: [relatedServiceId], references: [id], onDelete: SetNull)
   likes            BusinessMediaLike[]
   cropX            Int?
   cropY            Int?
@@ -548,10 +559,10 @@ model BusinessMedia {
   cropHeight       Int?
   originalWidth    Int?
   originalHeight   Int?
-  status           MediaStatus      @default(ACTIVE)
-  sortOrder        Int              @default(0)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  status           MediaStatus         @default(ACTIVE)
+  sortOrder        Int                 @default(0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 }
 
 model BusinessMediaLike {
@@ -568,31 +579,31 @@ model BusinessMediaLike {
 }
 
 model Appointment {
-  id              String            @id @default(cuid())
-  businessId      String
-  business        Business          @relation(fields: [businessId], references: [id], onDelete: Restrict)
-  customerId      String
-  customer        User              @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  serviceId       String
-  service         BusinessService   @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  professionalId  String?
-  professional    Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
-  couponId        String?
-  coupon          Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
-  discountAmount  Decimal?          @db.Decimal(10, 2)
-  requestedDate   DateTime          @db.Date
-  requestedTime   String
-  isGroup          Boolean           @default(false)
-  guestCount       Int               @default(1)
+  id                   String            @id @default(cuid())
+  businessId           String
+  business             Business          @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  customerId           String
+  customer             User              @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  serviceId            String
+  service              BusinessService   @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  professionalId       String?
+  professional         Professional?     @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  couponId             String?
+  coupon               Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  discountAmount       Decimal?          @db.Decimal(10, 2)
+  requestedDate        DateTime          @db.Date
+  requestedTime        String
+  isGroup              Boolean           @default(false)
+  guestCount           Int               @default(1)
   totalDurationMinutes Int?
-  totalPrice       Decimal?          @db.Decimal(10, 2)
-  firstVisit       Boolean?
-  status          AppointmentStatus @default(PENDING)
-  customerNote    String?
-  businessNote    String?
-  cancelledReason String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  totalPrice           Decimal?          @db.Decimal(10, 2)
+  firstVisit           Boolean?
+  status               AppointmentStatus @default(PENDING)
+  customerNote         String?
+  businessNote         String?
+  cancelledReason      String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   review             Review?
   items              AppointmentItem[]
@@ -644,20 +655,20 @@ model BlockedTime {
 }
 
 model NotificationLog {
-  id                 String              @id @default(cuid())
-  appointmentId      String?
-  appointment        Appointment?        @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  recipientUserId    String?
-  recipientUser      User?               @relation(fields: [recipientUserId], references: [id], onDelete: SetNull)
-  notificationType   NotificationLogType @default(TRANSACTIONAL)
-  channel            NotificationChannel
-  recipientPhone     String
-  templateName       String
-  status             NotificationStatus
-  providerMessageId  String?
-  errorMessage       String?
-  createdAt          DateTime            @default(now())
-  sentAt             DateTime?
+  id                String              @id @default(cuid())
+  appointmentId     String?
+  appointment       Appointment?        @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  recipientUserId   String?
+  recipientUser     User?               @relation(fields: [recipientUserId], references: [id], onDelete: SetNull)
+  notificationType  NotificationLogType @default(TRANSACTIONAL)
+  channel           NotificationChannel
+  recipientPhone    String
+  templateName      String
+  status            NotificationStatus
+  providerMessageId String?
+  errorMessage      String?
+  createdAt         DateTime            @default(now())
+  sentAt            DateTime?
 
   @@unique([appointmentId, channel, templateName])
   @@index([recipientUserId])
@@ -684,15 +695,15 @@ model InAppNotification {
 }
 
 model Review {
-  id            String       @id @default(cuid())
-  businessId    String
-  business      Business     @relation(fields: [businessId], references: [id])
-  customerId    String
-  customer      User         @relation(fields: [customerId], references: [id])
-  appointmentId String?      @unique
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  rating        Float
-  trustWeight   Float        @default(1.0)
+  id              String       @id @default(cuid())
+  businessId      String
+  business        Business     @relation(fields: [businessId], references: [id])
+  customerId      String
+  customer        User         @relation(fields: [customerId], references: [id])
+  appointmentId   String?      @unique
+  appointment     Appointment? @relation(fields: [appointmentId], references: [id])
+  rating          Float
+  trustWeight     Float        @default(1.0)
   comment         String?
   businessReply   String?
   businessReplyAt DateTime?
@@ -952,11 +963,11 @@ model Professional {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  services     ProfessionalService[]
-  posts        Post[]
-  appointments Appointment[]
+  services         ProfessionalService[]
+  posts            Post[]
+  appointments     Appointment[]
   appointmentItems AppointmentItem[]
-  blockedTimes BlockedTime[]
+  blockedTimes     BlockedTime[]
 
   @@index([businessId, isActive])
 }
@@ -983,7 +994,7 @@ model UserPreferences {
   locale String?
 
   // Theme — SYSTEM defers to prefers-color-scheme
-  theme  Theme  @default(SYSTEM)
+  theme Theme @default(SYSTEM)
 
   // Consent timestamps — null means not yet consented; kept on revocation for audit
   personalizationConsentAt DateTime?
@@ -1029,22 +1040,22 @@ model ConsentAuditLog {
 // ─── Campaign & Marketing ────────────────────────────────────────────────────
 
 model Campaign {
-  id               String         @id @default(cuid())
-  name             String
-  channel          NotificationChannel
-  status           CampaignStatus @default(DRAFT)
-  audienceFilters  Json           // snapshot of segmentation params
-  recipientCount   Int?           // set at snapshot time
-  subject          String?        // email only
-  templateName     String?        // whatsapp only
-  templateParams   Json?          // whatsapp parameter values
-  contentJson      Json?          // email body / React template config
-  createdById      String
-  createdBy        User           @relation(fields: [createdById], references: [id])
-  sentAt           DateTime?
-  completedAt      DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id              String              @id @default(cuid())
+  name            String
+  channel         NotificationChannel
+  status          CampaignStatus      @default(DRAFT)
+  audienceFilters Json // snapshot of segmentation params
+  recipientCount  Int? // set at snapshot time
+  subject         String? // email only
+  templateName    String? // whatsapp only
+  templateParams  Json? // whatsapp parameter values
+  contentJson     Json? // email body / React template config
+  createdById     String
+  createdBy       User                @relation(fields: [createdById], references: [id])
+  sentAt          DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
   recipients CampaignRecipient[]
 
@@ -1054,17 +1065,17 @@ model Campaign {
 }
 
 model CampaignRecipient {
-  id                String   @id @default(cuid())
+  id                String             @id @default(cuid())
   campaignId        String
-  campaign          Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign          Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   userId            String
-  user              User     @relation(name: "CampaignRecipients", fields: [userId], references: [id], onDelete: Cascade)
+  user              User               @relation(name: "CampaignRecipients", fields: [userId], references: [id], onDelete: Cascade)
   recipientEmail    String?
   recipientPhone    String?
   status            NotificationStatus // PENDING|SENT|FAILED|SKIPPED
   providerMessageId String?
   errorMessage      String?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime           @default(now())
   sentAt            DateTime?
 
   @@unique([campaignId, userId])
@@ -1210,17 +1221,17 @@ model Coupon {
 }
 
 model WaitlistEntry {
-  id            String          @id @default(cuid())
-  businessId    String
-  business      Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customerId    String
-  customer      User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  serviceId     String
-  service       BusinessService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  date          DateTime        @db.Date
-  time          String
-  notifiedAt    DateTime?
-  createdAt     DateTime        @default(now())
+  id         String          @id @default(cuid())
+  businessId String
+  business   Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceId  String
+  service    BusinessService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  date       DateTime        @db.Date
+  time       String
+  notifiedAt DateTime?
+  createdAt  DateTime        @default(now())
 
   @@unique([businessId, customerId, serviceId, date, time])
   @@index([businessId, date, time])
@@ -1230,26 +1241,26 @@ model WaitlistEntry {
 // ─── Place Reference & Claim ──────────────────────────────────────
 
 model PlaceReference {
-  id                String               @id @default(cuid())
-  provider          String               @default("GOOGLE")
-  providerPlaceId   String
+  id              String @id @default(cuid())
+  provider        String @default("GOOGLE")
+  providerPlaceId String
 
   claimedBusinessId String?
-  claimedBusiness   Business?            @relation("PlaceReferenceClaim", fields: [claimedBusinessId], references: [id])
+  claimedBusiness   Business? @relation("PlaceReferenceClaim", fields: [claimedBusinessId], references: [id])
 
-  city              String?
-  district          String?
-  categoryHint      String?
-  status            PlaceReferenceStatus @default(DISCOVERED)
+  city         String?
+  district     String?
+  categoryHint String?
+  status       PlaceReferenceStatus @default(DISCOVERED)
 
-  lastFetchedAt     DateTime?
-  cacheExpiresAt    DateTime?
-  fetchStatus       String?
+  lastFetchedAt  DateTime?
+  cacheExpiresAt DateTime?
+  fetchStatus    String?
 
-  claimRequests     BusinessClaimRequest[]
+  claimRequests BusinessClaimRequest[]
 
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([provider, providerPlaceId])
   @@index([city, district])
@@ -1258,15 +1269,15 @@ model PlaceReference {
 }
 
 model BusinessClaimRequest {
-  id               String                 @id @default(cuid())
-  userId           String
-  user             User                   @relation("UserClaimRequests", fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("UserClaimRequests", fields: [userId], references: [id])
 
-  businessId       String?
-  business         Business?              @relation("BusinessClaimRequests", fields: [businessId], references: [id])
+  businessId String?
+  business   Business? @relation("BusinessClaimRequests", fields: [businessId], references: [id])
 
   placeReferenceId String?
-  placeReference   PlaceReference?        @relation(fields: [placeReferenceId], references: [id])
+  placeReference   PlaceReference? @relation(fields: [placeReferenceId], references: [id])
 
   status           ClaimRequestStatus     @default(PENDING)
   verificationType ClaimVerificationType?
@@ -1275,13 +1286,13 @@ model BusinessClaimRequest {
   email            String?
   note             String?
 
-  reviewedById     String?
-  reviewer         User?                  @relation("ReviewedClaimRequests", fields: [reviewedById], references: [id])
-  reviewedAt       DateTime?
-  rejectionReason  String?
+  reviewedById    String?
+  reviewer        User?     @relation("ReviewedClaimRequests", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+  rejectionReason String?
 
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([businessId])

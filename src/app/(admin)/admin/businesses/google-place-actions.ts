@@ -189,7 +189,12 @@ export async function matchGooglePlaceToBusiness(
 
     await tx.business.update({
       where: { id: businessId },
-      data: { googlePlaceId: placeId },
+      data: {
+        googlePlaceId: placeId,
+        googlePlaceMatchStatus: "MATCHED",
+        googlePlaceMatchAttemptedAt: new Date(),
+        googlePlaceMatchError: null,
+      },
     });
 
     await tx.placeReference.upsert({
@@ -256,7 +261,12 @@ export async function removeGooglePlaceMatch(
   await db.$transaction([
     db.business.update({
       where: { id: business.id },
-      data: { googlePlaceId: null },
+      data: {
+        googlePlaceId: null,
+        googlePlaceMatchStatus: null,
+        googlePlaceMatchAttemptedAt: null,
+        googlePlaceMatchError: null,
+      },
     }),
     db.placeReference.updateMany({
       where: {

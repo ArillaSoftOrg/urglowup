@@ -11,6 +11,7 @@ const PLACE_MATCH_FIELD_MASK = [
   "places.displayName",
   "places.formattedAddress",
   "places.googleMapsUri",
+  "places.location",
   "places.rating",
   "places.userRatingCount",
 ].join(",");
@@ -20,6 +21,7 @@ const PLACE_DETAILS_FIELD_MASK = [
   "displayName",
   "formattedAddress",
   "googleMapsUri",
+  "location",
 ].join(",");
 
 type GooglePlaceMatchRaw = {
@@ -27,6 +29,10 @@ type GooglePlaceMatchRaw = {
   displayName?: { text?: string };
   formattedAddress?: string;
   googleMapsUri?: string;
+  location?: {
+    latitude?: number;
+    longitude?: number;
+  };
   rating?: number;
   userRatingCount?: number;
 };
@@ -40,8 +46,26 @@ export type GooglePlaceCandidate = {
   name: string;
   formattedAddress: string | null;
   googleMapsUri: string | null;
+  latitude: number | null;
+  longitude: number | null;
   rating: number | null;
   userRatingCount: number;
+};
+
+export type GooglePlaceMatchBusiness = {
+  name: string;
+  address: string | null;
+  city: string | null;
+  district: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+export type GooglePlaceCandidateAssessment = {
+  candidate: GooglePlaceCandidate;
+  isStrongMatch: boolean;
+  nameScore: number;
+  locationMatches: boolean;
 };
 
 export type GooglePlaceMatchError =
@@ -83,18 +107,130 @@ function normalizeCandidate(
 
   const rating = Number(place.rating);
   const userRatingCount = Number(place.userRatingCount);
+  const latitude = Number(place.location?.latitude);
+  const longitude = Number(place.location?.longitude);
 
   return {
     placeId,
     name,
     formattedAddress: place.formattedAddress?.trim() || null,
     googleMapsUri: safeHttpsUrl(place.googleMapsUri),
+    latitude:
+      Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
+        ? latitude
+        : null,
+    longitude:
+      Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
+        ? longitude
+        : null,
     rating:
       Number.isFinite(rating) && rating >= 1 && rating <= 5 ? rating : null,
     userRatingCount:
       Number.isInteger(userRatingCount) && userRatingCount >= 0
         ? userRatingCount
         : 0,
+  };
+}
+
+function normalizeForMatch(value: string | null | undefined): string {
+  return (value ?? "")
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .replaceAll("ı", "i")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function calculateNameScore(
+  businessName: string,
+  candidateName: string,
+): number {
+  const expected = normalizeForMatch(businessName);
+  const actual = normalizeForMatch(candidateName);
+  if (!expected || !actual) return 0;
+  if (expected === actual) return 100;
+
+  const expectedTokens = expected.split(" ");
+  if (
+    expected.length >= 8 &&
+    expectedTokens.length >= 2 &&
+    (actual.startsWith(`${expected} `) || actual.endsWith(` ${expected}`))
+  ) {
+    return 90;
+  }
+
+  return 0;
+}
+
+function distanceInMeters(
+  first: { latitude: number; longitude: number },
+  second: { latitude: number; longitude: number },
+): number {
+  const earthRadius = 6_371_000;
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const latitudeDelta = toRadians(second.latitude - first.latitude);
+  const longitudeDelta = toRadians(second.longitude - first.longitude);
+  const firstLatitude = toRadians(first.latitude);
+  const secondLatitude = toRadians(second.latitude);
+  const a =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(firstLatitude) *
+      Math.cos(secondLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function locationMatches(
+  business: GooglePlaceMatchBusiness,
+  candidate: GooglePlaceCandidate,
+): boolean {
+  if (
+    business.latitude !== null &&
+    business.longitude !== null &&
+    candidate.latitude !== null &&
+    candidate.longitude !== null
+  ) {
+    return (
+      distanceInMeters(
+        {
+          latitude: business.latitude,
+          longitude: business.longitude,
+        },
+        {
+          latitude: candidate.latitude,
+          longitude: candidate.longitude,
+        },
+      ) <= 750
+    );
+  }
+
+  const candidateAddress = normalizeForMatch(candidate.formattedAddress);
+  if (!candidateAddress) return false;
+
+  const district = normalizeForMatch(business.district);
+  const city = normalizeForMatch(business.city);
+  if (!district && !city) return false;
+
+  return (
+    (!district || candidateAddress.includes(district)) &&
+    (!city || candidateAddress.includes(city))
+  );
+}
+
+export function assessGooglePlaceCandidate(
+  business: GooglePlaceMatchBusiness,
+  candidate: GooglePlaceCandidate,
+): GooglePlaceCandidateAssessment {
+  const nameScore = calculateNameScore(business.name, candidate.name);
+  const matchesLocation = locationMatches(business, candidate);
+
+  return {
+    candidate,
+    isStrongMatch: nameScore >= 90 && matchesLocation,
+    nameScore,
+    locationMatches: matchesLocation,
   };
 }
 
