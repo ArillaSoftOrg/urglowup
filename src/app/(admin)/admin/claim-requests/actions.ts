@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { UserRole, BusinessMemberRole, MembershipStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
+import { invalidateCache } from "@/lib/cache";
 
 export type ClaimRequestActionState = {
   success: boolean;
@@ -104,7 +105,7 @@ export async function approveClaimRequest(
   // ─── Pre-transaction guards (early UX) ───
   const claim = await db.businessClaimRequest.findUnique({
     where: { id },
-    select: { id: true, status: true, userId: true, placeReferenceId: true },
+    select: { id: true, status: true, userId: true, businessId: true, placeReferenceId: true },
   });
   if (!claim) {
     return { success: false, message: "Başvuru bulunamadı." };
@@ -112,31 +113,33 @@ export async function approveClaimRequest(
   if (claim.status !== "PENDING") {
     return { success: false, message: "Başvuru artık onaylanabilir durumda değil." };
   }
-  if (!claim.placeReferenceId) {
-    return { success: false, message: "Bu başvuru bir yer referansına bağlı değil." };
+  let businessId = claim.businessId;
+  if (!businessId && claim.placeReferenceId) {
+    const placeReference = await db.placeReference.findUnique({
+      where: { id: claim.placeReferenceId },
+      select: { claimedBusinessId: true },
+    });
+    if (!placeReference) {
+      return { success: false, message: "Yer referansı bulunamadı." };
+    }
+    if (placeReference.claimedBusinessId === null) {
+      return {
+        success: false,
+        message:
+          "Bu başvuru henüz bir Business'a bağlı değil. Önce PlaceReference'ı Business'a dönüştürün.",
+      };
+    }
+    businessId = placeReference.claimedBusinessId;
+  }
+  if (!businessId) {
+    return { success: false, message: "Bu başvuru bir işletmeye veya yer referansına bağlı değil." };
   }
 
-  const placeReference = await db.placeReference.findUnique({
-    where: { id: claim.placeReferenceId },
-    select: { claimedBusinessId: true },
-  });
-  if (!placeReference) {
-    return { success: false, message: "Yer referansı bulunamadı." };
-  }
-  if (placeReference.claimedBusinessId === null) {
-    return {
-      success: false,
-      message:
-        "Bu başvuru henüz bir Business'a bağlı değil. Önce PlaceReference'ı Business'a dönüştürün.",
-    };
-  }
-
-  const businessId = placeReference.claimedBusinessId;
   const userId = claim.userId;
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    select: { id: true, ownerId: true },
+    select: { id: true, ownerId: true, slug: true },
   });
   if (!business) {
     return { success: false, message: "İşletme bulunamadı." };
@@ -247,6 +250,8 @@ export async function approveClaimRequest(
   revalidatePath("/admin/claim-requests");
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath(`/b/${business.slug}`);
+  await invalidateCache(`business:v2:slug:${business.slug}`);
   revalidatePath("/admin/place-references");
   return { success: true, message: "Başvuru onaylandı, işletme sahibi atandı." };
 }

@@ -10,13 +10,13 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ placeReferenceId?: string }>;
+  searchParams: Promise<{ placeReferenceId?: string; businessId?: string }>;
 }
 
 export default async function ClaimBusinessPage({ searchParams }: PageProps) {
-  const { placeReferenceId } = await searchParams;
+  const { placeReferenceId, businessId } = await searchParams;
 
-  if (!placeReferenceId) {
+  if ((!placeReferenceId && !businessId) || (placeReferenceId && businessId)) {
     return (
       <div className="container mx-auto max-w-lg px-4 py-16 text-center">
         <h1 className="text-xl font-semibold">İşletme Başvurusu</h1>
@@ -27,24 +27,47 @@ export default async function ClaimBusinessPage({ searchParams }: PageProps) {
     );
   }
 
-  const placeReference = await db.placeReference.findUnique({
-    where: { id: placeReferenceId },
-    select: {
-      id: true,
-      provider: true,
-      status: true,
-      claimedBusinessId: true,
-      categoryHint: true,
-      city: true,
-      district: true,
-    },
-  });
+  const [placeReference, business] = await Promise.all([
+    placeReferenceId
+      ? db.placeReference.findUnique({
+          where: { id: placeReferenceId },
+          select: {
+            id: true,
+            provider: true,
+            status: true,
+            claimedBusinessId: true,
+            categoryHint: true,
+            city: true,
+            district: true,
+          },
+        })
+      : null,
+    businessId
+      ? db.business.findUnique({
+          where: { id: businessId },
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            district: true,
+            ownerId: true,
+            ownershipStatus: true,
+            status: true,
+          },
+        })
+      : null,
+  ]);
 
   const eligible =
-    placeReference &&
-    placeReference.provider === "GOOGLE" &&
-    placeReference.status === "APPROVED" &&
-    placeReference.claimedBusinessId === null;
+    (placeReference &&
+      placeReference.provider === "GOOGLE" &&
+      placeReference.status === "APPROVED" &&
+      placeReference.claimedBusinessId === null) ||
+    (business &&
+      business.ownerId === null &&
+      business.ownershipStatus === "UNCLAIMED" &&
+      business.status !== "SUSPENDED" &&
+      business.status !== "REJECTED");
 
   if (!eligible) {
     return (
@@ -60,7 +83,9 @@ export default async function ClaimBusinessPage({ searchParams }: PageProps) {
   // Auth gate — after eligibility so we don't bounce users to login for dead links.
   const user = await getCurrentUser();
   if (!user) {
-    const target = `/claim-business?placeReferenceId=${encodeURIComponent(placeReferenceId)}`;
+    const target = placeReferenceId
+      ? `/claim-business?placeReferenceId=${encodeURIComponent(placeReferenceId)}`
+      : `/claim-business?businessId=${encodeURIComponent(businessId!)}`;
     redirect(`/auth/login?redirect_url=${encodeURIComponent(target)}`);
   }
 
@@ -76,13 +101,27 @@ export default async function ClaimBusinessPage({ searchParams }: PageProps) {
       </div>
 
       <ClaimBusinessForm
-        placeReference={{
-          id: placeReference.id,
-          categoryHint: placeReference.categoryHint,
-          city: placeReference.city,
-          district: placeReference.district,
-          provider: placeReference.provider,
-        }}
+        placeReference={
+          placeReference
+            ? {
+                id: placeReference.id,
+                categoryHint: placeReference.categoryHint,
+                city: placeReference.city,
+                district: placeReference.district,
+                provider: placeReference.provider,
+              }
+            : undefined
+        }
+        business={
+          business
+            ? {
+                id: business.id,
+                name: business.name,
+                city: business.city,
+                district: business.district,
+              }
+            : undefined
+        }
         defaultEmail={user.email}
       />
     </div>

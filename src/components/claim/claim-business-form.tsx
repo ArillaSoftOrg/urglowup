@@ -22,18 +22,27 @@ type PlaceReferenceContext = {
   provider: string;
 };
 
+type BusinessContext = {
+  id: string;
+  name: string;
+  city: string | null;
+  district: string | null;
+};
+
 export function ClaimBusinessForm({
   placeReference,
+  business,
   defaultEmail,
 }: {
-  placeReference: PlaceReferenceContext;
+  placeReference?: PlaceReferenceContext;
+  business?: BusinessContext;
   defaultEmail: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
-  const [businessName, setBusinessName] = useState("");
+  const [businessName, setBusinessName] = useState(business?.name ?? "");
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState(defaultEmail);
@@ -47,7 +56,8 @@ export function ClaimBusinessForm({
     setError(null);
     startTransition(async () => {
       const res = await submitBusinessClaim({
-        placeReferenceId: placeReference.id,
+        placeReferenceId: placeReference?.id,
+        businessId: business?.id,
         businessName,
         contactName,
         phone,
@@ -76,9 +86,9 @@ export function ClaimBusinessForm({
   }
 
   const contextParts = [
-    placeReference.categoryHint,
-    placeReference.district,
-    placeReference.city,
+    placeReference?.categoryHint ?? business?.name,
+    placeReference?.district ?? business?.district,
+    placeReference?.city ?? business?.city,
   ].filter(Boolean);
 
   return (
@@ -89,10 +99,10 @@ export function ClaimBusinessForm({
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           <p>
-            {contextParts.length > 0 ? contextParts.join(" · ") : "Google Maps işletmesi"}
+            {contextParts.length > 0 ? contextParts.join(" · ") : "İşletme profili"}
           </p>
           <p className="mt-1 text-xs">
-            İşletme bilgilerini aşağıda kendiniz girin. Başvurunuz incelenecektir.
+            İşletme bilgilerini aşağıda kontrol edin. Başvurunuz incelenecektir.
           </p>
         </CardContent>
       </Card>

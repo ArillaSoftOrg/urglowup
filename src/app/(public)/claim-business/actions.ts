@@ -15,7 +15,8 @@ export type ClaimActionState = {
 class ClaimError extends Error {}
 
 const submitClaimSchema = z.object({
-  placeReferenceId: z.string().min(1),
+  placeReferenceId: z.string().min(1).optional(),
+  businessId: z.string().min(1).optional(),
   businessName: z.string().trim().min(2).max(100),
   contactName: z.string().trim().min(2).max(100),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
@@ -28,6 +29,9 @@ const submitClaimSchema = z.object({
   ]),
   evidenceUrl: z.string().trim().url().max(500).optional().or(z.literal("")),
   note: z.string().trim().max(1000).optional().or(z.literal("")),
+}).refine((data) => Boolean(data.placeReferenceId) !== Boolean(data.businessId), {
+  message: "Başvuru için tek bir hedef seçilmelidir.",
+  path: ["placeReferenceId"],
 });
 
 export async function submitBusinessClaim(
@@ -63,24 +67,50 @@ export async function submitBusinessClaim(
 
   try {
     await db.$transaction(async (tx) => {
-      const ref = await tx.placeReference.findUnique({
-        where: { id: data.placeReferenceId },
-        select: { provider: true, status: true, claimedBusinessId: true },
-      });
-      if (
-        !ref ||
-        ref.provider !== "GOOGLE" ||
-        ref.status !== "APPROVED" ||
-        ref.claimedBusinessId !== null
-      ) {
-        throw new ClaimError("Bu işletme için başvuru alınamıyor.");
+      let placeReferenceId: string | null = null;
+      let businessId: string | null = null;
+
+      if (data.placeReferenceId) {
+        const ref = await tx.placeReference.findUnique({
+          where: { id: data.placeReferenceId },
+          select: { provider: true, status: true, claimedBusinessId: true },
+        });
+        if (
+          !ref ||
+          ref.provider !== "GOOGLE" ||
+          ref.status !== "APPROVED" ||
+          ref.claimedBusinessId !== null
+        ) {
+          throw new ClaimError("Bu işletme için başvuru alınamıyor.");
+        }
+        placeReferenceId = data.placeReferenceId;
+      } else if (data.businessId) {
+        const business = await tx.business.findUnique({
+          where: { id: data.businessId },
+          select: {
+            ownerId: true,
+            ownershipStatus: true,
+            status: true,
+          },
+        });
+        if (
+          !business ||
+          business.ownerId !== null ||
+          business.ownershipStatus !== "UNCLAIMED" ||
+          business.status === "SUSPENDED" ||
+          business.status === "REJECTED"
+        ) {
+          throw new ClaimError("Bu işletme için başvuru alınamıyor.");
+        }
+        businessId = data.businessId;
       }
 
       const dup = await tx.businessClaimRequest.findFirst({
         where: {
           userId: user.id,
-          placeReferenceId: data.placeReferenceId,
           status: "PENDING",
+          ...(placeReferenceId ? { placeReferenceId } : {}),
+          ...(businessId ? { businessId } : {}),
         },
         select: { id: true },
       });
@@ -91,7 +121,8 @@ export async function submitBusinessClaim(
       await tx.businessClaimRequest.create({
         data: {
           userId: user.id,
-          placeReferenceId: data.placeReferenceId,
+          placeReferenceId,
+          businessId,
           status: "PENDING",
           verificationType: data.verificationType,
           phone: data.phone?.trim() || null,

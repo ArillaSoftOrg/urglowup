@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { generateUniqueSlug } from "@/lib/slug";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
+import { invalidateCache } from "@/lib/cache";
 import { ADMIN_PLACE_REFERENCE_TRANSITIONS } from "@/lib/constants/place-reference";
 import {
   GOOGLE_PLACES_DETAILS_API,
@@ -685,7 +686,7 @@ export async function adminConvertPlaceReferenceToBusiness(
   // 8) Slug
   const slug = await generateUniqueSlug(data.name);
 
-  let business: { id: string };
+  let business: { id: string; slug: string };
   try {
     business = await db.$transaction(async (tx) => {
       // 1) Atomic lock: DISCOVERED/APPROVED + unclaimed → CLAIM_PENDING
@@ -710,7 +711,7 @@ export async function adminConvertPlaceReferenceToBusiness(
       // 2) In-tx duplicate googlePlaceId guard
       const dup = await tx.business.findFirst({
         where: { googlePlaceId: fresh.providerPlaceId },
-        select: { id: true },
+        select: { id: true, slug: true },
       });
       if (dup) {
         throw new ConvertError("Bu Google Place zaten bir Business ile eşleşmiş.");
@@ -748,8 +749,8 @@ export async function adminConvertPlaceReferenceToBusiness(
           geocodedAt: data.latitude !== undefined && data.longitude !== undefined ? new Date() : null,
           geocodingStatus: data.latitude !== undefined && data.longitude !== undefined ? "GOOGLE_PLACE" : null,
           googlePlaceId: fresh.providerPlaceId,
-          status: "ACTIVE_PRIVATE",
-          isMarketplaceVisible: false,
+          status: ownerId ? "ACTIVE_PRIVATE" : "ACTIVE_MARKETPLACE",
+          isMarketplaceVisible: ownerId ? false : true,
           instantConfirmation: ownerId ? data.instantConfirmation : false,
           inAppPayment: ownerId ? data.inAppPayment : false,
           petFriendly: ownerId ? data.petFriendly : false,
@@ -758,7 +759,7 @@ export async function adminConvertPlaceReferenceToBusiness(
             ? { ownerId, ownershipStatus: "CLAIMED" as const }
             : { ownerId: null, ownershipStatus: "UNCLAIMED" as const }),
         },
-        select: { id: true },
+        select: { id: true, slug: true },
       });
 
       if (categoryIds.length > 0) {
@@ -813,6 +814,8 @@ export async function adminConvertPlaceReferenceToBusiness(
   revalidatePath("/admin/place-references");
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${business.id}`);
+  revalidatePath(`/b/${business.slug}`);
+  await invalidateCache(`business:v2:slug:${business.slug}`);
   return { success: true, businessId: business.id, message: "İşletme oluşturuldu." };
 }
 

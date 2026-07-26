@@ -107,12 +107,17 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
               const isLoading = pending && actionId === rec.id;
               const currentMessage = message?.id === rec.id ? message : null;
               const context = [
-                rec.placeReference?.categoryHint,
+                rec.business?.name ?? rec.placeReference?.categoryHint,
                 rec.placeReference?.district,
                 rec.placeReference?.city,
               ]
                 .filter(Boolean)
                 .join(" · ");
+              const businessContext = rec.business
+                ? [rec.business.name, rec.business.slug ? `/b/${rec.business.slug}` : null]
+                    .filter(Boolean)
+                    .join(" · ")
+                : null;
 
               return (
                 <tr key={rec.id} className="align-top hover:bg-muted/30">
@@ -121,7 +126,7 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
                     <div className="text-xs text-muted-foreground">{rec.user.email}</div>
                   </td>
                   <td className="px-3 py-2 text-xs">
-                    {context || <span className="text-muted-foreground">—</span>}
+                    {businessContext || context || <span className="text-muted-foreground">—</span>}
                   </td>
                   <td className="px-3 py-2 text-xs">
                     {rec.verificationType

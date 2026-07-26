@@ -52,6 +52,11 @@ export function ContactSidebar({
     todayHours?.isOpen && todayHours.openTime && todayHours.closeTime
       ? `${todayHours.openTime.slice(0, 5)} - ${todayHours.closeTime.slice(0, 5)}`
       : null;
+  const canClaim =
+    business.ownerId === null && business.ownershipStatus === "UNCLAIMED";
+  const primaryHref = canClaim
+    ? `/claim-business?businessId=${encodeURIComponent(business.id)}`
+    : `${hrefPrefix}/b/${business.slug}/book`;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-sm lg:sticky lg:top-[76px]">
@@ -79,14 +84,23 @@ export function ContactSidebar({
           </div>
         )}
 
+        {canClaim && (
+          <div className="rounded-xl border bg-surface-cream p-4 text-sm">
+            <p className="font-semibold">Bu işletme sizin mi?</p>
+            <p className="mt-1 text-muted-foreground">
+              Profili yönetmek, hizmet eklemek ve randevu almaya başlamak için sahiplik başvurusu gönderin.
+            </p>
+          </div>
+        )}
+
         <Link
-          href={`${hrefPrefix}/b/${business.slug}/book`}
+          href={primaryHref}
           className={cn(
             buttonVariants({ size: "lg" }),
             "inline-flex h-[60px] w-full items-center justify-center rounded-full px-6 text-center text-lg font-bold whitespace-nowrap",
           )}
         >
-          Rezervasyon yap
+          {canClaim ? "İşletmeyi talep et" : "Rezervasyon yap"}
         </Link>
       </div>
 

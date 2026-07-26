@@ -20,13 +20,13 @@ import {
   sendCancelledByBusinessEmailToCustomer,
   sendAdminCancelledEmailToBusinessOwner,
   sendReviewModeratedEmail,
-  sendPostModeratedEmail,
   sendMediaModeratedEmail,
 } from "@/lib/email-notifications";
 import { sendReviewRequestWhatsAppToCustomer } from "@/lib/whatsapp-notifications";
-import type { BusinessStatus, PostStatus, AppointmentStatus } from "@/generated/prisma/enums";
+import type { BusinessStatus, AppointmentStatus } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
 import { recalculateBusinessStats } from "@/lib/ratings/calculator";
+import { invalidateCache } from "@/lib/cache";
 
 export type AdminActionState = {
   success: boolean;
@@ -93,6 +93,7 @@ async function revalidateMarketplacePathsForBusiness(
   if (!business) return;
 
   if (business.slug) {
+    await invalidateCache(`business:v2:slug:${business.slug}`);
     revalidatePath(`/b/${business.slug}`);
   }
 
@@ -383,7 +384,7 @@ export async function updateBusinessStatus(
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    select: { status: true, slug: true, ownerId: true },
+    select: { status: true, slug: true },
   });
 
   if (!business) {
@@ -396,10 +397,6 @@ export async function updateBusinessStatus(
       success: false,
       message: `Cannot change status from ${business.status} to ${newStatus}.`,
     };
-  }
-
-  if (newStatus === "ACTIVE_MARKETPLACE" && !business.ownerId) {
-    return { success: false, message: "Sahipsiz business ACTIVE_MARKETPLACE yapılamaz." };
   }
 
   const isMarketplaceVisible = MARKETPLACE_VISIBILITY_FOR_STATUS[newStatus];
@@ -427,9 +424,7 @@ export async function updateBusinessStatus(
   );
 
   revalidateAdmin();
-  if (newStatus === "ACTIVE_MARKETPLACE" || business.status === "ACTIVE_MARKETPLACE") {
-    await revalidateMarketplacePathsForBusiness(businessId);
-  }
+  await revalidateMarketplacePathsForBusiness(businessId);
 
   return { success: true, message: `Status updated to ${newStatus}.` };
 }

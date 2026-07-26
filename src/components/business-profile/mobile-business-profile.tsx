@@ -123,6 +123,11 @@ export function MobileBusinessProfile({
   const hasContact = !!(business.phone || business.whatsapp);
   const hasAbout = !!(business.description || hasContact || hasSocial || business.address || business.city || business.district);
   const hasTeam = business.professionals.length > 0;
+  const canClaim =
+    business.ownerId === null && business.ownershipStatus === "UNCLAIMED";
+  const primaryActionHref = canClaim
+    ? `/claim-business?businessId=${encodeURIComponent(business.id)}`
+    : `${hrefPrefix}/b/${business.slug}/book`;
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
     ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
@@ -215,6 +220,15 @@ export function MobileBusinessProfile({
             </a>
           )}
 
+          {canClaim && (
+            <div className="mt-3 rounded-xl border bg-surface-cream p-3 text-sm">
+              <p className="font-semibold">Bu işletme sizin mi?</p>
+              <p className="mt-1 text-muted-foreground">
+                Profili yönetmek ve randevu almaya başlamak için sahiplik başvurusu gönderin.
+              </p>
+            </div>
+          )}
+
         </section>
 
         <SectionNav
@@ -294,20 +308,20 @@ export function MobileBusinessProfile({
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 border-t bg-background/95 px-5 pb-[env(safe-area-inset-bottom,12px)] pt-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/90 md:hidden">
-        {business.services.length > 0 && (
+        {!canClaim && business.services.length > 0 && (
           <p className="whitespace-nowrap text-sm text-muted-foreground">
             {business.services.length} hizmet mevcut
           </p>
         )}
         <Link
-          href={`${hrefPrefix}/b/${business.slug}/book`}
+          href={primaryActionHref}
           className={cn(
             buttonVariants({ size: "lg" }),
             "h-11 shrink-0 rounded-full bg-foreground px-6 text-sm font-bold text-background shadow-lg shadow-foreground/15 hover:bg-foreground/90",
           )}
         >
           <CalendarCheck className="size-4" />
-          Hemen randevu al
+          {canClaim ? "İşletmeyi talep et" : "Hemen randevu al"}
         </Link>
       </div>
     </div>
