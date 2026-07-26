@@ -1,4 +1,5 @@
-import { MessageSquare, Star } from "lucide-react";
+import { ExternalLink, MessageSquare, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ReviewList } from "./review-list";
 import type {
   BusinessWithDetails,
@@ -38,14 +39,18 @@ function SourceRatingSummary({
   rating,
   count,
   googleAttribution = false,
+  actionHref,
+  actionLabel,
 }: {
   label: string;
   rating: number;
   count: number;
   googleAttribution?: boolean;
+  actionHref?: string | null;
+  actionLabel?: string;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <p
         translate={googleAttribution ? "no" : undefined}
         className="text-xs font-medium text-muted-foreground"
@@ -64,6 +69,27 @@ function SourceRatingSummary({
           </span>
         </p>
       </div>
+      {actionHref && actionLabel && (
+        <Button
+          variant="outline"
+          size="lg"
+          render={
+            <a
+              href={actionHref}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+            />
+          }
+          className="h-auto min-h-11 w-full whitespace-normal px-4 py-2.5 text-center leading-5 sm:w-fit"
+        >
+          {actionLabel}
+          <ExternalLink
+            aria-hidden
+            data-icon="inline-end"
+            className="size-4"
+          />
+        </Button>
+      )}
     </div>
   );
 }
@@ -125,6 +151,13 @@ export function ReviewsSection({
                     rating={googleRating}
                     count={googleReviewData?.totalCount ?? googleReviews.length}
                     googleAttribution
+                    actionHref={googleReviewData?.mapsUrl}
+                    actionLabel={
+                      (googleReviewData?.totalCount ?? 0) >
+                      googleReviews.length
+                        ? `Google Maps'te ${googleReviewData?.totalCount} yorumun tamamını gör`
+                        : "Tüm Google yorumlarını gör"
+                    }
                   />
                 )}
               </div>

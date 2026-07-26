@@ -240,6 +240,8 @@ async function fetchCachedGoogleReviewsForBusiness(businessId: string) {
           normalizedReviews.length
         : null,
     totalCount: normalizedReviews.length,
+    mapsUrl:
+      normalizedReviews.find((review) => review.sourceUrl)?.sourceUrl ?? null,
   } satisfies GoogleReviewData;
 }
 
@@ -256,7 +258,16 @@ export async function getGoogleReviewsForBusiness(
 ): Promise<GoogleReviewData> {
   const cachedReviewData = await fetchCachedGoogleReviewsForBusiness(businessId);
   if (cachedReviewData.reviews.length > 0) {
-    return cachedReviewData;
+    if (!options?.placeId) return cachedReviewData;
+
+    const mapsUrl = new URL("https://www.google.com/maps/search/");
+    mapsUrl.searchParams.set("api", "1");
+    mapsUrl.searchParams.set(
+      "query",
+      options.autoMatchBusiness?.name ?? "Google Maps",
+    );
+    mapsUrl.searchParams.set("query_place_id", options.placeId);
+    return { ...cachedReviewData, mapsUrl: mapsUrl.toString() };
   }
 
   let placeId = options?.placeId ?? null;

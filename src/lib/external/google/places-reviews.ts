@@ -2,7 +2,8 @@ import "server-only";
 
 import { GOOGLE_PLACES_DETAILS_API } from "@/lib/constants/external";
 
-const PLACES_REVIEWS_FIELD_MASK = "rating,userRatingCount,reviews";
+const PLACES_REVIEWS_FIELD_MASK =
+  "googleMapsUri,rating,userRatingCount,reviews";
 const PLACES_REVIEWS_TIMEOUT_MS = 6_000;
 
 type LocalizedText = {
@@ -11,6 +12,7 @@ type LocalizedText = {
 };
 
 type GooglePlacesReviewResponse = {
+  googleMapsUri?: string;
   rating?: number;
   userRatingCount?: number;
   reviews?: Array<{
@@ -51,12 +53,14 @@ export type GooglePlacesReviewData = {
   reviews: GooglePlacesReview[];
   averageRating: number | null;
   totalCount: number;
+  mapsUrl: string | null;
 };
 
 const EMPTY_REVIEW_DATA: GooglePlacesReviewData = {
   reviews: [],
   averageRating: null,
   totalCount: 0,
+  mapsUrl: null,
 };
 
 function resolvePlacesApiKey(): string | null {
@@ -137,6 +141,7 @@ export function normalizePlacesReviewData(
         : null,
     totalCount:
       Number.isInteger(totalCount) && totalCount >= 0 ? totalCount : 0,
+    mapsUrl: safeHttpsUrl(response.googleMapsUri),
   };
 }
 
