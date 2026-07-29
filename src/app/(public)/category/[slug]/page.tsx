@@ -60,6 +60,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       minRating:    filters.minRating,
       hasMedia:     filters.hasMedia || undefined,
       hasHours:     filters.hasHours || undefined,
+      sort:          filters.sort,
     }),
     getMarketplaceCities(),
     getMarketplaceCategories(),

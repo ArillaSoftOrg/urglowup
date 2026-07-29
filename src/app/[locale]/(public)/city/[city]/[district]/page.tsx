@@ -61,6 +61,7 @@ export default async function LocaleDistrictPage({ params, searchParams }: PageP
       minRating:    filters.minRating,
       hasMedia:     filters.hasMedia || undefined,
       hasHours:     filters.hasHours || undefined,
+      sort:          filters.sort,
     }),
     getMarketplaceCategories(),
   ]);

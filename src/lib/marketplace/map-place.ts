@@ -13,6 +13,8 @@ export type MapPlace = {
   claimUrl?: string;
   rating?: number;
   reviewCount?: number;
+  coverImageUrl?: string;
+  categoryName?: string;
   attribution?: "Google Maps";
   // Phase 6 — external operational fields (no Google native content):
   placeReferenceId?: string;
@@ -21,6 +23,27 @@ export type MapPlace = {
   city?: string;
   district?: string;
 };
+
+export type MapBounds = {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+};
+
+export function isPointInBounds(
+  latitude: number,
+  longitude: number,
+  bounds: MapBounds,
+): boolean {
+  const withinLatitude = latitude >= bounds.south && latitude <= bounds.north;
+  const withinLongitude =
+    bounds.west <= bounds.east
+      ? longitude >= bounds.west && longitude <= bounds.east
+      : longitude >= bounds.west || longitude <= bounds.east;
+
+  return withinLatitude && withinLongitude;
+}
 
 export function normalizeBusinessToMapPlace(
   b: MarketplaceBusiness & { latitude: number; longitude: number },
@@ -36,6 +59,12 @@ export function normalizeBusinessToMapPlace(
     isBookable: true,
     markerVariant: "bookable",
     profileUrl: `${prefix}/b/${b.slug}`,
+    rating: b.reviewAvg ?? undefined,
+    reviewCount: b.reviewCount,
+    coverImageUrl: b.coverImageUrl ?? undefined,
+    categoryName: b.categories[0]?.category.name,
+    city: b.city ?? undefined,
+    district: b.district ?? undefined,
   };
 }
 

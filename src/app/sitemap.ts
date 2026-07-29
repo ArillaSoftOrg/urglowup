@@ -56,7 +56,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...forAllLocales("/explore",              { changeFrequency: "daily",   priority: 0.9 }),
     ...forAllLocales("/deals",                { changeFrequency: "daily",   priority: 0.7 }),
     ...forAllLocales("/for-business",         { changeFrequency: "monthly", priority: 0.6 }),
-    ...forAllLocales("/map",                  { changeFrequency: "weekly",  priority: 0.4 }),
     ...forAllLocales("/puanlama-sistemi",     { changeFrequency: "monthly", priority: 0.5 }),
     ...rootOnly("/privacy-policy",            { changeFrequency: "monthly", priority: 0.3 }),
     ...rootOnly("/cookie-policy",             { changeFrequency: "monthly", priority: 0.3 }),

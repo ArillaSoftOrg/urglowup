@@ -1,5 +1,6 @@
 // LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
 import type { Dictionary } from './tr'
+import en from './en'
 
 const nl: Dictionary = {
   nav: {
@@ -37,6 +38,7 @@ const nl: Dictionary = {
     allCategories: 'Alle categorieën →',
     professionalCount: (n: number) => `${n} specialisten gevonden`,
     emptyMessage: 'Er zijn nog geen specialisten geregistreerd. Kom binnenkort terug.',
+    map: { ...en.explore.map },
   },
   deals: {
     title: 'Aanbiedingen',

@@ -1,5 +1,6 @@
 // LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
 import type { Dictionary } from './tr'
+import en from './en'
 
 const fa: Dictionary = {
   nav: {
@@ -37,6 +38,7 @@ const fa: Dictionary = {
     allCategories: 'همهٔ دسته‌بندی‌ها ←',
     professionalCount: (n: number) => `${n} متخصص پیدا شد`,
     emptyMessage: 'هنوز متخصصی فهرست نشده است. به‌زودی دوباره بررسی کنید.',
+    map: { ...en.explore.map },
   },
   deals: {
     title: 'پیشنهادها',

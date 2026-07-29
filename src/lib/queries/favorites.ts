@@ -4,6 +4,10 @@ import {
   optimizeBusinessCoverUrl,
   optimizeBusinessLogoUrl,
 } from "@/lib/optimized-media";
+import {
+  isNewToUrGlowUp,
+  parseMarketplaceLaunchAt,
+} from "@/lib/marketplace/ranking";
 
 export async function getCustomerFavorites(userId: string): Promise<MarketplaceBusiness[]> {
   const rows = await db.favorite.findMany({
@@ -21,6 +25,14 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
           district: true,
           latitude: true,
           longitude: true,
+          status: true,
+          isMarketplaceVisible: true,
+          ownershipStatus: true,
+          marketplaceJoinedAt: true,
+          isEditoriallyRecommended: true,
+          editorialRecommendationRank: true,
+          instantConfirmation: true,
+          inAppPayment: true,
           categories: {
             select: {
               category: { select: { id: true, name: true, slug: true } },
@@ -29,7 +41,15 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
           media: {
             where: {
               status: "ACTIVE",
-              type: { in: ["COVER", "LOGO"] },
+              type: {
+                in: [
+                  "COVER",
+                  "LOGO",
+                  "PORTFOLIO_IMAGE",
+                  "PORTFOLIO_VIDEO",
+                  "BEFORE_AFTER",
+                ],
+              },
             },
             select: {
               type: true,
@@ -41,7 +61,19 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
             },
           },
           ratingStats: {
-            select: { bayesianScore: true, rawReviewCount: true },
+            select: {
+              bayesianScore: true,
+              rawReviewCount: true,
+              recentReviewCount: true,
+            },
+          },
+          services: {
+            where: { isActive: true },
+            select: { name: true },
+          },
+          hours: {
+            where: { isOpen: true },
+            select: { dayOfWeek: true },
           },
         },
       },
@@ -52,6 +84,9 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
   return rows.map(({ business: b }) => {
     const coverMedia = b.media.find((item) => item.type === "COVER");
     const logoMedia = b.media.find((item) => item.type === "LOGO");
+    const launchAt = parseMarketplaceLaunchAt(
+      process.env.MARKETPLACE_PUBLIC_LAUNCH_AT,
+    );
 
     return {
       id: b.id,
@@ -66,7 +101,34 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
       longitude: b.longitude,
       categories: b.categories,
       reviewCount: b.ratingStats?.rawReviewCount ?? 0,
-      reviewAvg: b.ratingStats ? Number(b.ratingStats.bayesianScore) : null,
+      reviewAvg:
+        b.ratingStats?.bayesianScore != null
+          ? Number(b.ratingStats.bayesianScore)
+          : null,
+      recentReviewCount: b.ratingStats?.recentReviewCount ?? 0,
+      ownershipStatus: b.ownershipStatus,
+      marketplaceJoinedAt: b.marketplaceJoinedAt,
+      isEditoriallyRecommended: b.isEditoriallyRecommended,
+      editorialRecommendationRank: b.editorialRecommendationRank,
+      instantConfirmation: b.instantConfirmation,
+      inAppPayment: b.inAppPayment,
+      activeServiceNames: b.services.map((service) => service.name),
+      activeServiceCount: b.services.length,
+      openHourCount: b.hours.length,
+      activePortfolioCount: b.media.filter((item) =>
+        ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"].includes(
+          item.type,
+        ),
+      ).length,
+      isNewToUrGlowUp: isNewToUrGlowUp(
+        {
+          ownershipStatus: b.ownershipStatus,
+          marketplaceJoinedAt: b.marketplaceJoinedAt,
+          status: b.status,
+          isMarketplaceVisible: b.isMarketplaceVisible,
+        },
+        launchAt,
+      ),
     };
   });
 }

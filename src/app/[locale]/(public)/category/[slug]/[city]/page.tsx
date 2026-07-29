@@ -73,6 +73,7 @@ export default async function LocaleCategoryCityPage({ params, searchParams }: P
       minRating: filters.minRating,
       hasMedia:  filters.hasMedia || undefined,
       hasHours:  filters.hasHours || undefined,
+      sort:       filters.sort,
     }),
     db.business.findMany({
       where: {

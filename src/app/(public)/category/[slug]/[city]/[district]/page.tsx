@@ -68,6 +68,7 @@ export default async function CategoryCityDistrictPage({ params, searchParams }:
       minRating: filters.minRating,
       hasMedia:  filters.hasMedia || undefined,
       hasHours:  filters.hasHours || undefined,
+      sort:       filters.sort,
     }),
   ]);
 

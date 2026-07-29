@@ -185,7 +185,12 @@ export async function approveClaimRequest(
 
       const freshBiz = await tx.business.findUnique({
         where: { id: businessId },
-        select: { ownerId: true },
+        select: {
+          ownerId: true,
+          status: true,
+          isMarketplaceVisible: true,
+          marketplaceJoinedAt: true,
+        },
       });
       if (!freshBiz || freshBiz.ownerId !== null) {
         throw new ApproveError("İşletmenin zaten bir sahibi var.");
@@ -212,7 +217,15 @@ export async function approveClaimRequest(
 
       await tx.business.update({
         where: { id: businessId },
-        data: { ownerId: userId, ownershipStatus: "CLAIMED" },
+        data: {
+          ownerId: userId,
+          ownershipStatus: "CLAIMED",
+          ...(freshBiz.status === "ACTIVE_MARKETPLACE" &&
+            freshBiz.isMarketplaceVisible &&
+            freshBiz.marketplaceJoinedAt === null && {
+              marketplaceJoinedAt: new Date(),
+            }),
+        },
       });
       await tx.businessMember.upsert({
         where: { businessId_userId: { businessId, userId } },
@@ -251,6 +264,8 @@ export async function approveClaimRequest(
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
   revalidatePath(`/b/${business.slug}`);
+  revalidatePath("/");
+  revalidatePath("/explore");
   await invalidateCache(`business:v2:slug:${business.slug}`);
   revalidatePath("/admin/place-references");
   return { success: true, message: "Başvuru onaylandı, işletme sahibi atandı." };

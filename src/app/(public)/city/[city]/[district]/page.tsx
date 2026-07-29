@@ -54,6 +54,7 @@ export default async function DistrictPage({ params, searchParams }: PageProps) 
       minRating:    filters.minRating,
       hasMedia:     filters.hasMedia || undefined,
       hasHours:     filters.hasHours || undefined,
+      sort:          filters.sort,
     }),
     getMarketplaceCategories(),
   ]);

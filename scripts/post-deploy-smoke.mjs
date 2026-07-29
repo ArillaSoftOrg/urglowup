@@ -49,7 +49,6 @@ const SITEMAP_PUBLIC_PATHS = [
   "/explore",
   "/for-business",
   "/styles",
-  "/map",
   "/privacy-policy",
   "/cookie-policy",
   "/kvkk",

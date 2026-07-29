@@ -66,6 +66,7 @@ export default async function LocaleCategoryPage({ params, searchParams }: PageP
       minRating:    filters.minRating,
       hasMedia:     filters.hasMedia || undefined,
       hasHours:     filters.hasHours || undefined,
+      sort:          filters.sort,
     }),
     getMarketplaceCities(),
     getMarketplaceCategories(),

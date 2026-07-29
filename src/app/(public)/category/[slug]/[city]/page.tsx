@@ -67,6 +67,7 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
       minRating: filters.minRating,
       hasMedia: filters.hasMedia || undefined,
       hasHours: filters.hasHours || undefined,
+      sort: filters.sort,
     }),
     db.business.findMany({
       where: {

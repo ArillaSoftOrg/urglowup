@@ -1,10 +1,13 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertCircle,
@@ -16,7 +19,10 @@ import {
   Pencil,
 } from "lucide-react";
 import Link from "next/link";
-import { updateBusinessStatus } from "@/app/(admin)/admin/actions";
+import {
+  updateBusinessStatus,
+  updateEditorialRecommendation,
+} from "@/app/(admin)/admin/actions";
 import { AssignOwnerDialog } from "./assign-owner-dialog";
 import { GooglePlaceMatchPanel } from "./google-place-match-panel";
 import {
@@ -27,6 +33,7 @@ import {
 import { MEDIA_TYPE_LABELS } from "@/lib/constants/media";
 import { calculateProfileCompletion } from "@/lib/profile-completion";
 import { computeBusinessSignals } from "@/lib/admin/business-signals";
+import { getRecommendationReadinessIssues } from "@/lib/marketplace/ranking";
 import type { AdminBusinessDetail } from "@/lib/queries/admin";
 import type { AdminAction } from "@/lib/queries/admin";
 
@@ -97,6 +104,152 @@ function StatusActions({ business }: { business: AdminBusinessDetail }) {
         </Button>
       ))}
     </div>
+  );
+}
+
+function EditorialRecommendationControl({
+  business,
+}: {
+  business: AdminBusinessDetail;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [rank, setRank] = useState(
+    String(business.editorialRecommendationRank ?? 100),
+  );
+  const [message, setMessage] = useState<string | null>(null);
+
+  const readinessIssues = getRecommendationReadinessIssues({
+    ownershipStatus: business.ownershipStatus,
+    coverImageUrl:
+      business.coverImageUrl ||
+      business.media.some(
+        (media) => media.type === "COVER" && media.status === "ACTIVE",
+      )
+        ? "available"
+        : null,
+    categories: business.categories.map(({ category }) => ({
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+      },
+    })),
+    city: business.city,
+    district: business.district,
+    activeServiceCount: business.services.length,
+    openHourCount: business.hours.length,
+  });
+
+  if (
+    business.status !== "ACTIVE_MARKETPLACE" ||
+    !business.isMarketplaceVisible
+  ) {
+    readinessIssues.unshift(
+      "İşletme pazaryerinde aktif ve görünür olmalı.",
+    );
+  }
+
+  function submit(enabled: boolean) {
+    const parsedRank = Number.parseInt(rank, 10);
+    setMessage(null);
+    startTransition(async () => {
+      const result = await updateEditorialRecommendation({
+        businessId: business.id,
+        enabled,
+        rank:
+          enabled && Number.isInteger(parsedRank)
+            ? parsedRank
+            : enabled
+              ? 100
+              : null,
+      });
+      setMessage(result.message ?? null);
+      if (result.success) router.refresh();
+    });
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Lansman önerisi</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Organik öneri sırası dolana kadar bu işletmeyi önerilenlerde kullanır.
+            </p>
+          </div>
+          <Badge
+            variant={
+              business.isEditoriallyRecommended ? "success" : "neutral"
+            }
+          >
+            {business.isEditoriallyRecommended ? "Etkin" : "Kapalı"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {readinessIssues.length > 0 && (
+          <div className="rounded-lg bg-warning/30 p-3 text-sm text-warning-foreground">
+            <p className="font-medium">Öneri için eksikler</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {readinessIssues.map((issue) => (
+                <li key={issue}>{issue}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="w-full sm:max-w-40">
+            <Label htmlFor="editorial-recommendation-rank">Gösterim sırası</Label>
+            <Input
+              id="editorial-recommendation-rank"
+              type="number"
+              min={1}
+              max={999}
+              value={rank}
+              onChange={(event) => setRank(event.target.value)}
+              disabled={isPending}
+              className="mt-1"
+            />
+          </div>
+          <Button
+            type="button"
+            variant={
+              business.isEditoriallyRecommended ? "outline" : "default"
+            }
+            onClick={() => submit(!business.isEditoriallyRecommended)}
+            disabled={
+              isPending ||
+              (!business.isEditoriallyRecommended &&
+                readinessIssues.length > 0)
+            }
+          >
+            {isPending && <Loader2 className="size-4 animate-spin" />}
+            {business.isEditoriallyRecommended
+              ? "Öneriden çıkar"
+              : "Lansman önerisine ekle"}
+          </Button>
+          {business.isEditoriallyRecommended && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => submit(true)}
+              disabled={isPending}
+            >
+              Sırayı kaydet
+            </Button>
+          )}
+        </div>
+
+        {message && (
+          <p role="status" className="text-sm text-muted-foreground">
+            {message}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -195,6 +348,8 @@ export function BusinessDetailView({
           googlePlaceId: business.googlePlaceId,
         }}
       />
+
+      <EditorialRecommendationControl business={business} />
 
       {/* Health Overview & Profile Completeness */}
       <div className="grid gap-4 md:grid-cols-2">

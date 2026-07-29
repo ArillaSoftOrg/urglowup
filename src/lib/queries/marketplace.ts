@@ -5,6 +5,15 @@ import {
 } from "@/lib/optimized-media";
 import { getDayOfWeek, nowInBusinessTimezone } from "@/lib/constants/booking";
 import type { Prisma } from "@/generated/prisma/client";
+import type { MapBounds } from "@/lib/marketplace/map-place";
+import {
+  MARKETPLACE_SORTS,
+  isNewToUrGlowUp,
+  parseMarketplaceLaunchAt,
+  rankMarketplaceBusinesses,
+  type DiscoveryBusiness,
+  type MarketplaceSort,
+} from "@/lib/marketplace/ranking";
 
 // ─── Shared filter ─────────────────────────────────────────────
 
@@ -15,7 +24,7 @@ const ACTIVE_VISIBLE = {
 
 // ─── Types ─────────────────────────────────────────────────────
 
-export type MarketplaceBusiness = {
+export type MarketplaceBusiness = DiscoveryBusiness & {
   id: string;
   name: string;
   slug: string;
@@ -75,6 +84,12 @@ export interface BusinessFilters {
   maxDuration?: number;
   /** Minimum number of approved reviews */
   minReviewCount?: number;
+  /** Result ordering. Defaults to balanced marketplace recommendation. */
+  sort?: MarketplaceSort;
+  /** Optional visible map area. Longitude supports antimeridian-crossing bounds. */
+  bounds?: MapBounds;
+  /** Result cap. Defaults to 50 and is clamped to 250. */
+  limit?: number;
 }
 
 // ─── Filter parser ──────────────────────────────────────────────
@@ -98,6 +113,7 @@ export interface ParsedFilters {
   priceMax?: number;
   maxDuration?: number;
   minReviewCount?: number;
+  sort: MarketplaceSort;
 }
 
 /**
@@ -134,6 +150,10 @@ export function parseMarketplaceFilters(
 
   const priceMin = positiveInt("priceMin", 0, 1_000_000);
   const priceMax = positiveInt("priceMax", 0, 1_000_000);
+  const sortRaw = str("sort");
+  const sort = MARKETPLACE_SORTS.includes(sortRaw as MarketplaceSort)
+    ? (sortRaw as MarketplaceSort)
+    : "recommended";
 
   return {
     q:              str("q"),
@@ -149,6 +169,7 @@ export function parseMarketplaceFilters(
     priceMax:       priceMin !== undefined && priceMax !== undefined && priceMin > priceMax ? undefined : priceMax,
     maxDuration:    positiveInt("maxDuration", 1, 24 * 60),
     minReviewCount: positiveInt("minReviewCount", 1, 100_000),
+    sort,
   };
 }
 
@@ -191,6 +212,7 @@ export async function getMarketplaceBusinesses(
   const {
     categorySlug, city, district, q, minRating, hasMedia, hasHours,
     availability, priceMin, priceMax, maxDuration, minReviewCount,
+    sort = "recommended", bounds, limit,
   } = filters;
 
   // Combine hours-related conditions into a single `hours.some` filter — the
@@ -238,6 +260,21 @@ export async function getMarketplaceBusinesses(
           { categories:  { some: { category: { name: { contains: q, mode: "insensitive" } } } } },
         ],
       }),
+      ...(bounds && {
+        AND: [
+          {
+            latitude: { gte: bounds.south, lte: bounds.north },
+          },
+          bounds.west <= bounds.east
+            ? { longitude: { gte: bounds.west, lte: bounds.east } }
+            : {
+                OR: [
+                  { longitude: { gte: bounds.west } },
+                  { longitude: { lte: bounds.east } },
+                ],
+              },
+        ],
+      }),
       ...(hasMedia && {
         media: {
           some: {
@@ -268,15 +305,39 @@ export async function getMarketplaceBusinesses(
       district: true,
       latitude: true,
       longitude: true,
+      status: true,
+      isMarketplaceVisible: true,
+      ownershipStatus: true,
+      marketplaceJoinedAt: true,
+      isEditoriallyRecommended: true,
+      editorialRecommendationRank: true,
+      instantConfirmation: true,
+      inAppPayment: true,
       categories: {
         select: {
           category: { select: { id: true, name: true, slug: true } },
         },
       },
+      services: {
+        where: { isActive: true },
+        select: { name: true },
+      },
+      hours: {
+        where: { isOpen: true },
+        select: { dayOfWeek: true },
+      },
       media: {
         where: {
           status: "ACTIVE",
-          type: { in: ["COVER", "LOGO"] },
+          type: {
+            in: [
+              "COVER",
+              "LOGO",
+              "PORTFOLIO_IMAGE",
+              "PORTFOLIO_VIDEO",
+              "BEFORE_AFTER",
+            ],
+          },
         },
         orderBy: [{ sortOrder: "asc" }],
         select: {
@@ -289,30 +350,74 @@ export async function getMarketplaceBusinesses(
         },
       },
       ratingStats: {
-        select: { bayesianScore: true, rawReviewCount: true },
+        select: {
+          bayesianScore: true,
+          rawReviewCount: true,
+          recentReviewCount: true,
+        },
       },
     },
     orderBy: { createdAt: "desc" },
-    take: 50, // Phase 10 limit — pagination added in a later phase
+    take: 250,
   });
 
   const mapped = raw.map((b) => {
-    const { ratingStats, media, ...rest } = b;
+    const {
+      ratingStats,
+      media,
+      services,
+      hours,
+      status,
+      isMarketplaceVisible,
+      ...rest
+    } = b;
     const coverMedia = media.find((item) => item.type === "COVER");
     const logoMedia = media.find((item) => item.type === "LOGO");
+    const coverImageUrl = optimizeBusinessCoverUrl(
+      coverMedia,
+      b.coverImageUrl,
+    );
+    const logoUrl = optimizeBusinessLogoUrl(logoMedia, b.logoUrl);
+    const launchAt = parseMarketplaceLaunchAt(
+      process.env.MARKETPLACE_PUBLIC_LAUNCH_AT,
+    );
 
     return {
       ...rest,
-      coverImageUrl: optimizeBusinessCoverUrl(coverMedia, b.coverImageUrl),
-      logoUrl: optimizeBusinessLogoUrl(logoMedia, b.logoUrl),
+      coverImageUrl,
+      logoUrl,
       reviewCount: ratingStats?.rawReviewCount ?? 0,
       reviewAvg: ratingStats?.bayesianScore ?? null,
+      recentReviewCount: ratingStats?.recentReviewCount ?? 0,
+      activeServiceNames: services.map((service) => service.name),
+      activeServiceCount: services.length,
+      openHourCount: hours.length,
+      activePortfolioCount: media.filter((item) =>
+        ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"].includes(
+          item.type,
+        ),
+      ).length,
+      isNewToUrGlowUp: isNewToUrGlowUp(
+        {
+          ownershipStatus: b.ownershipStatus,
+          marketplaceJoinedAt: b.marketplaceJoinedAt,
+          status,
+          isMarketplaceVisible,
+        },
+        launchAt,
+      ),
     };
   });
 
-  return minRating != null
+  const ratingFiltered = minRating != null
     ? mapped.filter((b) => b.reviewAvg !== null && b.reviewAvg >= minRating)
     : mapped;
+  const ranked = rankMarketplaceBusinesses(ratingFiltered, {
+    sort,
+    query: q,
+  });
+
+  return ranked.slice(0, Math.min(Math.max(limit ?? 50, 1), 250));
 }
 
 /**

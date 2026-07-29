@@ -141,6 +141,16 @@ const checks = [
     hint: "Recommended before enabling internal cron endpoints.",
   },
   {
+    key: "MARKETPLACE_PUBLIC_LAUNCH_AT",
+    required: false,
+    validate: (value) =>
+      !value ||
+      (/^\d{4}-\d{2}-\d{2}T/.test(value) &&
+        Number.isFinite(new Date(value).getTime())),
+    hint:
+      "Optional ISO timestamp for public launch, for example 2026-09-01T09:00:00+03:00.",
+  },
+  {
     key: "AUTH_RATE_LIMIT_LOGIN_IP",
     required: false,
     validate: isPositiveInteger,

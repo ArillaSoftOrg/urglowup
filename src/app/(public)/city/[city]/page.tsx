@@ -50,6 +50,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       minRating:    filters.minRating,
       hasMedia:     filters.hasMedia || undefined,
       hasHours:     filters.hasHours || undefined,
+      sort:          filters.sort,
     }),
     db.business.findMany({
       where: {

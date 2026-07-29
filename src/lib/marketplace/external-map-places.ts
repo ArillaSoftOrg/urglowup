@@ -16,7 +16,12 @@ import {
   resolveGooglePlaceLocation,
   type LocationCache,
 } from "@/lib/external/google/places-location";
-import { normalizePlaceReferenceToMapPlace, type MapPlace } from "./map-place";
+import {
+  isPointInBounds,
+  normalizePlaceReferenceToMapPlace,
+  type MapBounds,
+  type MapPlace,
+} from "./map-place";
 import type { ParsedFilters } from "@/lib/queries/marketplace";
 
 /** Resolves a list with a bounded concurrency limit, preserving input order. */
@@ -52,6 +57,7 @@ async function mapWithConcurrency<T, R>(
  */
 export async function getExternalMapPlaces(
   filters: ParsedFilters,
+  bounds?: MapBounds,
 ): Promise<MapPlace[]> {
   try {
     if (!filters.city) return [];
@@ -90,7 +96,13 @@ export async function getExternalMapPlaces(
       },
     );
 
-    const places = resolved.filter((p): p is MapPlace => p !== null);
+    const places = resolved
+      .filter((p): p is MapPlace => p !== null)
+      .filter(
+        (place) =>
+          !bounds ||
+          isPointInBounds(place.latitude, place.longitude, bounds),
+      );
     console.log(
       `[external-map-places] resolved=${places.length} failed=${refs.length - places.length}`,
     );

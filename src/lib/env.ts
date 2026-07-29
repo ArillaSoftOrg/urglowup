@@ -81,6 +81,8 @@ const envSchema = z.object({
     ),
   // Feature flags
   REVIEW_MODERATION_MODE: z.enum(["approved", "pending"]).optional().default("approved"),
+  // Public marketplace launch boundary. Until set, no listing is labelled as new.
+  MARKETPLACE_PUBLIC_LAUNCH_AT: z.string().datetime({ offset: true }).optional(),
   // Google Business Profile OAuth (Phase 15+)
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

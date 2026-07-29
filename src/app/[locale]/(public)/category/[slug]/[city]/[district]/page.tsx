@@ -74,6 +74,7 @@ export default async function LocaleCategoryCityDistrictPage({ params, searchPar
       minRating: filters.minRating,
       hasMedia:  filters.hasMedia || undefined,
       hasHours:  filters.hasHours || undefined,
+      sort:       filters.sort,
     }),
   ]);
 

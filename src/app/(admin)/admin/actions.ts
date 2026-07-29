@@ -27,6 +27,7 @@ import type { BusinessStatus, AppointmentStatus } from "@/generated/prisma/enums
 import type { Prisma } from "@/generated/prisma/client";
 import { recalculateBusinessStats } from "@/lib/ratings/calculator";
 import { invalidateCache } from "@/lib/cache";
+import { getRecommendationReadinessIssues } from "@/lib/marketplace/ranking";
 
 export type AdminActionState = {
   success: boolean;
@@ -384,7 +385,12 @@ export async function updateBusinessStatus(
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    select: { status: true, slug: true },
+    select: {
+      status: true,
+      slug: true,
+      ownershipStatus: true,
+      marketplaceJoinedAt: true,
+    },
   });
 
   if (!business) {
@@ -403,7 +409,16 @@ export async function updateBusinessStatus(
 
   await db.business.update({
     where: { id: businessId },
-    data: { status: newStatus, isMarketplaceVisible },
+    data: {
+      status: newStatus,
+      isMarketplaceVisible,
+      ...(newStatus === "ACTIVE_MARKETPLACE" &&
+        isMarketplaceVisible &&
+        business.ownershipStatus === "CLAIMED" &&
+        business.marketplaceJoinedAt === null && {
+          marketplaceJoinedAt: new Date(),
+        }),
+    },
   });
 
   const actionName =
@@ -436,7 +451,13 @@ export async function toggleMarketplaceVisibility(
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    select: { status: true, isMarketplaceVisible: true, slug: true },
+    select: {
+      status: true,
+      isMarketplaceVisible: true,
+      slug: true,
+      ownershipStatus: true,
+      marketplaceJoinedAt: true,
+    },
   });
 
   if (!business) {
@@ -455,7 +476,14 @@ export async function toggleMarketplaceVisibility(
 
   await db.business.update({
     where: { id: businessId },
-    data: { isMarketplaceVisible: newValue },
+    data: {
+      isMarketplaceVisible: newValue,
+      ...(newValue &&
+        business.ownershipStatus === "CLAIMED" &&
+        business.marketplaceJoinedAt === null && {
+          marketplaceJoinedAt: new Date(),
+        }),
+    },
   });
 
   await logAdminAction(
@@ -471,6 +499,122 @@ export async function toggleMarketplaceVisibility(
   return {
     success: true,
     message: `Marketplace visibility ${newValue ? "enabled" : "disabled"}.`,
+  };
+}
+
+const editorialRecommendationSchema = z.object({
+  businessId: z.string().min(1),
+  enabled: z.boolean(),
+  rank: z.number().int().min(1).max(999).nullable(),
+});
+
+export async function updateEditorialRecommendation(input: {
+  businessId: string;
+  enabled: boolean;
+  rank: number | null;
+}): Promise<AdminActionState> {
+  const admin = await requireRole(UserRole.ADMIN);
+  const parsed = editorialRecommendationSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.issues[0].message };
+  }
+
+  const business = await db.business.findUnique({
+    where: { id: parsed.data.businessId },
+    select: {
+      id: true,
+      status: true,
+      isMarketplaceVisible: true,
+      ownershipStatus: true,
+      coverImageUrl: true,
+      city: true,
+      district: true,
+      categories: {
+        select: {
+          category: { select: { id: true, name: true, slug: true } },
+        },
+      },
+      services: {
+        where: { isActive: true },
+        select: { id: true },
+      },
+      hours: {
+        where: { isOpen: true },
+        select: { dayOfWeek: true },
+      },
+      media: {
+        where: { status: "ACTIVE", type: "COVER" },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  });
+
+  if (!business) {
+    return { success: false, message: "İşletme bulunamadı." };
+  }
+
+  if (parsed.data.enabled) {
+    if (
+      business.status !== "ACTIVE_MARKETPLACE" ||
+      !business.isMarketplaceVisible
+    ) {
+      return {
+        success: false,
+        message: "Lansman önerisi için işletme pazaryerinde aktif ve görünür olmalı.",
+      };
+    }
+
+    const issues = getRecommendationReadinessIssues({
+      ownershipStatus: business.ownershipStatus,
+      coverImageUrl:
+        business.coverImageUrl || business.media.length > 0
+          ? "available"
+          : null,
+      categories: business.categories,
+      city: business.city,
+      district: business.district,
+      activeServiceCount: business.services.length,
+      openHourCount: business.hours.length,
+    });
+
+    if (issues.length > 0) {
+      return {
+        success: false,
+        message: issues.join(" "),
+      };
+    }
+  }
+
+  await db.business.update({
+    where: { id: business.id },
+    data: {
+      isEditoriallyRecommended: parsed.data.enabled,
+      editorialRecommendationRank: parsed.data.enabled
+        ? (parsed.data.rank ?? 100)
+        : null,
+    },
+  });
+
+  await logAdminAction(
+    admin.id,
+    "business.editorial_recommendation",
+    "Business",
+    business.id,
+    parsed.data.enabled
+      ? `enabled, rank=${parsed.data.rank ?? 100}`
+      : "disabled",
+  );
+
+  revalidateAdmin();
+  await revalidateMarketplacePathsForBusiness(business.id);
+
+  return {
+    success: true,
+    message: parsed.data.enabled
+      ? "İşletme lansman önerilerine eklendi."
+      : "İşletme lansman önerilerinden çıkarıldı.",
   };
 }
 
@@ -616,7 +760,13 @@ export async function adminAssignOwner(
 
   const business = await db.business.findUnique({
     where: { id: businessId },
-    select: { id: true, ownerId: true },
+    select: {
+      id: true,
+      ownerId: true,
+      status: true,
+      isMarketplaceVisible: true,
+      marketplaceJoinedAt: true,
+    },
   });
 
   if (!business) {
@@ -666,7 +816,15 @@ export async function adminAssignOwner(
   await db.$transaction(async (tx) => {
     await tx.business.update({
       where: { id: businessId },
-      data: { ownerId: user.id, ownershipStatus: "CLAIMED" },
+      data: {
+        ownerId: user.id,
+        ownershipStatus: "CLAIMED",
+        ...(business.status === "ACTIVE_MARKETPLACE" &&
+          business.isMarketplaceVisible &&
+          business.marketplaceJoinedAt === null && {
+            marketplaceJoinedAt: new Date(),
+          }),
+      },
     });
     await tx.businessMember.upsert({
       where: { businessId_userId: { businessId, userId: user.id } },
@@ -694,6 +852,7 @@ export async function adminAssignOwner(
 
   revalidatePath("/admin/businesses");
   revalidatePath(`/admin/businesses/${businessId}`);
+  await revalidateMarketplacePathsForBusiness(businessId);
   return { success: true, message: "Sahip atandı." };
 }
 

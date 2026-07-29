@@ -1,5 +1,6 @@
 // LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
 import type { Dictionary } from './tr'
+import en from './en'
 
 const ar: Dictionary = {
   nav: {
@@ -37,6 +38,7 @@ const ar: Dictionary = {
     allCategories: 'جميع الفئات ←',
     professionalCount: (n: number) => `تم العثور على ${n} متخصص`,
     emptyMessage: 'لا توجد متخصصون مدرجون حتى الآن. تحقق مرة أخرى قريباً.',
+    map: { ...en.explore.map },
   },
   deals: {
     title: 'العروض',

@@ -40,7 +40,7 @@ export default async function HomePage() {
   const [user, cookieStore] = await Promise.all([getCurrentUser(), cookies()]);
   const [categories, businesses, cities, personalization] = await Promise.all([
     getMarketplaceCategories(),
-    getMarketplaceBusinesses(),
+    getMarketplaceBusinesses({ limit: 250 }),
     getMarketplaceCities(),
     user ? getHomePersonalization(user.id) : null,
   ]);

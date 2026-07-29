@@ -390,6 +390,9 @@ model Business {
   googlePlaceMatchAttemptedAt DateTime?
   googlePlaceMatchError       String?
   ownershipStatus             BusinessOwnershipStatus @default(CLAIMED)
+  marketplaceJoinedAt         DateTime?
+  isEditoriallyRecommended    Boolean                 @default(false)
+  editorialRecommendationRank Int?
   createdAt                   DateTime                @default(now())
   updatedAt                   DateTime                @updatedAt
 
@@ -421,6 +424,8 @@ model Business {
 
   @@index([city])
   @@index([status])
+  @@index([ownershipStatus, marketplaceJoinedAt])
+  @@index([isEditoriallyRecommended, editorialRecommendationRank])
   @@index([googlePlaceMatchStatus, googlePlaceMatchAttemptedAt])
 }
 

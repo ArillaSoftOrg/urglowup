@@ -4,6 +4,28 @@ import Link from "next/link";
 import Image from "next/image";
 import { rememberBusinessView } from "@/lib/recent-business-history";
 import type { MarketplaceBusiness } from "@/lib/queries/marketplace";
+import { Badge } from "@/components/ui/badge";
+
+const CARD_COPY: Record<
+  string,
+  { newToUrGlowUp: string; noReviews: string }
+> = {
+  tr: {
+    newToUrGlowUp: "UrGlowUp'a yeni katıldı",
+    noReviews: "Henüz UrGlowUp yorumu yok",
+  },
+  en: { newToUrGlowUp: "New to UrGlowUp", noReviews: "No UrGlowUp reviews yet" },
+  de: { newToUrGlowUp: "Neu bei UrGlowUp", noReviews: "Noch keine UrGlowUp-Bewertungen" },
+  ru: { newToUrGlowUp: "Новое на UrGlowUp", noReviews: "Пока нет отзывов UrGlowUp" },
+  es: { newToUrGlowUp: "Nuevo en UrGlowUp", noReviews: "Aún no hay reseñas en UrGlowUp" },
+  bg: { newToUrGlowUp: "Ново в UrGlowUp", noReviews: "Все още няма отзиви в UrGlowUp" },
+  fa: { newToUrGlowUp: "جدید در UrGlowUp", noReviews: "هنوز نظری در UrGlowUp ثبت نشده" },
+  pl: { newToUrGlowUp: "Nowość w UrGlowUp", noReviews: "Brak opinii w UrGlowUp" },
+  ar: { newToUrGlowUp: "جديد على UrGlowUp", noReviews: "لا توجد تقييمات على UrGlowUp بعد" },
+  fr: { newToUrGlowUp: "Nouveau sur UrGlowUp", noReviews: "Pas encore d’avis UrGlowUp" },
+  nl: { newToUrGlowUp: "Nieuw op UrGlowUp", noReviews: "Nog geen UrGlowUp-beoordelingen" },
+  ro: { newToUrGlowUp: "Nou pe UrGlowUp", noReviews: "Încă nu există recenzii UrGlowUp" },
+};
 
 // Deterministic gradient based on business name initial — uses design tokens
 const COVER_GRADIENTS = [
@@ -32,6 +54,7 @@ export function BusinessCard({
   const firstCategory = categories[0]?.category ?? null;
   const locationLabel = district || city || null;
   const prefix = locale && locale !== "tr" ? `/${locale}` : "";
+  const copy = CARD_COPY[locale ?? "tr"] ?? CARD_COPY.tr;
 
   return (
     <Link
@@ -53,10 +76,13 @@ export function BusinessCard({
         ) : (
           <div className={`size-full bg-gradient-to-br ${gradient}`} />
         )}
-        {reviewCount === 0 && (
-          <span className="absolute left-2 top-2 rounded-full bg-card/90 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
-            Yeni
-          </span>
+        {business.isNewToUrGlowUp && (
+          <Badge
+            variant="purple"
+            className="absolute left-2 top-2 max-w-[calc(100%-1rem)] truncate shadow-xs"
+          >
+            {copy.newToUrGlowUp}
+          </Badge>
         )}
       </div>
 
@@ -68,6 +94,11 @@ export function BusinessCard({
             <span className="shrink-0 text-xs font-medium tabular-nums text-foreground">
               {(Math.round(reviewAvg * 10) / 10).toFixed(1)}
               <span className="text-muted-foreground"> / 10</span>
+            </span>
+          )}
+          {reviewCount === 0 && (
+            <span className="max-w-[8rem] shrink-0 text-right text-xs leading-tight text-muted-foreground">
+              {copy.noReviews}
             </span>
           )}
         </div>

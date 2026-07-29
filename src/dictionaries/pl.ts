@@ -1,5 +1,6 @@
 // LOCALE STATUS: review-needed — Machine-translated. Native review required before adding to PRODUCTION_LOCALES.
 import type { Dictionary } from './tr'
+import en from './en'
 
 const pl: Dictionary = {
   nav: {
@@ -37,6 +38,7 @@ const pl: Dictionary = {
     allCategories: 'Wszystkie kategorie →',
     professionalCount: (n: number) => `Znaleziono ${n} specjalistów`,
     emptyMessage: 'Jak dotąd nie ma żadnych specjalistów na liście. Sprawdź ponownie wkrótce.',
+    map: { ...en.explore.map },
   },
   deals: {
     title: 'Oferty',

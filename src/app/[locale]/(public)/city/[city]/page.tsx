@@ -57,6 +57,7 @@ export default async function LocaleCityPage({ params, searchParams }: PageProps
       minRating:    filters.minRating,
       hasMedia:     filters.hasMedia || undefined,
       hasHours:     filters.hasHours || undefined,
+      sort:          filters.sort,
     }),
     db.business.findMany({
       where: {

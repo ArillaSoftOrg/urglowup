@@ -1,5 +1,6 @@
 // LOCALE STATUS: placeholder — Machine-translated. Deprioritized per strategy. Review before adding to PRODUCTION_LOCALES.
 import type { Dictionary } from './tr'
+import en from './en'
 
 const es: Dictionary = {
   nav: {
@@ -37,6 +38,7 @@ const es: Dictionary = {
     allCategories: 'Todas las categorías →',
     professionalCount: (n: number) => `${n} profesionales encontrados`,
     emptyMessage: 'Aún no hay profesionales listados. Vuelve pronto.',
+    map: { ...en.explore.map },
   },
   deals: {
     title: 'Ofertas',

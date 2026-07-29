@@ -11,6 +11,7 @@
     "check:dictionaries": "node scripts/check-dictionaries.mjs",
     "release:check": "npm run env:check && npm run check:dictionaries && npm audit --audit-level=moderate && npm run lint && npx tsc --noEmit && npm run build",
     "smoke:deploy": "node scripts/post-deploy-smoke.mjs",
+    "test:ranking": "tsx --test src/lib/marketplace/ranking.test.ts",
     "test:e2e": "playwright test",
     "postinstall": "prisma generate"
   },
