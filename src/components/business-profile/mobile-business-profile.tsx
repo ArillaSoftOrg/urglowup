@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   CalendarCheck,
   Clock,
+  FileX2,
   MapPin,
   Star,
 } from "lucide-react";
@@ -134,6 +135,7 @@ export function MobileBusinessProfile({
   const primaryActionHref = canClaim
     ? `/claim-business?businessId=${encodeURIComponent(business.id)}`
     : `${hrefPrefix}/b/${business.slug}/book`;
+  const removalHref = `/remove-business?businessId=${encodeURIComponent(business.id)}`;
   const navSections: NavSection[] = [
     ...(galleryItems.length > 0 ? [{ id: "gallery", label: "Fotoğraflar" }] : []),
     ...(hasAbout ? [{ id: "about", label: "Hakkında" }] : []),
@@ -237,6 +239,13 @@ export function MobileBusinessProfile({
               <p className="mt-1 text-muted-foreground">
                 Profili yönetmek ve randevu almaya başlamak için sahiplik başvurusu gönderin.
               </p>
+              <Link
+                href={removalHref}
+                className="mt-3 inline-flex min-h-11 items-center gap-2 font-semibold text-muted-foreground underline decoration-border underline-offset-4 hover:text-foreground"
+              >
+                <FileX2 className="size-4" />
+                Bu sayfanın kaldırılmasını iste
+              </Link>
             </div>
           )}
 

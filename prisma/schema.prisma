@@ -228,6 +228,11 @@ enum ClaimRequestStatus {
   CANCELLED
 }
 
+enum BusinessClaimRequestType {
+  OWNERSHIP
+  REMOVAL
+}
+
 enum ClaimVerificationType {
   PHONE
   EMAIL
@@ -1284,7 +1289,8 @@ model BusinessClaimRequest {
   placeReferenceId String?
   placeReference   PlaceReference? @relation(fields: [placeReferenceId], references: [id])
 
-  status           ClaimRequestStatus     @default(PENDING)
+  requestType      BusinessClaimRequestType @default(OWNERSHIP)
+  status           ClaimRequestStatus       @default(PENDING)
   verificationType ClaimVerificationType?
   evidenceUrl      String?
   phone            String?
@@ -1303,4 +1309,5 @@ model BusinessClaimRequest {
   @@index([businessId])
   @@index([placeReferenceId])
   @@index([status])
+  @@index([requestType, status])
 }

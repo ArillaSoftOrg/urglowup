@@ -86,7 +86,7 @@ export default async function ClaimBusinessPage({ searchParams }: PageProps) {
     const target = placeReferenceId
       ? `/claim-business?placeReferenceId=${encodeURIComponent(placeReferenceId)}`
       : `/claim-business?businessId=${encodeURIComponent(businessId!)}`;
-    redirect(`/auth/login?redirect_url=${encodeURIComponent(target)}`);
+    redirect(`/login?redirect_url=${encodeURIComponent(target)}`);
   }
 
   return (

@@ -108,6 +108,7 @@ export async function submitBusinessClaim(
       const dup = await tx.businessClaimRequest.findFirst({
         where: {
           userId: user.id,
+          requestType: "OWNERSHIP",
           status: "PENDING",
           ...(placeReferenceId ? { placeReferenceId } : {}),
           ...(businessId ? { businessId } : {}),
@@ -123,6 +124,7 @@ export async function submitBusinessClaim(
           userId: user.id,
           placeReferenceId,
           businessId,
+          requestType: "OWNERSHIP",
           status: "PENDING",
           verificationType: data.verificationType,
           phone: data.phone?.trim() || null,

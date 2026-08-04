@@ -821,8 +821,8 @@ export async function adminConvertPlaceReferenceToBusiness(
           googlePlaceId: fresh.providerPlaceId,
           googlePlaceMatchStatus: "MATCHED",
           googlePlaceMatchAttemptedAt: new Date(),
-          status: ownerId ? "ACTIVE_PRIVATE" : "ACTIVE_MARKETPLACE",
-          isMarketplaceVisible: ownerId ? false : true,
+          status: "DRAFT",
+          isMarketplaceVisible: false,
           instantConfirmation: ownerId ? data.instantConfirmation : false,
           inAppPayment: ownerId ? data.inAppPayment : false,
           petFriendly: ownerId ? data.petFriendly : false,
@@ -888,7 +888,11 @@ export async function adminConvertPlaceReferenceToBusiness(
   revalidatePath(`/admin/businesses/${business.id}`);
   revalidatePath(`/b/${business.slug}`);
   await invalidateCache(`business:v2:slug:${business.slug}`);
-  return { success: true, businessId: business.id, message: "İşletme oluşturuldu." };
+  return {
+    success: true,
+    businessId: business.id,
+    message: "İşletme taslağı oluşturuldu. Yayınlamak için en az bir kapak fotoğrafı ekleyin.",
+  };
 }
 
 // ─── Google Places Discovery ────────────────────────────────────

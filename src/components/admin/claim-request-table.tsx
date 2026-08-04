@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Inbox } from "lucide-react";
+import { AlertTriangle, Loader2, Inbox } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,8 @@ import {
 import {
   CLAIM_STATUS_LABELS,
   CLAIM_STATUS_VARIANTS,
+  CLAIM_REQUEST_TYPE_LABELS,
+  CLAIM_REQUEST_TYPE_VARIANTS,
   CLAIM_VERIFICATION_LABELS,
 } from "@/lib/constants/claim";
 import type { AdminClaimRequest } from "@/lib/queries/admin";
@@ -50,6 +52,10 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
   const [actionId, setActionId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ id: string; text: string; ok: boolean } | null>(null);
   const [rejectDialog, setRejectDialog] = useState<{ id: string; reason: string } | null>(null);
+  const [removalApproveDialog, setRemovalApproveDialog] = useState<{
+    id: string;
+    businessName: string;
+  } | null>(null);
 
   function handleApprove(id: string) {
     setActionId(id);
@@ -57,7 +63,10 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
       const res = await approveClaimRequest(id);
       setMessage({ id, text: res.message ?? "", ok: res.success });
       setActionId(null);
-      if (res.success) router.refresh();
+      if (res.success) {
+        setRemovalApproveDialog(null);
+        router.refresh();
+      }
     });
   }
 
@@ -93,6 +102,7 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
           <thead>
             <tr className="border-b bg-muted/50 text-muted-foreground">
               <th className="px-3 py-2 text-left font-medium">Başvuran</th>
+              <th className="px-3 py-2 text-left font-medium">Tür</th>
               <th className="px-3 py-2 text-left font-medium">Yer</th>
               <th className="px-3 py-2 text-left font-medium">Doğrulama</th>
               <th className="px-3 py-2 text-left font-medium">İletişim</th>
@@ -124,6 +134,14 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
                   <td className="px-3 py-2">
                     <div className="font-medium">{requesterName(rec.user)}</div>
                     <div className="text-xs text-muted-foreground">{rec.user.email}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <Badge
+                      variant={CLAIM_REQUEST_TYPE_VARIANTS[rec.requestType]}
+                      className="text-xs"
+                    >
+                      {CLAIM_REQUEST_TYPE_LABELS[rec.requestType]}
+                    </Badge>
                   </td>
                   <td className="px-3 py-2 text-xs">
                     {businessContext || context || <span className="text-muted-foreground">—</span>}
@@ -158,11 +176,32 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
                       <div className="flex justify-end gap-1.5">
                         <Button
                           size="sm"
+                          variant={
+                            rec.requestType === "REMOVAL"
+                              ? "destructive"
+                              : "default"
+                          }
                           className="h-7 text-xs"
                           disabled={isLoading}
-                          onClick={() => handleApprove(rec.id)}
+                          onClick={() => {
+                            if (rec.requestType === "REMOVAL") {
+                              setRemovalApproveDialog({
+                                id: rec.id,
+                                businessName:
+                                  rec.business?.name ?? "Bu işletme",
+                              });
+                            } else {
+                              handleApprove(rec.id);
+                            }
+                          }}
                         >
-                          {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Onayla"}
+                          {isLoading ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : rec.requestType === "REMOVAL" ? (
+                            "Kaldır"
+                          ) : (
+                            "Onayla"
+                          )}
                         </Button>
                         <Button
                           variant="outline"
@@ -230,6 +269,54 @@ export function ClaimRequestTable({ records }: ClaimRequestTableProps) {
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               )}
               Reddet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!removalApproveDialog}
+        onOpenChange={(open) => !open && setRemovalApproveDialog(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sayfayı yayından kaldır</DialogTitle>
+          </DialogHeader>
+          {removalApproveDialog && (
+            <div className="flex items-start gap-3 rounded-xl border border-destructive/25 bg-destructive/10 p-4">
+              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
+              <div className="space-y-1 text-sm">
+                <p className="font-semibold">
+                  {removalApproveDialog.businessName} yayından kaldırılacak.
+                </p>
+                <p className="text-muted-foreground">
+                  Profil ve harita sonuçları gizlenir. Bekleyen sahiplik
+                  başvuruları iptal edilir.
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose
+              render={
+                <Button type="button" variant="outline" disabled={pending} />
+              }
+            >
+              Vazgeç
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={pending || !removalApproveDialog}
+              onClick={() =>
+                removalApproveDialog &&
+                handleApprove(removalApproveDialog.id)
+              }
+            >
+              {pending && actionId === removalApproveDialog?.id && (
+                <Loader2 className="size-4 animate-spin" />
+              )}
+              Kaldırmayı onayla
             </Button>
           </DialogFooter>
         </DialogContent>

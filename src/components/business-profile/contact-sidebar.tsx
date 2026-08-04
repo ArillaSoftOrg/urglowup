@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import {
   ChevronDown,
   Clock,
+  FileX2,
   Star,
 } from "lucide-react";
 import Link from "next/link";
@@ -57,6 +58,7 @@ export function ContactSidebar({
   const primaryHref = canClaim
     ? `/claim-business?businessId=${encodeURIComponent(business.id)}`
     : `${hrefPrefix}/b/${business.slug}/book`;
+  const removalHref = `/remove-business?businessId=${encodeURIComponent(business.id)}`;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-sm lg:sticky lg:top-[76px]">
@@ -102,6 +104,16 @@ export function ContactSidebar({
         >
           {canClaim ? "İşletmeyi talep et" : "Rezervasyon yap"}
         </Link>
+
+        {canClaim && (
+          <Link
+            href={removalHref}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <FileX2 className="size-4" />
+            Bu sayfanın kaldırılmasını iste
+          </Link>
+        )}
       </div>
 
       {(business.hours.length > 0 || addressLabel) && (

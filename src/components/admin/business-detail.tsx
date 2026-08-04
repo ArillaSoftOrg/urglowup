@@ -25,6 +25,7 @@ import {
 } from "@/app/(admin)/admin/actions";
 import { AssignOwnerDialog } from "./assign-owner-dialog";
 import { GooglePlaceMatchPanel } from "./google-place-match-panel";
+import { BusinessPhotoSetup } from "./business-photo-setup";
 import {
   BUSINESS_STATUS_LABELS,
   BUSINESS_STATUS_COLORS,
@@ -271,6 +272,20 @@ export function BusinessDetailView({
 
   return (
     <div className="space-y-6">
+      {business.status === "DRAFT" && business.googlePlaceId && (
+        <BusinessPhotoSetup
+          businessId={business.id}
+          businessName={business.name}
+          initialCovers={business.media
+            .filter((media) => media.type === "COVER" && media.status === "ACTIVE")
+            .map((media) => ({
+              id: media.id,
+              url: media.url,
+              sortOrder: media.sortOrder,
+            }))}
+        />
+      )}
+
       {/* Header + Status + Actions */}
       <Card>
         <CardHeader>

@@ -1,4 +1,5 @@
 import type {
+  BusinessClaimRequestType,
   ClaimRequestStatus,
   ClaimVerificationType,
 } from "@/generated/prisma/enums";
@@ -16,6 +17,22 @@ export const CLAIM_STATUS_VARIANTS: Record<ClaimRequestStatus, BadgeVariant> = {
   APPROVED: "success",
   REJECTED: "destructive",
   CANCELLED: "neutral",
+};
+
+export const CLAIM_REQUEST_TYPE_LABELS: Record<
+  BusinessClaimRequestType,
+  string
+> = {
+  OWNERSHIP: "Sahiplik",
+  REMOVAL: "Kaldırma",
+};
+
+export const CLAIM_REQUEST_TYPE_VARIANTS: Record<
+  BusinessClaimRequestType,
+  BadgeVariant
+> = {
+  OWNERSHIP: "neutral",
+  REMOVAL: "destructive",
 };
 
 export const CLAIM_VERIFICATION_LABELS: Record<ClaimVerificationType, string> = {

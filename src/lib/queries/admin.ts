@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
-import type { AppointmentStatus, BusinessStatus, CampaignStatus, ClaimRequestStatus, MediaStatus, PlaceReferenceStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
+import type { AppointmentStatus, BusinessClaimRequestType, BusinessStatus, CampaignStatus, ClaimRequestStatus, MediaStatus, PlaceReferenceStatus, PostContentType, PostStatus, ReviewStatus, UserRole } from "@/generated/prisma/enums";
 
 // ─── Dashboard ─────────────────────────────────────────────────
 
@@ -1563,6 +1563,10 @@ const VALID_CLAIM_REQUEST_STATUSES = new Set<ClaimRequestStatus>([
   "REJECTED",
   "CANCELLED",
 ]);
+const VALID_CLAIM_REQUEST_TYPES = new Set<BusinessClaimRequestType>([
+  "OWNERSHIP",
+  "REMOVAL",
+]);
 
 export function isValidClaimRequestStatus(
   value: unknown
@@ -1573,12 +1577,23 @@ export function isValidClaimRequestStatus(
   );
 }
 
+export function isValidClaimRequestType(
+  value: unknown,
+): value is BusinessClaimRequestType {
+  return (
+    typeof value === "string" &&
+    VALID_CLAIM_REQUEST_TYPES.has(value as BusinessClaimRequestType)
+  );
+}
+
 export async function getAdminClaimRequests(params?: {
   status?: ClaimRequestStatus;
+  requestType?: BusinessClaimRequestType;
 }) {
   return db.businessClaimRequest.findMany({
     where: {
       ...(params?.status ? { status: params.status } : {}),
+      ...(params?.requestType ? { requestType: params.requestType } : {}),
     },
     include: {
       user: {

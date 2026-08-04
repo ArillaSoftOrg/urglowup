@@ -90,6 +90,149 @@ const approveSchema = z.object({
   claimRequestId: z.string().min(1),
 });
 
+async function approveRemovalRequest({
+  adminId,
+  businessId,
+  requestId,
+}: {
+  adminId: string;
+  businessId: string | null;
+  requestId: string;
+}): Promise<ClaimRequestActionState> {
+  if (!businessId) {
+    return {
+      success: false,
+      message: "Kaldırma talebi bir işletmeye bağlı değil.",
+    };
+  }
+
+  const business = await db.business.findUnique({
+    where: { id: businessId },
+    select: {
+      id: true,
+      slug: true,
+      ownerId: true,
+      ownershipStatus: true,
+      status: true,
+      isMarketplaceVisible: true,
+      googlePlaceId: true,
+    },
+  });
+  if (!business) {
+    return { success: false, message: "İşletme bulunamadı." };
+  }
+  if (
+    business.ownerId !== null ||
+    business.ownershipStatus !== "UNCLAIMED"
+  ) {
+    return {
+      success: false,
+      message:
+        "İşletme bu sırada sahiplenilmiş. Kaldırma talebi otomatik onaylanamaz.",
+    };
+  }
+  if (business.status === "SUSPENDED" || !business.isMarketplaceVisible) {
+    return { success: false, message: "İşletme zaten yayında değil." };
+  }
+
+  try {
+    await db.$transaction(async (tx) => {
+      const locked = await tx.businessClaimRequest.updateMany({
+        where: {
+          id: requestId,
+          requestType: "REMOVAL",
+          status: "PENDING",
+        },
+        data: {
+          status: "APPROVED",
+          reviewedById: adminId,
+          reviewedAt: new Date(),
+        },
+      });
+      if (locked.count !== 1) {
+        throw new ApproveError(
+          "Kaldırma talebi artık onaylanabilir durumda değil.",
+        );
+      }
+
+      const hiddenBusiness = await tx.business.updateMany({
+        where: {
+          id: businessId,
+          ownerId: null,
+          ownershipStatus: "UNCLAIMED",
+          status: "ACTIVE_MARKETPLACE",
+          isMarketplaceVisible: true,
+        },
+        data: {
+          status: "SUSPENDED",
+          isMarketplaceVisible: false,
+        },
+      });
+      if (hiddenBusiness.count !== 1) {
+        throw new ApproveError(
+          "İşletmenin sahiplik veya yayın durumu değişti. Kaldırma talebi onaylanamadı.",
+        );
+      }
+      await tx.placeReference.updateMany({
+        where: {
+          OR: [
+            { claimedBusinessId: businessId },
+            ...(business.googlePlaceId
+              ? [
+                  {
+                    provider: "GOOGLE",
+                    providerPlaceId: business.googlePlaceId,
+                  },
+                ]
+              : []),
+          ],
+        },
+        data: { status: "HIDDEN" },
+      });
+      await tx.businessClaimRequest.updateMany({
+        where: {
+          businessId,
+          requestType: "OWNERSHIP",
+          status: "PENDING",
+        },
+        data: {
+          status: "CANCELLED",
+          reviewedById: adminId,
+          reviewedAt: new Date(),
+          rejectionReason:
+            "İşletme sayfası onaylanan kaldırma talebi nedeniyle yayından kaldırıldı.",
+        },
+      });
+    });
+  } catch (error) {
+    if (error instanceof ApproveError) {
+      return { success: false, message: error.message };
+    }
+    throw error;
+  }
+
+  await logAdminAction(
+    adminId,
+    "businessRemoval.approve",
+    requestId,
+    `business=${businessId}`,
+  );
+
+  revalidatePath("/admin/claim-requests");
+  revalidatePath("/admin/businesses");
+  revalidatePath(`/admin/businesses/${businessId}`);
+  revalidatePath(`/b/${business.slug}`);
+  revalidatePath("/explore");
+  revalidatePath("/");
+  revalidatePath("/admin/place-references");
+  await invalidateCache(`business:v2:slug:${business.slug}`);
+
+  return {
+    success: true,
+    message: "Kaldırma talebi onaylandı ve işletme sayfası yayından kaldırıldı.",
+  };
+}
+
 export async function approveClaimRequest(
   claimRequestId: string
 ): Promise<ClaimRequestActionState> {
@@ -105,13 +248,27 @@ export async function approveClaimRequest(
   // ─── Pre-transaction guards (early UX) ───
   const claim = await db.businessClaimRequest.findUnique({
     where: { id },
-    select: { id: true, status: true, userId: true, businessId: true, placeReferenceId: true },
+    select: {
+      id: true,
+      requestType: true,
+      status: true,
+      userId: true,
+      businessId: true,
+      placeReferenceId: true,
+    },
   });
   if (!claim) {
     return { success: false, message: "Başvuru bulunamadı." };
   }
   if (claim.status !== "PENDING") {
     return { success: false, message: "Başvuru artık onaylanabilir durumda değil." };
+  }
+  if (claim.requestType === "REMOVAL") {
+    return approveRemovalRequest({
+      adminId: admin.id,
+      businessId: claim.businessId,
+      requestId: claim.id,
+    });
   }
   let businessId = claim.businessId;
   if (!businessId && claim.placeReferenceId) {
