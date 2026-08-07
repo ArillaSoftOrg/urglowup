@@ -3,18 +3,31 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarCheck, Clock, CalendarDays, Star } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CalendarCheck, Clock, CalendarDays, Star, Navigation, RotateCcw } from "lucide-react";
 import Link from "next/link";
+import { format } from "date-fns";
 import { CancelAppointmentButton } from "./cancel-appointment-button";
 import { RescheduleAppointmentDialog } from "./reschedule-appointment-dialog";
+import { MessageBusinessButton } from "./message-business-button";
+import { AddToCalendarButton } from "./add-to-calendar-button";
+import { buildDirectionsUrl } from "@/lib/maps/directions-url";
 import {
   STATUS_LABELS,
-  STATUS_COLORS,
+  STATUS_VARIANTS,
   UPCOMING_STATUSES,
   CUSTOMER_CANCELLABLE,
 } from "@/lib/constants/booking";
 import type { CustomerAppointment } from "@/lib/queries/appointments";
+import type { AppointmentStatus } from "@/generated/prisma/enums";
+
+const CANCELLED_STATUSES: AppointmentStatus[] = [
+  "CANCELLED_BY_CUSTOMER",
+  "CANCELLED_BY_BUSINESS",
+  "REJECTED",
+];
 
 function formatDate(date: Date): string {
   return new Date(date).toLocaleDateString("tr-TR", {
@@ -71,8 +84,21 @@ function AppointmentCard({
   const [refreshKey, setRefreshKey] = useState(0);
   const canCancel = CUSTOMER_CANCELLABLE.includes(appointment.status);
   const canReschedule = CUSTOMER_CANCELLABLE.includes(appointment.status);
+  const isCompleted = appointment.status === "COMPLETED";
   const effectiveDuration =
     appointment.totalDurationMinutes ?? appointment.service.durationMinutes;
+
+  const directionsUrl = buildDirectionsUrl({
+    latitude: appointment.business.latitude,
+    longitude: appointment.business.longitude,
+    address: [appointment.business.address, appointment.business.district, appointment.business.city]
+      .filter(Boolean)
+      .join(", "),
+  });
+
+  const rebookHref = `/b/${appointment.business.slug}/book?service=${appointment.service.id}${
+    appointment.professionalId ? `&professional=${appointment.professionalId}` : ""
+  }`;
 
   return (
     <Card key={refreshKey}>
@@ -86,10 +112,7 @@ function AppointmentCard({
               >
                 {appointment.business.name}
               </Link>
-              <Badge
-                className={`text-xs ${STATUS_COLORS[appointment.status]}`}
-                variant="outline"
-              >
+              <Badge variant={STATUS_VARIANTS[appointment.status]} className="text-xs">
                 {STATUS_LABELS[appointment.status]}
               </Badge>
             </div>
@@ -151,6 +174,41 @@ function AppointmentCard({
                   {appointment.cancelledReason}
                 </p>
               )}
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <MessageBusinessButton businessId={appointment.business.id} />
+              {directionsUrl && (
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  <Navigation className="size-3.5" />
+                  Yol tarifi
+                </a>
+              )}
+              {UPCOMING_STATUSES.includes(appointment.status) && (
+                <AddToCalendarButton
+                  title={`${appointment.business.name} — ${appointment.service.name}`}
+                  location={[appointment.business.address, appointment.business.district, appointment.business.city]
+                    .filter(Boolean)
+                    .join(", ")}
+                  date={format(new Date(appointment.requestedDate), "yyyy-MM-dd")}
+                  time={appointment.requestedTime}
+                  durationMinutes={effectiveDuration}
+                />
+              )}
+              {isCompleted && (
+                <Link
+                  href={rebookHref}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  <RotateCcw className="size-3.5" />
+                  Tekrar randevu al
+                </Link>
+              )}
+            </div>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
             {canReschedule && (
@@ -183,8 +241,20 @@ export function CustomerAppointmentList({
         new Date(b.requestedDate).getTime()
     );
 
+  const cancelled = appointments
+    .filter((a) => CANCELLED_STATUSES.includes(a.status))
+    .sort(
+      (a, b) =>
+        new Date(b.requestedDate).getTime() -
+        new Date(a.requestedDate).getTime()
+    );
+
   const past = appointments
-    .filter((a) => !UPCOMING_STATUSES.includes(a.status))
+    .filter(
+      (a) =>
+        !UPCOMING_STATUSES.includes(a.status) &&
+        !CANCELLED_STATUSES.includes(a.status)
+    )
     .sort(
       (a, b) =>
         new Date(b.requestedDate).getTime() -
@@ -198,11 +268,19 @@ export function CustomerAppointmentList({
           Yaklaşan ({upcoming.length})
         </TabsTrigger>
         <TabsTrigger value="past">Geçmiş ({past.length})</TabsTrigger>
+        <TabsTrigger value="cancelled">İptal edilen ({cancelled.length})</TabsTrigger>
       </TabsList>
 
       <TabsContent value="upcoming" className="mt-4 space-y-3">
         {upcoming.length === 0 ? (
-          <EmptyState message="Yaklaşan randevu yok" />
+          <EmptyState
+            icon={CalendarDays}
+            headline="Yaklaşan randevu yok"
+            description="İşletmeleri keşfedin ve ilk randevunuzu oluşturun."
+            action={{ label: "İşletmeleri keşfet", href: "/explore" }}
+            surface="cream"
+            compact
+          />
         ) : (
           upcoming.map((a) => <AppointmentCard key={a.id} appointment={a} />)
         )}
@@ -210,30 +288,29 @@ export function CustomerAppointmentList({
 
       <TabsContent value="past" className="mt-4 space-y-3">
         {past.length === 0 ? (
-          <EmptyState message="Geçmiş randevu yok" />
+          <EmptyState
+            icon={CalendarDays}
+            headline="Geçmiş randevu yok"
+            surface="cream"
+            compact
+          />
         ) : (
           past.map((a) => <AppointmentCard key={a.id} appointment={a} />)
         )}
       </TabsContent>
-    </Tabs>
-  );
-}
 
-function EmptyState({ message }: { message: string }) {
-  return (
-    <Card>
-      <CardContent className="flex flex-col items-center py-8 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <CalendarDays className="size-6" />
-        </div>
-        <p className="mt-3 text-sm font-medium">{message}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          <Link href="/" className="text-primary hover:underline">
-            İşletmeleri keşfet
-          </Link>{" "}
-          randevu almak için
-        </p>
-      </CardContent>
-    </Card>
+      <TabsContent value="cancelled" className="mt-4 space-y-3">
+        {cancelled.length === 0 ? (
+          <EmptyState
+            icon={CalendarDays}
+            headline="İptal edilmiş randevu yok"
+            surface="cream"
+            compact
+          />
+        ) : (
+          cancelled.map((a) => <AppointmentCard key={a.id} appointment={a} />)
+        )}
+      </TabsContent>
+    </Tabs>
   );
 }

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, CalendarDays, Globe2, Heart, HelpCircle, LogOut, Menu, MessageCircle, Shield, User } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, CreditCard, Globe2, HelpCircle, LogOut, Menu, Settings, Shield, User } from "lucide-react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { LocaleSwitcher } from "./locale-switcher";
+import { LanguageDialog } from "./language-dialog";
 import { cn } from "@/lib/utils";
 import type { PublicAccountMenuState } from "./public-account-menu-state";
 
@@ -42,26 +43,26 @@ const COPY = {
     menu: "Menü",
     customers: "Müşteriler için",
     signInOrSignUp: "Oturum açın veya kaydolun",
-    appointments: "Randevularım",
-    favorites: "Favorilerim",
-    messages: "Mesajlarım",
+    payments: "Ödemeler",
+    settings: "Ayarlar",
+    switchToBusiness: "İşletme Paneline Geç",
     businessLogin: "İşletme girişi",
-    editBusinessProfile: "Profilinizi düzenleyin",
     help: "Yardım ve destek",
     language: "Türkçe (TR)",
+    languageDialogTitle: "Dil seçin",
     signOut: "Çıkış yap",
   },
   en: {
     menu: "Menu",
     customers: "For customers",
     signInOrSignUp: "Sign in or create an account",
-    appointments: "My appointments",
-    favorites: "My favorites",
-    messages: "Messages",
+    payments: "Payments",
+    settings: "Settings",
+    switchToBusiness: "Switch to Business Dashboard",
     businessLogin: "Business sign in",
-    editBusinessProfile: "Edit your profile",
     help: "Help and support",
     language: "English (EN)",
+    languageDialogTitle: "Choose language",
     signOut: "Sign out",
   },
 };
@@ -77,6 +78,7 @@ export function PublicAccountMenu({
   className,
 }: PublicAccountMenuProps) {
   const [open, setOpen] = useState(false);
+  const [languageDialogOpen, setLanguageDialogOpen] = useState(false);
   const copy = getCopy(state.locale);
   const triggerClassName = cn(
     "rounded-full border-border/80 bg-background px-4 font-semibold shadow-xs",
@@ -110,6 +112,7 @@ export function PublicAccountMenu({
               labels={labels}
               copy={copy}
               hideExploreLinks={hideExploreLinks}
+              onOpenLanguageDialog={() => setLanguageDialogOpen(true)}
             />
           </DropdownMenuContent>
         </DropdownMenu>
@@ -145,10 +148,21 @@ export function PublicAccountMenu({
               copy={copy}
               hideExploreLinks={hideExploreLinks}
               onNavigate={() => setOpen(false)}
+              onOpenLanguageDialog={() => {
+                setOpen(false);
+                setLanguageDialogOpen(true);
+              }}
             />
           </SheetContent>
         </Sheet>
       </div>
+
+      <LanguageDialog
+        open={languageDialogOpen}
+        onOpenChange={setLanguageDialogOpen}
+        isLoggedIn={state.isLoggedIn}
+        title={copy.languageDialogTitle}
+      />
     </>
   );
 }
@@ -159,29 +173,61 @@ function MenuPanel({
   copy,
   hideExploreLinks,
   onNavigate,
+  onOpenLanguageDialog,
 }: {
   state: PublicAccountMenuState;
   labels: PublicAccountMenuLabels;
   copy: (typeof COPY)["tr"];
   hideExploreLinks: boolean;
   onNavigate?: () => void;
+  onOpenLanguageDialog: () => void;
 }) {
+  const initials = state.name
+    ? state.name
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase())
+        .slice(0, 2)
+        .join("")
+    : null;
+
   return (
     <div className="space-y-6 px-5 py-5">
+      {state.isLoggedIn && (state.name || state.email) && (
+        <div className="flex items-center gap-3 border-b border-border/70 pb-5">
+          <Avatar className="size-11" size="lg">
+            {state.avatarUrl && (
+              <AvatarImage src={state.avatarUrl} alt={state.name ?? state.email ?? ""} />
+            )}
+            <AvatarFallback className="text-base">
+              {initials || <User className="size-4" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            {state.name && (
+              <p className="truncate text-sm font-semibold">{state.name}</p>
+            )}
+            {state.email && (
+              <p className="truncate text-xs text-muted-foreground">{state.email}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <MenuSection title={copy.customers}>
         {state.isLoggedIn ? (
           <>
             <MenuLink href="/account" icon={<User />} onNavigate={onNavigate}>
               {labels.account}
             </MenuLink>
-            <MenuLink href="/account/appointments" icon={<CalendarDays />} onNavigate={onNavigate}>
-              {copy.appointments}
+            <MenuLink href="/account/payments" icon={<CreditCard />} onNavigate={onNavigate}>
+              {copy.payments}
             </MenuLink>
-            <MenuLink href="/account/favorites" icon={<Heart />} onNavigate={onNavigate}>
-              {copy.favorites}
+            <MenuLink href="/account/settings" icon={<Settings />} onNavigate={onNavigate}>
+              {copy.settings}
             </MenuLink>
-            <MenuLink href="/account/messages" icon={<MessageCircle />} onNavigate={onNavigate}>
-              {copy.messages}
+            <MenuLink href="/help" icon={<HelpCircle />} onNavigate={onNavigate}>
+              {copy.help}
             </MenuLink>
           </>
         ) : (
@@ -194,14 +240,9 @@ function MenuPanel({
       {(state.hasBusinessAccess || !state.isLoggedIn) && !state.isAdmin && (
         <MenuSection title={labels.forBusiness}>
           {state.hasBusinessAccess ? (
-            <>
-              <MenuLink href="/business/dashboard" icon={<BriefcaseBusiness />} onNavigate={onNavigate}>
-                {labels.businessPanel}
-              </MenuLink>
-              <MenuLink href="/business/profile" icon={<User />} onNavigate={onNavigate}>
-                {copy.editBusinessProfile}
-              </MenuLink>
-            </>
+            <MenuLink href="/business/dashboard" icon={<BriefcaseBusiness />} onNavigate={onNavigate}>
+              {copy.switchToBusiness}
+            </MenuLink>
           ) : (
             <>
               <MenuLink href="/login?redirect_url=/business/dashboard" accent onNavigate={onNavigate}>
@@ -223,19 +264,21 @@ function MenuPanel({
         </MenuSection>
       )}
 
+      {!hideExploreLinks && !state.isLoggedIn && (
+        <MenuLink href="/help" icon={<HelpCircle />} onNavigate={onNavigate}>
+          {copy.help}
+        </MenuLink>
+      )}
+
       <div className="border-t border-border/70 pt-5">
-        {!hideExploreLinks && (
-          <MenuLink href="/help" icon={<HelpCircle />} onNavigate={onNavigate}>
-            {copy.help}
-          </MenuLink>
-        )}
-        <div className="mt-4 flex items-center gap-2 text-sm font-semibold">
-          <Globe2 className="size-4" />
+        <button
+          type="button"
+          onClick={onOpenLanguageDialog}
+          className="flex min-h-10 w-full items-center gap-3 rounded-lg px-1 py-2 text-left text-base font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <Globe2 className="size-4 text-foreground" />
           {copy.language}
-        </div>
-        <div className="mt-3">
-          <LocaleSwitcher isLoggedIn={state.isLoggedIn} variant="mobile" />
-        </div>
+        </button>
       </div>
 
       {state.isLoggedIn && (

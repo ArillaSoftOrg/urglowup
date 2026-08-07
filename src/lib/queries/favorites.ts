@@ -69,7 +69,7 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
           },
           services: {
             where: { isActive: true },
-            select: { name: true },
+            select: { name: true, price: true },
           },
           hours: {
             where: { isOpen: true },
@@ -87,6 +87,10 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
     const launchAt = parseMarketplaceLaunchAt(
       process.env.MARKETPLACE_PUBLIC_LAUNCH_AT,
     );
+    const servicePrices = b.services
+      .map((service) => (service.price !== null ? Number(service.price) : null))
+      .filter((price): price is number => price !== null);
+    const startingPrice = servicePrices.length > 0 ? Math.min(...servicePrices) : null;
 
     return {
       id: b.id,
@@ -114,6 +118,7 @@ export async function getCustomerFavorites(userId: string): Promise<MarketplaceB
       inAppPayment: b.inAppPayment,
       activeServiceNames: b.services.map((service) => service.name),
       activeServiceCount: b.services.length,
+      startingPrice,
       openHourCount: b.hours.length,
       activePortfolioCount: b.media.filter((item) =>
         ["PORTFOLIO_IMAGE", "PORTFOLIO_VIDEO", "BEFORE_AFTER"].includes(

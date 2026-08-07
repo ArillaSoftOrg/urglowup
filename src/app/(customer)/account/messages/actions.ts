@@ -1,10 +1,41 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { sendMessage } from "@/lib/queries/messages";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+
+interface GetOrCreateConversationResult {
+  success: boolean;
+  conversationId?: string;
+  error?: string;
+}
+
+/** Finds or creates the single conversation between the current customer and a business. */
+export async function getOrCreateConversation(
+  businessId: string,
+): Promise<GetOrCreateConversationResult> {
+  const user = await getCurrentUser();
+
+  if (!user || user.role !== "CUSTOMER") {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const conversation = await db.conversation.upsert({
+      where: { businessId_customerId: { businessId, customerId: user.id } },
+      update: {},
+      create: { businessId, customerId: user.id },
+      select: { id: true },
+    });
+    return { success: true, conversationId: conversation.id };
+  } catch (err) {
+    console.error("[messages] Failed to get or create conversation:", err);
+    return { success: false, error: "Konuşma başlatılamadı" };
+  }
+}
 
 interface SendMessageResult {
   success: boolean;

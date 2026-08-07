@@ -46,6 +46,8 @@ interface HomeSearchPanelProps {
   businesses?: SearchBusiness[];
   exploreHref: string;
   locale?: string;
+  /** "compact" trims the pill down for a persistent sticky-header search (desktop only). */
+  variant?: "hero" | "compact";
   labels: {
     searchPlaceholder: string;
     regionPlaceholder: string;
@@ -114,8 +116,10 @@ export function HomeSearchPanel({
   businesses = [],
   exploreHref,
   locale = "tr",
+  variant = "hero",
   labels,
 }: HomeSearchPanelProps) {
+  const compact = variant === "compact";
   const router = useRouter();
   const isMobile = useIsMobile();
   const [activePanel, setActivePanel] = useState<SearchPanel>(null);
@@ -452,7 +456,10 @@ export function HomeSearchPanel({
   return (
     <form
       action={exploreHref}
-      className="relative mx-auto mt-8 w-full max-w-6xl text-left md:mt-10"
+      className={cn(
+        "relative w-full text-left",
+        compact ? "mx-0 mt-0 max-w-xl" : "mx-auto mt-8 max-w-6xl md:mt-10",
+      )}
       onSubmit={(event) => {
         event.preventDefault();
         submitSearch();
@@ -473,60 +480,68 @@ export function HomeSearchPanel({
         />
       )}
 
-      <div className="rounded-3xl border border-border/70 bg-background p-3 shadow-lg md:hidden">
-        <div className="grid gap-2">
-          <button
-            type="button"
-            className="flex min-h-14 items-center gap-3 rounded-xl border border-input bg-background px-4 text-left transition-colors hover:bg-surface-cream focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            onClick={() => setMobilePanel("service")}
-          >
-            <Search className="size-5 shrink-0 text-muted-foreground" />
-            <span className={cn("min-w-0 flex-1 truncate", !query && "text-muted-foreground")}>
-              {serviceValue}
-            </span>
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-          </button>
-          <button
-            type="button"
-            className="flex min-h-14 items-center gap-3 rounded-xl border border-input bg-background px-4 text-left transition-colors hover:bg-surface-cream focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            onClick={() => setMobilePanel("location")}
-          >
-            <MapPin className="size-5 shrink-0 text-muted-foreground" />
-            <span className={cn("min-w-0 flex-1 truncate", !city && "text-muted-foreground")}>
-              {locationValue}
-            </span>
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-          </button>
-          <button
-            type="button"
-            className="flex min-h-14 items-center gap-3 rounded-xl border border-input bg-background px-4 text-left transition-colors hover:bg-surface-cream focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            onClick={() => setMobilePanel("date")}
-          >
-            <CalendarDays className="size-5 shrink-0 text-muted-foreground" />
-            <span
-              className={cn(
-                "min-w-0 flex-1 truncate",
-                !selectedDate && !timePreset && "text-muted-foreground",
-              )}
+      {!compact && (
+        <div className="rounded-3xl border border-border/70 bg-background p-3 shadow-lg md:hidden">
+          <div className="grid gap-2">
+            <button
+              type="button"
+              className="flex min-h-14 items-center gap-3 rounded-xl border border-input bg-background px-4 text-left transition-colors hover:bg-surface-cream focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              onClick={() => setMobilePanel("service")}
             >
-              {dateLabel}
-            </span>
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-          </button>
-          <Button type="submit" variant="brand" size="lg" className="h-14 w-full rounded-xl text-base">
-            {labels.submit}
-          </Button>
+              <Search className="size-5 shrink-0 text-muted-foreground" />
+              <span className={cn("min-w-0 flex-1 truncate", !query && "text-muted-foreground")}>
+                {serviceValue}
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+            </button>
+            <button
+              type="button"
+              className="flex min-h-14 items-center gap-3 rounded-xl border border-input bg-background px-4 text-left transition-colors hover:bg-surface-cream focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              onClick={() => setMobilePanel("location")}
+            >
+              <MapPin className="size-5 shrink-0 text-muted-foreground" />
+              <span className={cn("min-w-0 flex-1 truncate", !city && "text-muted-foreground")}>
+                {locationValue}
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+            </button>
+            <button
+              type="button"
+              className="flex min-h-14 items-center gap-3 rounded-xl border border-input bg-background px-4 text-left transition-colors hover:bg-surface-cream focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              onClick={() => setMobilePanel("date")}
+            >
+              <CalendarDays className="size-5 shrink-0 text-muted-foreground" />
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate",
+                  !selectedDate && !timePreset && "text-muted-foreground",
+                )}
+              >
+                {dateLabel}
+              </span>
+              <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+            </button>
+            <Button type="submit" variant="brand" size="lg" className="h-14 w-full rounded-xl text-base">
+              {labels.submit}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="relative z-40 hidden h-[4.5rem] grid-cols-[1.2fr_0.9fr_1fr_auto] items-center overflow-hidden rounded-full border border-border/70 bg-background p-1.5 shadow-lg md:grid">
+      <div
+        className={cn(
+          "relative z-40 hidden grid-cols-[1.2fr_0.9fr_1fr_auto] items-center overflow-hidden rounded-full border border-border/70 bg-background shadow-lg md:grid",
+          compact ? "h-11 p-1" : "h-[4.5rem] p-1.5",
+        )}
+      >
         <div
           className={cn(
-            "flex h-full min-w-0 items-center gap-3 rounded-full px-5 transition-colors",
+            "flex h-full min-w-0 items-center gap-2 rounded-full transition-colors",
+            compact ? "px-3.5" : "gap-3 px-5",
             activePanel === "service" ? "bg-surface-cream shadow-sm" : "hover:bg-surface-cream/70",
           )}
         >
-          <Search className="size-5 shrink-0 text-muted-foreground" />
+          <Search className={cn("shrink-0 text-muted-foreground", compact ? "size-4" : "size-5")} />
           <label className="sr-only" htmlFor="home-search-query">
             {labels.searchPlaceholder}
           </label>
@@ -536,7 +551,10 @@ export function HomeSearchPanel({
             value={query}
             placeholder={labels.searchPlaceholder}
             autoComplete="off"
-            className="h-full min-w-0 flex-1 bg-transparent text-[15px] font-medium outline-none placeholder:text-foreground"
+            className={cn(
+              "h-full min-w-0 flex-1 bg-transparent font-medium outline-none placeholder:text-foreground",
+              compact ? "text-sm" : "text-[15px]",
+            )}
             onFocus={() => setActivePanel("service")}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -563,13 +581,20 @@ export function HomeSearchPanel({
           type="button"
           aria-expanded={activePanel === "location"}
           className={cn(
-            "flex h-full min-w-0 items-center gap-3 rounded-full px-5 text-left transition-colors",
+            "flex h-full min-w-0 items-center gap-2 rounded-full text-left transition-colors",
+            compact ? "px-3.5" : "gap-3 px-5",
             activePanel === "location" ? "bg-surface-cream shadow-sm" : "hover:bg-surface-cream/70",
           )}
           onClick={() => setActivePanel("location")}
         >
-          <MapPin className="size-5 shrink-0 text-muted-foreground" />
-          <span className={cn("truncate text-[15px] font-medium", !city && "text-foreground")}>
+          <MapPin className={cn("shrink-0 text-muted-foreground", compact ? "size-4" : "size-5")} />
+          <span
+            className={cn(
+              "truncate font-medium",
+              compact ? "text-sm" : "text-[15px]",
+              !city && "text-foreground",
+            )}
+          >
             {locationValue}
           </span>
         </button>
@@ -578,18 +603,25 @@ export function HomeSearchPanel({
           type="button"
           aria-expanded={activePanel === "date"}
           className={cn(
-            "flex h-full min-w-0 items-center gap-3 rounded-full px-5 text-left transition-colors",
+            "flex h-full min-w-0 items-center gap-2 rounded-full text-left transition-colors",
+            compact ? "px-3.5" : "gap-3 px-5",
             activePanel === "date" ? "bg-surface-cream shadow-sm" : "hover:bg-surface-cream/70",
           )}
           onClick={() => setActivePanel("date")}
         >
-          <CalendarDays className="size-5 shrink-0 text-muted-foreground" />
-          <span className="truncate text-[15px] font-medium">{dateLabel}</span>
+          <CalendarDays className={cn("shrink-0 text-muted-foreground", compact ? "size-4" : "size-5")} />
+          <span className={cn("truncate font-medium", compact ? "text-sm" : "text-[15px]")}>
+            {dateLabel}
+          </span>
         </button>
 
         <Button
           type="submit"
-          className="h-14 rounded-full px-7 text-base font-semibold"
+          size={compact ? "sm" : undefined}
+          className={cn(
+            "rounded-full font-semibold",
+            compact ? "h-9 px-4 text-sm" : "h-14 px-7 text-base",
+          )}
         >
           {labels.submit}
         </Button>

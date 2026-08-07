@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Navigation } from "lucide-react";
 import { LazyBusinessMap } from "./lazy-business-map";
 import { LocationPinIcon } from "./location-pin-icon";
+import { buildDirectionsUrl } from "@/lib/maps/directions-url";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
@@ -28,11 +29,11 @@ export function LocationSection({
   const hasCoords =
     typeof business.latitude === "number" &&
     typeof business.longitude === "number";
-
-  const directionsUrl =
-    hasCoords
-      ? `https://www.google.com/maps/dir/?api=1&destination=${business.latitude},${business.longitude}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+  const directionsUrl = buildDirectionsUrl({
+    latitude: business.latitude,
+    longitude: business.longitude,
+    address: fullAddress,
+  });
 
   return (
     <section
@@ -88,7 +89,7 @@ export function LocationSection({
           </div>
         </div>
         <a
-          href={directionsUrl}
+          href={directionsUrl ?? "#"}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { unstable_cache } from "next/cache";
 import {
   optimizeBusinessCoverUrl,
   optimizeBusinessLogoUrl,
@@ -40,6 +41,8 @@ export type MarketplaceBusiness = DiscoveryBusiness & {
   reviewCount: number;
   /** Bayesian-adjusted average rating (0–10), or null if no reviews */
   reviewAvg: number | null;
+  /** Lowest active service price (real data, from BusinessService.price), or null/undefined if none priced. */
+  startingPrice?: number | null;
 };
 
 export type MarketplaceCategory = {
@@ -424,7 +427,18 @@ export async function getMarketplaceBusinesses(
  * Returns all categories ordered by sortOrder, with a count of active visible
  * businesses in each category.
  */
-export async function getMarketplaceCategories(): Promise<MarketplaceCategory[]> {
+/**
+ * Cached for 60s: this is now called on every page render via the persistent
+ * header search (src/components/layout/navbar.tsx), in addition to the many
+ * page-level callers below — avoid re-querying the DB on every single request.
+ */
+export const getMarketplaceCategories = unstable_cache(
+  getMarketplaceCategoriesUncached,
+  ["marketplace-categories"],
+  { revalidate: 60 },
+);
+
+async function getMarketplaceCategoriesUncached(): Promise<MarketplaceCategory[]> {
   const categories = await db.businessCategory.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
@@ -455,7 +469,14 @@ export async function getMarketplaceCategories(): Promise<MarketplaceCategory[]>
  * Returns distinct cities that have at least one active visible business,
  * sorted by business count descending.
  */
-export async function getMarketplaceCities(): Promise<MarketplaceCity[]> {
+/** Cached for 60s — same rationale as getMarketplaceCategories above. */
+export const getMarketplaceCities = unstable_cache(
+  getMarketplaceCitiesUncached,
+  ["marketplace-cities"],
+  { revalidate: 60 },
+);
+
+async function getMarketplaceCitiesUncached(): Promise<MarketplaceCity[]> {
   const result = await db.business.groupBy({
     by: ["city"],
     where: {

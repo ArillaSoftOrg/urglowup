@@ -8,7 +8,12 @@ import { MessagesClientWrapper } from "@/components/account/messages/messages-cl
 
 export const metadata = { title: "Mesajlar" };
 
-export default async function MessagesPage() {
+interface MessagesPageProps {
+  searchParams: Promise<{ conversation?: string }>;
+}
+
+export default async function MessagesPage({ searchParams }: MessagesPageProps) {
+  const { conversation: initialSelectedId } = await searchParams;
   const user = await getCurrentUser();
 
   if (!user) {
@@ -46,6 +51,7 @@ export default async function MessagesPage() {
       <MessagesClientWrapper
         conversations={conversations}
         currentUserId={user.id}
+        initialSelectedId={initialSelectedId}
       />
     </div>
   );

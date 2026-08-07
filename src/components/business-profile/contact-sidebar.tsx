@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { LocationPinIcon } from "@/components/business-profile/location-pin-icon";
+import { buildDirectionsUrl } from "@/lib/maps/directions-url";
 import type { BusinessWithDetails } from "@/lib/queries/business";
 
 interface ReviewSummary {
@@ -36,6 +37,11 @@ export function ContactSidebar({
     .filter(Boolean)
     .join(", ");
   const addressLabel = fullAddress || location;
+  const directionsUrl = buildDirectionsUrl({
+    latitude: business.latitude,
+    longitude: business.longitude,
+    address: addressQuery,
+  });
   const todayHours = business.hours.find((hour) => {
     const dayNames = [
       "SUNDAY",
@@ -146,11 +152,11 @@ export function ContactSidebar({
               <LocationPinIcon className="mt-1" />
               <p className="min-w-0 flex-1 font-medium text-foreground">
                 {addressLabel}
-                {addressQuery && (
+                {directionsUrl && (
                   <>
                     {" "}
                     <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
+                      href={directionsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold text-primary hover:underline"

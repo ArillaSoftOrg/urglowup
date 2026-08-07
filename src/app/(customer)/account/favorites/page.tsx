@@ -23,6 +23,7 @@ export default async function FavoritesPage() {
       <BusinessGrid
         businesses={favorites}
         emptyMessage="Henüz favori işletmeniz yok. İşletmeleri keşfedin ve beğendiklerinizi kaydedin."
+        showBookButton
       />
     </div>
   );

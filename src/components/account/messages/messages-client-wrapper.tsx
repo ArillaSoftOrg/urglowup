@@ -8,13 +8,15 @@ import { ThreadView } from "./thread-view";
 interface MessagesClientWrapperProps {
   conversations: CustomerConversation[];
   currentUserId: string;
+  initialSelectedId?: string | null;
 }
 
 export function MessagesClientWrapper({
   conversations,
   currentUserId,
+  initialSelectedId = null,
 }: MessagesClientWrapperProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
 
   return (
     <div

@@ -5,6 +5,9 @@ import { PublicAccountMenu } from "./public-account-menu";
 import { getPublicAccountMenuState } from "./public-account-menu-state";
 import { NavLinks } from "./navbar-nav-links";
 import { NavbarScrollEffect } from "./navbar-scroll-effect";
+import { HomeSearchPanel } from "@/components/home/home-search-panel";
+import { getMarketplaceCategories, getMarketplaceCities } from "@/lib/queries/marketplace";
+import { getHomeSearchCopy } from "@/lib/home-search-copy";
 import { getDictionary } from "@/lib/get-dictionary";
 import type { Locale } from "@/lib/i18n-config";
 
@@ -14,9 +17,11 @@ interface NavbarProps {
 }
 
 export async function Navbar({ locale = "tr", hideExploreLinks = false }: NavbarProps) {
-  const [user, dict] = await Promise.all([
+  const [user, dict, categories, cities] = await Promise.all([
     getCurrentUser(),
     getDictionary(locale),
+    getMarketplaceCategories(),
+    getMarketplaceCities(),
   ]);
 
   const p = (path: string) =>
@@ -24,6 +29,8 @@ export async function Navbar({ locale = "tr", hideExploreLinks = false }: Navbar
 
   const menuState = await getPublicAccountMenuState(user, locale);
   const businessHref = p("/for-business");
+  const activeCategories = categories.filter((c) => c.businessCount > 0);
+  const searchCopy = getHomeSearchCopy(locale);
 
   return (
     <header
@@ -55,6 +62,26 @@ export async function Navbar({ locale = "tr", hideExploreLinks = false }: Navbar
             ]}
           />
         )}
+
+        <div className="hidden flex-1 justify-center lg:flex">
+          <HomeSearchPanel
+            variant="compact"
+            categories={activeCategories.map((category) => ({
+              name: category.name,
+              slug: category.slug,
+            }))}
+            cities={cities}
+            exploreHref={p("/explore")}
+            locale={locale}
+            labels={{
+              searchPlaceholder: searchCopy.searchPlaceholder,
+              regionPlaceholder: searchCopy.regionPlaceholder,
+              categoryPlaceholder: searchCopy.categoryPlaceholder,
+              datePlaceholder: searchCopy.datePlaceholder,
+              submit: searchCopy.submit,
+            }}
+          />
+        </div>
 
         <div className="flex items-center gap-2">
           <PublicAccountMenu

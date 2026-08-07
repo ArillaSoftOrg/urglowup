@@ -43,7 +43,17 @@ export async function getCustomerAppointments(userId: string) {
         },
       },
       business: {
-        select: { id: true, name: true, slug: true, logoUrl: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          logoUrl: true,
+          address: true,
+          city: true,
+          district: true,
+          latitude: true,
+          longitude: true,
+        },
       },
       review: {
         select: { id: true, rating: true, status: true },
