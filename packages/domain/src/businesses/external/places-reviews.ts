@@ -1,6 +1,6 @@
 import "server-only";
 
-import { GOOGLE_PLACES_DETAILS_API } from "@/lib/constants/external";
+import { GOOGLE_PLACES_DETAILS_API } from "./constants";
 
 const PLACES_REVIEWS_FIELD_MASK =
   "googleMapsUri,rating,userRatingCount,reviews";

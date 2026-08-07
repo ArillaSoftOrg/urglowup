@@ -194,6 +194,9 @@ importers:
       '@urglowup/validation':
         specifier: workspace:*
         version: link:../validation
+      redis:
+        specifier: ^6.0.0
+        version: 6.2.0
       server-only:
         specifier: ^0.0.1
         version: 0.0.1

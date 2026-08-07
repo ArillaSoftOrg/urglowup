@@ -9,7 +9,9 @@
     ".": "./src/index.ts",
     "./booking": "./src/booking/index.ts",
     "./favorites": "./src/favorites/index.ts",
-    "./reviews": "./src/reviews/index.ts"
+    "./reviews": "./src/reviews/index.ts",
+    "./businesses": "./src/businesses/index.ts",
+    "./cache": "./src/cache/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -18,6 +20,7 @@
   "dependencies": {
     "@urglowup/db": "workspace:*",
     "@urglowup/validation": "workspace:*",
+    "redis": "^6.0.0",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
