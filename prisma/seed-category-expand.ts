@@ -2,7 +2,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-const prisma = new PrismaClient({ adapter });
+const db = new PrismaClient({ adapter });
 
 const categories = [
   { name: "Hair Salon", slug: "hair-salon", sortOrder: 1 },
@@ -20,25 +20,23 @@ const categories = [
 ];
 
 async function main() {
-  console.log("Seeding categories...");
+  console.log("Expanding/reordering categories...");
 
   for (const cat of categories) {
-    await prisma.businessCategory.upsert({
+    const result = await db.businessCategory.upsert({
       where: { slug: cat.slug },
       update: { name: cat.name, sortOrder: cat.sortOrder },
       create: cat,
     });
+    console.log(`OK: ${result.slug} (sortOrder ${result.sortOrder})`);
   }
 
-  console.log(`Seeded ${categories.length} categories.`);
+  console.log(`\nDone — ${categories.length} categories in sync.`);
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
-  });
+  })
+  .finally(() => db.$disconnect());

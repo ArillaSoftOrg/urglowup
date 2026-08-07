@@ -32,12 +32,14 @@ const CATEGORIES = [
   { label: "Hair Salon", value: "hair-salon" },
   { label: "Barber Shop", value: "barber-shop" },
   { label: "Nail Salon", value: "nail-salon" },
-  { label: "Beauty Salon", value: "beauty-salon" },
-  { label: "Spa & Wellness", value: "spa-wellness" },
+  { label: "Lashes & Brows", value: "eyebrow-lash" },
   { label: "Skin Care", value: "skin-care" },
-  { label: "Makeup Artist", value: "makeup-artist" },
-  { label: "Lashes & Brows", value: "lashes-brows" },
+  { label: "Hair Removal", value: "hair-removal" },
+  { label: "Spa & Massage", value: "spa-massage" },
   { label: "Tattoo & Piercing", value: "tattoo-piercing" },
+  { label: "Permanent Makeup", value: "permanent-makeup" },
+  { label: "Makeup Artist", value: "makeup-artist" },
+  { label: "Aesthetic Clinic", value: "aesthetic-clinic" },
   { label: "Other", value: "other" },
 ];
 

@@ -4,13 +4,15 @@
  */
 const CATEGORY_TR: Record<string, string> = {
   "hair-salon":        "Kuaför",
-  "barber-shop":       "Berber Dükkanı",
+  "barber-shop":       "Berber",
   "nail-salon":        "Tırnak Stüdyosu",
-  "skin-care":         "Cilt Bakımı",
-  "makeup-artist":     "Makyaj Sanatçısı",
-  "spa-massage":       "Spa & Masaj",
   "eyebrow-lash":      "Kaş & Kirpik",
+  "skin-care":         "Cilt Bakımı",
+  "hair-removal":      "Epilasyon",
+  "spa-massage":       "Masaj & Spa",
   "tattoo-piercing":   "Dövme & Piercing",
+  "permanent-makeup":  "Kalıcı Makyaj",
+  "makeup-artist":     "Makyaj",
   "aesthetic-clinic":  "Estetik Klinik",
   "other":             "Diğer",
 };
