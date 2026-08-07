@@ -12,7 +12,7 @@
     "check:dictionaries": "node scripts/check-dictionaries.mjs",
     "release:check": "npm run env:check && npm run check:dictionaries && npm audit --audit-level=moderate && npm run lint && npm run typecheck && npm run build",
     "smoke:deploy": "node scripts/post-deploy-smoke.mjs",
-    "test:ranking": "tsx --test src/lib/marketplace/ranking.test.ts",
+    "test:ranking": "pnpm --filter @urglowup/domain run test:ranking",
     "test:e2e": "playwright test"
   },
   "dependencies": {

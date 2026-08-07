@@ -5,3 +5,5 @@
 // server-only dependencies (like the Postgres driver) into client bundles.
 
 export * from "./permissions/role";
+export * from "./marketplace/ranking";
+export * from "./marketplace/map-place";

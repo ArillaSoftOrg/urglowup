@@ -11,15 +11,18 @@
     "./favorites": "./src/favorites/index.ts",
     "./reviews": "./src/reviews/index.ts",
     "./businesses": "./src/businesses/index.ts",
-    "./cache": "./src/cache/index.ts"
+    "./cache": "./src/cache/index.ts",
+    "./marketplace": "./src/marketplace/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:booking": "tsx --test src/booking/create-appointment.test.ts"
+    "test:booking": "tsx --test src/booking/create-appointment.test.ts",
+    "test:ranking": "tsx --test src/marketplace/ranking.test.ts"
   },
   "dependencies": {
     "@urglowup/db": "workspace:*",
     "@urglowup/validation": "workspace:*",
+    "cloudinary": "^2.10.0",
     "redis": "^6.0.0",
     "server-only": "^0.0.1"
   },
