@@ -6,7 +6,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { meetsMinRole } from "@/lib/permissions";
+import { meetsMinRole } from "@urglowup/domain";
 import { BusinessMemberRole } from "@/generated/prisma/enums";
 import { businessNavItems } from "./business-nav-items";
 import { BusinessMobileNav } from "./business-mobile-nav";

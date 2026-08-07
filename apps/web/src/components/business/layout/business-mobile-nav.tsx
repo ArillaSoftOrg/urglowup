@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { meetsMinRole } from "@/lib/permissions";
+import { meetsMinRole } from "@urglowup/domain";
 import { BusinessMemberRole } from "@/generated/prisma/enums";
 import { businessNavItems } from "./business-nav-items";
 

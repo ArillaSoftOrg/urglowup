@@ -24,7 +24,7 @@ import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
 import { validateBotProtection } from "@/lib/bot-protection";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
-import { createAppointment } from "@urglowup/domain";
+import { createAppointment } from "@urglowup/domain/booking";
 
 // ─── Schemas ────────────────────────────────────────────────────
 

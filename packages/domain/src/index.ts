@@ -1,7 +1,7 @@
-// Server-only business logic services (booking, availability, marketplace, businesses,
-// professionals, favorites, reviews, accounts, notifications, permissions).
-// Populated starting in Phase 1 (booking) and Phase 2 (remaining domains) of the
-// master implementation plan. No React/Next.js imports belong in this package.
+// Pure, side-effect-free domain logic safe to import from anywhere,
+// including client components. Server-only domains (database access,
+// external APIs) live in their own subpath exports — e.g. "@urglowup/domain/booking"
+// — and must NOT be re-exported here, since bundlers would then pull
+// server-only dependencies (like the Postgres driver) into client bundles.
 
-export * from "./booking/create-appointment";
-export * from "./booking/types";
+export * from "./permissions/role";

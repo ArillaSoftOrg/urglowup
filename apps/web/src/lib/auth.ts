@@ -9,7 +9,7 @@ import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { passwordSchema } from "@/lib/password-policy";
 import { UserRole, BusinessMemberRole, MembershipStatus } from "@/generated/prisma/enums";
-import { meetsMinRole } from "./permissions";
+import { meetsMinRole } from "@urglowup/domain";
 import { AuthEmailVerification } from "@/emails/auth-email-verification";
 import { AuthPasswordReset } from "@/emails/auth-password-reset";
 import { isAdminEmail } from "./admin-bootstrap";

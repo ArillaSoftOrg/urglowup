@@ -1,8 +1,8 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { toggleFavorite as toggleFavoriteForUser } from "@urglowup/domain/favorites";
 
 export async function toggleFavorite(businessId: string): Promise<{ isFavorited: boolean }> {
   const user = await getCurrentUser();
@@ -10,20 +10,5 @@ export async function toggleFavorite(businessId: string): Promise<{ isFavorited:
     redirect("/login");
   }
 
-  const existing = await db.favorite.findUnique({
-    where: { userId_businessId: { userId: user.id, businessId } },
-    select: { id: true },
-  });
-
-  if (existing) {
-    await db.favorite.delete({
-      where: { userId_businessId: { userId: user.id, businessId } },
-    });
-    return { isFavorited: false };
-  }
-
-  await db.favorite.create({
-    data: { userId: user.id, businessId },
-  });
-  return { isFavorited: true };
+  return toggleFavoriteForUser(user.id, businessId);
 }

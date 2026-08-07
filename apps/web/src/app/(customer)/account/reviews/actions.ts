@@ -1,17 +1,20 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { headers } from "next/headers";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { EDITABLE_STATUSES, MAX_COMMENT_LENGTH } from "@/lib/constants/reviews";
-import { getGlobalAverage, recalculateBusinessStats } from "@/lib/ratings/calculator";
+import { MAX_COMMENT_LENGTH } from "@/lib/constants/reviews";
 import { env } from "@/lib/env";
 import { isSuspended } from "@/lib/admin/user-suspension";
 import { notifyBusinessReviewReceived } from "@/lib/in-app-notifications";
+import {
+  submitReview as submitReviewForCustomer,
+  updateReview as updateReviewForCustomer,
+  removeReview as removeReviewForCustomer,
+} from "@urglowup/domain/reviews";
 
 export type ReviewActionState = {
   success: boolean;
@@ -37,14 +40,6 @@ const updateSchema = z.object({
     .optional()
     .or(z.literal("")),
 });
-
-async function getBusinessSlug(businessId: string): Promise<string | null> {
-  const business = await db.business.findUnique({
-    where: { id: businessId },
-    select: { slug: true },
-  });
-  return business?.slug ?? null;
-}
 
 function revalidateReviewPaths(slug: string | null) {
   revalidatePath("/account/reviews");
@@ -90,77 +85,32 @@ export async function submitReview(
     return { success: false, message: result.error.issues[0].message };
   }
 
-  const { appointmentId, rating, comment } = result.data;
-
-  // Verify appointment ownership and COMPLETED status
-  const appointment = await db.appointment.findUnique({
-    where: { id: appointmentId },
-    select: { customerId: true, status: true, businessId: true },
+  const submission = await submitReviewForCustomer({
+    customerId: user.id,
+    appointmentId: result.data.appointmentId,
+    rating: result.data.rating,
+    comment: result.data.comment || null,
+    moderationMode: env.REVIEW_MODERATION_MODE,
   });
 
-  if (!appointment || appointment.customerId !== user.id) {
-    return { success: false, message: "Appointment not found." };
-  }
-
-  if (appointment.status !== "COMPLETED") {
-    return {
-      success: false,
-      message: "You can only review completed appointments.",
+  if (!submission.ok) {
+    const messages: Record<typeof submission.reason, string> = {
+      APPOINTMENT_NOT_FOUND: "Appointment not found.",
+      NOT_COMPLETED: "You can only review completed appointments.",
+      ALREADY_REVIEWED: "You have already reviewed this appointment.",
     };
+    return { success: false, message: messages[submission.reason] };
   }
 
-  // Check no existing review for this appointment
-  const existing = await db.review.findUnique({
-    where: { appointmentId },
-    select: { id: true },
+  revalidateReviewPaths(submission.businessSlug);
+
+  after(async () => {
+    try {
+      await notifyBusinessReviewReceived(submission.reviewId);
+    } catch (err) {
+      console.error("[in-app] submitReview → business:", err);
+    }
   });
-
-  if (existing) {
-    return {
-      success: false,
-      message: "You have already reviewed this appointment.",
-    };
-  }
-
-  // Appointment-linked reviews get full trust weight; unlinked get reduced weight
-  const trustWeight = appointmentId ? 1.0 : 0.75;
-
-  // Feature flag: REVIEW_MODERATION_MODE controls whether reviews are auto-approved or pending
-  const reviewStatus = env.REVIEW_MODERATION_MODE === "pending" ? "PENDING" : "APPROVED";
-
-  await db.review.create({
-    data: {
-      businessId: appointment.businessId,
-      customerId: user.id,
-      appointmentId,
-      rating,
-      trustWeight,
-      comment: comment || null,
-      source: "URGLOWUP",
-      status: reviewStatus,
-    },
-  });
-
-  const globalAvg = await getGlobalAverage();
-  await recalculateBusinessStats(appointment.businessId, globalAvg);
-
-  const slug = await getBusinessSlug(appointment.businessId);
-  revalidateReviewPaths(slug);
-
-  const createdReview = await db.review.findUnique({
-    where: { appointmentId },
-    select: { id: true },
-  });
-
-  if (createdReview) {
-    after(async () => {
-      try {
-        await notifyBusinessReviewReceived(createdReview.id);
-      } catch (err) {
-        console.error("[in-app] submitReview → business:", err);
-      }
-    });
-  }
 
   return { success: true, message: "Review submitted!" };
 }
@@ -197,38 +147,23 @@ export async function updateReview(
     return { success: false, message: result.error.issues[0].message };
   }
 
-  const { reviewId, rating, comment } = result.data;
-
-  const review = await db.review.findUnique({
-    where: { id: reviewId },
-    select: { customerId: true, source: true, status: true, businessId: true },
+  const update = await updateReviewForCustomer({
+    customerId: user.id,
+    reviewId: result.data.reviewId,
+    rating: result.data.rating,
+    comment: result.data.comment || null,
   });
 
-  if (!review || review.customerId !== user.id) {
-    return { success: false, message: "Review not found." };
-  }
-
-  if (review.source !== "URGLOWUP") {
-    return { success: false, message: "Cannot edit this review." };
-  }
-
-  if (!EDITABLE_STATUSES.includes(review.status)) {
-    return {
-      success: false,
-      message: "This review can no longer be edited.",
+  if (!update.ok) {
+    const messages: Record<typeof update.reason, string> = {
+      NOT_FOUND: "Review not found.",
+      NOT_EDITABLE_SOURCE: "Cannot edit this review.",
+      NOT_EDITABLE_STATUS: "This review can no longer be edited.",
     };
+    return { success: false, message: messages[update.reason] };
   }
 
-  await db.review.update({
-    where: { id: reviewId },
-    data: { rating, comment: comment || null },
-  });
-
-  const globalAvg = await getGlobalAverage();
-  await recalculateBusinessStats(review.businessId, globalAvg);
-
-  const slug = await getBusinessSlug(review.businessId);
-  revalidateReviewPaths(slug);
+  revalidateReviewPaths(update.businessSlug);
 
   return { success: true, message: "Review updated." };
 }
@@ -243,29 +178,17 @@ export async function removeReview(
     return { success: false, message: "Not authenticated." };
   }
 
-  const review = await db.review.findUnique({
-    where: { id: reviewId },
-    select: { customerId: true, source: true, businessId: true },
-  });
+  const removal = await removeReviewForCustomer(user.id, reviewId);
 
-  if (!review || review.customerId !== user.id) {
-    return { success: false, message: "Review not found." };
+  if (!removal.ok) {
+    const messages: Record<typeof removal.reason, string> = {
+      NOT_FOUND: "Review not found.",
+      NOT_REMOVABLE_SOURCE: "Cannot remove this review.",
+    };
+    return { success: false, message: messages[removal.reason] };
   }
 
-  if (review.source !== "URGLOWUP") {
-    return { success: false, message: "Cannot remove this review." };
-  }
-
-  await db.review.update({
-    where: { id: reviewId },
-    data: { status: "REMOVED" },
-  });
-
-  const globalAvg = await getGlobalAverage();
-  await recalculateBusinessStats(review.businessId, globalAvg);
-
-  const slug = await getBusinessSlug(review.businessId);
-  revalidateReviewPaths(slug);
+  revalidateReviewPaths(removal.businessSlug);
 
   return { success: true, message: "Review removed." };
 }

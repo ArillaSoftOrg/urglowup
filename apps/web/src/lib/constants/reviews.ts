@@ -3,6 +3,9 @@ import type { BadgeVariant } from "@/components/ui/badge";
 
 export const MIN_RATING = 0;
 export const MAX_RATING = 10;
+// Kept in sync with packages/domain/src/reviews/constants.ts by hand — this
+// file is imported by client components, so it can't re-export from the
+// server-only domain package.
 export const MAX_COMMENT_LENGTH = 1000;
 
 /** Labels for the 5 star positions (each star = 2 points on the 0–10 scale) */
@@ -44,7 +47,10 @@ export const REVIEW_STATUS_VARIANTS: Record<ReviewStatus, BadgeVariant> = {
   REMOVED: "destructive",
 };
 
-/** Statuses that allow the customer to edit their review */
+/**
+ * Statuses that allow the customer to edit their review. Kept in sync with
+ * packages/domain/src/reviews/constants.ts by hand (see note above).
+ */
 export const EDITABLE_STATUSES: ReviewStatus[] = ["APPROVED", "PENDING"];
 
 // ── Google / external source display ─────────────────────────────────────────

@@ -194,6 +194,9 @@ importers:
       '@urglowup/validation':
         specifier: workspace:*
         version: link:../validation
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
     devDependencies:
       '@types/node':
         specifier: ^20
