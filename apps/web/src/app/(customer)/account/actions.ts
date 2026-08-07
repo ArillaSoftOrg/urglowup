@@ -5,10 +5,13 @@ import { headers } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
 import { auth } from "@/lib/auth";
 import { passwordSchema, PASSWORD_GUIDANCE_MESSAGE } from "@/lib/password-policy";
-import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { cookies } from "next/headers";
 import { isValidLocale, type Locale } from "@/lib/i18n-config";
+import {
+  updateProfile as updateProfileForUser,
+  updateLocalePreference as updateLocalePreferenceForUser,
+} from "@urglowup/domain/accounts";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
@@ -77,13 +80,10 @@ export async function updateProfile(
     return { success: false, errors: fieldErrors };
   }
 
-  await db.user.update({
-    where: { id: user.id },
-    data: {
-      firstName: result.data.firstName,
-      lastName: result.data.lastName,
-      phone: result.data.phone || null,
-    },
+  await updateProfileForUser(user.id, {
+    firstName: result.data.firstName,
+    lastName: result.data.lastName,
+    phone: result.data.phone || null,
   });
 
   return { success: true, message: "Profile updated successfully" };
@@ -95,11 +95,7 @@ export async function updateLocalePreference(locale: Locale): Promise<void> {
   const user = await getCurrentUser();
   if (!user) return;
 
-  await db.userPreferences.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id, locale },
-    update: { locale },
-  });
+  await updateLocalePreferenceForUser(user.id, locale);
 
   const jar = await cookies();
   jar.set("NEXT_LOCALE", locale, {

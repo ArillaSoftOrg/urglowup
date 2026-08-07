@@ -12,7 +12,8 @@
     "./reviews": "./src/reviews/index.ts",
     "./businesses": "./src/businesses/index.ts",
     "./cache": "./src/cache/index.ts",
-    "./marketplace": "./src/marketplace/index.ts"
+    "./marketplace": "./src/marketplace/index.ts",
+    "./accounts": "./src/accounts/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -2,13 +2,21 @@
 
 import { createHash } from "crypto";
 import { getCurrentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { getUserPreferences } from "@/lib/preferences";
-import { ConsentAction, ConsentCategory, Theme } from "@/generated/prisma/enums";
-import { CONSENT_VERSION } from "@/lib/consent-version";
+import { ConsentCategory, Theme } from "@/generated/prisma/enums";
 import { parseConsentCookie } from "@/lib/cookies";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
+import {
+  getUserPreferences,
+  updateNotificationPreferences as updateNotificationPreferencesForUser,
+  grantConsent as grantConsentForUser,
+  revokeConsent as revokeConsentForUser,
+  syncBrowserConsentIfNeeded as syncBrowserConsentIfNeededForUser,
+  acknowledgeConsentVersion as acknowledgeConsentVersionForUser,
+  updateSingleNotificationPreference as updateSingleNotificationPreferenceForUser,
+  updateThemePreference as updateThemePreferenceForUser,
+  type AuditContext,
+} from "@urglowup/domain/accounts";
 
 export type PreferencesFormState = {
   success: boolean;
@@ -18,17 +26,16 @@ export type PreferencesFormState = {
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 /** Produce a SHA-256 hex digest of the request IP (no raw IP stored). */
-async function getIpHash(): Promise<string | null> {
+async function getAuditContext(): Promise<AuditContext> {
   try {
     const h = await headers();
     const ip =
-      h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      h.get("x-real-ip") ??
-      null;
-    if (!ip) return null;
-    return createHash("sha256").update(ip).digest("hex");
+      h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? h.get("x-real-ip") ?? null;
+    const ipHash = ip ? createHash("sha256").update(ip).digest("hex") : null;
+    const userAgent = h.get("user-agent")?.slice(0, 512) ?? null;
+    return { ipHash, userAgent };
   } catch {
-    return null;
+    return { ipHash: null, userAgent: null };
   }
 }
 
@@ -41,34 +48,11 @@ export async function updateNotificationPreferences(
   const user = await getCurrentUser();
   if (!user) return { success: false, message: "Not authenticated" };
 
-  const emailTransactional = formData.get("emailTransactional") === "on";
-  const whatsappTransactional = formData.get("whatsappTransactional") === "on";
-  const emailMarketingRequested = formData.get("emailMarketing") === "on";
-  const whatsappMarketingRequested = formData.get("whatsappMarketing") === "on";
-
-  // Marketing channels can only be enabled when active marketing consent exists
-  const prefs = await getUserPreferences(user.id);
-  const marketingConsentActive =
-    prefs.marketingConsentAt !== null &&
-    (prefs.marketingRevokedAt === null || prefs.marketingConsentAt > prefs.marketingRevokedAt);
-  const emailMarketing = marketingConsentActive ? emailMarketingRequested : false;
-  const whatsappMarketing = marketingConsentActive ? whatsappMarketingRequested : false;
-
-  await db.userPreferences.upsert({
-    where: { userId: user.id },
-    create: {
-      userId: user.id,
-      emailTransactional,
-      whatsappTransactional,
-      emailMarketing,
-      whatsappMarketing,
-    },
-    update: {
-      emailTransactional,
-      whatsappTransactional,
-      emailMarketing,
-      whatsappMarketing,
-    },
+  await updateNotificationPreferencesForUser(user.id, {
+    emailTransactional: formData.get("emailTransactional") === "on",
+    whatsappTransactional: formData.get("whatsappTransactional") === "on",
+    emailMarketingRequested: formData.get("emailMarketing") === "on",
+    whatsappMarketingRequested: formData.get("whatsappMarketing") === "on",
   });
 
   revalidatePath("/account/settings");
@@ -83,39 +67,7 @@ export async function grantConsent(
   const user = await getCurrentUser();
   if (!user) return { success: false, message: "Not authenticated" };
 
-  const now = new Date();
-
-  const updateData: Record<string, unknown> = { consentVersion: CONSENT_VERSION };
-  if (category === ConsentCategory.PERSONALIZATION) {
-    updateData.personalizationConsentAt = now;
-    updateData.personalizationRevokedAt = null;
-  } else if (category === ConsentCategory.ANALYTICS) {
-    updateData.analyticsConsentAt = now;
-    updateData.analyticsRevokedAt = null;
-  } else if (category === ConsentCategory.MARKETING) {
-    updateData.marketingConsentAt = now;
-    updateData.marketingRevokedAt = null;
-  }
-
-  await db.userPreferences.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id, ...updateData },
-    update: updateData,
-  });
-
-  const [ipHash, h] = await Promise.all([getIpHash(), headers()]);
-  const userAgent = h.get("user-agent")?.slice(0, 512) ?? null;
-
-  await db.consentAuditLog.create({
-    data: {
-      userId: user.id,
-      category,
-      action: ConsentAction.GRANTED,
-      version: CONSENT_VERSION,
-      ipHash,
-      userAgent,
-    },
-  });
+  await grantConsentForUser(user.id, category, await getAuditContext());
 
   revalidatePath("/account/settings");
   return { success: true };
@@ -127,41 +79,7 @@ export async function revokeConsent(
   const user = await getCurrentUser();
   if (!user) return { success: false, message: "Not authenticated" };
 
-  const now = new Date();
-
-  const updateData: Record<string, unknown> = {};
-  if (category === ConsentCategory.PERSONALIZATION) {
-    updateData.personalizationRevokedAt = now;
-    // Clear cached affinity on revocation
-    updateData.preferredCategoryIds = null;
-    updateData.affinityComputedAt = null;
-  } else if (category === ConsentCategory.ANALYTICS) {
-    updateData.analyticsRevokedAt = now;
-  } else if (category === ConsentCategory.MARKETING) {
-    updateData.marketingRevokedAt = now;
-    updateData.emailMarketing = false;
-    updateData.whatsappMarketing = false;
-  }
-
-  await db.userPreferences.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id },
-    update: updateData,
-  });
-
-  const [ipHash, h] = await Promise.all([getIpHash(), headers()]);
-  const userAgent = h.get("user-agent")?.slice(0, 512) ?? null;
-
-  await db.consentAuditLog.create({
-    data: {
-      userId: user.id,
-      category,
-      action: ConsentAction.REVOKED,
-      version: CONSENT_VERSION,
-      ipHash,
-      userAgent,
-    },
-  });
+  await revokeConsentForUser(user.id, category, await getAuditContext());
 
   revalidatePath("/account/settings");
   return { success: true };
@@ -183,51 +101,10 @@ export async function syncBrowserConsentIfNeeded(
   const user = await getCurrentUser();
   if (!user) return;
 
-  const prefs = await getUserPreferences(user.id);
-
-  // Already synced from an explicit DB consent action — don't override
-  if (prefs.consentVersion !== null) return;
-
   const parsed = parseConsentCookie(consentCookieValue);
   if (!parsed) return;
 
-  const now = new Date();
-  const updateData: Record<string, unknown> = { consentVersion: CONSENT_VERSION };
-
-  if (parsed.analytics) {
-    updateData.analyticsConsentAt = now;
-    updateData.analyticsRevokedAt = null;
-  }
-  if (parsed.marketing) {
-    updateData.marketingConsentAt = now;
-    updateData.marketingRevokedAt = null;
-  }
-
-  await db.userPreferences.update({
-    where: { userId: user.id },
-    data: updateData,
-  });
-
-  // Write audit log entries for every synced category
-  const [ipHash, h] = await Promise.all([getIpHash(), headers()]);
-  const userAgent = h.get("user-agent")?.slice(0, 512) ?? null;
-
-  const categoriesToLog: ConsentCategory[] = [];
-  if (parsed.analytics) categoriesToLog.push(ConsentCategory.ANALYTICS);
-  if (parsed.marketing) categoriesToLog.push(ConsentCategory.MARKETING);
-
-  for (const category of categoriesToLog) {
-    await db.consentAuditLog.create({
-      data: {
-        userId: user.id,
-        category,
-        action: ConsentAction.GRANTED,
-        version: CONSENT_VERSION,
-        ipHash,
-        userAgent,
-      },
-    });
-  }
+  await syncBrowserConsentIfNeededForUser(user.id, parsed, await getAuditContext());
 }
 
 /**
@@ -238,11 +115,7 @@ export async function syncBrowserConsentIfNeeded(
 export async function acknowledgeConsentVersion(): Promise<void> {
   const user = await getCurrentUser();
   if (!user) return;
-  await db.userPreferences.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id, consentVersion: CONSENT_VERSION },
-    update: { consentVersion: CONSENT_VERSION },
-  });
+  await acknowledgeConsentVersionForUser(user.id);
 }
 
 // ── Single notification preference toggle ─────────────────────────────────────
@@ -260,21 +133,10 @@ export async function updateSingleNotificationPreference(
   const user = await getCurrentUser();
   if (!user) return { success: false, message: "Not authenticated" };
 
-  if ((field === "emailMarketing" || field === "whatsappMarketing") && value) {
-    const prefs = await getUserPreferences(user.id);
-    const marketingConsentActive =
-      prefs.marketingConsentAt !== null &&
-      (prefs.marketingRevokedAt === null ||
-        prefs.marketingConsentAt > prefs.marketingRevokedAt);
-    if (!marketingConsentActive)
-      return { success: false, message: "Pazarlama onayı gereklidir." };
+  const result = await updateSingleNotificationPreferenceForUser(user.id, field, value);
+  if (!result.ok) {
+    return { success: false, message: "Pazarlama onayı gereklidir." };
   }
-
-  await db.userPreferences.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id, [field]: value },
-    update: { [field]: value },
-  });
 
   revalidatePath("/account/settings");
   return { success: true };
@@ -308,11 +170,7 @@ export async function updateThemePreference(
 
   const user = await getCurrentUser();
   if (user) {
-    await db.userPreferences.upsert({
-      where: { userId: user.id },
-      create: { userId: user.id, theme },
-      update: { theme },
-    });
+    await updateThemePreferenceForUser(user.id, theme);
     revalidatePath("/account/settings");
   }
 
