@@ -48,6 +48,9 @@ function isValidIpAllowlist(value?: string) {
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
+  // Non-pooled connection, used only by the Prisma CLI (packages/db) for
+  // migrations/studio. Not read by the app at runtime.
+  DIRECT_URL: z.string().min(1).optional(),
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url().optional(),
   BETTER_AUTH_TRUSTED_ORIGINS: z

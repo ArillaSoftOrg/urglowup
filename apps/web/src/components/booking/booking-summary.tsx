@@ -71,6 +71,9 @@ export function BookingSummary({
     BookingActionState,
     FormData
   >(createAppointmentRequest, { success: false });
+  // Stable for the lifetime of this mount so a double-click/retry of the same
+  // submission dedupes server-side instead of creating a duplicate booking.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
@@ -319,6 +322,7 @@ export function BookingSummary({
 
       <form action={formAction} className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <BotProtectionFields />
+        <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
         <input type="hidden" name="businessId" value={business.id} />
         <input type="hidden" name="serviceId" value={primary.service.id} />
         <input type="hidden" name="professionalId" value={primary.professional?.id ?? ""} />

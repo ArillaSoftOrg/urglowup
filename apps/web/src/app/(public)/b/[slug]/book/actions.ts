@@ -24,6 +24,7 @@ import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
 import { validateBotProtection } from "@/lib/bot-protection";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { createAppointment } from "@urglowup/domain";
 
 // ─── Schemas ────────────────────────────────────────────────────
 
@@ -45,6 +46,7 @@ const bookingRequestSchema = z.object({
     .max(500, "Not 500 karakterden uzun olamaz.")
     .optional()
     .or(z.literal("")),
+  idempotencyKey: z.string().min(1).max(200).optional().or(z.literal("")),
 });
 
 const bookingItemSchema = z.object({
@@ -247,6 +249,7 @@ export async function createAppointmentRequest(
     date,
     time,
     customerNote,
+    idempotencyKey,
   } = result.data;
 
   try {
@@ -350,68 +353,49 @@ export async function createAppointmentRequest(
       return { success: false, message: "Bu saat artık dolu. Lütfen başka bir saat seçin." };
     }
 
-    // Check if customer already has a PENDING/CONFIRMED appointment at same business/date/time
-    const duplicate = await db.appointment.findFirst({
-      where: {
-        customerId: user.id,
-        businessId,
-        requestedDate: new Date(date),
-        requestedTime: time,
-        status: { in: BLOCKING_STATUSES },
-      },
-    });
-    if (duplicate) {
-      return { success: false, message: "Bu saatte zaten bir randevu talebiniz var." };
-    }
-
-    // Create appointment
-    const appointment = await db.appointment.create({
-      data: {
-        businessId,
-        customerId: user.id,
-        serviceId: primaryItem.serviceId,
-        professionalId: primaryItem.professionalId || null,
-        couponId: couponId || null,
-        discountAmount: discountAmount ? discountAmount : null,
-        requestedDate: new Date(date),
-        requestedTime: time,
-        isGroup: guestIndexes.size > 1,
-        guestCount: guestIndexes.size,
-        totalDurationMinutes,
-        totalPrice: totalPrice || null,
-        firstVisit: firstVisit ?? null,
-        status: "PENDING",
-        customerNote: customerNote || null,
-        items: {
-          create: parsedItems.map((item, index) => {
-            const itemService = servicesById.get(item.serviceId)!;
-            return {
-              guestName: item.guestName,
-              guestIndex: item.guestIndex,
-              serviceId: item.serviceId,
-              professionalId: item.professionalId || null,
-              durationMinutes: itemService.durationMinutes,
-              priceSnapshot: itemService.price,
-              sortOrder: index,
-            };
-          }),
-        },
-      },
+    // Create appointment. Slot-conflict, duplicate-booking, and coupon-limit
+    // checks all happen atomically inside this call (transaction + Postgres
+    // advisory lock, with a unique-index backstop) so two concurrent
+    // requests for the same slot can't both succeed.
+    const creation = await createAppointment({
+      businessId,
+      customerId: user.id,
+      primaryServiceId: primaryItem.serviceId,
+      primaryProfessionalId: primaryItem.professionalId || null,
+      couponId: couponId || null,
+      discountAmount: discountAmount ? discountAmount : null,
+      requestedDate: date,
+      requestedTime: time,
+      isGroup: guestIndexes.size > 1,
+      guestCount: guestIndexes.size,
+      totalDurationMinutes,
+      totalPrice: totalPrice || null,
+      firstVisit: firstVisit ?? null,
+      customerNote: customerNote || null,
+      items: parsedItems.map((item) => {
+        const itemService = servicesById.get(item.serviceId)!;
+        return {
+          guestName: item.guestName,
+          guestIndex: item.guestIndex,
+          serviceId: item.serviceId,
+          professionalId: item.professionalId || null,
+          durationMinutes: itemService.durationMinutes,
+          priceSnapshot: itemService.price ? Number(itemService.price) : null,
+        };
+      }),
+      idempotencyKey: idempotencyKey || undefined,
     });
 
-    // Increment coupon usage count
-    if (couponId) {
-      after(async () => {
-        try {
-          await db.coupon.update({
-            where: { id: couponId },
-            data: { usedCount: { increment: 1 } },
-          });
-        } catch (err) {
-          console.error("[coupon] increment usedCount:", err);
-        }
-      });
+    if (!creation.ok) {
+      const messages: Record<typeof creation.reason, string> = {
+        SLOT_TAKEN: "Bu saat artık dolu. Lütfen başka bir saat seçin.",
+        DUPLICATE_CUSTOMER_BOOKING: "Bu saatte zaten bir randevu talebiniz var.",
+        COUPON_EXHAUSTED: "Bu kupon artık kullanılamıyor.",
+      };
+      return { success: false, message: messages[creation.reason] };
     }
+
+    const appointment = { id: creation.appointmentId };
 
     // Email to business owner — independent of customer email
     after(async () => {

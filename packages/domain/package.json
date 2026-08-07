@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:booking": "tsx --test src/booking/create-appointment.test.ts"
   },
   "dependencies": {
     "@urglowup/db": "workspace:*",
@@ -14,6 +15,8 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "dotenv": "^17.4.2",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

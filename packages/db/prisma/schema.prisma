@@ -1248,6 +1248,19 @@ model WaitlistEntry {
   @@index([customerId])
 }
 
+/// Dedupes retried mutating requests (e.g. double-submitted booking creation).
+/// A client-generated key is stored alongside the response that was produced
+/// the first time it was seen; a repeat request with the same key replays that
+/// response instead of re-executing the mutation.
+model IdempotencyKey {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  responseBody Json
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // ─── Place Reference & Claim ──────────────────────────────────────
 
 model PlaceReference {

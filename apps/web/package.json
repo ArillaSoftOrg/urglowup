@@ -24,6 +24,7 @@
     "@react-email/components": "^1.0.12",
     "@react-google-maps/api": "^2.20.8",
     "@urglowup/db": "workspace:*",
+    "@urglowup/domain": "workspace:*",
     "better-auth": "^1.6.11",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.10.0",
