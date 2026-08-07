@@ -19,6 +19,7 @@
       }
     ],
     "paths": {
+      "@/generated/prisma/*": ["../../packages/db/src/generated/prisma/*"],
       "@/*": ["./src/*"]
     }
   },

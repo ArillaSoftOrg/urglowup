@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -36,6 +37,10 @@ const cspHeaderKey = cspReportOnly
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Monorepo: this app is nested under apps/web, and imports workspace packages
+  // (@urglowup/db etc.) that ship untranspiled TypeScript source.
+  outputFileTracingRoot: path.join(__dirname, "../../"),
+  transpilePackages: ["@urglowup/db", "@urglowup/domain", "@urglowup/validation"],
   images: {
     remotePatterns: cloudName
       ? [

@@ -1,9 +1,8 @@
 import { statSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "./generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { env } from "./env";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -14,7 +13,6 @@ function getGeneratedMtime(): number {
   try {
     const p = path.join(
       path.dirname(fileURLToPath(import.meta.url)),
-      "..",
       "generated",
       "prisma",
       "client.ts",
@@ -26,7 +24,11 @@ function getGeneratedMtime(): number {
 }
 
 function createPrismaClient(): PrismaClient {
-  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is not set");
+  }
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 

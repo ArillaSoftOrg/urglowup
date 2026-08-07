@@ -71,7 +71,7 @@ export function RevenueChart({ data, isMonthly = false }: RevenueChartProps) {
         />
         <Tooltip
           formatter={(v) => [`₺${Number(v ?? 0).toFixed(0)}`, "Gelir"]}
-          labelFormatter={(l) => formatBucket(l, isMonthly)}
+          labelFormatter={(l) => formatBucket(String(l), isMonthly)}
           contentStyle={{
             background: "hsl(var(--card))",
             border: "1px solid hsl(var(--border))",
