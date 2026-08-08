@@ -510,6 +510,8 @@ model BusinessService {
   posts            Post[]
   professionals    ProfessionalService[]
   waitlistEntries  WaitlistEntry[]
+
+  @@index([businessId, isActive])
 }
 
 model BusinessHour {
@@ -727,6 +729,9 @@ model Review {
   source          ReviewSource @default(URGLOWUP)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+
+  @@index([businessId, status])
+  @@index([customerId])
 }
 
 model BusinessRatingStats {
@@ -752,6 +757,7 @@ model Favorite {
   createdAt  DateTime @default(now())
 
   @@unique([userId, businessId])
+  @@index([businessId])
 }
 
 model AdminAction {

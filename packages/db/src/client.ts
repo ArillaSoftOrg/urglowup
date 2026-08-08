@@ -32,7 +32,18 @@ function createPrismaClient(): PrismaClient {
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set");
   }
-  const adapter = new PrismaPg({ connectionString });
+  // DATABASE_URL already points at Neon's pooled (PgBouncer-style) endpoint,
+  // but each serverless function instance still opens its own node-postgres
+  // pool on top of that — pg's un-set default is `max: 10`, which multiplies
+  // fast across concurrent instances. Kept small and env-overridable rather
+  // than hardcoded, since the right ceiling depends on the provider's
+  // connection limit and expected instance concurrency.
+  const adapter = new PrismaPg({
+    connectionString,
+    max: Number(process.env.DATABASE_POOL_MAX ?? 5),
+    idleTimeoutMillis: Number(process.env.DATABASE_POOL_IDLE_TIMEOUT_MS ?? 10_000),
+    connectionTimeoutMillis: Number(process.env.DATABASE_POOL_CONNECTION_TIMEOUT_MS ?? 10_000),
+  });
   return new PrismaClient({ adapter });
 }
 
