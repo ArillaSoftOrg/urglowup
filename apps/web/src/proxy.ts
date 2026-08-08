@@ -10,6 +10,7 @@ import {
   type Locale,
 } from "@/lib/i18n-config";
 import { isAdminIpAllowed } from "@/lib/admin-ip-allowlist";
+import { env } from "@/lib/env";
 
 const PROTECTED_PREFIXES = ["/account", "/business", "/admin"];
 const PUBLIC_BUSINESS_PREFIXES = ["/business/register", "/business/invite"];
@@ -58,8 +59,57 @@ function needsLocaleRouting(pathname: string): boolean {
   );
 }
 
+// CORS for the API surface a mobile client calls. Browsers enforce CORS;
+// React Native's fetch doesn't, so this mainly matters for Expo web/dev
+// tooling and any browser-based API testing — but it's also the only gate
+// that would stop an arbitrary web page from making credentialed requests
+// against these routes, so it stays strict (reflected-origin, allowlist
+// only, no wildcard). Reuses BETTER_AUTH_TRUSTED_ORIGINS — once Phase 7
+// picks the Expo app's custom scheme / dev origin, adding it there covers
+// both better-auth's own origin check and this.
+const CORS_PREFIXES = ["/api/v1/", "/api/auth/"];
+
+function isCorsScopedPath(pathname: string): boolean {
+  return CORS_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function getTrustedOrigins(): string[] {
+  return (
+    env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean) ?? []
+  );
+}
+
+function withCorsHeaders(response: NextResponse, origin: string | null): NextResponse {
+  if (!origin || !getTrustedOrigins().includes(origin)) {
+    return response;
+  }
+  response.headers.set("Access-Control-Allow-Origin", origin);
+  response.headers.set("Access-Control-Allow-Credentials", "true");
+  response.headers.append("Vary", "Origin");
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (isCorsScopedPath(pathname)) {
+    const origin = request.headers.get("origin");
+
+    if (request.method === "OPTIONS") {
+      const preflight = withCorsHeaders(new NextResponse(null, { status: 204 }), origin);
+      preflight.headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+      preflight.headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, Idempotency-Key",
+      );
+      preflight.headers.set("Access-Control-Max-Age", "86400");
+      return preflight;
+    }
+
+    return withCorsHeaders(NextResponse.next(), origin);
+  }
 
   // Optional network gate: when ADMIN_IP_ALLOWLIST is configured, restrict the
   // entire /admin surface to allowlisted IPs. Disabled (no-op) when unset.

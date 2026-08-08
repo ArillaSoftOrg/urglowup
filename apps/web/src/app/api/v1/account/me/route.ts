@@ -4,7 +4,7 @@ import { requireApiUser } from "@/lib/api/auth";
 import { apiOk, apiError } from "@/lib/api/response";
 import { toAccountDTO } from "@/lib/api/dto";
 import { updateProfileSchema } from "@urglowup/validation";
-import { updateProfile } from "@urglowup/domain/accounts";
+import { updateProfile, deleteAccount } from "@urglowup/domain/accounts";
 
 export async function GET() {
   const auth = await requireApiUser();
@@ -44,4 +44,21 @@ export async function PATCH(request: NextRequest) {
   if (!updated) return apiError("UNAUTHORIZED", "Authentication required.");
 
   return apiOk(toAccountDTO(updated));
+}
+
+/**
+ * Account deletion (anonymization — see packages/domain/src/accounts/delete-account.ts).
+ * Required by both App Store and Play Store review: an in-app deletion path,
+ * not just a support-email process.
+ */
+export async function DELETE() {
+  const auth = await requireApiUser();
+  if (!auth.ok) return auth.response;
+
+  const result = await deleteAccount(auth.user.id);
+  if (!result.ok) {
+    return apiError("NOT_FOUND", "Account not found.");
+  }
+
+  return apiOk({ deleted: true });
 }

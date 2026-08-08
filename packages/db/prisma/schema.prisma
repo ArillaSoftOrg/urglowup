@@ -265,6 +265,12 @@ model User {
   suspendedAt      DateTime?
   suspendedUntil   DateTime?
   suspensionReason String?
+  /// Account deletion is anonymization, not a row delete (Business.owner,
+  /// Appointment.customer, Review.customer all use onDelete: Restrict, and
+  /// historical business-side records need to survive). Non-null means the
+  /// account is deleted: email/name/PII cleared, sessions and OAuth
+  /// connections revoked.
+  deletedAt        DateTime?
 
   twoFactorEnabled Boolean @default(false)
 

@@ -7,6 +7,7 @@ import { hashPassword } from "better-auth/crypto";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { bearer } from "better-auth/plugins";
 import { passwordSchema } from "@/lib/password-policy";
 import { UserRole, BusinessMemberRole, MembershipStatus } from "@/generated/prisma/enums";
 import { meetsMinRole } from "@urglowup/domain";
@@ -216,6 +217,10 @@ export const auth = betterAuth({
         amount: 10,
       },
     }),
+    // Accepts `Authorization: Bearer <session token>` alongside the existing
+    // cookie flow — the mobile app (Phase 7) authenticates this way via
+    // @better-auth/expo; web is unaffected (still cookie-based).
+    bearer(),
     nextCookies(),
   ],
 });
@@ -239,6 +244,13 @@ export async function getCurrentUser() {
   });
 
   if (!user) {
+    return null;
+  }
+
+  // Defense in depth: deleteAccount() already revokes sessions/OAuth
+  // accounts, but a still-valid session token (e.g. one already cached in
+  // better-auth's cookieCache) shouldn't resolve to a deleted user either.
+  if (user.deletedAt) {
     return null;
   }
 

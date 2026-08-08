@@ -7,10 +7,11 @@ type RequireApiUserResult =
   | { ok: false; response: NextResponse };
 
 /**
- * Session check for /api/v1 routes. Currently cookie-session only, same as
- * the rest of the app — mobile bearer-token support lands in Phase 4
- * (better-auth's `bearer` plugin), at which point this is the one place
- * that needs to start accepting `Authorization: Bearer <token>` too.
+ * Session check for /api/v1 routes. Accepts both the existing cookie
+ * session (web) and `Authorization: Bearer <token>` (mobile, via
+ * better-auth's `bearer` plugin, registered in src/lib/auth.ts) — no
+ * branching needed here, better-auth resolves either transparently before
+ * getCurrentUser()'s getSession() call sees it.
  */
 export async function requireApiUser(): Promise<RequireApiUserResult> {
   const user = await getCurrentUser();
