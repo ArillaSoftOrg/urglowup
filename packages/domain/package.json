@@ -13,18 +13,21 @@
     "./businesses": "./src/businesses/index.ts",
     "./cache": "./src/cache/index.ts",
     "./marketplace": "./src/marketplace/index.ts",
-    "./accounts": "./src/accounts/index.ts"
+    "./accounts": "./src/accounts/index.ts",
+    "./notifications": "./src/notifications/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test:booking": "tsx --test src/booking/create-appointment.test.ts src/booking/ownership.test.ts",
     "test:accounts": "tsx --test src/accounts/delete-account.test.ts",
-    "test:ranking": "tsx --test src/marketplace/ranking.test.ts"
+    "test:ranking": "tsx --test src/marketplace/ranking.test.ts",
+    "test:notifications": "tsx --test src/notifications/devices.test.ts"
   },
   "dependencies": {
     "@urglowup/db": "workspace:*",
     "@urglowup/validation": "workspace:*",
     "cloudinary": "^2.10.0",
+    "expo-server-sdk": "^7.1.0",
     "redis": "^6.0.0",
     "server-only": "^0.0.1"
   },

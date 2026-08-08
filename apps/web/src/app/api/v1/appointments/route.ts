@@ -13,6 +13,7 @@ import {
 } from "@/lib/email-notifications";
 import { notifyBusinessAppointmentRequested } from "@/lib/in-app-notifications";
 import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
+import { sendPushToUser } from "@urglowup/domain/notifications";
 
 const PREPARE_FAILURE_MESSAGES: Record<
   Exclude<Awaited<ReturnType<typeof prepareBookingRequest>>, { ok: true }>["reason"],
@@ -128,6 +129,11 @@ export async function POST(request: NextRequest) {
     notifyBusinessAppointmentRequested(creation.appointmentId).catch((err) =>
       console.error("[in-app] POST /api/v1/appointments:", err),
     ),
+    sendPushToUser(auth.user.id, {
+      title: "Randevu talebiniz alındı",
+      body: "İşletme onayladığında bilgilendirileceksiniz.",
+      data: { appointmentId: creation.appointmentId, type: "APPOINTMENT_REQUESTED" },
+    }).catch((err) => console.error("[push] POST /api/v1/appointments:", err)),
   ]);
 
   return apiOk({ appointmentId: creation.appointmentId }, 201);

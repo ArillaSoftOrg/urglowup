@@ -15,6 +15,7 @@ import { validateBotProtection } from "@/lib/bot-protection";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { createAppointment, getAvailableSlots, prepareBookingRequest } from "@urglowup/domain/booking";
+import { sendPushToUser } from "@urglowup/domain/notifications";
 
 // ─── Schemas ────────────────────────────────────────────────────
 
@@ -241,6 +242,20 @@ export async function createAppointmentRequest(
         await notifyBusinessAppointmentRequested(appointment.id);
       } catch (err) {
         console.error("[in-app] createAppointmentRequest -> business:", err);
+      }
+    });
+
+    // No-op if the customer has no registered device (most web bookings) —
+    // only sends if they'd previously signed into the mobile app too.
+    after(async () => {
+      try {
+        await sendPushToUser(user.id, {
+          title: "Randevu talebiniz alındı",
+          body: "İşletme onayladığında bilgilendirileceksiniz.",
+          data: { appointmentId: appointment.id, type: "APPOINTMENT_REQUESTED" },
+        });
+      } catch (err) {
+        console.error("[push] createAppointmentRequest:", err);
       }
     });
 

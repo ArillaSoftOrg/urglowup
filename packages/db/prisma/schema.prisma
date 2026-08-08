@@ -112,6 +112,7 @@ enum MediaStatus {
 enum NotificationChannel {
   EMAIL
   WHATSAPP
+  PUSH
 }
 
 enum PostStatus {
@@ -293,6 +294,7 @@ model User {
   unsubscribeToken      UnsubscribeToken?            @relation("UnsubscribeTokens")
   createdCampaigns      Campaign[]
   sessions              Session[]
+  deviceTokens          DeviceToken[]
   twoFactor             TwoFactor?
   businessMemberships   BusinessMember[]
   sentInvitations       BusinessInvitation[]         @relation("SentInvitations")
@@ -710,6 +712,21 @@ model InAppNotification {
   @@index([businessId, readAt, createdAt])
   @@index([recipientUserId, readAt, createdAt])
   @@index([appointmentId])
+}
+
+/// A registered Expo push token for one (user, device) pair. A user can have
+/// several (multiple devices); invalid tokens are pruned by a cron job that
+/// reads Expo's push receipts (Phase 6 follow-up — not built in this pass).
+model DeviceToken {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expoPushToken String   @unique
+  platform      String
+  lastSeenAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Review {
