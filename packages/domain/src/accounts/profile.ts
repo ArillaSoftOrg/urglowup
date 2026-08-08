@@ -1,4 +1,3 @@
-import "server-only";
 import { db } from "@urglowup/db";
 
 export interface UpdateProfileInput {

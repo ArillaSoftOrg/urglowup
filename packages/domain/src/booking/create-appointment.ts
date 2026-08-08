@@ -1,8 +1,6 @@
-import { db, Prisma, type AppointmentStatus } from "@urglowup/db";
+import { db, Prisma } from "@urglowup/db";
 import type { CreateAppointmentInput, CreateAppointmentResult } from "./types";
-
-/** Statuses that occupy a time slot (block other bookings for that slot). */
-const BLOCKING_STATUSES: AppointmentStatus[] = ["PENDING", "CONFIRMED", "CHECKED_IN"];
+import { BLOCKING_STATUSES } from "./constants";
 
 function slotLockKey(input: CreateAppointmentInput): string {
   return [

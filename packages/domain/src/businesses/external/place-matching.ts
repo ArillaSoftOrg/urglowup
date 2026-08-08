@@ -1,5 +1,3 @@
-import "server-only";
-
 import {
   GOOGLE_PLACES_DETAILS_API,
   GOOGLE_PLACES_TEXT_SEARCH_API,

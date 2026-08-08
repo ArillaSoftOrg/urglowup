@@ -1,4 +1,3 @@
-import "server-only";
 import { v2 as cloudinary } from "cloudinary";
 
 // Duplicated (not shared) from apps/web/src/lib/cloudinary.ts +

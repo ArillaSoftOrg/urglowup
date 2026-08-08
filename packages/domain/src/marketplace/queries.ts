@@ -1,5 +1,3 @@
-import "server-only";
-
 import { db, type Prisma } from "@urglowup/db";
 import { optimizeBusinessCoverUrl, optimizeBusinessLogoUrl } from "./media";
 import { getDayOfWeek, nowInBusinessTimezone } from "./timezone";

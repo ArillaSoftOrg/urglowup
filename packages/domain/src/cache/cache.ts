@@ -1,5 +1,3 @@
-import "server-only";
-
 /**
  * Response caching layer with Redis backing and in-memory fallback.
  *

@@ -36,6 +36,33 @@ export async function getCustomerReviews(userId: string) {
 
 export type CustomerReview = Awaited<ReturnType<typeof getCustomerReviews>>[number];
 
+/** Cursor-paginated variant for API v1 — getCustomerReviews above is unbounded. */
+export async function listCustomerReviews(
+  userId: string,
+  options: { cursor?: string; limit: number },
+) {
+  const rows = await db.review.findMany({
+    where: { customerId: userId, source: "URGLOWUP" },
+    include: {
+      business: { select: { name: true, slug: true } },
+      appointment: {
+        select: {
+          requestedDate: true,
+          requestedTime: true,
+          service: { select: { name: true } },
+        },
+      },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: options.limit + 1,
+    ...(options.cursor ? { cursor: { id: options.cursor }, skip: 1 } : {}),
+  });
+
+  const hasMore = rows.length > options.limit;
+  const data = hasMore ? rows.slice(0, options.limit) : rows;
+  return { data, nextCursor: hasMore ? data[data.length - 1].id : null };
+}
+
 export async function getBusinessReviews(businessId: string) {
   return db.review.findMany({
     where: { businessId },
@@ -56,6 +83,35 @@ export async function getBusinessReviews(businessId: string) {
 }
 
 export type BusinessReview = Awaited<ReturnType<typeof getBusinessReviews>>[number];
+
+/** Cursor-paginated variant for API v1 — getBusinessReviews above is unbounded. */
+export async function listBusinessReviews(
+  businessId: string,
+  options: { cursor?: string; limit: number },
+) {
+  const rows = await db.review.findMany({
+    where: { businessId, status: "APPROVED" },
+    include: {
+      customer: {
+        select: { firstName: true, lastName: true, avatarUrl: true },
+      },
+      appointment: {
+        select: {
+          requestedDate: true,
+          requestedTime: true,
+          service: { select: { name: true } },
+        },
+      },
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: options.limit + 1,
+    ...(options.cursor ? { cursor: { id: options.cursor }, skip: 1 } : {}),
+  });
+
+  const hasMore = rows.length > options.limit;
+  const data = hasMore ? rows.slice(0, options.limit) : rows;
+  return { data, nextCursor: hasMore ? data[data.length - 1].id : null };
+}
 
 export async function getBusinessReviewStats(businessId: string) {
   const [reviews, cachedStats] = await Promise.all([

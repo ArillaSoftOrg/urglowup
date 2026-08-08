@@ -1,20 +1,10 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { z } from "zod/v4";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { generateTimeSlots } from "@/lib/slots";
-import type { TimeBlock } from "@/lib/slots";
 import { isSuspended } from "@/lib/admin/user-suspension";
-import {
-  MIN_ADVANCE_HOURS,
-  MAX_ADVANCE_DAYS,
-  BLOCKING_STATUSES,
-  nowInBusinessTimezone,
-  getDayOfWeek,
-} from "@/lib/constants/booking";
 import {
   sendNewRequestEmailToBusiness,
   sendRequestReceivedEmailToCustomer,
@@ -24,7 +14,7 @@ import { sendBookingConfirmationWhatsApp } from "@/lib/whatsapp-notifications";
 import { validateBotProtection } from "@/lib/bot-protection";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
-import { createAppointment } from "@urglowup/domain/booking";
+import { createAppointment, getAvailableSlots, prepareBookingRequest } from "@urglowup/domain/booking";
 
 // ─── Schemas ────────────────────────────────────────────────────
 
@@ -66,15 +56,6 @@ export type BookingActionState = {
   message?: string;
 };
 
-function parseTimeBlocks(value: unknown): TimeBlock[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is TimeBlock => {
-    if (!item || typeof item !== "object") return false;
-    const block = item as Record<string, unknown>;
-    return typeof block.startTime === "string" && typeof block.endTime === "string";
-  });
-}
-
 function parseBookingItems(
   raw: string | undefined,
   fallback: { serviceId: string; professionalId?: string | null }
@@ -100,98 +81,26 @@ function parseBookingItems(
 
 // ─── Get Available Slots ────────────────────────────────────────
 
-export async function getAvailableSlots(
-  businessId: string,
-  serviceId: string,
-  dateString: string,
-  durationOverrideMinutes?: number
-): Promise<string[]> {
-  // Validate date format
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return [];
-
-  const now = nowInBusinessTimezone();
-  const requestedDate = new Date(dateString + "T00:00:00");
-
-  // Date must not be in the past
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  if (dateString < todayStr) return [];
-
-  // Date must not exceed max advance days
-  const maxDate = new Date(now);
-  maxDate.setDate(maxDate.getDate() + MAX_ADVANCE_DAYS);
-  if (requestedDate > maxDate) return [];
-
-  // Check for an applied holiday closure on this specific date (precedence #2)
-  const appliedHoliday = await db.businessHolidaySuggestion.findFirst({
-    where: {
-      businessId,
-      state: "APPLIED",
-      holiday: { date: new Date(dateString) },
-    },
-  });
-  if (appliedHoliday) return [];
-
-  // Get business hour for this day of week
-  const dayOfWeek = getDayOfWeek(dateString);
-  const [hour, service] = await Promise.all([
-    db.businessHour.findUnique({
-      where: { businessId_dayOfWeek: { businessId, dayOfWeek } },
-    }),
-    db.businessService.findFirst({
-      where: { id: serviceId, businessId, isActive: true },
-      select: { durationMinutes: true },
-    }),
-  ]);
-
-  if (!hour || !hour.isOpen || !hour.openTime || !hour.closeTime) return [];
-  if (!service) return [];
-
-  const requestedDuration = durationOverrideMinutes ?? service.durationMinutes;
-  if (!Number.isInteger(requestedDuration) || requestedDuration < 5 || requestedDuration > 24 * 60) {
-    return [];
-  }
-
-  // Get existing blocking appointments for this date
-  const existingAppointments = await db.appointment.findMany({
-    where: {
-      businessId,
-      requestedDate: new Date(dateString),
-      status: { in: BLOCKING_STATUSES },
-    },
-    select: {
-      requestedTime: true,
-      totalDurationMinutes: true,
-      service: { select: { durationMinutes: true } },
-    },
-  });
-
-  const occupied = existingAppointments.map((a) => ({
-    requestedTime: a.requestedTime,
-    durationMinutes: a.totalDurationMinutes ?? a.service.durationMinutes,
-  }));
-
-  // Calculate minTimeMinutes for today
-  let minTimeMinutes: number | undefined;
-  if (dateString === todayStr) {
-    minTimeMinutes = now.getHours() * 60 + now.getMinutes() + MIN_ADVANCE_HOURS * 60;
-  }
-
-  return generateTimeSlots(
-    hour.openTime,
-    hour.closeTime,
-    hour.slotIntervalMinutes,
-    requestedDuration,
-    occupied,
-    minTimeMinutes,
-    {
-      appointmentBufferMinutes: hour.appointmentBufferMinutes,
-      workBlocks: parseTimeBlocks(hour.workBlocks),
-      breakBlocks: parseTimeBlocks(hour.breakBlocks),
-    }
-  );
-}
+// Re-exported so existing callers (Server Action RPC from client components)
+// don't need to change their import path. Backend-authoritative logic lives
+// in packages/domain/src/booking/availability.ts.
+export { getAvailableSlots };
 
 // ─── Create Appointment Request ─────────────────────────────────
+
+const PREPARE_FAILURE_MESSAGES: Record<
+  Exclude<Awaited<ReturnType<typeof prepareBookingRequest>>, { ok: true }>["reason"],
+  string
+> = {
+  BUSINESS_NOT_BOOKABLE: "Bu işletme şu anda randevu almıyor.",
+  GROUP_SIZE_EXCEEDED: "Bu işletme bu kadar kişilik grup randevusu almıyor.",
+  SERVICE_UNAVAILABLE: "Seçili hizmetlerden biri artık sunulmuyor.",
+  PROFESSIONAL_UNAVAILABLE: "Seçili uzmanlardan biri bu hizmeti sunmuyor.",
+  NO_ITEMS: "Hizmet seçimi eksik.",
+  PAST_DATE: "Geçmiş bir tarih seçemezsiniz.",
+  TOO_FAR_IN_ADVANCE: "Çok ileri bir tarih seçtiniz.",
+  SLOT_TAKEN: "Bu saat artık dolu. Lütfen başka bir saat seçin.",
+};
 
 export async function createAppointmentRequest(
   _prev: BookingActionState,
@@ -253,19 +162,6 @@ export async function createAppointmentRequest(
   } = result.data;
 
   try {
-    // Verify business exists and is bookable
-    const business = await db.business.findUnique({
-      where: { id: businessId },
-      select: { status: true, maxGroupBookingGuests: true },
-    });
-    if (
-      !business ||
-      business.status === "SUSPENDED" ||
-      business.status === "REJECTED"
-    ) {
-      return { success: false, message: "Bu işletme şu anda randevu almıyor." };
-    }
-
     const parsedItems = parseBookingItems(itemsJson || undefined, {
       serviceId,
       professionalId: professionalId || null,
@@ -274,117 +170,33 @@ export async function createAppointmentRequest(
       return { success: false, message: "Hizmet seçimlerinizi kontrol edip tekrar deneyin." };
     }
 
-    const guestIndexes = new Set(parsedItems.map((item) => item.guestIndex));
-    if (guestIndexes.size > business.maxGroupBookingGuests) {
-      return {
-        success: false,
-        message: `Bu işletme en fazla ${business.maxGroupBookingGuests} kişilik grup randevusu alıyor.`,
-      };
-    }
-
-    const serviceIds = Array.from(new Set(parsedItems.map((item) => item.serviceId)));
-    const services = await db.businessService.findMany({
-      where: { id: { in: serviceIds }, businessId, isActive: true },
-      select: { id: true, durationMinutes: true, price: true },
-    });
-    const servicesById = new Map(services.map((item) => [item.id, item]));
-    if (services.length !== serviceIds.length) {
-      return { success: false, message: "Seçili hizmetlerden biri artık sunulmuyor." };
-    }
-
-    const professionalIds = Array.from(
-      new Set(parsedItems.map((item) => item.professionalId).filter((id): id is string => Boolean(id)))
-    );
-    if (professionalIds.length > 0) {
-      const professionalServices = await db.professionalService.findMany({
-        where: {
-          professionalId: { in: professionalIds },
-          serviceId: { in: serviceIds },
-          professional: { businessId, isActive: true },
-        },
-        select: { professionalId: true, serviceId: true },
-      });
-      const allowed = new Set(
-        professionalServices.map((item) => `${item.professionalId}:${item.serviceId}`)
-      );
-      const invalidProfessional = parsedItems.some(
-        (item) => item.professionalId && !allowed.has(`${item.professionalId}:${item.serviceId}`)
-      );
-      if (invalidProfessional) {
-        return { success: false, message: "Seçili uzmanlardan biri bu hizmeti sunmuyor." };
-      }
-    }
-
-    const totalDurationMinutes = parsedItems.reduce((sum, item) => {
-      return sum + (servicesById.get(item.serviceId)?.durationMinutes ?? 0);
-    }, 0);
-    const totalPrice = parsedItems.reduce((sum, item) => {
-      const price = servicesById.get(item.serviceId)?.price;
-      return sum + (price ? Number(price) : 0);
-    }, 0);
-    const primaryItem = parsedItems[0];
-    const primaryService = servicesById.get(primaryItem.serviceId);
-    if (!primaryService || totalDurationMinutes <= 0) {
-      return { success: false, message: "Hizmet seçimi eksik." };
-    }
-
-    // Verify date is valid
-    const now = nowInBusinessTimezone();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    if (date < todayStr) {
-      return { success: false, message: "Geçmiş bir tarih seçemezsiniz." };
-    }
-
-    const maxDate = new Date(now);
-    maxDate.setDate(maxDate.getDate() + MAX_ADVANCE_DAYS);
-    const requestedDate = new Date(date + "T00:00:00");
-    if (requestedDate > maxDate) {
-      return { success: false, message: `En fazla ${MAX_ADVANCE_DAYS} gün öncesinden randevu alabilirsiniz.` };
-    }
-
-    // Verify slot is still available
-    const availableSlots = await getAvailableSlots(
+    const prepared = await prepareBookingRequest({
       businessId,
-      primaryItem.serviceId,
+      customerId: user.id,
       date,
-      totalDurationMinutes
-    );
-    if (!availableSlots.includes(time)) {
-      return { success: false, message: "Bu saat artık dolu. Lütfen başka bir saat seçin." };
+      time,
+      items: parsedItems.map((item) => ({
+        guestName: item.guestName,
+        guestIndex: item.guestIndex,
+        serviceId: item.serviceId,
+        professionalId: item.professionalId || null,
+      })),
+      couponId: couponId || null,
+      discountAmount: discountAmount ? discountAmount : null,
+      firstVisit: firstVisit ?? null,
+      customerNote: customerNote || null,
+      idempotencyKey: idempotencyKey || undefined,
+    });
+
+    if (!prepared.ok) {
+      return { success: false, message: PREPARE_FAILURE_MESSAGES[prepared.reason] };
     }
 
     // Create appointment. Slot-conflict, duplicate-booking, and coupon-limit
     // checks all happen atomically inside this call (transaction + Postgres
     // advisory lock, with a unique-index backstop) so two concurrent
     // requests for the same slot can't both succeed.
-    const creation = await createAppointment({
-      businessId,
-      customerId: user.id,
-      primaryServiceId: primaryItem.serviceId,
-      primaryProfessionalId: primaryItem.professionalId || null,
-      couponId: couponId || null,
-      discountAmount: discountAmount ? discountAmount : null,
-      requestedDate: date,
-      requestedTime: time,
-      isGroup: guestIndexes.size > 1,
-      guestCount: guestIndexes.size,
-      totalDurationMinutes,
-      totalPrice: totalPrice || null,
-      firstVisit: firstVisit ?? null,
-      customerNote: customerNote || null,
-      items: parsedItems.map((item) => {
-        const itemService = servicesById.get(item.serviceId)!;
-        return {
-          guestName: item.guestName,
-          guestIndex: item.guestIndex,
-          serviceId: item.serviceId,
-          professionalId: item.professionalId || null,
-          durationMinutes: itemService.durationMinutes,
-          priceSnapshot: itemService.price ? Number(itemService.price) : null,
-        };
-      }),
-      idempotencyKey: idempotencyKey || undefined,
-    });
+    const creation = await createAppointment(prepared.input);
 
     if (!creation.ok) {
       const messages: Record<typeof creation.reason, string> = {

@@ -25,6 +25,7 @@
     "@react-google-maps/api": "^2.20.8",
     "@urglowup/db": "workspace:*",
     "@urglowup/domain": "workspace:*",
+    "@urglowup/validation": "workspace:*",
     "better-auth": "^1.6.11",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.10.0",

@@ -1,5 +1,3 @@
-import "server-only";
-
 import { db } from "@urglowup/db";
 import { getCached, setCached } from "../cache";
 import { GOOGLE_MAX_REVIEWS_PER_FETCH } from "./external/constants";

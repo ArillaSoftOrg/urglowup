@@ -1,4 +1,3 @@
-import "server-only";
 import { db, ConsentAction, ConsentCategory, type Theme } from "@urglowup/db";
 
 // Kept in sync by hand with apps/web/src/lib/consent-version.ts — bump both

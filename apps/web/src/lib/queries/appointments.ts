@@ -7,65 +7,7 @@ import {
   CALENDAR_FETCH_MONTHS_AFTER,
 } from "@/lib/constants/calendar";
 
-export async function getCustomerAppointments(userId: string) {
-  return db.appointment.findMany({
-    where: { customerId: userId },
-    include: {
-      service: {
-        select: {
-          id: true,
-          name: true,
-          durationMinutes: true,
-          price: true,
-          priceType: true,
-        },
-      },
-      items: {
-        orderBy: { sortOrder: "asc" },
-        select: {
-          id: true,
-          guestName: true,
-          guestIndex: true,
-          durationMinutes: true,
-          priceSnapshot: true,
-          service: {
-            select: {
-              id: true,
-              name: true,
-              durationMinutes: true,
-              price: true,
-              priceType: true,
-            },
-          },
-          professional: {
-            select: { id: true, displayName: true, avatarUrl: true },
-          },
-        },
-      },
-      business: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          logoUrl: true,
-          address: true,
-          city: true,
-          district: true,
-          latitude: true,
-          longitude: true,
-        },
-      },
-      review: {
-        select: { id: true, rating: true, status: true },
-      },
-    },
-    orderBy: { requestedDate: "desc" },
-  });
-}
-
-export type CustomerAppointment = Awaited<
-  ReturnType<typeof getCustomerAppointments>
->[number];
+export { getCustomerAppointments, type CustomerAppointment } from "@urglowup/domain/booking";
 
 export async function getBusinessForBooking(slug: string) {
   const business = await db.business.findUnique({
