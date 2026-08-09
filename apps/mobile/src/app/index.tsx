@@ -3,7 +3,9 @@ import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/button";
 import { api } from "@/lib/api";
+import { authClient } from "@/lib/auth";
 
 interface Category {
   id: string;
@@ -45,6 +47,12 @@ export default function HomeScreen() {
           ListEmptyComponent={
             !isLoading && !error ? <ThemedText type="small">No categories yet.</ThemedText> : null
           }
+        />
+
+        <Button
+          label="Çıkış yap"
+          variant="outline"
+          onPress={() => authClient.signOut()}
         />
       </SafeAreaView>
     </ThemedView>

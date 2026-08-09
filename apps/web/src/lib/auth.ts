@@ -8,6 +8,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { bearer } from "better-auth/plugins";
+import { expo } from "@better-auth/expo";
 import { passwordSchema } from "@/lib/password-policy";
 import { UserRole, BusinessMemberRole, MembershipStatus } from "@/generated/prisma/enums";
 import { meetsMinRole } from "@urglowup/domain";
@@ -23,18 +24,22 @@ import { db } from "./db";
 import { sendEmail } from "./email";
 import { env } from "./env";
 
+// The mobile scheme is a literal `scheme://` origin, not a standard HTTP(S)
+// URL — it must NOT be passed through `new URL(value).origin` (WHATWG parsing
+// gives non-special schemes an opaque "null" origin, which would silently
+// drop it). Matches apps/mobile/app.json's "scheme": "urglowup".
+const MOBILE_APP_ORIGIN = "urglowup://";
+
 function resolveTrustedOrigins() {
   const configuredOrigins = env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [];
 
-  return Array.from(
-    new Set(
-      [env.NEXT_PUBLIC_APP_URL, env.BETTER_AUTH_URL, ...configuredOrigins]
-        .filter((value): value is string => Boolean(value))
-        .map((value) => value.trim())
-        .filter(Boolean)
-        .map((value) => new URL(value).origin),
-    ),
-  );
+  const httpOrigins = [env.NEXT_PUBLIC_APP_URL, env.BETTER_AUTH_URL, ...configuredOrigins]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => new URL(value).origin);
+
+  return Array.from(new Set([...httpOrigins, MOBILE_APP_ORIGIN]));
 }
 
 function buildSocialProviders() {
@@ -221,6 +226,15 @@ export const auth = betterAuth({
     // cookie flow — the mobile app (Phase 7) authenticates this way via
     // @better-auth/expo; web is unaffected (still cookie-based).
     bearer(),
+    // Required server half of @better-auth/expo (apps/mobile/src/lib/auth.ts's
+    // expoClient()). Translates the `expo-origin` header the Expo client sends
+    // on every request into the `origin` header the trustedOrigins check
+    // expects (native fetch never sets Origin the way a browser does), and
+    // relays the Set-Cookie header through the OAuth redirect chain back into
+    // the app for social sign-in. Without this, mobile sign-in/sign-up would
+    // fail origin validation and Google OAuth would never hand the session
+    // cookie back to the app.
+    expo(),
     nextCookies(),
   ],
 });

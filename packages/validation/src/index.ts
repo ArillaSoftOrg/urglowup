@@ -2,6 +2,7 @@
 // routes, and the Expo mobile app.
 
 export * from "./accounts";
+export * from "./auth";
 export * from "./booking";
 export * from "./reviews";
 export * from "./notifications";
