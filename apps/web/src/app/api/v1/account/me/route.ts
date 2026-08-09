@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { requireApiUser } from "@/lib/api/auth";
 import { apiOk, apiError } from "@/lib/api/response";
+import { enforceApiRateLimit } from "@/lib/api/rate-limit";
 import { toAccountDTO } from "@/lib/api/dto";
 import { updateProfileSchema } from "@urglowup/validation";
 import { updateProfile, deleteAccount } from "@urglowup/domain/accounts";
@@ -16,6 +17,14 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
+
+  const limited = await enforceApiRateLimit({
+    scope: "account-update",
+    subjectId: auth.user.id,
+    ipLimit: 20,
+    subjectLimit: 10,
+  });
+  if (limited) return limited;
 
   let body: unknown;
   try {
@@ -54,6 +63,14 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE() {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
+
+  const limited = await enforceApiRateLimit({
+    scope: "account-delete",
+    subjectId: auth.user.id,
+    ipLimit: 10,
+    subjectLimit: 5,
+  });
+  if (limited) return limited;
 
   const result = await deleteAccount(auth.user.id);
   if (!result.ok) {

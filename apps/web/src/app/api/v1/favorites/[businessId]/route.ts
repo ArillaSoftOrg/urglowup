@@ -1,5 +1,6 @@
 import { requireApiUser } from "@/lib/api/auth";
 import { apiOk } from "@/lib/api/response";
+import { enforceApiRateLimit } from "@/lib/api/rate-limit";
 import { toggleFavorite } from "@urglowup/domain/favorites";
 import { db } from "@/lib/db";
 
@@ -19,6 +20,14 @@ export async function POST(_request: Request, { params }: Params) {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
 
+  const limited = await enforceApiRateLimit({
+    scope: "favorite",
+    subjectId: auth.user.id,
+    ipLimit: 60,
+    subjectLimit: 40,
+  });
+  if (limited) return limited;
+
   const { businessId } = await params;
   const alreadyFavorited = await isFavorited(auth.user.id, businessId);
   if (!alreadyFavorited) {
@@ -31,6 +40,14 @@ export async function POST(_request: Request, { params }: Params) {
 export async function DELETE(_request: Request, { params }: Params) {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
+
+  const limited = await enforceApiRateLimit({
+    scope: "favorite",
+    subjectId: auth.user.id,
+    ipLimit: 60,
+    subjectLimit: 40,
+  });
+  if (limited) return limited;
 
   const { businessId } = await params;
   const alreadyFavorited = await isFavorited(auth.user.id, businessId);

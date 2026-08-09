@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import { NotificationStatus } from "@/generated/prisma/enums";
 
 // Resend delivers webhooks via Svix. Secret is stored as "whsec_<base64>" in the dashboard.
-const RESEND_WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
+const RESEND_WEBHOOK_SECRET = env.RESEND_WEBHOOK_SECRET;
 
 // Reject replays older than 5 minutes (Svix recommendation).
 const TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;

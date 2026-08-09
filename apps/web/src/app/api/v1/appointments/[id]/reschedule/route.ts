@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { requireApiUser } from "@/lib/api/auth";
 import { apiOk, apiError } from "@/lib/api/response";
+import { enforceApiRateLimit } from "@/lib/api/rate-limit";
 import { rescheduleAppointmentBodySchema } from "@urglowup/validation";
 import { rescheduleAppointment } from "@urglowup/domain/booking";
 import {
@@ -25,6 +26,14 @@ const RESCHEDULE_FAILURE_MESSAGES = {
 export async function POST(request: NextRequest, { params }: Params) {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
+
+  const limited = await enforceApiRateLimit({
+    scope: "booking",
+    subjectId: auth.user.id,
+    ipLimit: 40,
+    subjectLimit: 20,
+  });
+  if (limited) return limited;
 
   let body: unknown;
   try {

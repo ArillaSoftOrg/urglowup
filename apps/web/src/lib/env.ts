@@ -122,6 +122,13 @@ const envSchema = z.object({
   WHATSAPP_API_VERSION: z.string().optional(),
   WHATSAPP_MARKETING_TEMPLATES: z.string().optional(),
   CAMPAIGN_DRY_RUN: z.string().optional(),
+  // Verifies Resend's inbound webhook signature (Svix). Missing in production
+  // means the webhook route rejects everything — see src/app/api/webhooks/resend/route.ts.
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
+  // Cloudflare Turnstile bot protection on public forms (booking, claim, etc).
+  // Both must be set together for it to actually run — see src/lib/bot-protection.ts.
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
+  TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
 // During `next build`, secrets are not available — skip strict validation.

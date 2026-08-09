@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { requireApiUser } from "@/lib/api/auth";
 import { apiOk, apiError } from "@/lib/api/response";
+import { enforceApiRateLimit } from "@/lib/api/rate-limit";
 import { updatePreferencesSchema } from "@urglowup/validation";
 import { getUserPreferences, updateNotificationPreferences } from "@urglowup/domain/accounts";
 
@@ -33,6 +34,14 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   const auth = await requireApiUser();
   if (!auth.ok) return auth.response;
+
+  const limited = await enforceApiRateLimit({
+    scope: "account-preferences",
+    subjectId: auth.user.id,
+    ipLimit: 30,
+    subjectLimit: 20,
+  });
+  if (limited) return limited;
 
   let body: unknown;
   try {

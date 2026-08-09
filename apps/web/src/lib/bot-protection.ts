@@ -1,3 +1,5 @@
+import { env } from "@/lib/env";
+
 const MIN_FORM_FILL_MS = 1500;
 const TURNSTILE_VERIFY_URL =
   "https://challenges.cloudflare.com/turnstile/v0/siteverify";
@@ -34,8 +36,8 @@ function validatePassiveBotSignals(
 }
 
 async function verifyTurnstile(formData: FormData): Promise<string | null> {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const secret = env.TURNSTILE_SECRET_KEY;
+  const siteKey = env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const token = String(formData.get("cf-turnstile-response") ?? "").trim();
 
   if (!secret && !siteKey) {
