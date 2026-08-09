@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same branch/PR.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+
+  prisma-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate Prisma schema
+        run: pnpm --filter @urglowup/db exec prisma validate
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build web app
+        # env.ts skips strict secret validation during `next build`
+        # (NEXT_PHASE === "phase-production-build"), but a couple of module-
+        # init-time reads (e.g. Cloudinary config) aren't behind that gate —
+        # untested against a fully secret-less CI environment yet. If this
+        # job fails here, wire up the real secrets as repo/environment
+        # secrets and pass them through as env vars below.
+        run: pnpm --filter web run build
+
+  test:
+    runs-on: ubuntu-latest
+    # These are integration tests against a real Postgres database (see
+    # packages/domain/src/**/*.test.ts) — DATABASE_URL must be configured as
+    # a repository secret. Since there's no production data yet, pointing it
+    # at the same dev database used locally is acceptable for now; a
+    # dedicated CI/test database is cleaner once real data exists. Each test
+    # file creates and tears down its own fixtures, so runs shouldn't
+    # collide with local dev work, but concurrent CI runs against the same
+    # DB could still race each other — the `concurrency` block above only
+    # cancels superseded runs on the *same* ref, not across branches.
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run domain test suite (includes booking concurrency + IDOR tests)
+        run: pnpm run test
