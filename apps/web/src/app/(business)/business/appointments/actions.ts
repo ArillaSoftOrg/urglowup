@@ -24,6 +24,12 @@ import {
   sendReviewRequestEmailToCustomer,
 } from "@/lib/email-notifications";
 import { sendReviewRequestWhatsAppToCustomer } from "@/lib/whatsapp-notifications";
+import {
+  notifyCustomerAppointmentConfirmed,
+  notifyCustomerAppointmentRejected,
+  notifyCustomerAppointmentCancelledByBusiness,
+} from "@/lib/in-app-notifications";
+import { sendPushToUser } from "@urglowup/domain/notifications";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
 
 export type AppointmentActionState = {
@@ -89,6 +95,21 @@ export async function confirmAppointment(
     }
   });
 
+  after(async () => {
+    try {
+      const notification = await notifyCustomerAppointmentConfirmed(appointmentId);
+      if (notification) {
+        await sendPushToUser(notification.recipientUserId, {
+          title: notification.title,
+          body: notification.body,
+          data: { appointmentId, type: "APPOINTMENT_CONFIRMED" },
+        });
+      }
+    } catch (err) {
+      console.error("[notify] confirmAppointment:", err);
+    }
+  });
+
   revalidate();
   return { success: true, message: "Appointment confirmed." };
 }
@@ -110,6 +131,21 @@ export async function rejectAppointment(
       await sendRejectedEmailToCustomer(appointmentId);
     } catch (err) {
       console.error("[email] rejectAppointment:", err);
+    }
+  });
+
+  after(async () => {
+    try {
+      const notification = await notifyCustomerAppointmentRejected(appointmentId);
+      if (notification) {
+        await sendPushToUser(notification.recipientUserId, {
+          title: notification.title,
+          body: notification.body,
+          data: { appointmentId, type: "APPOINTMENT_REJECTED" },
+        });
+      }
+    } catch (err) {
+      console.error("[notify] rejectAppointment:", err);
     }
   });
 
@@ -142,6 +178,21 @@ export async function cancelAppointmentByBusiness(
       await sendCancelledByBusinessEmailToCustomer(appointmentId);
     } catch (err) {
       console.error("[email] cancelAppointmentByBusiness:", err);
+    }
+  });
+
+  after(async () => {
+    try {
+      const notification = await notifyCustomerAppointmentCancelledByBusiness(appointmentId);
+      if (notification) {
+        await sendPushToUser(notification.recipientUserId, {
+          title: notification.title,
+          body: notification.body,
+          data: { appointmentId, type: "APPOINTMENT_CANCELLED_BY_BUSINESS" },
+        });
+      }
+    } catch (err) {
+      console.error("[notify] cancelAppointmentByBusiness:", err);
     }
   });
 

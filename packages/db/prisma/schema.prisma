@@ -153,6 +153,11 @@ enum InAppNotificationType {
   PROFILE_ATTENTION
   INTEGRATION_ALERT
   TEAM_UPDATE
+  /// Customer-facing (recipientUserId = the customer, not business staff) —
+  /// added for the mobile notifications feed (Phase 8 item 15).
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_REJECTED
+  APPOINTMENT_CANCELLED_BY_BUSINESS
 }
 
 enum ConsentCategory {

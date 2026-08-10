@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
@@ -7,6 +9,7 @@ import { Button } from "@/components/button";
 import { Spacing } from "@/constants/theme";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth";
+import { registerForPushNotifications } from "@/lib/push-notifications";
 
 interface AccountMe {
   email: string;
@@ -16,13 +19,29 @@ interface AccountMe {
 
 // Minimal placeholder for Phase 8 item 14 (Profile/settings — edit profile,
 // language, notification prefs, delete account). For now this only exposes
-// the one thing every other screen depends on existing somewhere: sign out.
+// the things every other screen depends on existing somewhere: sign out and
+// push notification opt-in.
 export default function ProfileScreen() {
+  const router = useRouter();
+  const [pushStatus, setPushStatus] = useState<string | null>(null);
+  const [isRequestingPush, setIsRequestingPush] = useState(false);
+
   const { data } = useQuery({
     queryKey: ["account", "me"],
     queryFn: () => api.account.me(),
   });
   const account = data as AccountMe | undefined;
+
+  const onEnablePush = async () => {
+    setIsRequestingPush(true);
+    setPushStatus(null);
+    try {
+      const result = await registerForPushNotifications();
+      setPushStatus(result.ok ? "Bildirimler açıldı." : result.message);
+    } finally {
+      setIsRequestingPush(false);
+    }
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -40,6 +59,20 @@ export default function ProfileScreen() {
           {account ? (
             <ThemedText type="small" themeColor="textSecondary">
               {account.email}
+            </ThemedText>
+          ) : null}
+
+          <Button label="Bildirimler" variant="outline" onPress={() => router.push("/notifications")} />
+
+          <Button
+            label={isRequestingPush ? "İsteniyor..." : "Anlık bildirimleri aç"}
+            variant="outline"
+            loading={isRequestingPush}
+            onPress={onEnablePush}
+          />
+          {pushStatus ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {pushStatus}
             </ThemedText>
           ) : null}
 

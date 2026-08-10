@@ -62,6 +62,10 @@ export function createApiResources(client: ApiClient) {
       register: (body: RegisterDeviceBody) => client.post<{ id: string }>("/api/v1/devices", body),
       remove: (id: string) => client.delete<{ removed: boolean }>(`/api/v1/devices/${id}`),
     },
+    notifications: {
+      list: (cursor?: string) => client.get<Page<unknown>>("/api/v1/notifications", { query: { cursor } }),
+      markRead: (id: string) => client.post<{ read: boolean }>(`/api/v1/notifications/${id}/read`),
+    },
   };
 }
 

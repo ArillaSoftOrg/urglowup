@@ -1,17 +1,22 @@
 import { BusinessMemberRole } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
+type NotificationType =
+  | "APPOINTMENT_REQUESTED"
+  | "APPOINTMENT_CANCELLED_BY_CUSTOMER"
+  | "APPOINTMENT_RESCHEDULED_BY_CUSTOMER"
+  | "REVIEW_RECEIVED"
+  | "PROFILE_ATTENTION"
+  | "INTEGRATION_ALERT"
+  | "TEAM_UPDATE"
+  | "APPOINTMENT_CONFIRMED"
+  | "APPOINTMENT_REJECTED"
+  | "APPOINTMENT_CANCELLED_BY_BUSINESS";
+
 type NotificationPayload = {
   businessId: string;
   appointmentId?: string;
-  type:
-    | "APPOINTMENT_REQUESTED"
-    | "APPOINTMENT_CANCELLED_BY_CUSTOMER"
-    | "APPOINTMENT_RESCHEDULED_BY_CUSTOMER"
-    | "REVIEW_RECEIVED"
-    | "PROFILE_ATTENTION"
-    | "INTEGRATION_ALERT"
-    | "TEAM_UPDATE";
+  type: NotificationType;
   title: string;
   body: string;
   href: string;
@@ -58,6 +63,110 @@ export async function createBusinessInAppNotification(
       body: payload.body,
       href: payload.href,
     })),
+  });
+}
+
+/** Unlike createBusinessInAppNotification, this fans out to exactly one recipient: the customer. */
+async function createCustomerInAppNotification(
+  payload: NotificationPayload & { recipientUserId: string }
+) {
+  return db.inAppNotification.create({
+    data: {
+      businessId: payload.businessId,
+      recipientUserId: payload.recipientUserId,
+      appointmentId: payload.appointmentId,
+      type: payload.type,
+      title: payload.title,
+      body: payload.body,
+      href: payload.href,
+    },
+  });
+}
+
+export async function notifyCustomerAppointmentConfirmed(appointmentId: string) {
+  const appointment = await db.appointment.findUnique({
+    where: { id: appointmentId },
+    select: {
+      id: true,
+      businessId: true,
+      customerId: true,
+      requestedDate: true,
+      requestedTime: true,
+      business: { select: { name: true } },
+    },
+  });
+
+  if (!appointment) return null;
+
+  return createCustomerInAppNotification({
+    businessId: appointment.businessId,
+    recipientUserId: appointment.customerId,
+    appointmentId: appointment.id,
+    type: "APPOINTMENT_CONFIRMED",
+    title: "Randevunuz onaylandı",
+    body: `${appointment.business.name}, ${formatDateTime(
+      appointment.requestedDate,
+      appointment.requestedTime
+    )} randevunuzu onayladı.`,
+    href: "/account/appointments",
+  });
+}
+
+export async function notifyCustomerAppointmentRejected(appointmentId: string) {
+  const appointment = await db.appointment.findUnique({
+    where: { id: appointmentId },
+    select: {
+      id: true,
+      businessId: true,
+      customerId: true,
+      requestedDate: true,
+      requestedTime: true,
+      business: { select: { name: true } },
+    },
+  });
+
+  if (!appointment) return null;
+
+  return createCustomerInAppNotification({
+    businessId: appointment.businessId,
+    recipientUserId: appointment.customerId,
+    appointmentId: appointment.id,
+    type: "APPOINTMENT_REJECTED",
+    title: "Randevunuz reddedildi",
+    body: `${appointment.business.name}, ${formatDateTime(
+      appointment.requestedDate,
+      appointment.requestedTime
+    )} randevu talebinizi kabul edemedi.`,
+    href: "/account/appointments",
+  });
+}
+
+export async function notifyCustomerAppointmentCancelledByBusiness(appointmentId: string) {
+  const appointment = await db.appointment.findUnique({
+    where: { id: appointmentId },
+    select: {
+      id: true,
+      businessId: true,
+      customerId: true,
+      requestedDate: true,
+      requestedTime: true,
+      business: { select: { name: true } },
+    },
+  });
+
+  if (!appointment) return null;
+
+  return createCustomerInAppNotification({
+    businessId: appointment.businessId,
+    recipientUserId: appointment.customerId,
+    appointmentId: appointment.id,
+    type: "APPOINTMENT_CANCELLED_BY_BUSINESS",
+    title: "Randevunuz iptal edildi",
+    body: `${appointment.business.name}, ${formatDateTime(
+      appointment.requestedDate,
+      appointment.requestedTime
+    )} randevunuzu iptal etti.`,
+    href: "/account/appointments",
   });
 }
 
