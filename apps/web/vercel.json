@@ -19,6 +19,14 @@
     {
       "path": "/api/internal/rating-recalc",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/internal/appointment-reminders",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/internal/push-receipts",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

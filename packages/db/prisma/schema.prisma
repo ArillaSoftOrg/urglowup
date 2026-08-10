@@ -627,6 +627,10 @@ model Appointment {
   customerNote         String?
   businessNote         String?
   cancelledReason      String?
+  /// Set once the T-2h reminder push has been sent, so the reminder cron
+  /// (apps/web/src/app/api/internal/appointment-reminders) never double-sends
+  /// across overlapping cron runs.
+  reminderSentAt       DateTime?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
@@ -639,6 +643,9 @@ model Appointment {
   @@index([customerId])
   @@index([businessId, requestedDate])
   @@index([customerId, requestedDate])
+  /// Supports the reminder cron's cross-business scan (CONFIRMED appointments
+  /// starting in the next lookahead window, reminderSentAt IS NULL).
+  @@index([status, requestedDate])
   @@index([createdAt(sort: Desc)])
 }
 
@@ -732,6 +739,22 @@ model DeviceToken {
   createdAt     DateTime @default(now())
 
   @@index([userId])
+}
+
+/// A pending Expo push receipt to check later. Expo's push API is two-step:
+/// sendPushNotificationsAsync returns a *ticket* immediately (only catches
+/// malformed/already-known-invalid tokens synchronously); delivery-time
+/// failures like DeviceNotRegistered only show up in a *receipt*, fetchable
+/// 15 minutes to a day later via getPushNotificationReceiptsAsync. No FK to
+/// DeviceToken — by the time a receipt is checked the token row may already
+/// be gone, and the token *string* is all the cleanup step needs.
+model PushTicket {
+  id            String   @id @default(cuid())
+  expoPushToken String
+  ticketId      String   @unique
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model Review {
