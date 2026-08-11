@@ -1,5 +1,6 @@
 import { apiOk, apiError } from "@/lib/api/response";
 import { getBusinessBySlug } from "@urglowup/domain/businesses";
+import { toBusinessDetailDTO } from "@/lib/api/dto";
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -13,5 +14,5 @@ export async function GET(_request: Request, { params }: Params) {
     return apiError("NOT_FOUND", "Business not found.");
   }
 
-  return apiOk(business);
+  return apiOk(toBusinessDetailDTO(business));
 }

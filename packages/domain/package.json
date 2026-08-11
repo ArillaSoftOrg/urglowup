@@ -18,7 +18,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:booking": "tsx --test src/booking/create-appointment.test.ts src/booking/ownership.test.ts",
+    "test:booking": "tsx --test src/booking/create-appointment.test.ts src/booking/ownership.test.ts src/booking/reschedule-appointment.test.ts",
     "test:accounts": "tsx --test src/accounts/delete-account.test.ts",
     "test:ranking": "tsx --test src/marketplace/ranking.test.ts",
     "test:notifications": "tsx --test src/notifications/devices.test.ts"

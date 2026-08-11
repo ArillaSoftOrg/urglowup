@@ -11,7 +11,6 @@ import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { api } from "@/lib/api";
 import { ApiError } from "@urglowup/api-client";
-import type { BusinessDetail } from "@/lib/types/business-detail";
 
 const WEEKDAY_LABEL = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
@@ -53,7 +52,7 @@ export default function BookingScreen() {
     queryFn: () => api.businesses.bySlug(slug),
     enabled: Boolean(slug),
   });
-  const business = detailQuery.data as BusinessDetail | undefined;
+  const business = detailQuery.data;
   const activeServices = (business?.services ?? []).filter((s) => s.isActive);
 
   const availabilityQuery = useQuery({

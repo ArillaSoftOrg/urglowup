@@ -10,7 +10,7 @@ import { Button } from "@/components/button";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { api } from "@/lib/api";
-import type { BusinessDetail, BusinessDetailService } from "@/lib/types/business-detail";
+import type { BusinessDetailServiceDTO } from "@urglowup/validation";
 import type { BusinessSummary } from "@/lib/types/marketplace";
 
 const DAY_LABEL: Record<string, string> = {
@@ -23,7 +23,7 @@ const DAY_LABEL: Record<string, string> = {
   SUNDAY: "Pazar",
 };
 
-function formatServicePrice(service: BusinessDetailService): string | null {
+function formatServicePrice(service: BusinessDetailServiceDTO): string | null {
   if (service.priceType === "FREE_CONSULTATION") return "Ücretsiz danışma";
   if (service.priceType === "CONSULTATION_REQUIRED") return "Fiyat için danışın";
   if (!service.price) return null;
@@ -49,7 +49,7 @@ export default function BusinessDetailScreen() {
     queryFn: () => api.favorites.list(),
   });
 
-  const business = detailQuery.data as BusinessDetail | undefined;
+  const business = detailQuery.data;
   const favorites = (favoritesQuery.data?.data as BusinessSummary[] | undefined) ?? [];
   const isFavorited = business ? favorites.some((f) => f.id === business.id) : false;
 
@@ -115,7 +115,7 @@ export default function BusinessDetailScreen() {
             ) : null}
 
             <ThemedText type="small" themeColor="textSecondary">
-              {business._count.reviews} değerlendirme · {business._count.appointments} randevu
+              {business.reviewCount} değerlendirme · {business.appointmentCount} randevu
             </ThemedText>
 
             {business.description ? (

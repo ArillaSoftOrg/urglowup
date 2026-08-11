@@ -4,5 +4,6 @@
 export * from "./accounts";
 export * from "./auth";
 export * from "./booking";
+export * from "./business";
 export * from "./reviews";
 export * from "./notifications";

@@ -6,6 +6,7 @@ import {
   type ConflictAppointment,
   type ConflictBlockedTime,
 } from "./calendar";
+import { isSlotConflictError, runInSlotLock, slotLockKey } from "./slot-lock";
 
 export type RescheduleAppointmentResult =
   | { ok: true }
@@ -56,66 +57,12 @@ export async function rescheduleAppointment(
   }
 
   const dayOfWeek = getDayOfWeek(date);
-  const [businessHour, existingAppointments, blockedTimes] = await Promise.all([
-    db.businessHour.findUnique({
-      where: { businessId_dayOfWeek: { businessId: appointment.businessId, dayOfWeek } },
-    }),
-    db.appointment.findMany({
-      where: {
-        businessId: appointment.businessId,
-        requestedDate: new Date(date),
-        status: { in: BLOCKING_STATUSES },
-        id: { not: appointmentId },
-      },
-      select: {
-        id: true,
-        requestedDate: true,
-        requestedTime: true,
-        service: { select: { durationMinutes: true } },
-        professionalId: true,
-        status: true,
-      },
-    }),
-    db.blockedTime.findMany({
-      where: { businessId: appointment.businessId, date: new Date(date) },
-      select: { id: true, date: true, startTime: true, endTime: true, professionalId: true },
-    }),
-  ]);
+  const businessHour = await db.businessHour.findUnique({
+    where: { businessId_dayOfWeek: { businessId: appointment.businessId, dayOfWeek } },
+  });
 
   if (!businessHour || !businessHour.isOpen || !businessHour.openTime || !businessHour.closeTime) {
     return { ok: false, reason: "CLOSED" };
-  }
-
-  const conflictAppointments: ConflictAppointment[] = existingAppointments.map((a) => ({
-    id: a.id,
-    requestedDate: a.requestedDate,
-    requestedTime: a.requestedTime,
-    durationMinutes: a.service.durationMinutes,
-    professionalId: a.professionalId,
-    status: a.status,
-  }));
-
-  const conflictBlockedTimes: ConflictBlockedTime[] = blockedTimes.map((b) => ({
-    id: b.id,
-    date: b.date,
-    startTime: b.startTime,
-    endTime: b.endTime,
-    professionalId: b.professionalId,
-  }));
-
-  if (
-    hasSchedulingConflict(
-      {
-        date,
-        startTime: time,
-        durationMinutes: appointment.service.durationMinutes,
-        professionalId: appointment.professionalId,
-      },
-      conflictAppointments,
-      conflictBlockedTimes,
-    )
-  ) {
-    return { ok: false, reason: "CONFLICT" };
   }
 
   if (!isWithinWorkingHours(time, appointment.service.durationMinutes, businessHour)) {
@@ -125,14 +72,93 @@ export async function rescheduleAppointment(
   const newNote = `Müşteri tarafından yeniden planlandı: ${appointment.requestedTime} -> ${time} (${new Date(appointment.requestedDate).toLocaleDateString("tr-TR")} -> ${new Date(date).toLocaleDateString("tr-TR")})`;
   const updatedNote = appointment.businessNote ? `${appointment.businessNote}\n${newNote}` : newNote;
 
-  await db.appointment.update({
-    where: { id: appointmentId },
-    data: {
-      requestedDate: new Date(date),
-      requestedTime: time,
-      businessNote: updatedNote,
-    },
-  });
+  const lockKey = slotLockKey(appointment.businessId, appointment.professionalId, date, time);
 
-  return { ok: true };
+  return runInSlotLock(lockKey, async (tx) => {
+    // Re-check conflicts with fresh data now that we hold the slot lock —
+    // the pre-lock businessHour/working-hours checks above are safe to do
+    // early (they don't depend on other appointments), but conflicts do.
+    const [existingAppointments, blockedTimes] = await Promise.all([
+      tx.appointment.findMany({
+        where: {
+          businessId: appointment.businessId,
+          requestedDate: new Date(date),
+          status: { in: BLOCKING_STATUSES },
+          id: { not: appointmentId },
+        },
+        select: {
+          id: true,
+          requestedDate: true,
+          requestedTime: true,
+          service: { select: { durationMinutes: true } },
+          professionalId: true,
+          status: true,
+        },
+      }),
+      tx.blockedTime.findMany({
+        where: { businessId: appointment.businessId, date: new Date(date) },
+        select: { id: true, date: true, startTime: true, endTime: true, professionalId: true },
+      }),
+    ]);
+
+    const conflictAppointments: ConflictAppointment[] = existingAppointments.map((a) => ({
+      id: a.id,
+      requestedDate: a.requestedDate,
+      requestedTime: a.requestedTime,
+      durationMinutes: a.service.durationMinutes,
+      professionalId: a.professionalId,
+      status: a.status,
+    }));
+
+    const conflictBlockedTimes: ConflictBlockedTime[] = blockedTimes.map((b) => ({
+      id: b.id,
+      date: b.date,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      professionalId: b.professionalId,
+    }));
+
+    if (
+      hasSchedulingConflict(
+        {
+          date,
+          startTime: time,
+          durationMinutes: appointment.service.durationMinutes,
+          professionalId: appointment.professionalId,
+        },
+        conflictAppointments,
+        conflictBlockedTimes,
+      )
+    ) {
+      return { ok: false, reason: "CONFLICT" };
+    }
+
+    try {
+      // Guarded on status still being cancellable — closes the window
+      // between the pre-lock status check above and acquiring the lock
+      // (e.g. the business rejected/cancelled it concurrently).
+      const updated = await tx.appointment.updateMany({
+        where: { id: appointmentId, status: { in: CUSTOMER_CANCELLABLE } },
+        data: {
+          requestedDate: new Date(date),
+          requestedTime: time,
+          businessNote: updatedNote,
+        },
+      });
+
+      if (updated.count === 0) {
+        return { ok: false, reason: "NOT_RESCHEDULABLE" };
+      }
+
+      return { ok: true };
+    } catch (err) {
+      // Defense-in-depth: the advisory lock + fresh re-check above should
+      // make this unreachable in normal operation, but the partial unique
+      // index is the hard backstop if it's ever bypassed.
+      if (isSlotConflictError(err)) {
+        return { ok: false, reason: "CONFLICT" };
+      }
+      throw err;
+    }
+  });
 }

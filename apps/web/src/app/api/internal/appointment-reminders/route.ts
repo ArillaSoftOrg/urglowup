@@ -9,50 +9,29 @@
  * Route:   GET /api/internal/appointment-reminders
  * Access:  Internal only — NOT publicly callable
  *
- * Authentication (two accepted paths, checked in order):
- *   1. x-internal-secret header matching INTERNAL_API_SECRET env var (timingSafeEqual)
- *   2. Vercel Cron user-agent fallback: "vercel-cron/1.0"
+ * Authentication: x-internal-secret header matching INTERNAL_API_SECRET
+ * env var (timing-safe comparison), enforced by lib/internal-auth.ts.
+ * No User-Agent fallback — see that file's doc comment for why.
  *
  * Cron schedule: every 15 minutes (star-slash-15 * * * * in vercel.json).
  * WINDOW_MINUTES below must stay >= the cron interval, or an appointment
  * whose reminder window falls entirely between two runs would never get one.
  */
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
-import { INTERNAL_SECRET_HEADER } from "@/lib/constants/external";
 import {
   getAppointmentsNeedingReminders,
   markReminderSent,
 } from "@urglowup/domain/booking";
 import { sendPushToUser } from "@urglowup/domain/notifications";
+import { isInternalRequestAuthorized, unauthorizedInternalResponse } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
 
 const WINDOW_MINUTES = 20;
 
-function isAuthorised(request: Request): boolean {
-  const secret = process.env.INTERNAL_API_SECRET;
-  const provided = request.headers.get(INTERNAL_SECRET_HEADER);
-
-  if (provided !== null) {
-    if (!secret) return false;
-    try {
-      const a = Buffer.from(secret, "utf8");
-      const b = Buffer.from(provided, "utf8");
-      if (a.length !== b.length) return false;
-      return timingSafeEqual(a, b);
-    } catch {
-      return false;
-    }
-  }
-
-  const ua = request.headers.get("user-agent") ?? "";
-  return ua.startsWith("vercel-cron/");
-}
-
 export async function GET(request: Request) {
-  if (!isAuthorised(request)) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  if (!isInternalRequestAuthorized(request)) {
+    return unauthorizedInternalResponse();
   }
 
   const appointments = await getAppointmentsNeedingReminders(WINDOW_MINUTES);

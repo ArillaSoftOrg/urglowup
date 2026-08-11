@@ -9,3 +9,4 @@ export * from "./reschedule-appointment";
 export * from "./prepare-request";
 export * from "./constants";
 export * from "./reminders";
+export * from "./slot-lock";

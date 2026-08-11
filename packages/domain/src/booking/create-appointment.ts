@@ -1,15 +1,7 @@
 import { db, Prisma } from "@urglowup/db";
 import type { CreateAppointmentInput, CreateAppointmentResult } from "./types";
 import { BLOCKING_STATUSES } from "./constants";
-
-function slotLockKey(input: CreateAppointmentInput): string {
-  return [
-    input.businessId,
-    input.primaryProfessionalId ?? "unassigned",
-    input.requestedDate,
-    input.requestedTime,
-  ].join(":");
-}
+import { isSlotConflictError, runInSlotLock, slotLockKey } from "./slot-lock";
 
 /**
  * Creates an appointment request, guarding against the two concurrency bugs
@@ -39,12 +31,15 @@ export async function createAppointment(
     }
   }
 
-  const lockKey = slotLockKey(input);
+  const lockKey = slotLockKey(
+    input.businessId,
+    input.primaryProfessionalId,
+    input.requestedDate,
+    input.requestedTime,
+  );
   const requestedDate = new Date(input.requestedDate);
 
-  const result = await db.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
-
+  const result = await runInSlotLock(lockKey, async (tx) => {
     const slotConflict = await tx.appointment.findFirst({
       where: {
         businessId: input.businessId,
@@ -123,7 +118,7 @@ export async function createAppointment(
       // Defense-in-depth: the advisory lock above should make this
       // unreachable in normal operation, but the partial unique index is
       // the hard backstop if it's ever bypassed.
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      if (isSlotConflictError(err)) {
         return { ok: false, reason: "SLOT_TAKEN" } satisfies CreateAppointmentResult;
       }
       throw err;

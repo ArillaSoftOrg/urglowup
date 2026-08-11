@@ -30,6 +30,7 @@ import {
   notifyCustomerAppointmentCancelledByBusiness,
 } from "@/lib/in-app-notifications";
 import { sendPushToUser } from "@urglowup/domain/notifications";
+import { isSlotConflictError, runInSlotLock, slotLockKey } from "@urglowup/domain/booking";
 import type { AppointmentStatus } from "@/generated/prisma/enums";
 
 export type AppointmentActionState = {
@@ -438,55 +439,106 @@ export async function createAppointment(
     }
   }
 
-  const { appointments, blockedTimes } = await getConflictContext(businessId, date);
-
-  if (
-    hasSchedulingConflict(
-      { date, startTime, durationMinutes: service.durationMinutes, professionalId },
-      appointments,
-      blockedTimes
-    )
-  ) {
-    return { success: false, message: "Bu saatte çakışan bir randevu veya blokaj var." };
-  }
-
   const businessHour = await db.businessHour.findUnique({
     where: { businessId_dayOfWeek: { businessId, dayOfWeek: getDayOfWeek(date) } },
   });
   const withinHours = isWithinWorkingHours(startTime, service.durationMinutes, businessHour ?? undefined);
 
-  const created = await db.appointment.create({
-    data: {
-      businessId,
-      customerId,
-      serviceId,
-      professionalId,
-      requestedDate: new Date(`${date}T00:00:00.000Z`),
-      requestedTime: startTime,
-      status: "CONFIRMED",
-      businessNote: notes || null,
-      totalDurationMinutes: service.durationMinutes,
-      totalPrice: service.price ?? null,
-      items: {
-        create: [
-          {
-            guestName: "Müşteri",
-            guestIndex: 0,
-            serviceId,
-            professionalId: professionalId ?? null,
-            durationMinutes: service.durationMinutes,
-            priceSnapshot: service.price ?? null,
-            sortOrder: 0,
+  const lockKey = slotLockKey(businessId, professionalId, date, startTime);
+
+  const outcome = await runInSlotLock(lockKey, async (tx) => {
+    // Re-check conflicts with fresh data now that the slot lock is held —
+    // the pre-lock lookups above (customer relationship, service,
+    // professional, business hours) don't depend on other appointments, so
+    // they're safe to have run before acquiring the lock.
+    const dateObj = new Date(`${date}T00:00:00.000Z`);
+    const [conflictAppointments, blockedTimes] = await Promise.all([
+      tx.appointment.findMany({
+        where: { businessId, requestedDate: dateObj },
+        select: {
+          id: true,
+          requestedDate: true,
+          requestedTime: true,
+          totalDurationMinutes: true,
+          professionalId: true,
+          status: true,
+          service: { select: { durationMinutes: true } },
+        },
+      }),
+      tx.blockedTime.findMany({
+        where: { businessId, date: dateObj },
+        select: { id: true, date: true, startTime: true, endTime: true, professionalId: true },
+      }),
+    ]);
+
+    const appointments: ConflictAppointment[] = conflictAppointments.map((appt) => ({
+      id: appt.id,
+      requestedDate: appt.requestedDate,
+      requestedTime: appt.requestedTime,
+      durationMinutes: appt.totalDurationMinutes ?? appt.service.durationMinutes,
+      professionalId: appt.professionalId,
+      status: appt.status,
+    }));
+
+    if (
+      hasSchedulingConflict(
+        { date, startTime, durationMinutes: service.durationMinutes, professionalId },
+        appointments,
+        blockedTimes,
+      )
+    ) {
+      return { ok: false as const, message: "Bu saatte çakışan bir randevu veya blokaj var." };
+    }
+
+    try {
+      const created = await tx.appointment.create({
+        data: {
+          businessId,
+          customerId,
+          serviceId,
+          professionalId,
+          requestedDate: dateObj,
+          requestedTime: startTime,
+          status: "CONFIRMED",
+          businessNote: notes || null,
+          totalDurationMinutes: service.durationMinutes,
+          totalPrice: service.price ?? null,
+          items: {
+            create: [
+              {
+                guestName: "Müşteri",
+                guestIndex: 0,
+                serviceId,
+                professionalId: professionalId ?? null,
+                durationMinutes: service.durationMinutes,
+                priceSnapshot: service.price ?? null,
+                sortOrder: 0,
+              },
+            ],
           },
-        ],
-      },
-    },
-    select: { id: true },
+        },
+        select: { id: true },
+      });
+
+      return { ok: true as const, appointmentId: created.id };
+    } catch (err) {
+      // Defense-in-depth: the advisory lock + fresh re-check above should
+      // make this unreachable in normal operation, but the partial unique
+      // index is the hard backstop if it's ever bypassed.
+      if (isSlotConflictError(err)) {
+        return { ok: false as const, message: "Bu saatte çakışan bir randevu veya blokaj var." };
+      }
+      throw err;
+    }
   });
+
+  if (!outcome.ok) {
+    return { success: false, message: outcome.message };
+  }
 
   after(async () => {
     try {
-      await sendConfirmedEmailToCustomer(created.id);
+      await sendConfirmedEmailToCustomer(outcome.appointmentId);
     } catch (err) {
       console.error("[email] createAppointment → customer:", err);
     }
@@ -496,7 +548,7 @@ export async function createAppointment(
   return {
     success: true,
     message: "Randevu oluşturuldu.",
-    appointmentId: created.id,
+    appointmentId: outcome.appointmentId,
     warning: withinHours ? undefined : "Bu saat çalışma saatleri dışında.",
   };
 }

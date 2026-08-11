@@ -13,6 +13,8 @@
     "release:check": "npm run env:check && npm run check:dictionaries && npm audit --audit-level=moderate && npm run lint && npm run typecheck && npm run build",
     "smoke:deploy": "node scripts/post-deploy-smoke.mjs",
     "test:ranking": "pnpm --filter @urglowup/domain run test:ranking",
+    "test:internal-auth": "tsx --test src/lib/internal-auth.test.ts",
+    "test:dto": "tsx --test src/lib/api/dto.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -58,6 +60,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",

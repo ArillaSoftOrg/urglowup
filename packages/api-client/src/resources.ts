@@ -6,6 +6,7 @@ import type {
   UpdateProfileBody,
   UpdatePreferencesBody,
   RegisterDeviceBody,
+  BusinessDetailDTO,
 } from "@urglowup/validation";
 
 // Thin typed wrappers over ApiClient for each /api/v1 resource. Response
@@ -31,7 +32,7 @@ export function createApiResources(client: ApiClient) {
     businesses: {
       search: (query: Record<string, string | number | boolean | undefined>) =>
         client.get<{ data: unknown[] }>("/api/v1/businesses", { query }),
-      bySlug: (slug: string) => client.get<unknown>(`/api/v1/businesses/${slug}`),
+      bySlug: (slug: string) => client.get<BusinessDetailDTO>(`/api/v1/businesses/${slug}`),
       availability: (slug: string, serviceId: string, date: string, professionalId?: string) =>
         client.get<{ date: string; slots: string[] }>(`/api/v1/businesses/${slug}/availability`, {
           query: { serviceId, date, professionalId },
