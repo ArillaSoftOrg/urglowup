@@ -39,6 +39,23 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: urglowup_build
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d urglowup_build"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/urglowup_build?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/urglowup_build?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -47,28 +64,30 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Apply database migrations
+        run: pnpm --filter @urglowup/db run migrate:deploy
       - name: Build web app
-        # env.ts skips strict secret validation during `next build`
-        # (NEXT_PHASE === "phase-production-build"), but a couple of module-
-        # init-time reads (e.g. Cloudinary config) aren't behind that gate —
-        # untested against a fully secret-less CI environment yet. If this
-        # job fails here, wire up the real secrets as repo/environment
-        # secrets and pass them through as env vars below.
         run: pnpm --filter web run build
 
   test:
     runs-on: ubuntu-latest
-    # These are integration tests against a real Postgres database (see
-    # packages/domain/src/**/*.test.ts) — DATABASE_URL must be configured as
-    # a repository secret. Since there's no production data yet, pointing it
-    # at the same dev database used locally is acceptable for now; a
-    # dedicated CI/test database is cleaner once real data exists. Each test
-    # file creates and tears down its own fixtures, so runs shouldn't
-    # collide with local dev work, but concurrent CI runs against the same
-    # DB could still race each other — the `concurrency` block above only
-    # cancels superseded runs on the *same* ref, not across branches.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: urglowup_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d urglowup_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/urglowup_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/urglowup_test?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -77,5 +96,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Apply database migrations
+        run: pnpm --filter @urglowup/db run migrate:deploy
       - name: Run domain test suite (includes booking concurrency + IDOR tests)
         run: pnpm run test

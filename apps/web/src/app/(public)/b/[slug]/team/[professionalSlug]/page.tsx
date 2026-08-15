@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { absoluteUrl } from "@/lib/seo";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { JsonLd } from "@/components/shared/json-ld";
 import { CalendarCheck, ChevronRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -85,7 +86,7 @@ export default async function ProfessionalPage({ params }: PageProps) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }} />
+      <JsonLd data={personJsonLd} />
 
       <div className="container mx-auto max-w-2xl space-y-8 px-4 py-8">
         {/* Breadcrumb */}

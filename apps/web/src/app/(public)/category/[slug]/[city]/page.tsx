@@ -16,6 +16,7 @@ import { ChevronRight, MapPin } from "lucide-react";
 import { buildAlternates } from "@/lib/i18n-metadata";
 import { absoluteUrl } from "@/lib/seo";
 import { db } from "@/lib/db";
+import { JsonLd } from "@/components/shared/json-ld";
 
 interface PageProps {
   params: Promise<{ slug: string; city: string }>;
@@ -118,10 +119,7 @@ export default async function CategoryCityPage({ params, searchParams }: PagePro
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
-      />
+      <JsonLd data={collectionJsonLd} />
       <div className="container mx-auto space-y-5 px-4 py-6 sm:space-y-8 sm:py-10">
         <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
           <Link href="/" className="hover:underline">

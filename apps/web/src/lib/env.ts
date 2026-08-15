@@ -73,6 +73,10 @@ const envSchema = z.object({
   // Content-Security-Policy is enforced by default; "true" is the emergency
   // rollback that switches the header back to Report-Only.
   CSP_REPORT_ONLY: z.string().optional(),
+  // Promote the nonce-based strict policy from Report-Only to enforced.
+  CSP_STRICT_ENFORCE: z.string().optional(),
+  // Optional CSP violation endpoint appended as report-uri.
+  CSP_REPORT_URI: z.string().optional(),
   // Optional admin network gate — comma-separated IPs/CIDRs allowed to reach /admin.
   // Empty/unset disables the allowlist. Only safe behind a trusted proxy/CDN.
   ADMIN_IP_ALLOWLIST: z

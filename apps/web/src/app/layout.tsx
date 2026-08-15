@@ -9,6 +9,7 @@ import {
   SITE_URL,
   absoluteUrl,
 } from "@/lib/seo";
+import { JsonLd } from "@/components/shared/json-ld";
 import "./globals.css";
 
 // Validate email config on startup
@@ -65,6 +66,7 @@ export default async function RootLayout({
 }>) {
   const h = await headers();
   const locale = h.get("x-locale") ?? "tr";
+  const nonce = h.get("x-nonce") ?? undefined;
   const direction = getDirection(locale);
 
   const jar = await cookies();
@@ -103,22 +105,13 @@ export default async function RootLayout({
       <head>
         {/* Blocking script: resolves SYSTEM mode and prevents dark-mode flash before paint */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=document.cookie.match(/(?:^|; )ugl_theme=([^;]*)/);var theme=t?decodeURIComponent(t[1]):'SYSTEM';if(theme==='DARK'||(theme==='SYSTEM'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
           }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationJsonLd),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteJsonLd),
-          }}
-        />
+        <JsonLd data={organizationJsonLd} />
+        <JsonLd data={websiteJsonLd} />
       </head>
       <body className="flex min-h-full flex-col font-sans">{children}</body>
     </html>

@@ -10,6 +10,7 @@ import {
   type Locale,
 } from "@/lib/i18n-config";
 import { isAdminIpAllowed } from "@/lib/admin-ip-allowlist";
+import { generateCspNonce, resolveCspHeaders } from "@/lib/csp";
 import { env } from "@/lib/env";
 
 const PROTECTED_PREFIXES = ["/account", "/business", "/admin"];
@@ -93,6 +94,24 @@ function withCorsHeaders(response: NextResponse, origin: string | null): NextRes
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const nonce = generateCspNonce();
+  const { strict, responseHeaders } = resolveCspHeaders(nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", strict);
+
+  function withCspHeaders(response: NextResponse): NextResponse {
+    response.headers.delete("Content-Security-Policy");
+    response.headers.delete("Content-Security-Policy-Report-Only");
+    for (const header of responseHeaders) {
+      response.headers.set(header.key, header.value);
+    }
+    return response;
+  }
+
+  function nextWithRequestHeaders(headers = requestHeaders): NextResponse {
+    return withCspHeaders(NextResponse.next({ request: { headers } }));
+  }
 
   if (isCorsScopedPath(pathname)) {
     const origin = request.headers.get("origin");
@@ -105,10 +124,10 @@ export function proxy(request: NextRequest) {
         "Content-Type, Authorization, Idempotency-Key",
       );
       preflight.headers.set("Access-Control-Max-Age", "86400");
-      return preflight;
+      return withCspHeaders(preflight);
     }
 
-    return withCorsHeaders(NextResponse.next(), origin);
+    return withCspHeaders(withCorsHeaders(NextResponse.next(), origin));
   }
 
   // Optional network gate: when ADMIN_IP_ALLOWLIST is configured, restrict the
@@ -119,7 +138,7 @@ export function proxy(request: NextRequest) {
         path: pathname,
         ip: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown",
       });
-      return new NextResponse(null, { status: 404 });
+      return withCspHeaders(new NextResponse(null, { status: 404 }));
     }
   }
 
@@ -151,21 +170,21 @@ export function proxy(request: NextRequest) {
       );
       const redirectTarget = `${pathname}${request.nextUrl.search}`;
       authUrl.searchParams.set("redirect_url", redirectTarget);
-      return NextResponse.redirect(authUrl);
+      return withCspHeaders(NextResponse.redirect(authUrl));
     }
-    return NextResponse.next();
+    return nextWithRequestHeaders();
   }
 
   if (!needsLocaleRouting(pathname)) {
-    return;
+    return nextWithRequestHeaders();
   }
 
-  const reqHeaders = new Headers(request.headers);
+  const reqHeaders = new Headers(requestHeaders);
 
   for (const locale of INTL_LOCALES) {
     if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
       reqHeaders.set("x-locale", locale);
-      return NextResponse.next({ request: { headers: reqHeaders } });
+      return nextWithRequestHeaders(reqHeaders);
     }
   }
 
@@ -177,11 +196,11 @@ export function proxy(request: NextRequest) {
       request.url,
     );
     redirectUrl.search = request.nextUrl.search;
-    return NextResponse.redirect(redirectUrl);
+    return withCspHeaders(NextResponse.redirect(redirectUrl));
   }
 
   reqHeaders.set("x-locale", "tr");
-  return NextResponse.next({ request: { headers: reqHeaders } });
+  return nextWithRequestHeaders(reqHeaders);
 }
 
 export const config = {
