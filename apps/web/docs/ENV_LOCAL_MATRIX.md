@@ -34,6 +34,12 @@ For a copy-ready local example, see [.env.local.example](/C:/Users/YUSUF/Documen
 | `WHATSAPP_TEMPLATE_BOOKING_CONFIRMED` | template name | production template name | Optional |
 | `WHATSAPP_TEMPLATE_LANGUAGE` | `tr` | `tr` | Optional |
 | `WHATSAPP_API_VERSION` | `v21.0` | `v21.0` | Optional |
+| `WHATSAPP_APP_ID` | test app's App ID | production app's App ID | Optional — reserved for a future JS-SDK Embedded Signup flow, unused by the current webhook-driven flow |
+| `WHATSAPP_APP_SECRET` | test app's App Secret | production app's App Secret | Required for webhook signature verification (X-Hub-Signature-256), server-only |
+| `WHATSAPP_REDIRECT_URI` | `http://localhost:3000/api/integrations/whatsapp/callback` | `https://urglowup.vercel.app/api/integrations/whatsapp/callback` | Optional — reserved for a future JS-SDK flow; the callback route itself no longer reads this |
+| `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | random string | random string | Required for the webhook route's GET verification |
+| `WHATSAPP_EXPECTED_PHONE_NUMBER` | your test number, E.164 | the real Urglowup number, E.164 (`+90...`) | Required for post-PARTNER_ADDED phone-number matching — never auto-selects "the first" number |
+| `WHATSAPP_SYSTEM_USER_ACCESS_TOKEN` | a test System User token | production System User token, manually generated in Meta Business Settings | Required for the post-PARTNER_ADDED `/phone_numbers` Graph API call — see Phase 1.2 report's "Access Token Strategy" |
 
 ## Quick Notes
 

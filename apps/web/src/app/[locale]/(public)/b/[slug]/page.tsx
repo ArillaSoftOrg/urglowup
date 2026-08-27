@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import {
   getBusinessBySlug,
   getBusinessMediaEngagement,
@@ -56,6 +57,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function LocaleBusinessProfilePage({ params }: PageProps) {
   const { locale, slug } = await params;
+  const h = await headers();
+  const nonce = h.get("x-nonce") ?? undefined;
   const business = await getBusinessBySlug(slug);
 
   if (!business || HIDDEN_STATUSES.has(business.status)) {
@@ -139,6 +142,7 @@ export default async function LocaleBusinessProfilePage({ params }: PageProps) {
           isLoggedIn={!!user}
           initialIsFavorited={!!isFavorited}
           mediaEngagement={mediaEngagement}
+          nonce={nonce}
         />
         <DesktopBusinessProfile
           business={business}

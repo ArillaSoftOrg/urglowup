@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { db } from "./db";
+import { resolveClientIp } from "@/lib/client-ip";
 
 export type HeaderReader = Pick<Headers, "get">;
 
@@ -39,20 +40,7 @@ export function readPositiveIntEnv(key: string, fallback: number) {
 }
 
 export function getClientIp(headers: HeaderReader) {
-  const forwardedFor = headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    const first = forwardedFor.split(",")[0]?.trim();
-    if (first) {
-      return first;
-    }
-  }
-
-  const realIp = headers.get("x-real-ip")?.trim();
-  if (realIp) {
-    return realIp;
-  }
-
-  return "unknown";
+  return resolveClientIp(headers) ?? "unknown";
 }
 
 export function hashIdentifier(value: string) {

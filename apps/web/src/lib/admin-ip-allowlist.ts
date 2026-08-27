@@ -1,27 +1,11 @@
+import { resolveClientIp } from "@/lib/client-ip";
+
 // Optional network gate for /admin. Reads a comma-separated ADMIN_IP_ALLOWLIST
 // of IPv4/IPv6 addresses or CIDR ranges. Empty/unset ⇒ allowlist disabled
 // (every IP allowed). Intentionally dependency-free (no Prisma / DB imports)
-// so it can run inside the proxy without bloating the bundle. It trusts
-// x-forwarded-for / x-real-ip, so it is only safe behind a trusted proxy/CDN.
+// so it can run inside the proxy without bloating the bundle.
 
 type HeaderReader = Pick<Headers, "get">;
-
-function getClientIp(headers: HeaderReader): string | null {
-  const forwardedFor = headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    const first = forwardedFor.split(",")[0]?.trim();
-    if (first) {
-      return first;
-    }
-  }
-
-  const realIp = headers.get("x-real-ip")?.trim();
-  if (realIp) {
-    return realIp;
-  }
-
-  return null;
-}
 
 type ParsedIp = { bits: bigint; version: 4 | 6 };
 
@@ -139,7 +123,7 @@ export function isAdminIpAllowed(headers: HeaderReader): boolean {
     return true; // disabled
   }
 
-  const clientIp = getClientIp(headers);
+  const clientIp = resolveClientIp(headers);
   if (!clientIp) {
     return false;
   }

@@ -18,6 +18,7 @@ import { absoluteUrl } from "@/lib/seo";
 import { getDictionary } from "@/lib/get-dictionary";
 import type { Locale } from "@/lib/i18n-config";
 import { db } from "@/lib/db";
+import { JsonLd } from "@/components/shared/json-ld";
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string; city: string }>;
@@ -121,10 +122,7 @@ export default async function LocaleCategoryCityPage({ params, searchParams }: P
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
-      />
+      <JsonLd data={collectionJsonLd} />
       <div className="container mx-auto space-y-5 px-4 py-6 sm:space-y-8 sm:py-10">
         {/* Breadcrumb */}
         <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">

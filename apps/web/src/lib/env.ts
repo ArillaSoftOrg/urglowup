@@ -73,6 +73,10 @@ const envSchema = z.object({
   // Content-Security-Policy is enforced by default; "true" is the emergency
   // rollback that switches the header back to Report-Only.
   CSP_REPORT_ONLY: z.string().optional(),
+  // Promote the nonce-based strict policy from Report-Only to enforced.
+  CSP_STRICT_ENFORCE: z.string().optional(),
+  // Optional CSP violation endpoint appended as report-uri.
+  CSP_REPORT_URI: z.string().optional(),
   // Optional admin network gate — comma-separated IPs/CIDRs allowed to reach /admin.
   // Empty/unset disables the allowlist. Only safe behind a trusted proxy/CDN.
   ADMIN_IP_ALLOWLIST: z
@@ -121,6 +125,22 @@ const envSchema = z.object({
   WHATSAPP_TEMPLATE_LANGUAGE: z.string().optional(),
   WHATSAPP_API_VERSION: z.string().optional(),
   WHATSAPP_MARKETING_TEMPLATES: z.string().optional(),
+  // WhatsApp Coexistence — Meta-hosted Embedded Signup (Tech Provider
+  // "Generate link" flow). Server-only; see src/lib/external/whatsapp/onboarding-config.ts.
+  WHATSAPP_APP_ID: z.string().optional(),
+  WHATSAPP_APP_SECRET: z.string().optional(),
+  WHATSAPP_REDIRECT_URI: z.string().url().optional(),
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
+  // account_update/PARTNER_ADDED webhook handling — see
+  // src/lib/external/whatsapp/webhook-config.ts.
+  // The single Urglowup number, E.164 (+90...), matched against Meta's
+  // /phone_numbers response — no auto-selection of "the first" number.
+  WHATSAPP_EXPECTED_PHONE_NUMBER: z.string().optional(),
+  // Pre-provisioned System User token (Meta Business Settings) with asset
+  // access to WABAs shared via the Tech Provider partnership. NOT obtained
+  // through this app's OAuth code exchange — the Meta-hosted PARTNER_ADDED
+  // flow never delivers a code. See Phase 1.2 report's "Access Token Strategy".
+  WHATSAPP_SYSTEM_USER_ACCESS_TOKEN: z.string().optional(),
   CAMPAIGN_DRY_RUN: z.string().optional(),
   // Verifies Resend's inbound webhook signature (Svix). Missing in production
   // means the webhook route rejects everything — see src/app/api/webhooks/resend/route.ts.

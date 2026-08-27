@@ -15,6 +15,7 @@ import { EmptyFilterState } from "@/components/marketplace/empty-filter-state";
 import { ChevronRight, MapPin } from "lucide-react";
 import { buildAlternates } from "@/lib/i18n-metadata";
 import { absoluteUrl } from "@/lib/seo";
+import { JsonLd } from "@/components/shared/json-ld";
 
 interface PageProps {
   params: Promise<{ slug: string; city: string; district: string }>;
@@ -101,10 +102,7 @@ export default async function CategoryCityDistrictPage({ params, searchParams }:
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
-      />
+      <JsonLd data={collectionJsonLd} />
       <div className="container mx-auto space-y-8 px-4 py-10">
         {/* Breadcrumb */}
         <nav className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">

@@ -13,7 +13,9 @@
     "release:check": "npm run env:check && npm run check:dictionaries && npm audit --audit-level=moderate && npm run lint && npm run typecheck && npm run build",
     "smoke:deploy": "node scripts/post-deploy-smoke.mjs",
     "test:ranking": "pnpm --filter @urglowup/domain run test:ranking",
-    "test:internal-auth": "tsx --test src/lib/internal-auth.test.ts",
+    "test:security": "tsx --test src/lib/internal-auth.test.ts src/lib/client-ip.test.ts src/lib/json-ld.test.ts src/lib/csp.test.ts",
+    "test:internal-auth": "pnpm run test:security",
+    "test:whatsapp": "tsx --test src/lib/external/whatsapp/onboarding-config.test.ts src/lib/external/whatsapp/oauth.test.ts src/lib/external/whatsapp/discovery.test.ts src/lib/external/whatsapp/integration-store.test.ts src/lib/external/whatsapp/webhook-config.test.ts src/lib/external/whatsapp/webhook-signature.test.ts src/lib/external/whatsapp/webhook-challenge.test.ts src/lib/external/whatsapp/account-update-parser.test.ts src/lib/external/whatsapp/subscription.test.ts src/app/api/webhooks/whatsapp/route.test.ts",
     "test:dto": "tsx --test src/lib/api/dto.test.ts",
     "test:e2e": "playwright test"
   },

@@ -877,6 +877,73 @@ model BusinessExternalConnection {
   @@index([provider, syncStatus])
 }
 
+// Coexistence onboarding progress for the single-row WhatsAppIntegration
+// below. There is deliberately no PENDING value: no code path creates a row
+// before a WABA ID is known, so "no row" (getWhatsAppIntegrationStatus()
+// returns null) already means "not started" — a PENDING enum value would be
+// unreachable dead state, which is what Phase 1.2 was asked to avoid.
+enum WhatsAppIntegrationStatus {
+  WABA_DISCOVERED
+  PHONE_DISCOVERED
+  CONNECTED
+  FAILED
+}
+
+// ─── WhatsApp Coexistence Platform Integration ────────────────────────────
+// Single centralized Urglowup WhatsApp number, onboarded once via Meta's
+// Embedded Signup (Meta-hosted Tech Provider "Generate link" flow). This is
+// NOT a per-business credential model like BusinessExternalConnection above
+// — there is intentionally only ever one row, enforced by the unique
+// `singletonKey`. WHATSAPP_APP_SECRET is never stored here; it stays in the
+// server-only env var and is only used transiently during signature
+// verification / token exchange.
+//
+// Populated incrementally by the account_update/PARTNER_ADDED webhook
+// handler (see api/webhooks/whatsapp/route.ts): wabaId/ownerBusinessId
+// arrive first (from Meta, no token needed), phoneNumberId/
+// displayPhoneNumber are discovered afterward via a separate Graph API call
+// that DOES need a token. accessTokenEncrypted/tokenType are only ever
+// populated by the future JS-SDK Embedded Signup flow's
+// saveWhatsAppIntegration() — the Meta-hosted PARTNER_ADDED flow uses a
+// pre-provisioned WHATSAPP_SYSTEM_USER_ACCESS_TOKEN (env var) instead and
+// never writes a token here. See Phase 1.2 report's "Access Token Strategy".
+model WhatsAppIntegration {
+  id String @id @default(cuid())
+
+  // Fixed constant value — the unique constraint on this column is what
+  // enforces "only one row ever exists" at the database level.
+  singletonKey String @unique @default("primary")
+
+  status WhatsAppIntegrationStatus @default(WABA_DISCOVERED)
+
+  // owner_business_id is the field name Meta's account_update/PARTNER_ADDED
+  // webhook payload uses (per the Postman collection referenced in Phase
+  // 1.2) — kept distinct from Meta's separate "Business Portfolio" concept
+  // used elsewhere in Meta's product surface, which Phase 1 had guessed at
+  // under the old `businessPortfolioId` name.
+  wabaId          String
+  ownerBusinessId String?
+
+  phoneNumberId      String?
+  displayPhoneNumber String?
+
+  // AES-256-GCM, same scheme as BusinessExternalConnection.accessTokenEncrypted
+  // above (OAUTH_TOKEN_ENCRYPTION_KEY). Never the App Secret. Nullable — see
+  // model doc comment: the hosted PARTNER_ADDED flow never populates this.
+  accessTokenEncrypted String?
+  tokenType             String?
+
+  // Set when phone discovery finds zero or more-than-one match, or when a
+  // downstream step fails — never the raw Meta error body, just a safe
+  // summary. Cleared (set to null) on the next successful transition.
+  lastError String?
+
+  connectedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([wabaId])
+}
+
 model ExternalReviewCache {
   id                      String                     @id @default(cuid())
   businessId              String

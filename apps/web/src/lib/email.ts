@@ -8,7 +8,16 @@ import {
   type EmailFailureType,
 } from "./email-diagnostics";
 
-const resend = new Resend(env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  if (!env.RESEND_API_KEY) {
+    return null;
+  }
+
+  resend ??= new Resend(env.RESEND_API_KEY);
+  return resend;
+}
 
 interface EmailTag {
   name: string;
@@ -45,9 +54,27 @@ export async function sendEmail({
   });
 
   try {
+    const client = getResendClient();
+    if (!client) {
+      const message = "RESEND_API_KEY is not configured";
+      logEmailEvent({
+        type: "send_failure",
+        to,
+        subject,
+        template,
+        errorType: "MISSING_ENV",
+        errorMessage: message,
+      });
+      return {
+        success: false,
+        error: message,
+        errorType: "MISSING_ENV",
+      };
+    }
+
     const html = await render(react);
 
-    const response = await resend.emails.send({
+    const response = await client.emails.send({
       from: env.EMAIL_FROM,
       to,
       subject,

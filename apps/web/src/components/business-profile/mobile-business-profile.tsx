@@ -108,6 +108,7 @@ export function MobileBusinessProfile({
   isLoggedIn = false,
   initialIsFavorited = false,
   mediaEngagement = {},
+  nonce,
 }: {
   business: BusinessWithDetails;
   reviewSummary: ReviewSummary;
@@ -120,6 +121,7 @@ export function MobileBusinessProfile({
   isLoggedIn?: boolean;
   initialIsFavorited?: boolean;
   mediaEngagement?: Record<string, BusinessMediaEngagement>;
+  nonce?: string;
 }) {
   const galleryItems = buildGalleryItems(business);
   const portfolioItems = buildPortfolioItems(business, mediaEngagement);
@@ -258,6 +260,7 @@ export function MobileBusinessProfile({
           className="border-t bg-background/95 md:hidden"
         />
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               (() => {

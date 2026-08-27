@@ -10,6 +10,7 @@ import { absoluteUrl } from "@/lib/seo";
 import { getDictionary } from "@/lib/get-dictionary";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { JsonLd } from "@/components/shared/json-ld";
 import { ChevronRight, Clock, MapPin, CalendarCheck, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -160,8 +161,8 @@ export default async function ServiceDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <JsonLd data={serviceJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
 
       <div className="container mx-auto max-w-4xl space-y-8 px-4 py-6 sm:py-10">
         {/* Breadcrumb */}

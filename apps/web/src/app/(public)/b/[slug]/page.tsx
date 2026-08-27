@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { after } from "next/server";
+import { headers } from "next/headers";
 import {
   getBusinessBySlug,
   getBusinessMediaEngagement,
@@ -18,6 +19,7 @@ import { db } from "@/lib/db";
 import { getDictionary } from "@/lib/get-dictionary";
 import { getPublicAccountMenuState } from "@/components/layout/public-account-menu-state";
 import { RecentBusinessViewTracker } from "@/components/home/recent-business-history";
+import { JsonLd } from "@/components/shared/json-ld";
 import type { Metadata } from "next";
 
 const HIDDEN_STATUSES = new Set(["SUSPENDED", "REJECTED"]);
@@ -68,6 +70,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BusinessProfilePage({ params, searchParams }: PageProps) {
   const [{ slug }, { ref }] = await Promise.all([params, searchParams]);
+  const h = await headers();
+  const nonce = h.get("x-nonce") ?? undefined;
   const business = await getBusinessBySlug(slug);
 
   if (!business || HIDDEN_STATUSES.has(business.status)) {
@@ -229,12 +233,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
         }
       `}</style>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(localBusinessJsonLd),
-        }}
-      />
+      <JsonLd data={localBusinessJsonLd} />
 
       <main className="bg-background">
         <MobileBusinessProfile
@@ -248,6 +247,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Page
           isLoggedIn={!!user}
           initialIsFavorited={!!isFavorited}
           mediaEngagement={mediaEngagement}
+          nonce={nonce}
         />
         <DesktopBusinessProfile
           business={business}
